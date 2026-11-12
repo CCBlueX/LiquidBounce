@@ -44,6 +44,8 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
+import java.util.Comparator.comparing
+import java.util.Comparator.comparingInt
 
 /**
  * SmartEat module
@@ -68,12 +70,12 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
         private val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
             // If there is an indication for a special item, we should use it. Items with lower health threshold
             // are preferred since their usage is probably more urgent.
-            compareByDescending { it.second.healthThreshold },
-            compareBy { it.second.restoredHunger },
+            comparingInt { it.second.healthThreshold.inv() },
+            comparingInt { it.second.restoredHunger },
             // Use the closest slot
-            Comparator.comparing({ it.first }, HotbarItemSlot.PREFER_NEARBY),
+            comparing({ it.first }, HotbarItemSlot.PREFER_NEARBY),
             // Just for stabilization reasons
-            compareBy { SilentHotbar.serversideSlot }
+            comparingInt { SilentHotbar.serversideSlot }
         )
 
         fun findBestFood(): HotbarItemSlot? {
@@ -92,7 +94,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
             val prefersHealthPot = player.health <= preferHealthPotHealth
 
             return when {
-                prefersGapples && item == Items.POTION -> {
+                prefersHealthPot && item == Items.POTION -> {
                     val hasHealthEffect =
                         itemStack.getPotionEffects().any {
                             it.effect == MobEffects.INSTANT_HEALTH
@@ -104,9 +106,9 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                         null
                     }
                 }
-                prefersHealthPot && item == Items.GOLDEN_APPLE -> {
+                prefersGapples && item == Items.GOLDEN_APPLE -> {
                     FoodEstimationData(
-                        healthThreshold = preferHealthPotHealth.toInt(),
+                        healthThreshold = preferGappleHealth.toInt(),
                         restoredHunger = itemStack.foodComponent!!.nutrition
                     )
                 }

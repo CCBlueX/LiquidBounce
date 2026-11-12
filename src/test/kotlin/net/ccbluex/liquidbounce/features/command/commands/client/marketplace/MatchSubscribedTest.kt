@@ -91,11 +91,11 @@ class MatchSubscribedTest {
     }
 
     @Test
-    fun `suggests the id where author and name or an unknown author's name are shared`() {
+    fun `suggests a shared address once and never an id`() {
         val script = item("AutoGG", 1, "CCBlueX")
-        val theme = item("AutoGG", 2, "CCBlueX")
+        val theme = item("AutoGG", 2, "ccbluex")
         val legacy = item("AutoGG", 3)
-        assertEquals(listOf("1", "2", "3"), suggestSubscribed(listOf(script, theme, legacy)))
+        assertEquals(listOf("CCBlueX/AutoGG", "AutoGG"), suggestSubscribed(listOf(script, theme, legacy)))
     }
 
     @Test

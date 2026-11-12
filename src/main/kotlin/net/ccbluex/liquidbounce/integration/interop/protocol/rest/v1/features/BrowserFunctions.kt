@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
 // GET /api/v1/client/browser
 private fun Route.getBrowserInfo() = get {
@@ -52,18 +52,18 @@ private fun Route.postBrowserNavigate() = post("/navigate") { with(call.receive<
         ?: call.badRequest("No browser tab")
 
     browser.url = url
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 } }
 
 private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
-private fun Route.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
+private fun Route.postBrowserClose() = post("/close") { withContext(Dispatchers.Main) {
     if (mc.gui.screen() !is InternetExplorerScreen) {
         call.badRequest("No browser screen")
     } else {
         mc.gui.setScreen(null)
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 } }
 
@@ -75,7 +75,7 @@ private fun Route.postBrowserReload() = post("/reload") {
         ?: call.badRequest("No browser tab")
 
     browser.reload()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/forceReload
@@ -86,7 +86,7 @@ private fun Route.postBrowserForceReload() = post("/forceReload") {
         ?: call.badRequest("No browser tab")
 
     browser.forceReload()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/forward
@@ -97,7 +97,7 @@ private fun Route.postBrowserForward() = post("/forward") {
         ?: call.badRequest("No browser tab")
 
     browser.goForward()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/back
@@ -108,7 +108,7 @@ private fun Route.postBrowserBack() = post("/back") {
         ?: call.badRequest("No browser tab")
 
     browser.goBack()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/closeTab
@@ -117,11 +117,11 @@ private fun Route.postBrowserCloseTab() = post("/closeTab") {
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
-    withContext(Dispatchers.Minecraft) {
+    withContext(Dispatchers.Main) {
         browser.close()
         browserBrowsers.remove(browser)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.browserRoutes() = route("/browser") {

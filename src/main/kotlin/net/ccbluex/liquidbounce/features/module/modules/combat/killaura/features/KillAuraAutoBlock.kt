@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -61,6 +61,7 @@ import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
@@ -120,7 +121,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 }
 
                 val eyes = target.eyePosition
-                val lookEnd = eyes.add(target.rotation.directionVector.scale(interactionRange))
+                val lookEnd = eyes.fma(interactionRange, target.rotation.directionVector)
                 val toleratedBox = player.box.inflate(tolerance.toDouble())
                 val hitPosition = toleratedBox.firstHit(eyes, lookEnd) ?: return@any false
                 val distance = eyes.distanceTo(hitPosition)
@@ -149,12 +150,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     var enforcedBlockingHand: InteractionHand? = null
         set(value) {
-            debugParameter(this, "EnforcedBlockingHand", value)
-            debugParameter(this, if (value != null) {
+            debugParameter("EnforcedBlockingHand") { value }
+            debugParameter(if (value != null) {
                 "Block Age"
             } else {
                 "Unblock Age"
-            }, player.tickCount)
+            }) { player.tickCount }
 
             field = value
         }
@@ -300,8 +301,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         fun flush(reason: String) {
-            debugParameter(this, "Flush", flushTicks)
-            debugParameter(this, "Flush Reason", reason)
+            debugParameter("Flush") { flushTicks }
+            debugParameter("Flush Reason") { reason }
             flushTicks = 0
         }
 

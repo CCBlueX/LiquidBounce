@@ -132,7 +132,7 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
         val speed by int("Speed", 20, 1..35, "packets")
 
         @Suppress("unused")
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (accelerateNow && player.ticksUsingItem >= consumeTime) {
                 repeat(speed) {
                     network.send(packetType.generatePacket())

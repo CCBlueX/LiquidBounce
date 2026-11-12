@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
+import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -36,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
+import net.ccbluex.liquidbounce.utils.text.toText
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -58,7 +61,7 @@ private fun Route.getPlayerData() = get {
     if (playerData != null) {
         call.respond(playerData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -68,7 +71,17 @@ private fun Route.getPlayerInventory() = get("/inventory") {
     if (playerInventoryData != null) {
         call.respond(playerInventoryData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
+    }
+}
+
+// GET /api/v1/client/player/statistics
+private fun Route.getPlayerStatistics() = get("/statistics") {
+    val statistics = PlayerStatisticsTracker.statistics
+    if (statistics != null) {
+        call.respond(statistics)
+    } else {
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -78,7 +91,7 @@ private fun Route.getCrosshairData() = get("/crosshair") {
     if (crosshairData != null) {
         call.respond(crosshairData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -212,10 +225,13 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                     val entryWithDecoration: Component = PlayerTeam.formatNameForTeam(team, entryName)
                     val entryValue: Component = scoreboardEntry.formatValue(numberFormat)
 
-                    SidebarEntry(entryWithDecoration.sanitizeForeignInput(), entryValue.sanitizeForeignInput())
+                    SidebarEntry(
+                        entryWithDecoration.sanitizeForeignInput().toText(),
+                        entryValue.sanitizeForeignInput().toText(),
+                    )
                 }.asList()
 
-            return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
+            return ScoreboardData(objective.displayName.sanitizeForeignInput().toText(), sidebarEntries)
         }
     }
 
@@ -230,6 +246,7 @@ internal fun Route.playerRoutes() {
     route("/player") {
         getPlayerData()
         getPlayerInventory()
+        getPlayerStatistics()
     }
     getCrosshairData()
 }

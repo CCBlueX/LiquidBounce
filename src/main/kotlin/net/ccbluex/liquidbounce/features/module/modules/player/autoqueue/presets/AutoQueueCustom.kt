@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTabFooter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTabHeader
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTitle
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
 object AutoQueueCustom : Mode("Custom") {
 
@@ -90,7 +89,7 @@ object AutoQueueCustom : Mode("Custom") {
     private var worldChangeOccurred = false
 
     @Suppress("unused")
-    private val tickHandler = tickHandler(Dispatchers.Minecraft) {
+    private val tickHandler = tickHandler(Dispatchers.Main) {
         if (ModuleAutoQueue.shouldPause) {
             return@tickHandler
         }

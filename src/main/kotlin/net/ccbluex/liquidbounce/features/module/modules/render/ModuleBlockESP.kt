@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.atomicfu.atomic
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.translate
@@ -48,9 +49,11 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Matrix4f
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.function.Predicate
 
 /**
  * BlockESP module
@@ -212,6 +215,11 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     object GlowMode : Mode("Glow") {
+
+        init {
+            OutlineGlow.styles(this)
+        }
+
         private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
@@ -221,19 +229,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         @Suppress("unused")
-        private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            val dirty = event.renderTarget.drawGenericBlockESP(
-                renderState,
-                ClientRenderPipelines.outlineQuads(useColor),
-                distanceFade,
-            ) {
-                getDynamicTransformsUniform(
-                    colorModulatorAlpha = 255,
-                )
-            }
-
-            if (dirty) {
-                event.markDirty()
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            OutlineGlow.drawMeshes(GlowMode, event.renderTarget) { target ->
+                target.drawGenericBlockESP(renderState, ClientRenderPipelines.outlineQuads(useColor), distanceFade) {
+                    getDynamicTransformsUniform(
+                        modelView = event.poseStack.last().pose(),
+                        colorModulatorAlpha = 255,
+                    )
+                }
             }
         }
 
@@ -291,7 +294,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private fun collectBlockShapes(
-        colorMode: net.ccbluex.liquidbounce.render.GenericColorMode<Pair<BlockPos, BlockState>>,
+        colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
         useColor: Boolean,
     ): List<PositionedVoxelShape<BlockMergeKey>> {
         val shapes = buildList {
@@ -312,12 +315,27 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     private data class BlockMergeKey(val block: Block, val color: Color4b?)
 
-    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape)
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape) {
+        constructor(pos: BlockPos, state: BlockState) : this(state, state.getShape(world, pos))
+    }
 
-    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>(), Predicate<BlockState> {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        /**
+         * [net.minecraft.world.level.chunk.ChunkAccess.findBlocks] filters whole sections through
+         * [net.minecraft.world.level.chunk.LevelChunkSection.maybeHas] before touching any block.
+         */
+        override fun chunkUpdate(chunk: LevelChunk) {
+            chunk.findBlocks(this) { pos, state ->
+                track(pos, TrackedState(pos, state))
+            }
+        }
+
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (!state.isAir && state.block in targets) {
-                TrackedState(state, state.getShape(world, pos))
+            return if (this.test(state)) {
+                TrackedState(pos, state)
             } else {
                 null
             }
@@ -326,6 +344,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         override fun onUpdated() {
             markDirtyForModes()
         }
+
+        override fun test(state: BlockState): Boolean = !state.isAir && state.block in targets
     }
 
 }

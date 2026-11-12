@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -27,17 +29,23 @@ import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
+import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -50,7 +58,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.client.RequestHandler
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -59,11 +68,13 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.Relative
+import net.minecraft.world.phys.AABB
 
 /**
- * A rotation manager
+ * A rotation manager. Will also actively affect our F5 model.
  */
-object RotationManager : EventListener {
+@Suppress("TooManyFunctions")
+object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     /**
      * Our final target rotation. This rotation is only used to define our current rotation.
@@ -88,7 +99,7 @@ object RotationManager : EventListener {
     @AddonApi
     var currentRotation: Rotation? = null
         private set(value) {
-            previousRotation = if (value == null) {
+            lastRotation = if (value == null) {
                 null
             } else {
                 field ?: mc.player?.rotation ?: Rotation.ZERO
@@ -98,10 +109,12 @@ object RotationManager : EventListener {
         }
 
     // Used for rotation interpolation
-    var playerRotation: Rotation? = null
+    var lastRotation: Rotation? = null
         private set
-    var previousRotation: Rotation? = null
-        private set
+
+    // currentRotation of the previous tick. Unlike lastRotation it outlives a reset by one tick, so the
+    // F5 model turns back to the vanilla rotation instead of snapping to it.
+    private var lastModelRotation: Rotation? = null
 
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
@@ -137,8 +150,8 @@ object RotationManager : EventListener {
         rotationTargetHandler.clear()
         previousRotationTarget = null
         currentRotation = null
-        playerRotation = null
-        previousRotation = null
+        lastRotation = null
+        lastModelRotation = null
         actualServerRotation = Rotation.ZERO
         theoreticalServerRotation = Rotation.ZERO
     }
@@ -180,7 +193,7 @@ object RotationManager : EventListener {
         considerInventory: Boolean = true,
         valueGroup: RotationsValueGroup,
         priority: Priority,
-        provider: ClientModule,
+        provider: EventListener,
         whenReached: RestrictedSingleUseAction? = null
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
@@ -189,11 +202,11 @@ object RotationManager : EventListener {
     }
 
     @AddonApi
-    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) =
+    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: EventListener) =
         setRotationTarget(plan, priority.priority, provider)
 
     @AddonApi
-    fun setRotationTarget(plan: RotationTarget, priority: Int, provider: ClientModule) {
+    fun setRotationTarget(plan: RotationTarget, priority: Int, provider: EventListener) {
         if (!allowedToUpdate()) {
             return
         }
@@ -230,7 +243,8 @@ object RotationManager : EventListener {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
-        val playerRotation = player.rotation.also { this.playerRotation = it }
+        lastModelRotation = currentRotation
+        val playerRotation = player.rotation
         val activeRotationTarget = this.activeRotationTarget ?: return
         val rotationTarget = this.rotationTarget
 
@@ -241,11 +255,11 @@ object RotationManager : EventListener {
                 // After generating the next rotation, we need to normalize it
                 .normalize()
 
-            val diff = rotation.rotationDeltaLengthTo(playerRotation)
+            val diffSqr = rotation.rotationDeltaLengthSqrTo(playerRotation)
 
             if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
                     || activeRotationTarget.processors.isEmpty()
-                    || diff <= activeRotationTarget.resetThreshold)) {
+                    || diffSqr <= activeRotationTarget.resetThreshold.sq())) {
                 currentRotation?.let { currentRotation ->
                     player.yRot = player.withFixedYaw(currentRotation)
                     player.yBob = player.yRot
@@ -271,11 +285,10 @@ object RotationManager : EventListener {
 
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-            val playerRotation = playerRotation ?: return
             val currentRotation = currentRotation ?: return
+            val lastRotation = lastRotation ?: currentRotation
 
-            val interpolated = playerRotation.interpolateTo(currentRotation, partialTicks)
-            player.setRotation(interpolated)
+            player.setRotation(lastRotation.interpolateTo(currentRotation, partialTicks))
         }
     }
 
@@ -290,13 +303,13 @@ object RotationManager : EventListener {
         fun adjustRotation(rotation: Rotation): Rotation =
             RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
-        playerRotation?.let { rotation ->
-            playerRotation = adjustRotation(rotation)
-        }
+        val currentRotation = currentRotation ?: return@handler
+        val lastRotation = lastRotation ?: currentRotation
 
-        currentRotation?.let { rotation ->
-            currentRotation = adjustRotation(rotation)
-        }
+        // The setter would move lastRotation onto the old currentRotation, so shift both ends instead
+        this.currentRotation = adjustRotation(currentRotation)
+        this.lastRotation = adjustRotation(lastRotation)
+        lastModelRotation = lastModelRotation?.let(::adjustRotation)
     }
 
     /**
@@ -308,7 +321,7 @@ object RotationManager : EventListener {
         val player = mc.player ?: return false
 
         currentRotation?.let {
-            return it == previousRotation
+            return it == lastRotation
         }
 
         return player.rotation == player.lastRotation
@@ -377,6 +390,81 @@ object RotationManager : EventListener {
             actualServerRotation = rotation
         }
         theoreticalServerRotation = rotation
+    }
+
+    /**
+     * It overwrites the body part's yaw and rotation, so the F5 view model looks
+     * at the [RotationManager.currentRotation].
+     */
+    private val bodyPart by multiEnumChoice("BodyPart", BodyPart.entries)
+
+    @Suppress("unused")
+    enum class BodyPart(
+        override val tag: String,
+    ) : Tagged {
+        HEAD("Head"),
+        BODY("Body");
+    }
+
+    /**
+     * Yaw of [part] on the F5 model. Blends from or to [vanillaYaw] on the tick a rotation starts or ends.
+     */
+    fun modelYaw(part: BodyPart, partialTicks: Float, vanillaYaw: Float): Float {
+        if (part !in bodyPart) {
+            return vanillaYaw
+        }
+
+        val from = lastModelRotation?.yaw ?: vanillaYaw
+        val to = currentRotation?.yaw ?: vanillaYaw
+        return Mth.rotLerp(partialTicks, from, to)
+    }
+
+    fun modelPitch(partialTicks: Float, vanillaPitch: Float): Float {
+        if (BodyPart.HEAD !in bodyPart) {
+            return vanillaPitch
+        }
+
+        val from = lastModelRotation?.pitch ?: vanillaPitch
+        val to = currentRotation?.pitch ?: vanillaPitch
+        return Mth.lerp(partialTicks, from, to)
+    }
+
+    /**
+     * Draws a tracer line to the point we aim at.
+     */
+    private val vectorLine by color("VectorLine", Color4b.WHITE.with(a = 0)) // alpha 0 means OFF
+
+    /**
+     * Draws a dot at the point we aim at.
+     */
+    private val vectorDot by color("VectorDot", Color4b(0x00, 0x80, 0xFF, 0x00))
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        val drawVectorLine = vectorLine.a > 0
+        val drawVectorDot = vectorDot.a > 0
+
+        if (drawVectorLine || drawVectorDot) {
+            val currentRotation = currentRotation ?: return@handler
+            val previousRotation = lastRotation ?: currentRotation
+
+            val interpolatedRotationVec = previousRotation.directionVector
+                .lerp(currentRotation.directionVector, event.partialTicks.toDouble())
+                .toVec3f()
+
+            val eyeVector = Vec3f.eyeVector(event.camera)
+
+            event.renderEnvironment {
+                val vector = eyeVector.fma(100f, interpolatedRotationVec)
+                if (drawVectorLine) {
+                    drawLine(eyeVector, vector, vectorLine.argb)
+                }
+
+                if (drawVectorDot) {
+                    drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
+                }
+            }
+        }
     }
 
     override val running: Boolean

@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.common;
 
 import com.mojang.blaze3d.vertex.QuadInstance;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Scoped context for XRay background block rendering.
@@ -46,7 +48,11 @@ public final class XRayBlockRenderContext {
         return isRenderingTransparentBackground() ? ChunkSectionLayer.TRANSLUCENT : original;
     }
 
-    public static void renderTransparentBackground(int alpha, Runnable render) {
+    /**
+     * Runs [render] in the transparent background scope when XRay applies to the block being rendered.
+     */
+    public static void renderIfActive(BlockState state, Runnable render) {
+        int alpha = ModuleXRay.INSTANCE.transparentBackgroundAlpha(state);
         if (alpha >= 255) {
             render.run();
             return;

@@ -8,6 +8,7 @@ import type {
     ClientUpdate,
     ClientUser,
     ConfigurableSetting,
+    ConnectionDetails,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
@@ -229,8 +230,8 @@ export async function getSession(): Promise<Session> {
     return data;
 }
 
-export async function browse(target: string) {
-    await fetch(`${API_BASE}/client/browse`, {
+export async function openLink(target: string) {
+    await fetch(`${API_BASE}/client/openLink`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -271,6 +272,16 @@ export async function deleteScreen() {
     });
 }
 
+export async function keepScreenEscape(name: string, keep: boolean) {
+    await fetch(`${API_BASE}/client/screen/escape`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name, keep})
+    });
+}
+
 export async function getServers(): Promise<Server[]> {
     const response = await fetch(`${API_BASE}/client/servers`);
     const data: Server[] = await response.json();
@@ -298,6 +309,18 @@ export async function connectToServer(address: string) {
         },
         body: JSON.stringify({address})
     });
+}
+
+export async function getConnectionDetails(): Promise<ConnectionDetails | null> {
+    const response = await fetch(`${API_BASE}/client/connection`);
+
+    if (response.status !== 200) {
+        return null;
+    }
+
+    const data: ConnectionDetails = await response.json();
+
+    return data;
 }
 
 export async function removeServer(id: number) {
@@ -602,23 +625,23 @@ export async function setProxyFavorite(id: number, favorite: boolean) {
     }
 }
 
-export async function addProxy(host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
+export async function addProxy(host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean, proxyResourcePacks: boolean, proxyDns: boolean) {
     await fetch(`${API_BASE}/client/proxies/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({host, port, username, password, type, forwardAuthentication})
+        body: JSON.stringify({host, port, username, password, type, forwardAuthentication, proxyResourcePacks, proxyDns})
     });
 }
 
-export async function editProxy(id: number, host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
+export async function editProxy(id: number, host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean, proxyResourcePacks: boolean, proxyDns: boolean) {
     await fetch(`${API_BASE}/client/proxies/edit`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({id, host, port, username, password, type, forwardAuthentication})
+        body: JSON.stringify({id, host, port, username, password, type, forwardAuthentication, proxyResourcePacks, proxyDns})
     })
 }
 

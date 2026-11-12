@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.djl;
 
 import ai.djl.util.Utils;
 import net.ccbluex.liquidbounce.api.core.HttpClient;
+import net.ccbluex.liquidbounce.api.core.OkHttpProgressInterceptor;
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine;
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -57,7 +57,7 @@ public abstract class MixinUtils {
                 }
 
                 var task = mainTask.getOrCreateFileTask(url);
-                task.update(bytesRead, contentLength);
+                task.update(bytesRead, contentLength, done);
 
                 if (done) {
                     task.setCompleted(true);

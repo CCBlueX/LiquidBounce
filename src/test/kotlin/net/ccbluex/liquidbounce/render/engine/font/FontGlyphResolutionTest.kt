@@ -42,16 +42,53 @@ class FontGlyphResolutionTest {
     }
 
     @Test
-    fun testGlyphIdentifierIncludesActualFont() {
+    fun testRequestedFaceKeepsItsGlyphWhenAFallbackCoversItToo() = runTest {
+        val face = FontFace("Test", 43f)
+        face.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+        val fallback = FontFace("Fallback", 43f)
+        fallback.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+
+        val resolved = resolveFont(face, listOf(fallback), Font.PLAIN, 'A'.code)
+
+        assertSame(face.plainStyle, resolved)
+    }
+
+    @Test
+    fun testFallbackFaceIgnoresTheRequestedStyle() = runTest {
+        val face = FontFace("Test", 43f)
+        face.fillStyle(CoverageFont(Font.PLAIN, covered = false), Font.PLAIN)
+        val fallback = FontFace("Fallback", 43f)
+        fallback.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+        fallback.fillStyle(CoverageFont(Font.BOLD, covered = true), Font.BOLD)
+
+        val resolved = resolveFont(face, listOf(fallback), Font.BOLD, 'A'.code)
+
+        assertNotNull(fallback.style(Font.BOLD))
+        assertSame(fallback.plainStyle, resolved)
+    }
+
+    @Test
+    fun testFontGlyphIncludesActualFont() {
         val firstFont = createFontId(Font.SANS_SERIF)
         val secondFont = createFontId(Font.SERIF)
         val codepoint = 0x20000
 
-        val first = GlyphIdentifier(codepoint, firstFont)
-        val second = GlyphIdentifier(codepoint, secondFont)
+        val first = FontGlyph(codepoint, firstFont)
+        val second = FontGlyph(codepoint, secondFont)
 
         assertEquals(codepoint, first.codepoint)
         assertNotEquals(first, second)
+    }
+
+    @Test
+    fun testFontIdIdentityIsItsFont() {
+        val base = createFontId(Font.SANS_SERIF)
+        val sameFont = createFontId(Font.SANS_SERIF)
+
+        assertEquals(base, sameFont)
+        assertEquals(base.hashCode(), sameFont.hashCode())
+
+        assertNotEquals(base, createFontId(Font.SERIF))
     }
 
     @Test
@@ -62,20 +99,19 @@ class FontGlyphResolutionTest {
         assertTrue(face.style(Font.BOLD)!!.awtFont.isBold)
         assertTrue(face.style(Font.ITALIC)!!.awtFont.isItalic)
         assertNotNull(face.style(Font.BOLD or Font.ITALIC))
-        assertTrue(face.plainStyle.underlineOffset > 0f)
-        assertTrue(face.plainStyle.underlineThickness > 0f)
-        assertTrue(face.plainStyle.strikethroughOffset < 0f)
-        assertTrue(face.plainStyle.strikethroughThickness > 0f)
+        assertTrue(face.plainMetrics.underlineOffset > 0f)
+        assertTrue(face.plainMetrics.underlineThickness > 0f)
+        assertTrue(face.plainMetrics.strikethroughOffset < 0f)
+        assertTrue(face.plainMetrics.strikethroughThickness > 0f)
     }
 
-    private fun createFontId(name: String) = FontId(
-        Font.PLAIN,
-        Font(name, Font.PLAIN, 43),
-        51f,
-        40f,
-        2f,
-        1f,
-        -12f,
-        1f,
-    )
+    private fun createFontId(name: String) = FontId(Font(name, Font.PLAIN, 43))
+}
+
+/**
+ * A font with a fixed glyph coverage, so the fallback path can be tested without depending on which
+ * fonts the machine happens to have installed.
+ */
+private class CoverageFont(style: Int, private val covered: Boolean) : Font("Dialog", style, 43) {
+    override fun canDisplay(codePoint: Int): Boolean = covered
 }

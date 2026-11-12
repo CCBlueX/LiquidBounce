@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils
 import net.minecraft.network.chat.HoverEvent
 
 /**
@@ -88,7 +88,7 @@ object CommandHelp : CommandRegistrar {
             .map { it.name }
 
         aliases.forEach { alias ->
-            this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
+            this += ComponentUtils.DEFAULT_SEPARATOR
             this += regular(alias).withStyle(ChatFormatting.GRAY)
                 .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
         }

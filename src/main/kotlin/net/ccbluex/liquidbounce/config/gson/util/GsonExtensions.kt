@@ -25,9 +25,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonElement
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -36,6 +36,9 @@ import java.io.File
 import java.io.InputStream
 import java.io.Reader
 import java.nio.charset.Charset
+
+@JvmField
+val GSON_DEFAULT = Gson()
 
 /**
  * Read JSON content
@@ -59,7 +62,7 @@ inline fun <reified T> InputStream.readJson(charset: Charset = Charsets.UTF_8): 
  * Read JSON content from a [Reader] and close it
  */
 inline fun <reified T> Reader.readJson(gson: Gson = publicGson): T = use {
-    gson.fromJson(it, object : TypeToken<T>() {}.type)
+    gson.fromJson(it, object : TypeToken<T>() {})
 }
 
 inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)
@@ -155,6 +158,11 @@ inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonA
     return a
 }
 
+fun Iterable<String>.toJsonArray(): JsonArray = mapToJsonArray(::JsonPrimitive)
+
+@JvmName("toJsonArrayOfElements")
+fun Iterable<JsonElement?>.toJsonArray(): JsonArray = mapToJsonArray { it }
+
 /**
  * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key
  * instead of throwing.
@@ -164,6 +172,8 @@ fun JsonObject.string(key: String): String? = if (has(key)) get(key).asString el
 fun JsonObject.int(key: String): Int? = if (has(key)) get(key).asInt else null
 
 fun JsonObject.long(key: String): Long? = if (has(key)) get(key).asLong else null
+
+fun JsonObject.float(key: String): Float? = if (has(key)) get(key).asFloat else null
 
 fun JsonObject.double(key: String): Double? = if (has(key)) get(key).asDouble else null
 

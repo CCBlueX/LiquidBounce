@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions", "WildcardImport")
+@file:Suppress("TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.inventory
 
@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.ccbluex.liquidbounce.utils.item.isMergeable
@@ -94,7 +95,7 @@ fun useHotbarSlotOrOffhand(
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): InteractionResult {
     SilentHotbar.selectSlotSilently(requester, slot, ticksUntilReset)
-    return net.ccbluex.liquidbounce.utils.entity.useItem(slot.useHand, yRot, xRot, swingMode)
+    return useItem(slot.useHand, yRot, xRot, swingMode)
 }
 
 internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =

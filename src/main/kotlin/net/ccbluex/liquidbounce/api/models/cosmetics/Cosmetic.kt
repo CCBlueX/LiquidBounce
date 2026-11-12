@@ -18,4 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.models.cosmetics
 
-data class Cosmetic(val category: CosmeticCategory, val extra: String? = null)
+/**
+ * [category] is null for categories newer than this client.
+ */
+data class Cosmetic(val category: CosmeticCategory?, val extra: String? = null)

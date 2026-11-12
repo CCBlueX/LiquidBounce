@@ -20,21 +20,14 @@
 package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
-import com.mojang.authlib.Environment
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.thealtening.api.TheAltening
 import com.thealtening.api.TheAlteningException
 import net.ccbluex.liquidbounce.config.gson.util.int
 import net.ccbluex.liquidbounce.config.gson.util.string
-import java.net.Proxy
 
 const val ALTENING_AUTH = "http://authserver.thealtening.com"
 const val ALTENING_SESSION = "http://sessionserver.thealtening.com"
-
-val alteningEnvironment = Environment(
-    ALTENING_SESSION,
-    "TheAltening",
-)
 
 /**
  * An account from the TheAltening account generator.
@@ -59,9 +52,8 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
     var hypixelRank: String = ""
         private set
 
-    override val authenticationService: MinecraftServicesDiscoveryService by lazy {
-        MinecraftServicesDiscoveryService.create(Proxy.NO_PROXY, false, alteningEnvironment)
-    }
+    override fun createMinecraftSessionService(service: MinecraftServicesDiscoveryService) =
+        AlteningSessionService(service)
 
     override fun refresh() {
         val session = YggdrasilUserAuthentication(ALTENING_AUTH).authenticate(accountToken, "LiquidBounce")

@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import java.util.function.ToIntFunction
 
 /**
@@ -144,6 +144,9 @@ abstract class Mode @JvmOverloads constructor(
     final override val tagAliases: List<String>
         get() = this.aliases
 
+    override val debugName: String
+        get() = name
+
     abstract val parent: ModeValueGroup<*>
 
     open fun enable() { }
@@ -161,7 +164,7 @@ abstract class Mode @JvmOverloads constructor(
      * we handle the events.
      */
     override val running: Boolean
-        get() = super.running && isSelected
+        get() = isSelected && super.running
 
     override fun parent() = this.parent.eventListener
 

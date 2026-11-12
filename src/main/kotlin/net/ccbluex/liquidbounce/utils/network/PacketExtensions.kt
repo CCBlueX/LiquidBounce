@@ -38,6 +38,8 @@ import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.phys.Vec3
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 fun Packet<*>?.isC2SContainerPacket() =
     this is ServerboundContainerClickPacket ||
@@ -46,7 +48,12 @@ fun Packet<*>?.isC2SContainerPacket() =
         this is ServerboundContainerSlotStateChangedPacket ||
         this is ServerboundContainerClosePacket
 
+@OptIn(ExperimentalContracts::class)
 fun Packet<*>?.isLocalPlayerDamage(): Boolean {
+    contract {
+        returns(true) implies (this@isLocalPlayerDamage is ClientboundDamageEventPacket)
+    }
+
     return this is ClientboundDamageEventPacket && this.entityId == mc.player?.id
 }
 

@@ -33,9 +33,6 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Subscribe to marketplace item
- */
 object MarketplaceUpdateCommand {
 
     private const val MESSAGE_ID = "CMarketplace#update"
@@ -65,9 +62,7 @@ object MarketplaceUpdateCommand {
 
     private suspend fun CmdI18n.updateAll() {
         if (MarketplaceManager.subscribedItems.isEmpty()) {
-            throw CommandException(
-                t("update.noSubscribedItems")
-            )
+            throw CommandException(t("update.noSubscribedItems"))
         }
 
         chat(regular(t("update.updatingAll")), metadata = MessageMetadata(id = MESSAGE_ID))
@@ -86,43 +81,27 @@ object MarketplaceUpdateCommand {
             logger.error("Failed to update item ${item.id}", e)
 
             throw CommandException(
-                t("error.updateFailed",
-                    variable(item.id.toString()),
-                    variable(e.message ?: "Unknown error")
-                )
+                t("error.updateFailed", variable(item.address), variable(e.message ?: "Unknown error"))
             )
         }
     }
 
     private fun CmdI18n.report(result: UpdateResult) {
-        when (result) {
-            is UpdateResult.Updated -> chat(
-                regular(
-                    t("update.success",
-                        variable(result.item.id.toString()),
-                        variable(result.revisionId.toString())
-                    )
-                ),
-                metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
+        val (item, text) = when (result) {
+            is UpdateResult.Updated -> result.item to regular(
+                t("update.success", variable(result.item.address), variable(result.revision.version))
             )
-            is UpdateResult.NoUpdate -> chat(
-                regular(t("update.noUpdate", variable(result.item.id.toString()))),
-                metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
-            )
-            is UpdateResult.Incompatible -> chat(
-                markAsError(result.unavailable.text()),
-                metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
-            )
-            is UpdateResult.Failed -> chat(
-                markAsError(
-                    t("error.updateFailed",
-                        variable(result.item.id.toString()),
-                        variable(result.error.message ?: "Unknown error")
-                    )
-                ),
-                metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
+            is UpdateResult.NoUpdate -> result.item to regular(t("update.noUpdate", variable(result.item.address)))
+            is UpdateResult.Incompatible -> result.item to markAsError(result.unavailable.text())
+            is UpdateResult.Failed -> result.item to markAsError(
+                t(
+                    "error.updateFailed",
+                    variable(result.item.address),
+                    variable(result.error.message ?: "Unknown error")
+                )
             )
         }
+        chat(text, metadata = MessageMetadata(id = "$MESSAGE_ID#${item.id}"))
     }
 
 }

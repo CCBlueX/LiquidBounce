@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
@@ -34,7 +35,7 @@ sealed class NukerArea(name: String) : Mode(name) {
     override val parent: ModeValueGroup<*>
         get() = areaMode
 
-    abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>
+    abstract fun lookupTargets(radius: Float, limit: Int? = null): List<Pair<BlockPos, BlockState>>
 
     protected fun isPositionAvailable(
         eyesPos: Vec3,
@@ -52,10 +53,6 @@ sealed class NukerArea(name: String) : Mode(name) {
             return false
         }
 
-        val vec3d = shape.move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-            .closestPointTo(eyesPos)
-            .orElse(null) ?: return false
-
-        return vec3d.distanceToSqr(eyesPos) <= rangeSquared
+        return shape.move(pos).distanceToSqr(eyesPos) <= rangeSquared
     }
 }

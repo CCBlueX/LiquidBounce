@@ -25,6 +25,7 @@ import net.minecraft.network.chat.ClickEvent
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class InputBindTest {
@@ -62,6 +63,22 @@ class InputBindTest {
         val rendered = InputBind.UNBOUND.renderText()
 
         assertEquals(InputConstants.UNKNOWN.displayName.string, rendered.siblings.first().string)
+    }
+
+    @Test
+    fun `an unbound bind does not match a key`() {
+        // SDL reports scan code 0 for keys it cannot map, while an unbound bind is `InputConstants.UNKNOWN`
+        assertFalse(InputBind.UNBOUND.matchesKey(0), "An unbound bind must not match the unmapped scan code")
+        assertFalse(InputBind.UNBOUND.matchesKey(InputConstants.KEY_K))
+    }
+
+    @Test
+    fun `a bound key only matches its own scan code`() {
+        val bind = InputBind(InputConstants.Type.KEYBOARD, InputConstants.KEY_K, InputBind.BindAction.TOGGLE)
+
+        assertTrue(bind.matchesKey(InputConstants.KEY_K))
+        assertFalse(bind.matchesKey(InputConstants.KEY_L))
+        assertFalse(bind.matchesKey(0))
     }
 
     private fun assertRendersKey(type: InputConstants.Type, code: Int) {

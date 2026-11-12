@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.liquidbounce.additions.drawCooldownProgress
 import net.ccbluex.liquidbounce.additions.drawItemBar
 import net.ccbluex.liquidbounce.additions.drawStackCount
@@ -28,7 +27,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -38,67 +36,46 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-
-/**
- * @see StatsScreen.SLOT_SPRITE
- */
-private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
+import java.util.function.Consumer
 
 @Suppress("TooManyFunctions")
 object ItemStackListRenderer : EventListener {
 
+    /**
+     * @see StatsScreen.SLOT_SPRITE
+     */
+    private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
+
     private val textRenderer = mc.font
     private val planned = ArrayList<ItemStackListRenderState>()
-    private val overlapRearranger = GuiOverlapRearranger()
-
-    @JvmStatic
-    @JvmName("create")
-    fun GuiGraphicsExtractor.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderState {
-        return ItemStackListRenderState(this, stacks)
-    }
-
-    @JvmStatic
-    @JvmName("create")
-    fun GuiGraphicsExtractor.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderState =
-        drawItemStackList(stacks.asList())
 
     @JvmStatic
     fun Block.createItemStackForRendering(count: Int): ItemStack {
-        return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
+        val mappedItem = when (this) {
+            Blocks.WATER -> Items.WATER_BUCKET
+            Blocks.LAVA -> Items.LAVA_BUCKET
+            else -> this.asItem()
+        }
+
+        return ItemStack(mappedItem, count)
     }
 
-    internal fun draw(state: ItemStackListRenderState, rearrange: Boolean) {
+    fun draw(graphics: GuiGraphicsExtractor, state: ItemStackListRenderState, rearrange: Boolean) {
         if (state.stacks.isEmpty() && state.title == null) return
 
         if (!rearrange) {
-            drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+            with(graphics) {
+                drawNow(state, state.centerX, state.centerY)
+            }
             return
         }
 
-        planned += state.copy()
-    }
-
-    private fun fillBackground(
-        guiGraphics: GuiGraphicsExtractor,
-        width: Int,
-        height: Int,
-        color: Color4b,
-        outlineColor: Color4b,
-        margin: Float,
-    ) {
-        guiGraphics.drawQuad(
-            -margin,
-            -margin,
-            width + margin,
-            height + margin,
-            color,
-            outlineColor,
-        )
+        state.updateBounds()
+        planned += state
     }
 
     private fun drawSlotTexture(guiGraphics: GuiGraphicsExtractor, x: Int, y: Int) {
@@ -113,16 +90,15 @@ object ItemStackListRenderer : EventListener {
     }
 
     @Suppress("CognitiveComplexMethod")
+    context(graphics: GuiGraphicsExtractor)
     private fun drawNow(
         state: ItemStackListRenderState,
         centerX: Float,
         centerY: Float,
     ) {
-        val guiGraphics = state.guiGraphics
-        val size = if (state.useTexture) ITEM_STACK_SLOT_SIZE else ITEM_STACK_ITEM_SIZE
         val dimensions = ItemStackListLayout.measureContent(state)
 
-        guiGraphics.pose().withPush {
+        graphics.pose().withPush {
             val width = dimensions.width
             val height = dimensions.height
 
@@ -130,71 +106,95 @@ object ItemStackListRenderer : EventListener {
             scale(state.scale, state.scale)
             translate(-width * 0.5F, -height * 0.5F)
 
-            if (!state.useTexture) {
-                fillBackground(
-                    guiGraphics = guiGraphics,
-                    width = width,
-                    height = height,
-                    color = state.backgroundColor,
-                    outlineColor = state.backgroundOutlineColor,
-                    margin = state.backgroundMargin,
-                )
+            val background = state.background
+            if (background is GuiPanel &&
+                graphics.drawPanel(width.toFloat(), height.toFloat(), background)
+            ) {
+                // Elements of a stratum are sorted by pipeline creation order, so pipelines of this mod are drawn
+                // after the vanilla item pipelines. Slots and items need a stratum of their own to stay above the
+                // background.
+                graphics.nextStratum()
             }
 
             state.title?.let { title ->
-                guiGraphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor)
+                graphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor.argb)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
-            for ((i, stack) in state.stacks.withIndex()) {
-                val leftX = i % state.rowLength * size
-                val topY = i / state.rowLength * size
-                if (state.useTexture) {
-                    drawSlotTexture(guiGraphics, leftX, topY)
+            val onSlots = background is ItemStackListBackground.Slots
+            state.stacks.forEachIndexed { i, stack ->
+                val leftX = i % state.rowLength * ITEM_STACK_SLOT_SIZE
+                val topY = i / state.rowLength * ITEM_STACK_SLOT_SIZE
+                if (onSlots) {
+                    drawSlotTexture(graphics, leftX, topY)
                 }
 
-                val diff = if (state.useTexture) (ITEM_STACK_SLOT_SIZE - ITEM_STACK_ITEM_SIZE) / 2 else 0
+                val diff = (ITEM_STACK_SLOT_SIZE - ITEM_STACK_ITEM_SIZE) / 2
                 with(state.itemStackRenderer) {
-                    guiGraphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+                    graphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
                 }
             }
         }
     }
 
     @Suppress("unused")
-    private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { _ ->
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) {
         if (planned.isEmpty()) return@handler
 
         try {
             if (planned.size > 1) {
-                overlapRearranger.rearrange(planned)
+                GuiOverlapRearranger.rearrange(planned)
             }
 
-            planned.forEach { state ->
-                drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+            with(it.context) {
+                planned.forEach { state ->
+                    drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+                }
             }
         } finally {
             planned.clear()
         }
     }
 
-    @JvmStatic
-    private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
-        put(Blocks.WATER, Items.WATER_BUCKET)
-        put(Blocks.LAVA, Items.LAVA_BUCKET)
-    }
-
     sealed class BackgroundMode(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
+
+        /**
+         * Snapshot of this mode, rebuilt on the next read after one of its settings changed.
+         */
+        abstract val background: ItemStackListBackground
+
         class Rect(parent: ModeValueGroup<*>) : BackgroundMode("Rect", parent) {
-            val fillColor by color("Color", Color4b.DEFAULT_BG_COLOR)
-            val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
-            val margin by float("Margin", 2.0F, 0.0F..100.0F)
+            private val invalidate = Consumer<Any?> {
+                snapshot = null
+            }
+
+            private val fillColor by color("Color", Color4b.DEFAULT_BG_COLOR).onChanged(invalidate)
+            private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT).onChanged(invalidate)
+            private val margin by float("Margin", DEFAULT_PANEL_MARGIN, 0F..100F).onChanged(invalidate)
+            private val radius by float("Radius", DEFAULT_PANEL_RADIUS, 0F..16F).onChanged(invalidate)
+            private val gradient by float("Gradient", DEFAULT_PANEL_GRADIENT, 0F..1F).onChanged(invalidate)
+            private val glow by float("Glow", DEFAULT_PANEL_GLOW, 0F..1F).onChanged(invalidate)
+
+            private var snapshot: GuiPanel? = null
+
+            // Configured values are trusted only up to the ranges above, an edited config file can hold anything.
+            override val background: GuiPanel
+                get() = snapshot ?: GuiPanel(
+                    fillColor = fillColor,
+                    outlineColor = outlineColor,
+                    margin = margin,
+                    radius = radius,
+                    gradient = gradient,
+                    glow = glow,
+                ).also { snapshot = it }
         }
 
-        class Texture(parent: ModeValueGroup<*>) : BackgroundMode("Texture", parent)
+        class Texture(parent: ModeValueGroup<*>) : BackgroundMode("Texture", parent) {
+            override val background get() = ItemStackListBackground.Slots
+        }
 
         companion {
-            internal fun backgroundChoices(parent: ModeValueGroup<*>) = arrayOf(
+            fun backgroundChoices(parent: ModeValueGroup<*>) = arrayOf(
                 Rect(parent),
                 Texture(parent),
             )

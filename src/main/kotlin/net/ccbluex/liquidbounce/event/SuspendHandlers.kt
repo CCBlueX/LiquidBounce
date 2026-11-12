@@ -54,6 +54,8 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on [GameTickEvent].
+ *
+ * Use plain `handler<GameTickEvent>` if there is no suspend calls inside the block.
  */
 inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,

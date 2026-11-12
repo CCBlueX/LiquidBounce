@@ -21,6 +21,7 @@
     import GenericPlayerInventory from "./GenericPlayerInventory.svelte";
     import type {PlayerInventory} from "../../../../integration/events";
     import type {ItemStack} from "../../../../integration/types";
+    import type {HudInventoryStatisticsSettings} from "../../components";
 
     export let settings: { [name: string]: any };
 

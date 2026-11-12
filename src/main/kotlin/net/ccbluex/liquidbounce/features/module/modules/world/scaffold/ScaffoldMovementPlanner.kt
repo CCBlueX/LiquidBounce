@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLine
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.player
@@ -30,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.math.bottomCenter
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -107,7 +108,7 @@ object ScaffoldMovementPlanner {
 
         // Debug optimal line
         ModuleScaffold.debugGeometry("optimalLine") {
-            ModuleDebug.DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
+            DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
         }
 
         return optimalLine
@@ -147,12 +148,10 @@ object ScaffoldMovementPlanner {
             val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 200.0).toInt()
 
             ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
+                DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
             }
         }
     }
-
-    private val offsetsToTry = doubleArrayOf(0.301, 0.0, -0.301)
 
     /**
      * Find the support block reference the player is currently standing on.
@@ -180,15 +179,14 @@ object ScaffoldMovementPlanner {
     }
 
     private fun collectSupportCandidates(): Map<BlockPos, SupportCandidate> {
-        // [offsetsToTry] makes the result map has up to 4 entries
+        val box = player.boundingBox
+        val supportY = Mth.floor(box.minY) - 1
+        // The player's box is narrower than a block, so each axis covers at most two block columns.
         val candidates = Object2ObjectArrayMap<BlockPos, SupportCandidate>()
 
-        for (xOffset in offsetsToTry) {
-            for (zOffset in offsetsToTry) {
-                val blockPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
-
-                if (candidates.containsKey(blockPos)) continue
-
+        for (x in Mth.floor(box.minX)..Mth.floor(box.maxX)) {
+            for (z in Mth.floor(box.minZ)..Mth.floor(box.maxZ)) {
+                val blockPos = BlockPos(x, supportY, z)
                 val collisionShape = blockPos.state?.getCollisionShape(world, blockPos) ?: continue
 
                 if (!collisionShape.isEmpty) {

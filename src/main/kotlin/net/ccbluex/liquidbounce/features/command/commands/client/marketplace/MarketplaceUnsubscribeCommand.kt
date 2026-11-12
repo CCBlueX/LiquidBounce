@@ -26,19 +26,16 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Unsubscribe from a marketplace item
- */
 object MarketplaceUnsubscribeCommand {
 
     fun CmdLiteralScope.unsubscribe() {
         literal("unsubscribe") {
             argument("item", ClientStringArgumentType.string(), suggests = subscribedSuggestions) { input ->
                 execSuspend { ctx ->
-                    val itemId = subscribedItem(ctx.get(input)).id
+                    val item = subscribedItem(ctx.get(input))
 
-                    MarketplaceManager.unsubscribe(itemId)
-                    chat(regular(t("unsubscribe.success", variable(itemId.toString()))))
+                    MarketplaceManager.unsubscribe(item.id)
+                    chat(regular(t("unsubscribe.success", variable(item.address))))
                 }
             }
         }

@@ -34,3 +34,29 @@ export function isAnniversary() {
 
     return now >= start && now <= end;
 }
+
+/**
+ * Input types that accept typed characters. Types such as `checkbox`, `radio`,
+ * `range` or `color` are operated with clicks only and therefore do not swallow
+ * key presses.
+ */
+const TEXT_INPUT_TYPES = new Set([
+    "text", "search", "url", "tel", "email", "password", "number",
+    "date", "datetime-local", "month", "time", "week",
+]);
+
+/**
+ * Whether the given event target is an element that consumes typed characters,
+ * meaning key presses reaching it must not be treated as game input.
+ */
+export function isTextEntry(target: EventTarget | null): boolean {
+    if (target instanceof HTMLTextAreaElement) {
+        return true;
+    }
+
+    if (target instanceof HTMLInputElement) {
+        return TEXT_INPUT_TYPES.has(target.type);
+    }
+
+    return target instanceof HTMLElement && target.isContentEditable;
+}

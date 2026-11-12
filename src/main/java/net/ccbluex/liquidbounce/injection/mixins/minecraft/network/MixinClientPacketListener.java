@@ -45,7 +45,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -172,9 +171,9 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         var present = original.isPresent();
         if (present && ModuleAntiExploit.canLimit(Limit.EXPLOSION_STRENGTH)) {
             var vec = original.get();
-            double fixedX = Mth.clamp(vec.x, -10.0, 10.0);
-            double fixedY = Mth.clamp(vec.y, -10.0, 10.0);
-            double fixedZ = Mth.clamp(vec.z, -10.0, 10.0);
+            double fixedX = Math.clamp(vec.x, -10.0, 10.0);
+            double fixedY = Math.clamp(vec.y, -10.0, 10.0);
+            double fixedZ = Math.clamp(vec.z, -10.0, 10.0);
 
             if (fixedX != vec.x || fixedY != vec.y || fixedZ != vec.z) {
                 ModuleAntiExploit.INSTANCE.notify(Limit.EXPLOSION_STRENGTH, "Limited too strong explosion", true);
@@ -256,6 +255,31 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
         this.rotationThreadLocal.remove();
 
+        applyNoRotateSet(prevRotation, player);
+    }
+
+    @WrapMethod(method = "handleRotatePlayer")
+    private void wrapNoRotateSet(ClientboundPlayerRotationPacket packet, Operation<Void> original) {
+        var player = Minecraft.getInstance().player;
+        if (player == null || !ModuleNoRotateSet.INSTANCE.getRunning()
+                || Minecraft.getInstance().gui.screen() instanceof LevelLoadingScreen) {
+            original.call(packet);
+            return;
+        }
+
+        var prevRotation = new Rotation(player.getYRot(), player.getXRot(), true);
+        original.call(packet);
+        applyNoRotateSet(prevRotation, player);
+    }
+
+    /**
+     * Restores the rotation the player was looking at before the server changed it.
+     *
+     * Both handlers also move the old rotation to the server-side values, so the restored angle has to be
+     * written to the old rotation too, otherwise the camera interpolates back to the server-side angle.
+     */
+    @Unique
+    private static void applyNoRotateSet(Rotation prevRotation, Player player) {
         if (ModuleNoRotateSet.INSTANCE.getMode().getActiveMode() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
             // Changes your server side rotation and then resets it with provided settings
             var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotations().toRotationTarget(
@@ -271,6 +295,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         // just to update the rotation server-side.
         player.setYRot(prevRotation.yRot() + 0.000001f);
         player.setXRot(prevRotation.xRot() + 0.000001f);
+        player.setOldRot();
     }
 
     @ModifyVariable(method = "sendChat", at = @At("HEAD"), argsOnly = true, name = "content")

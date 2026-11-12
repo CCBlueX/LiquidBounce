@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
@@ -52,10 +51,6 @@ public abstract class MixinCamera {
 
     @Shadow
     private boolean detached;
-    @Shadow
-    private float yRot;
-    @Shadow
-    private float xRot;
 
     @Shadow
     protected abstract void setRotation(float yRot, float xRot);
@@ -68,6 +63,9 @@ public abstract class MixinCamera {
 
     @Shadow
     public abstract void setPosition(Vec3 pos);
+
+    @Shadow
+    public abstract boolean isPanoramicMode();
 
     @Shadow
     private @Nullable Entity entity;
@@ -92,28 +90,16 @@ public abstract class MixinCamera {
 
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER), cancellable = true)
     private void modifyCameraOrientation(float partialTicks, CallbackInfo ci) {
-        var freeLook = ModuleFreeLook.INSTANCE.getRunning();
-        var freeLockInvertedView = ModuleFreeLook.INSTANCE.isInvertedView();
-        var qps = ModuleQuickPerspectiveSwap.INSTANCE.getRunning();
-        var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook
-            && this.minecraft.options.getCameraType().isFirstPerson();
-
-        if (freeLook || qps) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
             this.detached = true;
 
-            if (freeLook) {
-                var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
-                var cameraPitch = ModuleFreeLook.INSTANCE.getCameraPitch();
+            var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
+            var cameraPitch = ModuleFreeLook.INSTANCE.getCameraPitch();
 
-                if (freeLockInvertedView) {
-                    setRotation(cameraYaw + 180, -cameraPitch);
-                } else {
-                    setRotation(cameraYaw, cameraPitch);
-                }
-            }
-
-            if (qps && !rearView) {
-                setRotation(yRot + 180.0f, freeLook && !freeLockInvertedView ? xRot : -xRot);
+            if (ModuleFreeLook.INSTANCE.isInvertedView()) {
+                setRotation(cameraYaw + 180, -cameraPitch);
+            } else {
+                setRotation(cameraYaw, cameraPitch);
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
@@ -195,6 +181,27 @@ public abstract class MixinCamera {
         return result;
     }
 
+    /**
+     * <pre>
+     *     if (this.isPanoramicMode) {
+     *         return 90.0F;
+     *     }
+     *     ...
+     *     return this.modifyFovBasedOnDeathOrFluid(partialTicks, fov);
+     * </pre>
+     *
+     * The base fov above is an {@code int}, so the zoom would end in whole degrees. Re-add the fraction.
+     */
+    @ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
+    private float smoothZoomFov(float original) {
+        // The early return never reads the hooked fov, so its constant fov carries no fraction of ours.
+        if (this.isPanoramicMode()) {
+            return original;
+        }
+
+        return ModuleZoom.INSTANCE.applyFractionalFov(original);
+    }
+
     @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
     private float injectShit(float original) {
         var screen = ModuleDroneControl.INSTANCE.getScreen();
@@ -204,6 +211,13 @@ public abstract class MixinCamera {
         }
 
         return original;
+    }
+
+    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setupPerspective(FFFFF)V"))
+    private void hookAspectRatio(Args args) {
+        if (ModuleAspect.INSTANCE.getRunning()) {
+            args.set(3, (float) args.get(3) / ModuleAspect.getRatioMultiplier());
+        }
     }
 
     @ModifyArgs(method = "createProjectionMatrixForCulling", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;", remap = false))

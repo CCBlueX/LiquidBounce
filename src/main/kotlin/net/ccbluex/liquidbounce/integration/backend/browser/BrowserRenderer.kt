@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawTexQuad
+import net.ccbluex.liquidbounce.render.splash.SplashPhaseScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -76,7 +77,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
 
     @Suppress("unused")
     private val screenRenderHandler = handler<ScreenRenderEvent>(browser.priority) { event ->
-        if (!browser.visible || rendered) {
+        if (!browser.visible || rendered || mc.gui.screen() is SplashPhaseScreen) {
             return@handler
         }
 
@@ -117,14 +118,15 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         height: Float
     ) {
         val pipeline = if (texture.bgra) {
-            ClientRenderPipelines.JCEF.BGRA_BLURRED_TEXTURE
+            ClientRenderPipelines.BROWSER.BgraTexture
         } else {
-            ClientRenderPipelines.JCEF.BLURRED_TEXTURE
+            ClientRenderPipelines.BROWSER.Texture
         }
 
         context.drawTexQuad(
             texture.textureSetup,
             x0 = x, y0 = y, x1 = x + width, y1 = y + height,
+            u1 = texture.u1, v1 = texture.v1, u2 = texture.u2, v2 = texture.v2,
             pipeline = pipeline,
         )
     }

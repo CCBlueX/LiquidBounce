@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
 import java.io.File
-import kotlin.collections.mapTo
 
 private fun ValueGroup.modes(
     name: String,

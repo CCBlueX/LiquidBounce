@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -37,9 +38,9 @@ private fun Route.getSpooferConfig() = get {
 
 // PUT /api/v1/client/spoofer
 private fun Route.putSpooferConfig() = put {
-    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
+    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText())
     ConfigSystem.store(SpooferManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.spooferRoutes() = route("/spoofer") {

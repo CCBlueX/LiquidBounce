@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 
-abstract class VelocityMode(name: String) : Mode(name) {
+abstract class VelocityMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
 
     override val parent: ModeValueGroup<VelocityMode>
         get() = modes

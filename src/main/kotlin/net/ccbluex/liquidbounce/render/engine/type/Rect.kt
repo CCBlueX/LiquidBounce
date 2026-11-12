@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import org.joml.Vector2f
 
+@ValueClassCandidate
 @JvmRecord
 data class Rect(val x1: Float, val y1: Float, val x2: Float, val y2: Float) {
 

@@ -22,7 +22,6 @@ import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
@@ -78,6 +78,7 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShelfBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.awt.Color
@@ -293,6 +294,10 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     object GlowMode : Mode("Glow") {
         private val dirtyFlag = atomic(true)
 
+        init {
+            OutlineGlow.styles(this)
+        }
+
         private val renderState = CachedMeshStorage("${ModuleStorageESP.name} $name")
 
         internal fun markDirty() {
@@ -316,15 +321,15 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             get() = modes
 
         @Suppress("unused")
-        private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
-            val dirty = event.renderTarget.drawGenericBlockESP(
-                renderState = renderState,
-                pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
-                distanceFade = distanceFade,
-            )
-
-            if (dirty) {
-                event.markDirty()
+        private val glowRenderHandler = handler<WorldRenderEvent> { event ->
+            OutlineGlow.drawMeshes(GlowMode, event.renderTarget) { target ->
+                target.drawGenericBlockESP(
+                    renderState = renderState,
+                    pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
+                    distanceFade = distanceFade,
+                ) {
+                    getDynamicTransformsUniform(modelView = event.poseStack.last().pose())
+                }
             }
         }
 
@@ -459,11 +464,25 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        /**
+         * The client creates every block entity right away when the chunk packet arrives
+         * ([net.minecraft.world.level.chunk.LevelChunk.replaceWithPacketData]), so the map is complete.
+         *
+         * @see net.minecraft.client.renderer.chunk.SectionCopy
+         */
+        override fun chunkUpdate(chunk: LevelChunk) {
+            for ((pos, blockEntity) in chunk.blockEntities) {
+                blockEntity.categorize()?.let { track(pos, it) }
+            }
+        }
+
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             if (!state.hasBlockEntity()) return null
 
-            val chunk = mc.level?.getChunk(pos) ?: return null
-            return chunk.getBlockEntity(pos)?.categorize()
+            return mc.level?.getBlockEntity(pos).categorize()
         }
 
         override fun onUpdated() {

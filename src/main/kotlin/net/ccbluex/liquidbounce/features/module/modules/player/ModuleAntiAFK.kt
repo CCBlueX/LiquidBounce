@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.InteractionHand
 import kotlin.random.Random
 
 /**
@@ -113,7 +112,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
             }),
             SWING_HAND("SwingHand", {
                 if (!player.isSwinging) {
-                    SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+                    SwingMode.DO_NOT_HIDE.attackSwing()
                 }
             }),
             CHANGE_SLOT("ChangeSlot", {
@@ -166,7 +165,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
         val swingRepeatable = tickHandler {
             if (Swing.enabled && !player.isSwinging) {
                 waitTicks(Swing.delay)
-                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+                SwingMode.DO_NOT_HIDE.attackSwing()
             }
         }
 

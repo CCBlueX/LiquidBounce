@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.blink
 
-import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
@@ -76,7 +76,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
-    val packetQueue: ConcurrentLinkedQueue<PacketSnapshot> = Queues.newConcurrentLinkedQueue()
+    val packetQueue = ConcurrentLinkedQueue<PacketSnapshot>()
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
@@ -98,6 +98,8 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     }
 
     private val lineColor by color("Line", Color4b.LIQUID_BOUNCE)
+
+    private val render = rendering(solid = true)
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
@@ -206,9 +208,9 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (lineColor.a > 0) {
-            event.renderEnvironment {
+            event.renderEnvironment(render) {
                 drawLineStrip(
-                    argb = lineColor.argb,
+                    argb = shapeColor(lineColor).argb,
                     positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),
                 )
             }

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -163,10 +164,10 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         IGNORE("Ignore"),
         ALWAYS("Always");
 
-        fun isCriticalHit(target: Entity): Boolean {
+        fun isCriticalHit(): Boolean {
             return when (this) {
                 IGNORE -> true
-                SMART -> !shouldWaitForCrit(target, ignoreState = true)
+                SMART -> !shouldWaitForCrit(ignoreState = true)
                 ALWAYS -> wouldDoCriticalHit()
             }
         }
@@ -188,9 +189,9 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     }
 
-    fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false) = when {
+    fun shouldWaitForCrit(ignoreState: Boolean = false) = when {
         CriticalsBlink.running && CriticalsBlink.isInState -> false
-        else -> CriticalsJump.shouldWaitForCrit(target, ignoreState)
+        else -> CriticalsJump.shouldWaitForCrit(ignoreState)
     }
 
     private val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
@@ -217,7 +218,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
     }
 
     fun canDoCriticalHit(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        allowsCriticalHit(ignoreOnGround) && player.getAttackStrengthScale(0.5f) > 0.9f &&
+        allowsCriticalHit(ignoreOnGround) && CombatManager.attackCooldownProgress() > 0.9f &&
             (!player.isSprinting || ignoreSprint)
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =

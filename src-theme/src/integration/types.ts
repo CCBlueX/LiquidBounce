@@ -312,6 +312,12 @@ export interface Server {
     lan?: boolean;
 }
 
+export interface ConnectionDetails {
+    remoteAddress: string;
+    serverAddress: string;
+    proxy: boolean;
+}
+
 export interface TextComponent {
     type?: string;
     extra?: (TextComponent | string)[];
@@ -358,6 +364,8 @@ export interface Proxy {
     port: number;
     type: 'HTTP' | 'SOCKS5';
     forwardAuthentication: boolean;
+    proxyResourcePacks: boolean;
+    proxyDns: boolean;
     favorite: boolean;
     credentials: {
         username: string;

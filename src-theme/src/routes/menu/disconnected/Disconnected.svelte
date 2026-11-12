@@ -1,57 +1,58 @@
 <script lang="ts">
+    import Account from "../common/header/account/Account.svelte";
+    import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import {
-        directLoginToCrackedAccount,
-        getAccounts,
-        loginToAccount,
-        randomUsername,
-        reconnectToServer
-    } from "../../../integration/rest";
+    import {AutoReconnect} from "./autoReconnect.svelte";
     import {listen} from "../../../integration/ws";
-    import {onMount} from "svelte";
-    import type {Account} from "../../../integration/types";
-    import {restoreSession} from "../../../integration/rest.js";
     import {isLoggingIn} from "../altmanager/altmanager_store";
 
-    const premiumAccounts: Account[] = $state([]);
+    const auto = new AutoReconnect();
+    let accountHovered = $state(false);
 
-    async function reconnectWithRandomUsername() {
-        const username = await randomUsername();
-        await directLoginToCrackedAccount(username, false);
-    }
+    $effect(() => auto.run($isLoggingIn || accountHovered));
 
-    async function reconnectWithRandomAccount() {
-        const account = premiumAccounts[Math.floor(Math.random() * premiumAccounts.length)];
-        await loginToAccount(account.id);
-    }
+    listen("accountManagerLogin", () => auto.reconnect());
 
-    onMount(async () => {
-        const accounts = await getAccounts();
-        premiumAccounts.push(...accounts.filter(a => a.type !== "Cracked" && !a.favorite));
-    });
-
-    listen("accountManagerLogin", reconnectToServer);
+    const reconnectTitle = $derived(
+        auto.reconnecting ? "Reconnecting..." : auto.enabled ? `Reconnecting in ${auto.secondsLeft}s` : "Reconnect"
+    );
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="account" onmouseenter={() => accountHovered = true} onmouseleave={() => accountHovered = false}>
+    <Account/>
+</div>
+
 <div class="reconnect">
-    <ButtonSetting title="Reconnect" on:click={reconnectToServer}
-                   disabled={$isLoggingIn}/>
-    <ButtonSetting title="Restore initial session" on:click={restoreSession}
-                   disabled={$isLoggingIn}/>
-    <ButtonSetting title="Reconnect with random account" on:click={reconnectWithRandomAccount}
-                   disabled={premiumAccounts.length === 0 || $isLoggingIn}/>
-    <ButtonSetting title="Reconnect with random username" on:click={reconnectWithRandomUsername}
-                   disabled={$isLoggingIn}/>
+    <ButtonSetting title={reconnectTitle} disabled={$isLoggingIn} on:click={() => auto.reconnect()}/>
+    <SwitchSetting title="Auto reconnect" value={auto.enabled} on:change={() => auto.toggle()}/>
 </div>
 
 <style lang="scss">
+  .account {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+  }
+
   .reconnect {
     position: fixed;
     bottom: 20px;
     left: 45px;
     display: flex;
-    flex-direction: column;
-    row-gap: 10px;
-    align-items: flex-start;
+    align-items: center;
+    column-gap: 20px;
+  }
+
+  @media screen and (max-height: 1100px) {
+    .account {
+      zoom: 0.8;
+    }
+  }
+
+  @media screen and (max-height: 700px) {
+    .account {
+      zoom: 0.5;
+    }
   }
 </style>

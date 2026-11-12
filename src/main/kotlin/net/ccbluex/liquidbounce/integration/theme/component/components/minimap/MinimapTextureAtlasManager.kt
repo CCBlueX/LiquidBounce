@@ -18,17 +18,21 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.platform.NativeImage
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.render.textureSetup
-import net.ccbluex.liquidbounce.utils.render.uploadRect
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.kotlin.IntIntValuePair
+import net.ccbluex.liquidbounce.utils.render.createGpuTexture
+import net.ccbluex.liquidbounce.utils.render.writeRows
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.renderer.texture.DynamicTexture
-import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.BiConsumer
 import kotlin.concurrent.read
@@ -39,19 +43,28 @@ import kotlin.concurrent.write
  */
 private const val ATLAS_SIZE: Int = 64
 
-/**
- * If we need to upload more than this amount of chunks, we upload the whole texture
- */
-private const val FULL_UPLOAD_THRESHOLD: Int = 15
-
 private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
-    private val texture = DynamicTexture(
+    private val pixels = NativeImage(ATLAS_SIZE * 16, ATLAS_SIZE * 16, false).apply {
+        for (x in 0..15) {
+            for (y in 0..15) {
+                setPixel(x, y, if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.argb else Color4b.WHITE.argb)
+            }
+        }
+    }
+
+    private val texture = pixels.createGpuTexture(
         { "$CLIENT_NAME MinimapTexture" },
-        ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
+        GpuTexture.USAGE_TEXTURE_BINDING,
+        upload = true,
+    )
+
+    private val textureSetup = TextureSetup.singleTexture(
+        gpuDevice.createTextureView(texture),
+        RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST),
     )
 
     private val availableAtlasPositions = ObjectArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS).apply {
@@ -65,24 +78,13 @@ class MinimapTextureAtlasManager {
             }
         }
     }
-    private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>()
-    private val chunkPosAtlasPosMap = Long2ObjectOpenHashMap<AtlasPosition>() // key -> ChunkPos
+
+    private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>().apply { add(NOT_LOADED_ATLAS_POSITION) }
+
+    /** ChunkPos to AtlasPosition */
+    private val chunkPosAtlasPosMap = Long2ObjectOpenHashMap<AtlasPosition>()
 
     private val lock = ReentrantReadWriteLock()
-
-    private var allocated = false
-
-    init {
-        for (x in 0..15) {
-            for (y in 0..15) {
-                val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.argb else Color4b.WHITE.argb
-
-                this.texture.pixels!!.setPixel(x, y, color)
-            }
-        }
-
-        this.dirtyAtlasPositions.add(NOT_LOADED_ATLAS_POSITION)
-    }
 
     private fun allocate(chunkPos: Long): AtlasPosition {
         return lock.write {
@@ -121,7 +123,7 @@ class MinimapTextureAtlasManager {
 
     fun editChunk(
         chunkPos: Long,
-        editor: BiConsumer<DynamicTexture, AtlasPosition>,
+        editor: BiConsumer<NativeImage, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 
@@ -129,7 +131,7 @@ class MinimapTextureAtlasManager {
             dirtyAtlasPositions.add(atlasPosition)
         }
 
-        editor.accept(texture, atlasPosition)
+        editor.accept(pixels, atlasPosition)
     }
 
     /**
@@ -140,39 +142,37 @@ class MinimapTextureAtlasManager {
     fun prepareRendering(): TextureSetup {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.textureSetup
+                return this.textureSetup
             }
 
-            val dirtyChunks = this.dirtyAtlasPositions.size
-
-            when {
-                !this.allocated || dirtyChunks >= FULL_UPLOAD_THRESHOLD -> uploadFullTexture()
-                else -> uploadOnlyDirtyPositions()
-            }
+            uploadDirtyBounds()
         }
 
         lock.write {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.textureSetup
+        return this.textureSetup
     }
 
-    private fun uploadFullTexture() {
-        this.texture.upload()
+    /**
+     * One write covering every dirty cell: the per-call driver cost of a texture write dominates its size.
+     */
+    private fun uploadDirtyBounds() {
+        var minY = Int.MAX_VALUE
+        var maxY = Int.MIN_VALUE
 
-        this.allocated = true
-    }
-
-    private fun uploadOnlyDirtyPositions() {
-        for (dirtyAtlasPosition in this.dirtyAtlasPositions) {
-            this.texture.uploadRect(
-                mipLevel = 0,
-                x = dirtyAtlasPosition.baseXOnAtlas,
-                y = dirtyAtlasPosition.baseYOnAtlas,
-                width = 16, height = 16,
-            )
+        for (position in this.dirtyAtlasPositions) {
+            minY = minOf(minY, position.baseYOnAtlas)
+            maxY = maxOf(maxY, position.baseYOnAtlas)
         }
+
+        // Uploads dirty rows covering all [dirtyAtlasPositions]
+        this.texture.writeRows(
+            source = this.pixels,
+            y = minY,
+            height = maxY - minY + 16,
+        )
     }
 
     @JvmRecord
@@ -196,8 +196,8 @@ class MinimapTextureAtlasManager {
          * @param chunkX x coordinate in the chunk (0-15)
          * @param chunkY y coordinate in the chunk (0-15)
          */
-        fun getPosOnAtlas(chunkX: Int, chunkY: Int): Vector2i {
-            return Vector2i(baseXOnAtlas or chunkX, baseYOnAtlas or chunkY)
+        fun getPosOnAtlas(chunkX: Int, chunkY: Int): IntIntValuePair {
+            return IntIntValuePair(baseXOnAtlas or chunkX, baseYOnAtlas or chunkY)
         }
     }
 }

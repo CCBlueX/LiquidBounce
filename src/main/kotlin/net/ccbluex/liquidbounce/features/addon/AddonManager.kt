@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.addon
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -27,8 +29,10 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.fabricmc.loader.api.FabricLoader
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
@@ -38,7 +42,7 @@ object AddonManager {
     private const val ENTRYPOINT = "liquidbounce"
 
     /**
-     * Comma-separated add-on ids to skip, or `all`.
+     * Comma-separated add-on ids to skip, or `all` for every add-on but the ones LiquidBounce comes with.
      */
     private const val DISABLE_PROPERTY = "liquidbounce.disableAddons"
 
@@ -81,8 +85,9 @@ object AddonManager {
                 .getOrNull() ?: continue
 
             addon.container = container
+            val isBundled = container.containingMod.map { it.metadata.id == ENTRYPOINT }.orElse(false)
 
-            if (disableAll || disabled.any { it.equals(id, true) }) {
+            if (disableAll && !isBundled || disabled.any { it.equals(id, true) }) {
                 addon.state = AddonState.DISABLED
                 logger.info("Skipping add-on '$id' ($DISABLE_PROPERTY)")
             } else {
@@ -131,6 +136,8 @@ object AddonManager {
         pendingRestarts.remove(itemId)
     }
 
+    internal fun isRestartRequired(itemId: Int) = itemId in pendingRestarts
+
     private inline fun forEachEnabled(
         phase: String,
         rollbackOnFailure: Boolean = true,
@@ -172,6 +179,17 @@ object AddonManager {
         }
         addon.registeredModes.clear()
 
+        addon.registeredValueGroups.forEach { (parent, group) ->
+            step("value group ${group.name}") {
+                if (group is ToggleableValueGroup && group.running) {
+                    group.onToggled(false, isParentUpdate = true)
+                }
+                parent.drop(group)
+                (group as? EventListener)?.unregister()
+            }
+        }
+        addon.registeredValueGroups.clear()
+
         addon.registeredModules.forEach { module ->
             step("module ${module.name}") { ModuleManager.removeModule(module) }
         }
@@ -195,6 +213,16 @@ object AddonManager {
             step("marketplace handler for $type") { MarketplaceManager.unregisterHandler(type, handler) }
         }
         addon.registeredItemHandlers.clear()
+
+        addon.registeredBrowserBackends.forEach { provider ->
+            step("browser backend ${provider.id}") { BrowserBackendManager.unregisterBackend(provider) }
+        }
+        addon.registeredBrowserBackends.clear()
+
+        addon.registeredQuickFixes.forEach { quickFix ->
+            step("quick fix ${quickFix.description}") { QuickFixes.unregister(quickFix) }
+        }
+        addon.registeredQuickFixes.clear()
 
         step("event hooks") { addon.unregister() }
 

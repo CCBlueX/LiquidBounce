@@ -44,11 +44,6 @@ object ClientRenderPipelines {
 
     private val renderPipelines = Object2ObjectOpenHashMap<Identifier, RenderPipeline>()
 
-    /**
-     * Blend mode for JCEF compatible blending.
-     */
-    private val JCEF_COMPATIBLE_BLEND = BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA
-
     internal inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
@@ -115,48 +110,30 @@ object ClientRenderPipelines {
         withPrimitiveTopology(mode)
     }
 
-    object JCEF {
+    /**
+     * Chromium on Windows blends text through Skia's mask gamma, sRGB with contrast 1 (`skia/BUILD.gn`).
+     * On Linux Skia skips it for grayscale text, and macOS text comes out of CoreText's own smoothing.
+     */
+    private fun RenderPipeline.Builder.fontMaskSnippet() {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
+        if (Util.getPlatform() == Util.OS.WINDOWS) {
+            withShaderDefine("TEXT_CONTRAST", 1f)
+        }
+    }
+
+    // Browsers paint with premultiplied alpha
+    object BROWSER {
         @JvmField
-        val SMOOTH_TEXTURE = newPipeline("jcef/smooth_texture") {
+        val Texture = newPipeline("browser/texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-            withDepthStencilState(optional())
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
         }
 
         @JvmField
-        val BLURRED_TEXTURE = newPipeline("jcef/blurred_texture") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        @JvmField
-        val BGRA_TEXTURE = newPipeline("jcef/bgra_texture") {
+        val BgraTexture = newPipeline("browser/bgra_texture") {
             bgraPosTexColorQuads()
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        @JvmField
-        val BGRA_BLURRED_TEXTURE = newPipeline("jcef/bgra_blurred_texture") {
-            bgraPosTexColorQuads()
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        /**
-         * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-         */
-        @JvmField
-        val Blit = newPipeline("jcef_blit") {
-            screenQuadSnippet()
-            withFragmentShader("core/blit_screen")
-            withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-            withColorTargetState(
-                ColorTargetState(
-                    optional(JCEF_COMPATIBLE_BLEND),
-                    GpuFormat.RGBA8_UNORM,
-                    ColorTargetState.WRITE_COLOR,
-                )
-            )
-            withDepthStencilState(optional())
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
         }
     }
 
@@ -203,6 +180,13 @@ object ClientRenderPipelines {
         }
 
         @JvmField
+        val SmoothTexture = newPipeline("gui/smooth_texture") {
+            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+            withDepthStencilState(optional())
+        }
+
+        @JvmField
         val TexQuadNoCull = newPipeline("gui/tex_quad_no_cull") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
             withCull(false)
@@ -210,8 +194,7 @@ object ClientRenderPipelines {
 
         @JvmField
         val FontMask = newPipeline("gui/font_mask") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withFragmentShader(ClientShaders.Fragment.FontMask)
+            fontMaskSnippet()
         }
 
         @JvmStatic
@@ -380,8 +363,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {
-        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        withFragmentShader(ClientShaders.Fragment.FontMask)
+        fontMaskSnippet()
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
@@ -451,25 +433,6 @@ object ClientRenderPipelines {
 
     // Special
 
-    /**
-     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-     * @see RenderPipelines.OUTLINE_SNIPPET
-     */
-    @JvmField
-    val Outline = newPipeline("outline") {
-        screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-        withColorTargetState(
-            ColorTargetState(
-                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
-                GpuFormat.RGBA8_UNORM,
-                ColorTargetState.WRITE_COLOR,
-            )
-        )
-        withDepthStencilState(optional())
-    }
-
     @JvmField
     val ChamsImage = newPipeline("chams/image_blit") {
         screenQuadSnippet()
@@ -493,6 +456,56 @@ object ClientRenderPipelines {
             withSampler("texture0")
             withSampler("image")
             withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
+        }
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Additive effect layer (flow, trail, glow, chromatic, scanlines) drawn over the held item.
+     */
+    @JvmField
+    val ItemChamsEffects = newPipeline("item_chams/effects") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsEffects)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("trail")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.ADDITIVE))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Recovers the held item from the capture with an animated hue/brightness shift.
+     */
+    @JvmField
+    val ItemChamsRecolor = newPipeline("item_chams/recolor") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsRecolor)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Accumulates the captured held item into the trail history buffer with decay.
+     */
+    @JvmField
+    val ItemChamsTrail = newPipeline("item_chams/trail") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsTrail)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("history")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
         }
         withColorTargetState(ColorTargetState.DEFAULT)
         withDepthStencilState(optional())
@@ -535,6 +548,24 @@ object ClientRenderPipelines {
         withDepthStencilState(optional())
     }
 
+    /**
+     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+     */
+    @JvmField
+    val GuiBlurBlit = newPipeline("blur_blit") {
+        screenQuadSnippet()
+        withFragmentShader("core/blit_screen")
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(
+            ColorTargetState(
+                optional(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA),
+                GpuFormat.RGBA8_UNORM,
+                ColorTargetState.WRITE_COLOR,
+            )
+        )
+        withDepthStencilState(optional())
+    }
+
     @JvmField
     val Blend = newPipeline("blend") {
         withVertexShader(ClientShaders.Vertex.PlainPosTex)
@@ -552,7 +583,7 @@ object ClientRenderPipelines {
      * Precompile
      */
     fun precompile() {
-        JCEF
+        BROWSER
         GUI
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->

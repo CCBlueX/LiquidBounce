@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.backend.browser
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.mc
 import org.joml.Vector2d
 import org.joml.Vector2dc
@@ -30,6 +31,7 @@ import kotlin.math.ln
  * Represents a browser viewport with position, dimensions and rendering quality utilities
  */
 @JvmRecord
+@AddonApi
 data class BrowserViewport(
     val x: Int,
     val y: Int,

@@ -26,15 +26,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient.request
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -46,19 +45,17 @@ private val retiredName = Regex("""\.\d+\.old""")
 private const val RENAME_ATTEMPTS = 20
 private const val RENAME_RETRY_DELAY_MS = 100L
 
-private fun contentFolder(revisionDir: File): File? {
-    fun File.containsFile(): Boolean {
-        return this.isDirectory && !this.listFiles(File::isFile).isNullOrEmpty()
-    }
+/**
+ * [revisionDir] or its first subfolder that holds files, e.g. `items/265/1713/dist`.
+ */
+private fun findContentFolder(revisionDir: File): File? {
+    fun File.containsFile() = isDirectory && !listFiles(File::isFile).isNullOrEmpty()
 
     if (revisionDir.containsFile()) {
         return revisionDir
     }
 
-    // Return null if no files found at folder or one level below
-    return revisionDir.listFiles(File::isDirectory)?.firstOrNull { subFolder ->
-        subFolder.containsFile()
-    }
+    return revisionDir.listFiles(File::isDirectory)?.firstOrNull { it.containsFile() }
 }
 
 // Windows refuses to rename a directory while a virus scanner still reads a jar just extracted into it.
@@ -81,21 +78,17 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     /**
      * Tells apart subscriptions that share a name. Unknown for ones saved before it was kept, until
-     * [MarketplaceManager.fillAuthors] looks it up.
+     * [MarketplaceManager.updateMissingAuthors] looks it up.
      */
     internal var author: String? = null
 
     val itemDir
         get() = MarketplaceManager.marketplaceRoot.resolve("items/$id")
 
-    /**
-     * The revision currently unpacked in [itemDir], or `null` when nothing is installed.
-     */
     val installedRevisionId: Int?
         get() = installedRevisionDir?.name?.toInt()
 
     /**
-     * The revision directory currently unpacked in [itemDir], or `null` when nothing is installed.
      * Installing leaves exactly one numeric directory; anything in the making is named otherwise.
      */
     internal val installedRevisionDir: File?
@@ -108,16 +101,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     private val lock
         get() = itemLocks.computeIfAbsent(id) { Mutex() }
 
-    /**
-     * Get the installation folder of the item.
-     *
-     * Walks down the revision folder until it finds a file,
-     * which returns the parent folder of that file,
-     * as the installation folder.
-     *
-     * This ensures instead of e.g., /marketplace/items/265/1713, it returns /marketplace/items/265/1713/dist
-     */
-    fun getInstallationFolder(): File? = installedRevisionDir?.let(::contentFolder)
+    fun getInstallationFolder(): File? = installedRevisionDir?.let(::findContentFolder)
 
     suspend fun checkUpdate(): Int? = getNewestRevisionId()
 
@@ -125,13 +109,13 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * The revision to install, when it is not the installed one: the newest one, or for an add-on
      * the newest one the marketplace offers for this game. That can be older than the installed one.
      */
-    suspend fun getNewestRevisionId(): Int? = locked {
-        (resolveRevision() as? RevisionResolution.Compatible)?.revision?.id?.takeIf { it != installedRevisionId }
-    }
+    suspend fun getNewestRevisionId(): Int? = locked { findPendingRevisionId() }
+
+    private suspend fun findPendingRevisionId(): Int? =
+        (findCompatibleRevision() as? RevisionResult.Compatible)?.revision?.id?.takeIf { it != installedRevisionId }
 
     /**
-     * Whether [getNewestRevisionId] has one, without waiting for an install of this item. `false`
-     * while an install runs.
+     * Does not wait for a running install of this item; `false` until that is done.
      */
     internal suspend fun hasUpdate(): Boolean {
         if (!lock.tryLock()) {
@@ -139,8 +123,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         return try {
-            val revisionId = (resolveRevision() as? RevisionResolution.Compatible)?.revision?.id
-            revisionId != null && revisionId != installedRevisionId
+            findPendingRevisionId() != null
         } finally {
             lock.unlock()
         }
@@ -181,7 +164,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             return false
         }
 
-        commit(fetch(revisionId, subTask), revisionId)
+        activateRevision(downloadRevision(revisionId, subTask), revisionId)
         if (type == MarketplaceItemType.ADDON) {
             AddonInstaller.unpacked(this, revisionId)
         }
@@ -192,7 +175,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * Downloads and unpacks [revisionId] next to the installed revision, where nothing takes it for
      * installed. Callers hold [locked].
      */
-    private suspend fun fetch(revisionId: Int, subTask: ResourceTask? = null): File {
+    private suspend fun downloadRevision(revisionId: Int, subTask: ResourceTask?): File {
         val unpacked = itemDir.resolve(".$revisionId")
         if (unpacked.isDirectory) {
             return unpacked
@@ -204,23 +187,20 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         val part = itemDir.resolve(".$revisionId.part")
-        val progress = subTask?.let { subTask ->
-            OkHttpProgressInterceptor.ProgressListener { bytesRead, contentLength, _ ->
-                subTask.update(bytesRead, contentLength)
-            }
-        }
+        val progress = subTask?.let { OkHttpProgressInterceptor.ProgressListener(it::update) }
 
-        try {
-            withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
+            try {
                 part.deleteRecursively()
                 // TODO: Check checksum
                 request(MarketplaceApi.downloadRevision(id, revisionId), HttpMethod.GET, progressListener = progress)
                     .use { response -> extractZip(response.body.byteStream(), part) }
+                part.rename(unpacked)
+            } finally {
+                part.deleteRecursively()
             }
-            part.rename(unpacked)
-        } finally {
-            part.deleteRecursively()
         }
+
         return unpacked
     }
 
@@ -228,7 +208,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * Old revisions are renamed away before they are deleted, since a half-deleted one would still
      * count as installed. They go back when the new one cannot take their place.
      */
-    private suspend fun commit(unpacked: File, revisionId: Int) {
+    private suspend fun activateRevision(unpacked: File, revisionId: Int) {
         val retired = mutableListOf<Pair<File, File>>()
         try {
             for (dir in revisionDirs) {
@@ -243,21 +223,20 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             throw e
         }
 
-        itemDir.listFiles { file: File -> file.name.startsWith(".") }?.forEach { it.deleteRecursively() }
+        itemDir.listFiles { file: File -> file.name.startsWith('.') }?.forEach { it.deleteRecursively() }
     }
 
+    /**
+     * Type managers reload on the render thread; callers include Ktor workers.
+     */
     internal suspend fun reload() {
-        // Reload the item type's manager on the render thread.
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             type.reload()
         }
     }
 
-    /**
-     * The single jar an add-on revision in [revisionDir] holds.
-     */
-    internal fun addonJar(revisionDir: File): File {
-        val folder = contentFolder(revisionDir) ?: error("Add-on $id has no files in $revisionDir")
+    internal fun getAddonJar(revisionDir: File): File {
+        val folder = findContentFolder(revisionDir) ?: error("Add-on $id has no files in $revisionDir")
         val jars = folder.listFiles { file: File -> file.isFile && file.extension == "jar" }.orEmpty()
         check(jars.size == 1) {
             "Add-on revision must be an archive containing exactly one jar, found ${jars.size} in $folder"
