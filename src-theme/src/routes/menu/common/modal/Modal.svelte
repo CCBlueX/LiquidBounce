@@ -2,6 +2,7 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     import {portal} from "../../../../integration/util";
+    import {escapeLayer} from "../../../../integration/escape";
 
     export let title: string;
     export let visible: boolean;
@@ -12,6 +13,9 @@
         dispatch("close");
         visible = false;
     }
+
+    const layer = escapeLayer(handleClick);
+    $: layer.setOpen(visible);
 </script>
 
 {#if visible}

@@ -1,0 +1,6 @@
+# Rules that need type resolution. The plain `detekt` task skips them, so they run in
+# detektMain, detektTest and detektGametest, which `check` depends on.
+
+style:
+  UnnecessaryFullyQualifiedName:
+    active: true
