@@ -72,7 +72,9 @@ abstract class Buff(
     /**
      * Holds while [slot] still has an item this buff can use, for waits between finding the slot and using it.
      */
-    protected fun usable(slot: HotbarItemSlot) = Condition { isValidItem(slot.itemStack, true) }
+    protected fun usable(slot: HotbarItemSlot) = Condition { isUsable(slot) }
+
+    protected open fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
 
     /**
      * Try to run feature if possible, otherwise return false
