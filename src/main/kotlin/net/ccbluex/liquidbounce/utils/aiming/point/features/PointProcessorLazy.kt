@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.phys.Vec3
 
 /**
  * Lazy Point allows you to set a threshold when the point is going to be updated.
@@ -43,7 +44,7 @@ internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent
     private var currentThreshold: Float = threshold.random()
     private var currentPoint: PointInsideBox? = null
 
-    override fun process(point: PointInsideBox): PointInsideBox {
+    override fun process(point: PointInsideBox, eyes: Vec3): PointInsideBox {
         val currentPoint = currentPoint ?: run {
             this.currentPoint = point
             return point

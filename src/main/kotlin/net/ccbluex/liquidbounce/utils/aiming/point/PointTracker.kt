@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptContext
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorDelay
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorGaussian
+import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorHeight
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorLazy
 import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
@@ -62,7 +63,9 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
      */
     private val delay = tree(PointProcessorDelay(this))
 
-    private val processors = arrayOf(delay, lazy, gaussian)
+    private val height = tree(PointProcessorHeight(this))
+
+    private val processors = arrayOf(height, delay, lazy, gaussian)
 
     /**
      * The point tracker is being used to track a certain point of an entity.
@@ -108,7 +111,7 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
         var point = PointInsideBox(pos, box)
         for (processor in processors) {
             if (processor.enabled) {
-                point = processor.process(point)
+                point = processor.process(point, eyes)
             }
         }
         return point
