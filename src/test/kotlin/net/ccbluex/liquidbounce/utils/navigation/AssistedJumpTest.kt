@@ -52,10 +52,18 @@ class AssistedJumpTest {
     }
 
     /**
-     * Runs the course of single blocks [course] from [start], looking at the first block of it not stood on yet and
-     * jumping up the step walked into; the blocks stood on, in order, until the last one or a fall below all of them.
+     * Runs the course [course] from [start], looking at the first block of it not stood on yet and jumping up the step
+     * walked into; the blocks stood on, in order, until the last one or a fall below all of them. A block of the course
+     * counts as stood on anywhere within [platform] blocks around it, as on a wider platform. [end] gets the player as
+     * the run ends.
      */
-    private fun run(world: TestWorld, start: Vec3, course: List<BlockPos>): List<BlockPos> {
+    private fun run(
+        world: TestWorld,
+        start: Vec3,
+        course: List<BlockPos>,
+        platform: Int = 0,
+        end: (PlayerMotion) -> Unit = {},
+    ): List<BlockPos> {
         val terrain = world.terrain()
         val abilities = walkAbilities(canParkour = true, riskyJumps = true)
         val jumps = Jumps(terrain, abilities)
@@ -69,12 +77,17 @@ class AssistedJumpTest {
         var aimYaw = Float.NaN
 
         repeat(course.size * TICKS_PER_BLOCK) {
-            val on = course.indexOfFirst { state.standsOn(it.x, it.y, it.z) }
+            val on = course.indexOfFirst { block ->
+                (-platform..platform).any { dx ->
+                    (-platform..platform).any { dz -> state.standsOn(block.x + dx, block.y, block.z + dz) }
+                }
+            }
             if (on >= 0 && stood.lastOrNull() != course[on]) {
                 stood += course[on]
                 next = on + 1
             }
             if (next >= course.size || state.y < lowest) {
+                end(state)
                 return stood
             }
 
@@ -94,14 +107,15 @@ class AssistedJumpTest {
                 }
             }
         }
+        end(state)
         return stood
     }
 
-    /** ModuleParkour without a target: [held], with a jump on the last tick on the ground. */
+    /** ModuleParkour without a target: [held], with a jump on the last tick on the ground but not off a bounce. */
     private fun jumpAtEdge(state: PlayerMotion, yaw: Float, held: LeapInput): LeapInput {
         val probe = state.copy()
         probe.tick(yaw, held.forward, held.strafe, jump = false, sprint = held.sprint)
-        val edge = state.onGround && !probe.onGround
+        val edge = state.onGround && !probe.onGround && state.motionY <= 0.0
         return LeapInput(held.forward, held.strafe, jump = held.jump || edge, sprint = held.sprint)
     }
 
@@ -140,6 +154,25 @@ class AssistedJumpTest {
         val course = course(world, BlockPos(94, 19, 9), BlockPos(97, 20, 9), BlockPos(99, 20, 5), BlockPos(96, 21, 3))
 
         assertEquals(course, run(world, TestWorld.feet(92, 19, 9), course))
+    }
+
+    @Test
+    fun `a landing on slime with no jump from the landing spot settles instead of hopping off`() {
+        // Slime Parkour by GeoBilder: carpeted slime platforms, the next one up and a run-up away. With no jump from
+        // the landing spot, the bounce carried the player over the edge, and the edge jump on every bounce sent it
+        // further.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val carpet = Blocks.MOSS_CARPET.defaultBlockState()
+        val world = TestWorld().fill(7, 11, 24, 9, 11, 24).fill(8, 11, 23, 8, 11, 25)
+            .fill(7, 11, 18, 9, 11, 20, slime).fill(7, 12, 18, 9, 12, 20, carpet)
+            .fill(3, 12, 13, 5, 12, 15, slime).fill(3, 13, 13, 5, 13, 15, carpet)
+        val course = listOf(BlockPos(8, 11, 24), BlockPos(8, 12, 19), BlockPos(4, 13, 14))
+        var last: PlayerMotion? = null
+
+        val stood = run(world, TestWorld.feet(8, 12, 24), course, platform = 1) { last = it }
+        val state = assertNotNull(last)
+        assertEquals(course.take(2), stood.take(2))
+        assertTrue(state.onGround && state.motionY <= 0.0 && state.y > 12.0, "settled, at ${state.position}")
     }
 
     @Test

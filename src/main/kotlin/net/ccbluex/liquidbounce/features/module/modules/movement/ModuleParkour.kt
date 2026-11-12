@@ -150,9 +150,9 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         return assist
     }
 
-    /** Jumps on the last tick before running off a block. */
+    /** Jumps on the last tick before running off a block, but not off a slime bounce, which leaves it anyway. */
     private fun jumpAtEdge(event: MovementInputEvent) {
-        if (!player.onGround() || mc.options.keyJump.isDown) {
+        if (!player.onGround() || mc.options.keyJump.isDown || player.deltaMovement.y > 0.0) {
             return
         }
 
