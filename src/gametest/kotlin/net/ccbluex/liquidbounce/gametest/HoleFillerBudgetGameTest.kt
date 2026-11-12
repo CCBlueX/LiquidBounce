@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.player.RemotePlayer
@@ -38,10 +38,9 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import java.util.UUID
 
 /** Exercises the smart collector with two targets competing for one hotbar budget. */
-class HoleFillerBudgetGameTest : FabricClientGameTest {
+class HoleFillerBudgetGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleHoleFiller) }
         val savedTargets = context.fromClient { ConfigSystem.serializeValueGroup(GlobalSettingsTarget) }
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
@@ -63,13 +64,7 @@ object BlockChangeTrigger : PostPacketTrigger<ClientboundBlockUpdatePacket>("Blo
     }
 
     private fun tickIfInRange(blockPos: BlockPos, eyePos: Vec3, rangeSq: Double): Boolean {
-        val distance = eyePos.distanceToSqr(
-            blockPos.x.toDouble(),
-            blockPos.y.toDouble(),
-            blockPos.z.toDouble()
-        )
-
-        if (distance < rangeSq) {
+        if (AABB(blockPos).distanceToSqr(eyePos) < rangeSq) {
             runPlace { SubmoduleCrystalPlacer.tick() }
             return true
         }

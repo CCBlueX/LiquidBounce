@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
@@ -48,7 +48,7 @@ fun ledge(
     if (player.isCloseToEdge()) {
         val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
 
-        ModuleDebug.debugParameter(ModuleScaffold, "TicksUntilDestination", ticks)
+        ModuleScaffold.debugParameter("TicksUntilDestination") { ticks }
 
         val isLowOnBlocks = ModuleScaffold.blockCount <= 0
         val isNotReady = ticks >= 1

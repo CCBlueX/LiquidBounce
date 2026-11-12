@@ -58,8 +58,8 @@ object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
         stageChangeChronometer.reset()
     }
 
-    private fun getTransitionProgress(): Double {
-        return (stageChangeChronometer.elapsed / TRANSITION_TIME.toDouble()).coerceAtMost(1.0)
+    private fun getTransitionProgress(): Float {
+        return (stageChangeChronometer.elapsed / TRANSITION_TIME.toFloat()).coerceAtMost(1.0F)
     }
 
     fun reset() {

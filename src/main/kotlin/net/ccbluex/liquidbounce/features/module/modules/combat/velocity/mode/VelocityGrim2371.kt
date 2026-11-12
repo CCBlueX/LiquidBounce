@@ -43,7 +43,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 
-internal object VelocityGrim2371 : VelocityMode("Grim2371") {
+internal object VelocityGrim2371 : VelocityMode("Grim-2.3.71", aliases = listOf("Grim2371")) {
 
     private var cancelNextVelocity = false
     private var delay = false

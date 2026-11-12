@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import io.netty.buffer.ByteBuf;
-import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusScaffoldG;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerus20240816ScaffoldG;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.VarInt;
 import net.minecraft.network.codec.StreamCodec;
@@ -54,7 +54,7 @@ public abstract class MixinServerboundUseItemOnPacket {
 
             @Override
             public void encode(ByteBuf output, BlockHitResult blockHit) {
-                if (DisablerVerusScaffoldG.INSTANCE.getRunning()) {
+                if (DisablerVerus20240816ScaffoldG.INSTANCE.getRunning()) {
                     BlockPos.STREAM_CODEC.encode(output, blockHit.getBlockPos());
                     VarInt.write(output, 6 + blockHit.getDirection().ordinal() * 7);
                     output.writeFloat((float) blockHit.getLocation().x - blockHit.getBlockPos().getX());

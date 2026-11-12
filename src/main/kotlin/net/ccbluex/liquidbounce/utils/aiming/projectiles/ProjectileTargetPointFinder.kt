@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.utils.findVisiblePointFromVirtualEye
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -57,6 +57,6 @@ object ProjectileTargetPointFinder {
 
         val formattedNumber = DecimalFormat("0.00").format(deltaNanos / 1E6)
 
-        ModuleDebug.debugParameter(ModuleProjectileAimbot, "raytraceTime", "${formattedNumber}us")
+        ModuleProjectileAimbot.debugParameter("raytraceTime") { "${formattedNumber}us" }
     }
 }

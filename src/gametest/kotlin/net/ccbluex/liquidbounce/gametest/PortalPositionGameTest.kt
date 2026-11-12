@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.PortalMode
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
@@ -34,10 +34,9 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 
 /** Rejects obstructed portal sites, then exercises a successful enable and teardown. */
-class PortalPositionGameTest : FabricClientGameTest {
+class PortalPositionGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoBuild) }
 
         try {

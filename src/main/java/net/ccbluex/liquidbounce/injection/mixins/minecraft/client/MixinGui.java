@@ -27,12 +27,14 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
+import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.jspecify.annotations.Nullable;
@@ -41,6 +43,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Gui.class)
@@ -65,6 +68,11 @@ public abstract class MixinGui {
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(@Nullable Screen screen, CallbackInfo callbackInfo) {
+        if (ErrorScreen.keeps(screen)) {
+            callbackInfo.cancel();
+            return;
+        }
+
         if (RECURSIVE_SCREEN_OPENING.isBound()) {
             return;
         }
@@ -81,6 +89,21 @@ public abstract class MixinGui {
             callbackInfo.cancel();
             this.setScreen(new TitleScreen(true));
         }
+    }
+
+    @Inject(method = "setOverlay", at = @At("HEAD"), cancellable = true)
+    private void keepErrorScreen(@Nullable Overlay overlay, CallbackInfo callbackInfo) {
+        if (overlay != null && ErrorScreen.isShown()) {
+            callbackInfo.cancel();
+        }
+    }
+
+    /**
+     * Screens only draw once the game has loaded; the error screen also has to while it loads.
+     */
+    @ModifyVariable(method = "extractRenderState", at = @At("HEAD"), name = "resourcesLoaded", argsOnly = true)
+    private boolean drawErrorScreenWhileLoading(boolean resourcesLoaded) {
+        return resourcesLoaded || ErrorScreen.isShown();
     }
 
     @WrapWithCondition(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;releaseMouse()V"))
