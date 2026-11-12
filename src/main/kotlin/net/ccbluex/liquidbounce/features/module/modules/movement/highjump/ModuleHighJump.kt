@@ -60,7 +60,7 @@ object ModuleHighJump : ClientModule("HighJump", ModuleCategories.MOVEMENT) {
      * @testedOn eu.loyisa.cn; eu.anticheat-test.com
      * @note this still flags a bit
      */
-    private object Vulcan : Mode("Vulcan") {
+    private object Vulcan : Mode("Vulcan-2.7.5", aliases = listOf("Vulcan")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes

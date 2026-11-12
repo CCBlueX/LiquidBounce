@@ -173,6 +173,8 @@ fun JsonObject.int(key: String): Int? = if (has(key)) get(key).asInt else null
 
 fun JsonObject.long(key: String): Long? = if (has(key)) get(key).asLong else null
 
+fun JsonObject.float(key: String): Float? = if (has(key)) get(key).asFloat else null
+
 fun JsonObject.double(key: String): Double? = if (has(key)) get(key).asDouble else null
 
 fun JsonObject.boolean(key: String): Boolean? = if (has(key)) get(key).asBoolean else null

@@ -25,8 +25,8 @@ import net.minecraft.util.Mth
 
 class CrosshairColorSettings : ValueGroup("Color") {
     val syncColors by boolean("Sync", true)
-    val firstColor by color("FirstColor", Color4b(0, 0, 255, 255))
-    val secondColor by color("SecondColor", Color4b(0, 0, 255, 255))
+    val firstColor by color("FirstColor", Color4b.LIQUID_BOUNCE)
+    val secondColor by color("SecondColor", Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.5F))
     val spinSpeed by float("SpinSpeed", 4f, -10f..10f)
 
     fun getCurrentStepColor(
@@ -55,7 +55,7 @@ class CrosshairColorSettings : ValueGroup("Color") {
                 0.0
             }
 
-        val progress = (Mth.sin(angle + timeOffset) * 0.5 + 0.5)
+        val progress = (Mth.sin(angle + timeOffset) * 0.5F + 0.5F)
 
         return color1.interpolateTo(color2, progress)
     }

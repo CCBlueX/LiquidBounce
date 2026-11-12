@@ -30,25 +30,17 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.EnumMap
 
-/**
- * Outcome of a single [MarketplaceManager.update] call.
- */
 sealed interface UpdateResult {
-    /** The item was (re-)installed to [revision]. */
     data class Updated(val item: SubscribedItem, val revision: MarketplaceItemRevision) : UpdateResult
 
-    /** The item is already on its newest revision that fits. */
     data class NoUpdate(val item: SubscribedItem) : UpdateResult
 
-    /** No revision of the item fits this game, as [unavailable] says. */
-    data class Incompatible(val item: SubscribedItem, val unavailable: Unavailable) : UpdateResult
+    data class Incompatible(val item: SubscribedItem, val unavailable: UnavailableItem) : UpdateResult
 
-    /** The update failed with [error]; the item was left untouched on its old revision. */
+    /** The item stays on its old revision. */
     data class Failed(val item: SubscribedItem, val error: Throwable) : UpdateResult
 }
 
@@ -62,9 +54,6 @@ fun interface MarketplaceItemHandler {
     fun reload(items: List<SubscribedItem>)
 }
 
-/**
- * Marketplace manager for subscribing and updating items.
- */
 @Suppress("TooManyFunctions")
 object MarketplaceManager : Config("marketplace"), EventListener {
 
@@ -85,17 +74,16 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     @AddonApi
     fun hasHandler(type: MarketplaceItemType) = type in handlers
 
-    internal fun reloadHandled(type: MarketplaceItemType) {
+    internal fun reloadHandler(type: MarketplaceItemType) {
         val handler = handlers[type] ?: return
         runCatching { handler.reload(getSubscribedItemsOfType(type)) }
             .onFailure { logger.error("Failed to reload $type items", it) }
     }
 
     /**
-     * Hands every handler its subscribed items once they are loaded, before module settings are,
-     * so what the items register gets its settings back.
+     * Runs before module settings load, so what the items register gets its settings back.
      */
-    internal fun reloadHandlers() = handlers.keys.forEach(::reloadHandled)
+    internal fun reloadHandlers() = handlers.keys.forEach(::reloadHandler)
 
     val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 
@@ -110,9 +98,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
     /**
-     * Updates every subscribed item; one failing item does not abort the batch. Every
-     * item yields exactly one [UpdateResult] (including [UpdateResult.Failed]), so the
-     * caller can report successes and failures separately.
+     * A failing item does not abort the batch; it yields [UpdateResult.Failed].
      */
     suspend fun updateAll(task: Task? = null): List<UpdateResult> =
         subscribedItems.toTypedArray().map { item ->
@@ -126,18 +112,15 @@ object MarketplaceManager : Config("marketplace"), EventListener {
             }
         }
 
-    /**
-     * Installs the newest revision of [item] that fits this game, returning what happened.
-     *
-     * @throws Exception when checking or installing fails; callers decide how to surface it.
-     */
     suspend fun update(item: SubscribedItem, task: Task? = null): UpdateResult = item.locked {
+        fun fileTask() = task?.getOrCreateFileTask(item.id.toString())
+
         logger.info("Checking for updates for item ${item.id} (${item.type})")
         val installed = item.installedRevisionId
-        val resolution = item.unpackResolved { task?.getOrCreateFileTask(item.id.toString()) }
-        val compatible = when (resolution) {
-            is RevisionResolution.Compatible -> resolution
-            is RevisionResolution.NoneCompatible -> return@locked incompatible(item, resolution.unavailable)
+        val result = item.unpackCompatibleRevision(::fileTask)
+        val compatible = when (result) {
+            is RevisionResult.Compatible -> result
+            is RevisionResult.NoneCompatible -> return@locked handleIncompatible(item, result.unavailable)
         }
 
         val revisionId = compatible.revision.id
@@ -146,14 +129,14 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         }
 
         item.reload()
-        task?.getOrCreateFileTask(item.id.toString())?.isCompleted = true
+        fileTask()?.isCompleted = true
         logger.info("Updated item ${item.id} (${item.type}) to revision $revisionId")
 
         UpdateResult.Updated(item, compatible.revision)
     }
 
-    private fun incompatible(item: SubscribedItem, unavailable: Unavailable): UpdateResult {
-        if (!unavailable.published) {
+    private fun handleIncompatible(item: SubscribedItem, unavailable: UnavailableItem): UpdateResult {
+        if (!unavailable.hasOtherVersions) {
             return UpdateResult.NoUpdate(item)
         }
 
@@ -171,9 +154,9 @@ object MarketplaceManager : Config("marketplace"), EventListener {
                 return@locked false
             }
 
-            val resolution = subscribed.unpackResolved()
-            if (resolution is RevisionResolution.NoneCompatible) {
-                throw NoCompatibleRevisionException(resolution.unavailable)
+            val result = subscribed.unpackCompatibleRevision()
+            if (result is RevisionResult.NoneCompatible) {
+                throw NoCompatibleRevisionException(result.unavailable)
             }
             subscribedItems.add(subscribed)
         }
@@ -186,9 +169,9 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     }
 
     /**
-     * Looks up the author of subscriptions saved before it was kept.
+     * Subscriptions saved before the author was kept lack it.
      */
-    internal suspend fun fillAuthors() {
+    internal suspend fun updateMissingAuthors() {
         val unknown = subscribedItems.filter { it.author == null }
         if (unknown.isEmpty()) {
             return
@@ -203,7 +186,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     }
 
     suspend fun unsubscribe(itemId: Int) {
-        val item = subscribedItems.find { item -> item.id == itemId } ?: error("Item $itemId not found")
+        val item = getItem(itemId) ?: error("Item $itemId not found")
 
         item.locked {
             check(!item.itemDir.exists() || item.itemDir.deleteRecursively()) { "Failed to delete item directory" }
@@ -211,11 +194,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
 
         subscribedItems.remove(item)
         ConfigSystem.store(this)
-
-        // Reload the item type's manager. Also reached from Ktor workers, hence the render thread.
-        withContext(Dispatchers.Main) {
-            item.type.reload()
-        }
+        item.reload()
     }
 
 }

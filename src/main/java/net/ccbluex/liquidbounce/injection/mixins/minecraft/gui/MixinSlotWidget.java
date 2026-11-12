@@ -31,8 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractContainerScreen.class)
 public abstract class MixinSlotWidget {
 
-    // Before `if (itemStack.isEmpty() && slot.isActive()) {`
-    @Inject(method = "extractSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 0))
+    @Inject(method = "extractSlot", at = @At("HEAD"))
     private void drawSlotOutline(GuiGraphicsExtractor context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }

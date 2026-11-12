@@ -11,8 +11,7 @@
   "contact": {
     "homepage": "https://liquidbounce.net/",
     "sources": "https://github.com/CCBlueX/LiquidBounce/",
-    "issues": "https://github.com/CCBlueX/LiquidBounce/issues",
-    "email": "support@liquidbounce.net"
+    "issues": "https://github.com/CCBlueX/LiquidBounce/issues"
   },
   "license": "GNU General Public License v3.0",
   "icon": "resources/liquidbounce/icon_64x64.png",

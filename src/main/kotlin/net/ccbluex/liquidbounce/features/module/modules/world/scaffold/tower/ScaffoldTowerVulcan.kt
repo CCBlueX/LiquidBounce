@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.stats.Stats
 
-object ScaffoldTowerVulcan : ScaffoldTower("Vulcan") {
+object ScaffoldTowerVulcan : ScaffoldTower("Vulcan-2.8.8", aliases = listOf("Vulcan")) {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

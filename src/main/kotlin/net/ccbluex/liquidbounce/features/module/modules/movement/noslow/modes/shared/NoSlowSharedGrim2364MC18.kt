@@ -30,7 +30,10 @@ import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
  * @anticheat Grim
  * @anticheatVersion 2.3.64
  */
-internal class NoSlowSharedGrim2364MC18(override val parent: ModeValueGroup<*>) : Mode("Grim2364-1.8") {
+internal class NoSlowSharedGrim2364MC18(override val parent: ModeValueGroup<*>) : Mode(
+    "Grim-2.3.64-MC1.8",
+    aliases = listOf("Grim2364-1.8"),
+) {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
