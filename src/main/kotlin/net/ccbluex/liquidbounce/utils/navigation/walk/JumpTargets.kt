@@ -50,7 +50,8 @@ internal class JumpTargets(
      * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
      * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
      * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further. With
-     * [around], also the ones behind a post right where the straight line leaves the block, for a jump around it.
+     * [around], also the ones behind a post or the end of a wall right where the straight line leaves the block, for a
+     * jump around it.
      */
     @Suppress("LongParameterList", "CognitiveComplexMethod")
     fun forEach(
@@ -147,7 +148,8 @@ internal class JumpTargets(
 
     /**
      * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. With
-     * [around], a post right where it leaves will do when the line crosses a gap further on.
+     * [around], something right where it leaves that a jump gets around will do, when the line or the way beside it
+     * crosses a gap.
      */
     @Suppress("LongParameterList")
     private fun leavesOverGap(
@@ -168,28 +170,55 @@ internal class JumpTargets(
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
                     isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
-                    around && isPost(cx, y, cz, x, z) && crossesGap(x, y, z, height, offset)
+                    around && isJumpedAround(cx, y, cz, x, z) && !isStep(cx, y, cz, height) &&
+                    (crossesGap(x, y, z, height, offset) || hasGapBeside(cx, y, cz, height))
             }
         }
         return false
     }
 
     /**
-     * Whether [x] [y] [z] is in the way of the body with nothing beside it but the block [fromX] [fromZ], as a post
-     * or a pot that a jump gets around, and not a wall.
+     * Whether [x] [y] [z] is in the way of the body as something a jump from the block [fromX] [fromZ] gets around: a
+     * post or a pot with nothing else beside it, or the end of a wall that runs across the way from the block next
+     * to it. Not a wall seen end on, which the way runs along.
      */
-    private fun isPost(x: Int, y: Int, z: Int, fromX: Int, fromZ: Int): Boolean {
+    private fun isJumpedAround(x: Int, y: Int, z: Int, fromX: Int, fromZ: Int): Boolean {
         if (terrain.isOpen(x, y, z)) {
             return false
         }
+        var wall = -1
         for (i in 0 until SIDES) {
             val sideX = x + DX[i]
             val sideZ = z + DZ[i]
             if ((sideX != fromX || sideZ != fromZ) && !terrain.isOpen(sideX, y, sideZ)) {
-                return false
+                if (wall >= 0) {
+                    return false
+                }
+                wall = i
             }
         }
-        return true
+        return wall < 0 || abs(x - fromX) + abs(z - fromZ) == 1 &&
+            (x - fromX) * DX[wall] + (z - fromZ) * DZ[wall] == 0
+    }
+
+    /** Whether a jump from [height] gets onto [x] [y] [z] or the block above it. */
+    private fun isStep(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (feet in y..y + 1) {
+            val top = terrain.standHeight(x, feet, z)
+            if (!top.isNaN() && top - height <= maxRise) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasGapBeside(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in 0 until SIDES) {
+            if (isGap(x + DX[i], y, z + DZ[i], height)) {
+                return true
+            }
+        }
+        return false
     }
 
     /** Whether the line to [offset] passes over a gap anywhere between the block and the target. */

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.EndRodBlock
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
@@ -54,6 +55,7 @@ class AssistedJumpTest {
         private const val LANDING_TOLERANCE = 0.3
         private const val MAX_RUN_TICKS = 200
         private const val TRACE_TOLERANCE = 1.0E-3
+        private val QUARTZ = Blocks.QUARTZ_PILLAR.defaultBlockState()
     }
 
     /**
@@ -286,6 +288,48 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a jump around the end of a wall lands on the block behind it`() {
+        // A neo: the next block is behind a wall a block thick whose end is in front of the block jumped from, so the
+        // straight line runs into it.
+        val world = TestWorld().fill(1, 4, -4, 1, 13, 0)
+        val course = listOf(pillar(world, 0, 10, 0), pillar(world, 3, 10, 0))
+
+        assertEquals(course, run(world, Vec3(0.5, 11.0625, 0.5), course))
+    }
+
+    @Test
+    fun `a jump past an end rod under a hanging pillar goes beside it`() {
+        // Parkour Challenge, level 3: three blocks between quartz pillars, straight through a quartz pillar that hangs
+        // down to head height with an end rod under it at feet height. A ladder is on the pillar landed on.
+        val ladder = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.WEST)
+        val world = TestWorld().set(-124, 66, 9998, rod(Direction.DOWN)).fill(-124, 67, 9998, -124, 70, 9998, QUARTZ)
+            .fill(-125, 67, 9998, -125, 70, 9998, ladder)
+        val course = listOf(quartz(world, -122, 65, 9998), quartz(world, -125, 65, 9998))
+
+        assertEquals(course, run(world, TestWorld.feet(-122, 66, 9998), course))
+    }
+
+    @Test
+    fun `a corner jump past a wall post on the diagonal goes around it`() {
+        // Parkour Challenge, level 8: a corner jump one up, with a stone brick wall post on the diagonal between.
+        val world = TestWorld().set(-425, 113, 9997, Blocks.STONE_BRICK_WALL.defaultBlockState())
+        val course = listOf(quartz(world, -424, 112, 9998), quartz(world, -426, 113, 9996))
+
+        assertEquals(course, run(world, TestWorld.feet(-424, 113, 9998), course))
+    }
+
+    @Test
+    fun `a jump around a hanging pillar straight ahead goes beside it`() {
+        // Parkour Challenge, level 10: four blocks on and one down, through a quartz pillar hanging down to feet
+        // height with an end rod under it.
+        val world = TestWorld().set(-553, 129, 10001, rod(Direction.DOWN))
+            .fill(-553, 130, 10001, -553, 131, 10001, QUARTZ)
+        val course = listOf(quartz(world, -553, 129, 9999), quartz(world, -553, 128, 10003))
+
+        assertEquals(course, run(world, TestWorld.feet(-553, 130, 9999), course))
+    }
+
+    @Test
     fun `the traced way of a jump is the way the player takes`() {
         val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
         val terrain = world.terrain()
@@ -402,6 +446,14 @@ class AssistedJumpTest {
             .set(x, y, z, Blocks.MUD_BRICKS.defaultBlockState())
             .set(x, y + 1, z, Blocks.POTTED_POPPY.defaultBlockState())
     }
+
+    /** A quartz pillar block at [top] with an end rod hanging under it, as Parkour Challenge builds its blocks. */
+    private fun quartz(world: TestWorld, x: Int, top: Int, z: Int): BlockPos {
+        world.set(x, top, z, QUARTZ).set(x, top - 1, z, rod(Direction.DOWN))
+        return BlockPos(x, top, z)
+    }
+
+    private fun rod(facing: Direction) = Blocks.END_ROD.defaultBlockState().setValue(EndRodBlock.FACING, facing)
 
     /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */
     private fun room(x: Int) = TestWorld().fill(x + 1, 18, 1, x + 11, 18, 11)
