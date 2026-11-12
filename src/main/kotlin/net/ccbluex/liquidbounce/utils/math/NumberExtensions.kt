@@ -40,3 +40,5 @@ inline fun Double.toFixed(digits: Int): String {
     return "%.${digits}f".format(this)
 }
 
+inline fun Double.ifNaN(other: () -> Double) = if (isNaN()) other() else this
+

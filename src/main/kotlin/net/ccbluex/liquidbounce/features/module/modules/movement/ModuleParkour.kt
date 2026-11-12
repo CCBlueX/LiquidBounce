@@ -29,20 +29,20 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
-import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumpTargets
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.ifNaN
-import net.ccbluex.liquidbounce.utils.navigation.walk.keys
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
+import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
+import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -123,11 +123,11 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     /** False when there is nothing to assist this tick. */
     private fun assist(event: MovementInputEvent): Boolean {
-        val terrain = NavigationTerrain.live()
+        val terrain = Terrain.live()
         val abilities = abilities()
         val state = PlayerMotion(terrain, abilities.motion)
         state.reset(player)
-        val jumps = WalkJumps(terrain, abilities)
+        val jumps = Jumps(terrain, abilities)
         val yaw = RotationManager.movementYaw
 
         if (!player.onGround()) {
@@ -143,14 +143,14 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         val heading = getMovementDirectionOfInput(player.yRot, event.directionalInput)
-        val target = pickTarget(WalkJumpTargets(terrain, abilities.motion), jumps, state, yaw, heading)
+        val target = pickTarget(JumpTargets(terrain, abilities.motion), jumps, state, yaw, heading)
         if (target == null) {
             release()
             return ticksSinceLanding < BRAKE_TICKS && stopsOnLanding(event, state, yaw)
         }
 
         this.target = target
-        event.directionalInput = keys(1, 0, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(1, 0, player.yRot)
         event.jump = target.jumpNow
         airborne = target.jumpNow
         sprint = true
@@ -158,18 +158,18 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     }
 
     /** Presses the keys that land the furthest inside the block jumped to. */
-    private fun steerInAir(event: MovementInputEvent, jumps: WalkJumps, state: PlayerMotion, yaw: Float) {
+    private fun steerInAir(event: MovementInputEvent, jumps: Jumps, state: PlayerMotion, yaw: Float) {
         val target = target ?: return
         val air = jumps.airKeys(state, yaw, target.pos, target.aim.y) ?: return
-        event.directionalInput = keys(air.forward, air.strafe, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(air.forward, air.strafe, player.yRot)
         event.jump = false
         sprint = air.forward > 0
     }
 
     /** The block across a gap within MaxAngle of [heading] that a jump from here lands on best. */
     private fun pickTarget(
-        targets: WalkJumpTargets,
-        jumps: WalkJumps,
+        targets: JumpTargets,
+        jumps: Jumps,
         state: PlayerMotion,
         yaw: Float,
         heading: Float,
@@ -216,7 +216,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             return false
         }
 
-        event.directionalInput = keys(-1, 0, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(-1, 0, player.yRot)
         return true
     }
 
@@ -240,7 +240,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         aimYaw = Float.NaN
     }
 
-    private fun abilities() = WalkAbilities(
+    private fun abilities() = Abilities(
         canBreak = false,
         canPlace = false,
         placeableBlocks = 0,

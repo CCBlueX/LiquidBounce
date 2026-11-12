@@ -770,6 +770,8 @@ fun Entity.getBoundingBoxAt(pos: Vec3): AABB {
     return boundingBox.move(pos - this.position())
 }
 
+fun Entity.getEyePositionAt(feet: Vec3): Vec3 = feet.add(0.0, eyeHeight.toDouble(), 0.0)
+
 /**
  * Where the server last placed this entity. [Entity.position] only catches up while the entity ticks, so it falls
  * behind while ticks are held back.
