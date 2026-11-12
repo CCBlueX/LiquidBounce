@@ -100,6 +100,9 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
     private var edge = Double.MAX_VALUE
     private var airTicks = 0
 
+    /** Where [takeOff] puts the position after every simulated tick, or null. */
+    private var path: MutableList<Vec3>? = null
+
     /** The best way to jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight], or null. */
     fun plan(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): Jump? {
         setCourse(from.x + 0.5, fromHeight, from.z + 0.5, to, toHeight)
@@ -157,8 +160,39 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         return best
     }
 
-    /** The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. */
-    fun airKeys(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): AirKeys? {
+    /**
+     * Like [fromHere], but the jump that takes off last of those that land on [to], which gets the furthest onto it:
+     * for a landing that is the next take-off.
+     */
+    fun lastFromHere(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): Jump? {
+        setCourse(state.x, state.y, state.z, to, toHeight)
+        pool += ground
+        ground.clear()
+        motion.copyFrom(state)
+        runToEdge(yaw)
+        for (takeoff in ground.indices.reversed()) {
+            motion.copyFrom(ground[takeoff])
+            run(yawAt(takeoff, yaw), jump = true)
+            val jump = if (motion.onGround) null else fly(state.position, takeoff, jumps = true, hops = 0)
+            if (jump != null && jump.margin >= minMargin) {
+                return jump
+            }
+        }
+        return null
+    }
+
+    /**
+     * The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. With
+     * [keepSpeed], the first keys in the order tried, forward first, that land well enough, as the landing is a
+     * take-off.
+     */
+    fun airKeys(
+        state: PlayerMotion,
+        yaw: Float,
+        to: BlockPos,
+        toHeight: Double,
+        keepSpeed: Boolean = false,
+    ): AirKeys? {
         setCourse(state.x, state.y, state.z, to, toHeight)
         var best: AirKeys? = null
         for (forward in 1 downTo -1) {
@@ -166,12 +200,52 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
                 motion.copyFrom(state)
                 motion.tick(yaw, forward, strafe, jump = false, sprint = abilities.canSprint)
                 val margin = land()
+                if (keepSpeed && margin >= minMargin) {
+                    return AirKeys(forward, strafe, margin)
+                }
                 if (!margin.isNaN() && (best == null || margin > best.margin + KEY_PREFERENCE)) {
                     best = AirKeys(forward, strafe, margin)
                 }
             }
         }
         return best
+    }
+
+    /**
+     * Runs [state], a player on the ground, through the run and the take-off of [jump] onto [to], with the feet at
+     * [toHeight]: the first tick with [yaw], or towards the aim when null, and the positions into [path]. False when
+     * a hop of it fails.
+     */
+    @Suppress("LongParameterList")
+    fun takeOff(
+        state: PlayerMotion,
+        yaw: Float?,
+        to: BlockPos,
+        toHeight: Double,
+        jump: Jump,
+        path: MutableList<Vec3>,
+    ): Boolean {
+        setCourse(state.x, state.y, state.z, to, toHeight)
+        aimX = jump.aim.x
+        aimZ = jump.aim.z
+        motion.copyFrom(state)
+        this.path = path
+        try {
+            val hopTicks = hop(jump.hops)
+            if (hopTicks < 0) {
+                return false
+            }
+            // Running off the edge, the last tick on the ground is the one that leaves it.
+            val groundTicks = jump.takeoff - hopTicks - if (jump.jumps) 0 else 1
+            for (tick in 0 until groundTicks) {
+                run(yawAt(tick, yaw))
+            }
+            run(yawAt(groundTicks, yaw), jump = jump.jumps)
+            state.copyFrom(motion)
+            return true
+        } finally {
+            this.path = null
+        }
     }
 
     class AirKeys(val forward: Int, val strafe: Int, val margin: Double)
@@ -288,7 +362,8 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         }
 
         var best: Jump? = null
-        if (runToEdge(firstYaw) && targetHeight < motion.y) {
+        // Off a bouncing slime block, leaving the ground without a jump goes up as well.
+        if (runToEdge(firstYaw) && (targetHeight < motion.y || motion.motionY > 0.0)) {
             best = fly(runUp, hopTicks + ground.size, jumps = false, hops)
         }
 
@@ -335,7 +410,10 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         estimates.sortByDescending(Estimate::margin)
     }
 
-    private fun run(yaw: Float, jump: Boolean = false) = motion.tick(yaw, 1, 0, jump, abilities.canSprint)
+    private fun run(yaw: Float, jump: Boolean = false) {
+        motion.tick(yaw, 1, 0, jump, abilities.canSprint)
+        path?.add(motion.position)
+    }
 
     private fun yawAt(tick: Int, firstYaw: Float?) =
         if (tick == 0 && firstYaw != null) firstYaw else yawTo(aimX, aimZ)

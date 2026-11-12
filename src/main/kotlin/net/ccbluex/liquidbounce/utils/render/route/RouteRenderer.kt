@@ -204,48 +204,7 @@ class RouteRenderer(
         }
     }
 
-    private fun addPolyline(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
-        for (index in 0 until points.lastIndex) {
-            lines.addRelative(points[index].add(0.0, LIFT, 0.0), origin)
-            lines.addRelative(points[index + 1].add(0.0, LIFT, 0.0), origin)
-        }
-    }
-
-    /** Arrow heads along [points]. */
-    private fun addChevrons(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
-        var offset = CHEVRON_SPACING / 2
-        for (index in 0 until points.lastIndex) {
-            val from = points[index].add(0.0, LIFT, 0.0)
-            val segment = points[index + 1].add(0.0, LIFT, 0.0).subtract(from)
-            val length = segment.length()
-            if (length < 1.0E-4) {
-                continue
-            }
-
-            val direction = segment.scale(1.0 / length)
-            val side = if (direction.horizontalDistanceSqr() < 1.0E-4) {
-                Vec3.X_AXIS
-            } else {
-                Vec3(-direction.z, 0.0, direction.x).normalize()
-            }
-
-            while (offset < length) {
-                val tip = from.fma(offset + CHEVRON_SIZE, direction)
-                val back = from.fma(offset - CHEVRON_SIZE, direction)
-                lines.addRelative(back.fma(CHEVRON_SIZE, side), origin)
-                lines.addRelative(tip, origin)
-                lines.addRelative(back.fma(-CHEVRON_SIZE, side), origin)
-                lines.addRelative(tip, origin)
-                offset += CHEVRON_SPACING
-            }
-            offset -= length
-        }
-    }
-
     private companion object {
-        const val LIFT = 0.05
-        const val CHEVRON_SPACING = 1.5
-        const val CHEVRON_SIZE = 0.2
         const val GHOST_ALPHA = 50
         const val PENDING_ALPHA = 90
         const val OUTLINE_ALPHA = 160
@@ -262,4 +221,47 @@ class RouteRenderer(
         )
     }
 
+}
+
+private const val LIFT = 0.05
+private const val CHEVRON_SPACING = 1.5
+private const val CHEVRON_SIZE = 0.2
+
+/** Lines between [points], [LIFT] above them. */
+internal fun addPolyline(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
+    for (index in 0 until points.lastIndex) {
+        lines.addRelative(points[index].add(0.0, LIFT, 0.0), origin)
+        lines.addRelative(points[index + 1].add(0.0, LIFT, 0.0), origin)
+    }
+}
+
+/** Arrow heads along [points]. */
+internal fun addChevrons(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
+    var offset = CHEVRON_SPACING / 2
+    for (index in 0 until points.lastIndex) {
+        val from = points[index].add(0.0, LIFT, 0.0)
+        val segment = points[index + 1].add(0.0, LIFT, 0.0).subtract(from)
+        val length = segment.length()
+        if (length < 1.0E-4) {
+            continue
+        }
+
+        val direction = segment.scale(1.0 / length)
+        val side = if (direction.horizontalDistanceSqr() < 1.0E-4) {
+            Vec3.X_AXIS
+        } else {
+            Vec3(-direction.z, 0.0, direction.x).normalize()
+        }
+
+        while (offset < length) {
+            val tip = from.fma(offset + CHEVRON_SIZE, direction)
+            val back = from.fma(offset - CHEVRON_SIZE, direction)
+            lines.addRelative(back.fma(CHEVRON_SIZE, side), origin)
+            lines.addRelative(tip, origin)
+            lines.addRelative(back.fma(-CHEVRON_SIZE, side), origin)
+            lines.addRelative(tip, origin)
+            offset += CHEVRON_SPACING
+        }
+        offset -= length
+    }
 }

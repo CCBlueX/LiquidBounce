@@ -1,0 +1,329 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.utils.navigation
+
+import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.liquidbounce.utils.math.ifNaN
+import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
+import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
+import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
+import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.LadderBlock
+import net.minecraft.world.phys.Vec3
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+/**
+ * The Parkour assist driving a player who looks at the next block of a course and holds forward and sprint, simulated
+ * as the game moves the player and ModuleParkour turns it.
+ */
+class AssistedJumpTest {
+
+    companion object {
+        init {
+            MinecraftBootstrap.ensureInitialized()
+        }
+
+        private const val MAX_ANGLE = 35f
+        private const val TICKS_PER_BLOCK = 60
+        private const val MAX_JUMP_TICKS = 40
+        private const val LANDING_TOLERANCE = 0.3
+        private const val MAX_RUN_TICKS = 200
+        private const val TRACE_TOLERANCE = 1.0E-3
+    }
+
+    /**
+     * Runs the course [course] from [start], looking at the first block of it not stood on yet and jumping up the step
+     * walked into; the blocks stood on, in order, until the last one or a fall below all of them. A block of the course
+     * counts as stood on anywhere within [platform] blocks around it, as on a wider platform. [end] gets the player as
+     * the run ends.
+     */
+    private fun run(
+        world: TestWorld,
+        start: Vec3,
+        course: List<BlockPos>,
+        platform: Int = 0,
+        end: (PlayerMotion) -> Unit = {},
+    ): List<BlockPos> {
+        val terrain = world.terrain()
+        val abilities = walkAbilities(canParkour = true, riskyJumps = true)
+        val jumps = Jumps(terrain, abilities)
+        val targets = JumpTargets(terrain)
+        val assisted = AssistedJump()
+        val state = PlayerMotion(terrain)
+        state.reset(start, PlayerMotion.RESTING, onGround = true)
+        val lowest = course.minOf { it.y }
+        val stood = ArrayList<BlockPos>()
+        var next = 0
+        var aimYaw = Float.NaN
+
+        repeat(course.size * TICKS_PER_BLOCK) {
+            val on = course.indexOfFirst { block ->
+                (-platform..platform).any { dx ->
+                    (-platform..platform).any { dz -> state.standsOn(block.x + dx, block.y, block.z + dz) }
+                }
+            }
+            if (on >= 0 && stood.lastOrNull() != course[on]) {
+                stood += course[on]
+                next = on + 1
+            }
+            if (next >= course.size || state.y < lowest) {
+                end(state)
+                return stood
+            }
+
+            val look = Vec3.atBottomCenterOf(course[next].above())
+            val camera = look.subtract(state.position).yaw
+            val yaw = if (aimYaw.isNaN()) camera else aimYaw
+            val held = LeapInput(1, 0, jump = state.horizontalCollision, sprint = true)
+            val keys = assisted.tick(state, yaw, camera, held, MAX_ANGLE, jumps, targets)
+                ?: jumpAtEdge(state, yaw, held)
+            state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+            if (assisted.target == null) {
+                aimYaw = Float.NaN
+            } else {
+                val turn = assisted.aimYaw(state.position, state.deltaMovement, state.onGround)
+                if (!turn.isNaN()) {
+                    aimYaw = turn
+                }
+            }
+        }
+        end(state)
+        return stood
+    }
+
+    /** ModuleParkour without a target: [held], with a jump on the last tick on the ground but not off a bounce. */
+    private fun jumpAtEdge(state: PlayerMotion, yaw: Float, held: LeapInput): LeapInput {
+        val probe = state.copy()
+        probe.tick(yaw, held.forward, held.strafe, jump = false, sprint = held.sprint)
+        val edge = state.onGround && !probe.onGround && state.motionY <= 0.0
+        return LeapInput(held.forward, held.strafe, jump = held.jump || edge, sprint = held.sprint)
+    }
+
+    private fun course(world: TestWorld, vararg blocks: BlockPos) = blocks.toList().onEach {
+        world.set(it.x, it.y, it.z, TestWorld.STONE)
+    }
+
+    @Test
+    fun `the next block of the course is jumped to rather than the floor below it`() {
+        // 196 Level Parkour, level 1: the floor three blocks down was the safer landing.
+        val world = TestWorld().fill(-8, -3, -8, 12, -3, 8)
+        val course = course(world, BlockPos(0, 0, 0), BlockPos(3, 0, 0), BlockPos(6, 1, 0))
+        world.fill(-3, 0, 0, -1, 0, 0)
+
+        assertEquals(course, run(world, TestWorld.feet(-3, 1, 0), course))
+    }
+
+    @Test
+    fun `a block out of reach from the landing spot is jumped to from a run-up`() {
+        // 196 Level Parkour, level 1: the course turns at most blocks, so a landing leaves no run for the next jump.
+        val world = room(0)
+        val course = course(
+            world, BlockPos(3, 20, 7), BlockPos(3, 21, 10), BlockPos(7, 21, 10), BlockPos(7, 22, 7),
+            BlockPos(7, 22, 5), BlockPos(9, 23, 2), BlockPos(10, 23, 6),
+        )
+        world.set(3, 19, 4, TestWorld.STONE)
+
+        assertEquals(course, run(world, TestWorld.feet(3, 20, 4), course))
+    }
+
+    @Test
+    fun `the player turns where the jump was simulated to aim`() {
+        // 196 Level Parkour, level 10: the block of the course at 99 22 8 hangs over the jump from 97 20 9 to
+        // 99 20 5, which only works aimed beside the middle of the block.
+        val world = room(90).set(99, 22, 8, TestWorld.STONE)
+        val course = course(world, BlockPos(94, 19, 9), BlockPos(97, 20, 9), BlockPos(99, 20, 5), BlockPos(96, 21, 3))
+
+        assertEquals(course, run(world, TestWorld.feet(92, 19, 9), course))
+    }
+
+    @Test
+    fun `a landing on slime with no jump from the landing spot settles instead of hopping off`() {
+        // Slime Parkour by GeoBilder: carpeted slime platforms, the next one up and a run-up away. With no jump from
+        // the landing spot, the bounce carried the player over the edge, and the edge jump on every bounce sent it
+        // further.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val carpet = Blocks.MOSS_CARPET.defaultBlockState()
+        val world = TestWorld().fill(7, 11, 24, 9, 11, 24).fill(8, 11, 23, 8, 11, 25)
+            .fill(7, 11, 18, 9, 11, 20, slime).fill(7, 12, 18, 9, 12, 20, carpet)
+            .fill(3, 12, 13, 5, 12, 15, slime).fill(3, 13, 13, 5, 13, 15, carpet)
+        val course = listOf(BlockPos(8, 11, 24), BlockPos(8, 12, 19), BlockPos(4, 13, 14))
+        var last: PlayerMotion? = null
+
+        val stood = run(world, TestWorld.feet(8, 12, 24), course, platform = 1) { last = it }
+        val state = assertNotNull(last)
+        assertEquals(course.take(2), stood.take(2))
+        assertTrue(state.onGround && state.motionY <= 0.0 && state.y > 12.0, "settled, at ${state.position}")
+    }
+
+    @Test
+    fun `a bounce goes on to the next block rather than back onto the slime it came off`() {
+        // Gamerichie's Academy of Parkour, stage 16: a drop onto a 3x3 slime pad bounces up to a ladder on a block four
+        // higher. The next slime block of the pad was the closer landing.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val ladder = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.EAST)
+        val world = TestWorld().fill(12, 106, 28, 15, 106, 28).fill(5, 101, 27, 7, 101, 29, slime)
+            .set(2, 105, 28, TestWorld.STONE).set(3, 105, 28, ladder)
+        val course = listOf(BlockPos(12, 106, 28), BlockPos(6, 101, 28), BlockPos(2, 105, 28))
+
+        assertEquals(course, run(world, TestWorld.feet(14, 107, 28), course, platform = 1))
+    }
+
+    @Test
+    fun `a fall onto slime bounces up to a block higher than a jump reaches`() {
+        val world = TestWorld().fill(-3, 6, 0, -1, 6, 0)
+        val course = course(world, BlockPos(0, 6, 0), BlockPos(4, 0, 0), BlockPos(8, 3, 0))
+        world.set(4, 0, 0, Blocks.SLIME_BLOCK.defaultBlockState())
+
+        assertEquals(course, run(world, TestWorld.feet(-2, 7, 0), course))
+    }
+
+    @Test
+    fun `a chain of single slime blocks is jumped along on every bounce`() {
+        // Ultimate Slime Challenge 1-2, "DO press SPACE": single slime blocks five and four apart. The bounce off one
+        // is lower than a jump, so only a jump on the bounce with the speed of the jump before reaches the next one.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val world = TestWorld().fill(16, 9, -44, 22, 9, -40).fill(16, 9, -66, 22, 9, -62)
+            .set(19, 9, -48, slime).set(19, 9, -53, slime).set(19, 9, -57, slime)
+        val course = listOf(
+            BlockPos(19, 9, -42), BlockPos(19, 9, -48), BlockPos(19, 9, -53), BlockPos(19, 9, -57),
+            BlockPos(19, 9, -63),
+        )
+
+        assertEquals(course, run(world, TestWorld.feet(19, 10, -41), course, platform = 1))
+    }
+
+    @Test
+    fun `the traced way of a jump is the way the player takes`() {
+        val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
+        val terrain = world.terrain()
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val targets = JumpTargets(terrain)
+        val assisted = AssistedJump()
+        val state = PlayerMotion(terrain)
+        state.reset(TestWorld.feet(3, 20, 3).add(0.0, 0.0, 0.7), PlayerMotion.RESTING, onGround = true)
+        val held = LeapInput(1, 0, jump = false, sprint = true)
+
+        assisted.tick(state, 0f, 0f, held, MAX_ANGLE, jumps, targets)
+        assisted.trace(state, 0f, 0f, MAX_ANGLE, jumps, targets)
+        val target = assertNotNull(assisted.target)
+        val path = ArrayList(assisted.arcs.first().path)
+        val takeoff = assisted.arcs.first().takeoff
+        assertTrue(takeoff >= 0, "the jump starts on the ground")
+
+        var yaw = 0f
+        var ground = state.position
+        var lastGround = 0
+        for (tick in 1..MAX_JUMP_TICKS) {
+            val keys = assisted.tick(state, yaw, yaw, held, MAX_ANGLE, jumps, targets) ?: held
+            state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+            if (state.onGround && tick > takeoff + 1) {
+                break
+            }
+            if (state.onGround) {
+                ground = state.position
+                lastGround = tick
+            }
+            yaw = target.aim.subtract(state.position).yaw
+        }
+
+        assertEquals(takeoff, lastGround, "take-off tick")
+        assertEquals(0.0, ground.distanceTo(path[takeoff]), 1.0E-6, "take-off spot")
+        assertTrue(state.standsOn(3, 20, 7), "lands on the target, at ${state.position}")
+        assertTrue(path.last().distanceTo(state.position) < LANDING_TOLERANCE, "predicted landing ${path.last()}")
+    }
+
+    @Test
+    fun `the traced landing of a jump is where the player comes down`() {
+        val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
+        val (traced, landed) = tracedAndLanded(world, TestWorld.feet(3, 20, 4).add(0.0, 0.0, -0.3), heading = 0f)
+
+        assertEquals(1, traced.size, "arcs")
+        assertLandsAsTraced(traced, landed)
+    }
+
+    @Test
+    fun `the traced landing on slime and the jump off its bounce are where the player comes down`() {
+        val world = TestWorld().fill(-3, 6, 0, -1, 6, 0)
+        course(world, BlockPos(0, 6, 0), BlockPos(4, 0, 0), BlockPos(8, 3, 0))
+        world.set(4, 0, 0, Blocks.SLIME_BLOCK.defaultBlockState())
+        val heading = Vec3(1.0, 0.0, 0.0).yaw
+        val (traced, landed) = tracedAndLanded(world, TestWorld.feet(-2, 7, 0), heading)
+
+        assertEquals(2, traced.size, "arcs")
+        assertLandsAsTraced(traced, landed)
+    }
+
+    /**
+     * Where the arcs the assist traces first come down, and where the run it then makes from [start] comes down, one
+     * landing per arc, holding forward towards [heading] and turning as ModuleParkour turns the player.
+     */
+    private fun tracedAndLanded(world: TestWorld, start: Vec3, heading: Float): Pair<List<Vec3>, List<Vec3>> {
+        val terrain = world.terrain()
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val targets = JumpTargets(terrain)
+        val assisted = AssistedJump()
+        val state = PlayerMotion(terrain)
+        state.reset(start, PlayerMotion.RESTING, onGround = true)
+        val held = LeapInput(1, 0, jump = false, sprint = true)
+        var traced = emptyList<Vec3>()
+        val landed = ArrayList<Vec3>()
+        var aimYaw = Float.NaN
+
+        for (tick in 0 until MAX_RUN_TICKS) {
+            val yaw = if (aimYaw.isNaN()) heading else aimYaw
+            val keys = assisted.tick(state, yaw, heading, held, MAX_ANGLE, jumps, targets) ?: held
+            if (traced.isEmpty() && assisted.target != null) {
+                assisted.trace(state, yaw, heading, MAX_ANGLE, jumps, targets)
+                traced = assisted.arcs.map { it.path.last() }
+            }
+            val inAir = !state.onGround
+            state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+            if (traced.isNotEmpty() && inAir && state.onGround) {
+                landed += state.position
+            }
+            if (traced.isNotEmpty() && landed.size >= traced.size) {
+                break
+            }
+            val turn = assisted.aimYaw(state.position, state.deltaMovement, state.onGround)
+            aimYaw = if (assisted.target == null) Float.NaN else turn.ifNaN { aimYaw }
+        }
+        return traced to landed
+    }
+
+    private fun assertLandsAsTraced(traced: List<Vec3>, landed: List<Vec3>) {
+        assertEquals(traced.size, landed.size, "landings, traced $traced")
+        for ((predicted, actual) in traced.zip(landed)) {
+            assertEquals(0.0, predicted.distanceTo(actual), TRACE_TOLERANCE, "traced $predicted, landed $actual")
+        }
+    }
+
+    /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */
+    private fun room(x: Int) = TestWorld().fill(x + 1, 18, 1, x + 11, 18, 11)
+        .fill(x + 1, 19, 1, x + 11, 23, 1).fill(x + 1, 19, 11, x + 11, 23, 11)
+        .fill(x + 1, 19, 1, x + 1, 23, 11).fill(x + 11, 19, 1, x + 11, 23, 11)
+}

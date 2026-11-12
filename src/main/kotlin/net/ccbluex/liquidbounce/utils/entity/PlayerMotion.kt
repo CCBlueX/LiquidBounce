@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.navigation.terrain.BlockColliders
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5
@@ -35,6 +36,7 @@ import net.minecraft.world.entity.LivingEntity.MIN_MOVEMENT_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.FenceBlock
 import net.minecraft.world.level.block.FenceGateBlock
 import net.minecraft.world.level.block.SlimeBlock
 import net.minecraft.world.level.block.WallBlock
@@ -78,7 +80,7 @@ internal class PlayerMotion(
     var sprinting = false
         private set
 
-    /** Fall distance of the last landing, from the highest point since leaving the ground. */
+    /** Fall distance of the last landing as fall damage counts it, from the highest point since leaving the ground. */
     var landingFall = 0.0
         private set
 
@@ -88,6 +90,10 @@ internal class PlayerMotion(
     private var supportY = 0
     private var supportZ = 0
     private var hasSupport = false
+
+    /** Entity.mainSupportingBlockPos: the block the feet stand on, null without one. */
+    val supportingBlock: BlockPos?
+        get() = if (hasSupport) BlockPos(supportX, supportY, supportZ) else null
 
     /** Entity.onGroundNoBlocks */
     private var groundWithoutBlocks = false
@@ -99,6 +105,9 @@ internal class PlayerMotion(
 
     val position: Vec3
         get() = Vec3(x, y, z)
+
+    val deltaMovement: Vec3
+        get() = Vec3(motionX, motionY, motionZ)
 
     val horizontalSpeed: Double
         get() = Mth.length(motionX, motionZ)
@@ -209,6 +218,9 @@ internal class PlayerMotion(
         motionX *= friction
         motionY = (motionY - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         motionZ *= friction
+        if (onGround) {
+            stepOn()
+        }
     }
 
     /** LocalPlayer.modifyInput and Entity.getInputVector: the keys stretched to the unit square and turned by [yaw]. */
@@ -277,9 +289,8 @@ internal class PlayerMotion(
         }
 
         if (onGround) {
-            stepOn()
             if (!wasOnGround) {
-                landingFall = peakY - y
+                landingFall = (peakY - y) * fallScale()
             }
             peakY = y
         } else {
@@ -347,14 +358,13 @@ internal class PlayerMotion(
         groundWithoutBlocks = !hasSupport
     }
 
-    /** Vertical motion after hitting a floor or ceiling: none, or the rebound of a bouncy floor. */
+    /** Vertical motion after hitting a floor or ceiling: none, or the rebound of a bouncy floor unless sneaking. */
     private fun bounce(moved: Double): Double {
-        if (!onGround || !hasSupport) {
+        if (!onGround || sneaking) {
             return 0.0
         }
 
-        val floor = terrain.state(supportX, Mth.floor(y - DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2), supportZ).block
-        val restitution = floor.bounceRestitution.toDouble()
+        val restitution = onPosLegacy().bounceRestitution.toDouble()
         if (-motionY <= DEFAULT_BASE_GRAVITY || restitution <= 0.0) {
             return 0.0
         }
@@ -365,13 +375,33 @@ internal class PlayerMotion(
         return (compensation - motionY) * drag * restitution
     }
 
-    /** SlimeBlock.stepOn */
+    /** SlimeBlock.stepOn, which Entity.applyEffectsFromBlocks runs after the whole move. */
     private fun stepOn() {
-        if (movementBlock() is SlimeBlock && abs(motionY) < SLIME_STEP_MOTION) {
+        if (!sneaking && onPosLegacy() is SlimeBlock && abs(motionY) < SLIME_STEP_MOTION) {
             val scale = SLIME_STEP_BASE + abs(motionY) * SLIME_STEP_FACTOR
             motionX *= scale
             motionZ *= scale
         }
+    }
+
+    /** Block.fallOn: the part of a fall onto the block landed on that hurts; none onto slime. */
+    private fun fallScale(): Double {
+        val block = onPosLegacy()
+        return if (block is SlimeBlock) 0.0 else 1.0 - block.fallDistanceReduction
+    }
+
+    /** Entity.getOnPosLegacy: the block a landing falls on and the feet step on. */
+    private fun onPosLegacy(): Block {
+        val below = Mth.floor(y - DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2)
+        if (!hasSupport) {
+            return terrain.state(Mth.floor(x), below, Mth.floor(z)).block
+        }
+
+        val support = terrain.state(supportX, supportY, supportZ).block
+        if (support is FenceBlock || support is WallBlock || support is FenceGateBlock) {
+            return support
+        }
+        return terrain.state(supportX, below, supportZ).block
     }
 
     /** Entity.getBlockPosBelowThatAffectsMyMovement */
@@ -498,19 +528,25 @@ internal class PlayerMotion(
 /** What sets how fast a player walks and how high it jumps; [walkSpeed] is without sprinting. */
 class MotionTraits(val walkSpeed: Float, val jumpStrength: Float, val jumpBoost: Float) {
 
+    /** The upward motion of a jump from flat ground. */
+    val jumpPower: Double = (jumpStrength + jumpBoost).toDouble()
+
     /** How high a jump from flat ground gets the feet. */
-    val jumpHeight: Double = run {
-        var motion = (jumpStrength + jumpBoost).toDouble()
-        var height = 0.0
-        while (motion > 0.0) {
-            height += motion
-            motion = (motion - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
-        }
-        height
-    }
+    val jumpHeight: Double = rise(jumpPower)
 
     companion object {
         val DEFAULT = MotionTraits(walkSpeed = 0.1f, jumpStrength = BASE_JUMP_POWER, jumpBoost = 0f)
+
+        /** How high the feet get from moving up at [motionY] until it is used up. */
+        fun rise(motionY: Double): Double {
+            var motion = motionY
+            var height = 0.0
+            while (motion > 0.0) {
+                height += motion
+                motion = (motion - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
+            }
+            return height
+        }
 
         /** The traits of [player] now, effects included. Call on the render thread. */
         fun capture(player: Player): MotionTraits {
