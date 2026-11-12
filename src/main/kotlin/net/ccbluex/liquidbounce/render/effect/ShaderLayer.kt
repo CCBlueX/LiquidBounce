@@ -61,9 +61,9 @@ class ShaderLayer(parent: ModeValueGroup<*>, solid: Boolean) : Rendering("Shader
     }
 
     /**
-     * What tells the pictures of two layers apart: null without a style, else its shader and settings.
+     * What tells the pictures of two layers apart: the shader of their style and its settings.
      */
-    private fun look(): Any? = (styles.activeMode as? PostStyle)?.let { it.pipeline to it.uniforms() }
+    private fun look() = styles.activeMode.let { it.pipeline to it.uniforms() }
 
     internal companion object {
         // Outline
@@ -84,14 +84,15 @@ class ShaderLayer(parent: ModeValueGroup<*>, solid: Boolean) : Rendering("Shader
                 !layer.collector.isEmpty
             }
 
+            if (drawn.isEmpty()) {
+                return
+            }
+
+            val transforms = getDynamicTransformsUniform()
             for (group in drawn.groupBy { it.look() }.values) {
                 val target = silhouettes.initAndGet()
                 for (layer in group) {
-                    layer.collector.flush(
-                        target.colorTextureView!!,
-                        scene.depthTextureView,
-                        getDynamicTransformsUniform(),
-                    )
+                    layer.collector.flush(target.colorTextureView!!, scene.depthTextureView, transforms)
                 }
 
                 group.first().chain.get()?.process(target, mc.gameRenderer.resourcePool)
