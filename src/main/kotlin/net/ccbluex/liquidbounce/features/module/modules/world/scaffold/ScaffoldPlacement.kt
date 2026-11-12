@@ -173,7 +173,8 @@ internal object ScaffoldPlacement {
 
     /**
      * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [HOLD_TICKS]
-     * ticks while still on the ground.
+     * ticks, on the ground and short of the edge: a click that only works once the player stops at the edge comes
+     * too late, and stopping there without sneaking gets flagged.
      */
     private fun placesSoon(rotation: Rotation, stack: ItemStack, positions: List<BlockPos>): Boolean {
         val simulation = SimulatedPlayer.fromClientPlayer(
@@ -181,7 +182,7 @@ internal object ScaffoldPlacement {
         )
         repeat(HOLD_TICKS) {
             simulation.tick()
-            if (!simulation.onGround()) {
+            if (!simulation.onGround() || simulation.clipLedged) {
                 return false
             }
             val eyes = simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
