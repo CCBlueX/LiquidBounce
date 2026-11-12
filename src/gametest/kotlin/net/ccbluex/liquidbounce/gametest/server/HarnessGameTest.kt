@@ -59,7 +59,7 @@ class HarnessGameTest : LiquidBounceGameTest({
 
     // An anticheat catches a jump five blocks up; Paper alone only a move too fast for anything but a teleport. Some
     // anticheats check only a player that moves, and one standing still sends no positions for a while.
-    val height = if (anticheats == setOf(Anticheat.VANILLA)) 20 else 5
+    val height = if (Anticheat.VANILLA in anticheats) 20 else 5
     input.holdKey { options -> options.keyUp }
     ticks(10)
     expectViolation("the server to catch a move $height blocks up") {

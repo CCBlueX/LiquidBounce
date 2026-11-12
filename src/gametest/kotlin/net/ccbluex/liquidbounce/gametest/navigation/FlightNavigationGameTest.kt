@@ -50,7 +50,7 @@ class FlightNavigationGameTest : LiquidBounceGameTest({
 
         checkElytra(y)
         // The Vanilla mode of Fly is plain flying, which only Paper's own checks let through
-        if (anticheats == setOf(Anticheat.VANILLA)) {
+        if (Anticheat.VANILLA in anticheats) {
             checkFlyModule(y)
         }
         // Last, as a creative player who stops flying in mid-air falls in a way not every anticheat follows
