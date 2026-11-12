@@ -125,6 +125,12 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val EffectColumns = "effect/columns"("shaders/effect/field_columns.frag")
 
         @JvmField
+        val EffectMask = "effect/mask"("shaders/effect/mask.frag")
+
+        @JvmField
+        val EffectCombine = "effect/combine"("shaders/effect/combine.frag")
+
+        @JvmField
         val EffectSmooth = "effect/smooth"("shaders/effect/styles/smooth.frag")
 
         @JvmField

@@ -55,7 +55,7 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
 
     private var chain: PostChain? = null
     private var chainStyle: PostStyle? = null
-    private var view: GpuBufferSlice? = null
+    private val views = ArrayList<GpuBufferSlice>(1)
     private var dirty = true
 
     init {
@@ -77,12 +77,12 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
         }
 
         if (dirty || style !== chainStyle) {
-            chain?.close()
+            close()
             chain = if (compiles(style)) build(style) else null
             chainStyle = style
             dirty = false
         }
-        view?.let(::writeView)
+        views.forEach(::writeView)
         return chain
     }
 
@@ -90,56 +90,14 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
         chain?.close()
         chain = null
         chainStyle = null
-        view = null
+        views.clear()
     }
 
-    /**
-     * Camera axes and the tangents of half the field of view, see `EffectView` in `effect.glsl`.
-     */
-    private fun writeView(view: GpuBufferSlice) {
-        val camera = mc.gameRenderer.mainCamera()
-        val tangent = tan(camera.fov.toRadians() / 2f)
-        val left = camera.leftVector()
-        view.writeStd140 {
-            putVec4(-left.x(), -left.y(), -left.z(), 0f)
-            putVec4(Vector4f(camera.upVector(), 0f))
-            putVec4(Vector4f(camera.forwardVector(), 0f))
-            putVec4(tangent * mc.window.width / mc.window.height, tangent, 0f, 0f)
-        }
-    }
-
-    private fun build(style: PostStyle): PostChain {
-        val uniforms = mapOf(UNIFORMS to style.uniforms())
-        val stylePass = pass(style.pipeline, field, target, uniforms)
-        view = if (style.usesView) {
-            // The pass closes the buffer with its own
-            ClientUniformDefine.EFFECT_VIEW.createSingleBuffer().also {
-                stylePass.customUniforms[ClientUniformDefine.EFFECT_VIEW.uboName] = it.buffer
-            }
-        } else {
-            null
-        }
-
-        return PostChain(
-            id,
-            listOf(
-                pass(FieldRows, target, rows, uniforms),
-                pass(FieldColumns, rows, field, uniforms),
-                stylePass,
-            ),
-            mapOf(rows to screenTarget, field to screenTarget),
-            setOf(target),
-            mc.shaderManager.postChainProjection,
-            mc.shaderManager.postChainProjectionMatrixBuffer,
-        )
-    }
-
-    private fun pass(
-        pipeline: RenderPipeline,
-        input: Identifier,
-        output: Identifier,
-        uniforms: Map<String, List<UniformValue>>,
-    ) = PostPass(pipeline, output, uniforms, listOf(PostPass.TargetInput("In", input, false, false)))
+    private fun build(style: PostStyle) = postChain(
+        stylePasses(style, target, target, views),
+        mapOf(rows to scratch, field to scratch),
+        setOf(target),
+    )
 
     companion object {
 
@@ -148,7 +106,13 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
         private val id = LiquidBounce.identifier("effect")
         private val rows = LiquidBounce.identifier("effect/rows")
         private val field = LiquidBounce.identifier("effect/field")
-        private val screenTarget = PostChainConfig.InternalTarget(Optional.empty(), Optional.empty(), false, 0)
+
+        /**
+         * Screen sized target of a chain, cleared before every frame.
+         */
+        internal val scratch = PostChainConfig.InternalTarget(Optional.empty(), Optional.empty(), false, 0)
+
+        internal val scratchTargets = listOf(rows, field)
 
         private val pipelines = HashMap<Identifier, RenderPipeline>()
 
@@ -157,6 +121,67 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
 
         fun compiles(style: PostStyle) = arrayOf(FieldRows, FieldColumns, style.pipeline).all {
             RenderSystem.getCompiledPipelineNullable(it) != null
+        }
+
+        internal fun postChain(
+            passes: List<PostPass>,
+            internalTargets: Map<Identifier, PostChainConfig.InternalTarget>,
+            externalTargets: Set<Identifier>,
+        ) = PostChain(
+            id,
+            passes,
+            internalTargets,
+            externalTargets,
+            mc.shaderManager.postChainProjection,
+            mc.shaderManager.postChainProjectionMatrixBuffer,
+        )
+
+        /**
+         * The passes drawing [style] from the silhouettes in [input] into [output], using the scratch targets
+         * [scratchTargets]. Buffers that [writeView] has to fill every frame go to [views].
+         */
+        internal fun stylePasses(
+            style: PostStyle,
+            input: Identifier,
+            output: Identifier,
+            views: MutableList<GpuBufferSlice>,
+        ): List<PostPass> {
+            val uniforms = mapOf(UNIFORMS to style.uniforms())
+            val stylePass = pass(style.pipeline, field, output, uniforms)
+            if (style.usesView) {
+                // The pass closes the buffer with its own
+                views += ClientUniformDefine.EFFECT_VIEW.createSingleBuffer().also {
+                    stylePass.customUniforms[ClientUniformDefine.EFFECT_VIEW.uboName] = it.buffer
+                }
+            }
+
+            return listOf(
+                pass(FieldRows, input, rows, uniforms),
+                pass(FieldColumns, rows, field, uniforms),
+                stylePass,
+            )
+        }
+
+        internal fun pass(
+            pipeline: RenderPipeline,
+            input: Identifier,
+            output: Identifier,
+            uniforms: Map<String, List<UniformValue>> = emptyMap(),
+        ) = PostPass(pipeline, output, uniforms, listOf(PostPass.TargetInput("In", input, false, false)))
+
+        /**
+         * Camera axes and the tangents of half the field of view, see `EffectView` in `effect.glsl`.
+         */
+        internal fun writeView(view: GpuBufferSlice) {
+            val camera = mc.gameRenderer.mainCamera()
+            val tangent = tan(camera.fov.toRadians() / 2f)
+            val left = camera.leftVector()
+            view.writeStd140 {
+                putVec4(-left.x(), -left.y(), -left.z(), 0f)
+                putVec4(Vector4f(camera.upVector(), 0f))
+                putVec4(Vector4f(camera.forwardVector(), 0f))
+                putVec4(tangent * mc.window.width / mc.window.height, tangent, 0f, 0f)
+            }
         }
 
         /**

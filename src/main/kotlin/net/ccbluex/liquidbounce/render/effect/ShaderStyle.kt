@@ -243,7 +243,7 @@ class AuraStyle(parent: ModeValueGroup<*>, fill: Float?) :
  *
  * @param fill opacity inside the silhouettes every style starts with, null leaves each style its own
  */
-fun postStyles(parent: ModeValueGroup<*>, fill: Float? = null): List<PostStyle> = listOf(
+fun postStyles(parent: ModeValueGroup<*>, fill: Float? = null): Array<out PostStyle> = arrayOf(
     SmoothStyle(parent, fill),
     OutlineStyle(parent, fill),
     NeonStyle(parent, fill),

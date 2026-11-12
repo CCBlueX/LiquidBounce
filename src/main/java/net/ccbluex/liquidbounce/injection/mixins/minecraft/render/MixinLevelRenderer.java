@@ -29,7 +29,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
@@ -44,7 +43,6 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.joml.Vector4f;
 import org.joml.Vector4fc;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -63,13 +61,6 @@ public abstract class MixinLevelRenderer {
     @Final
     @Shadow
     private SubmitNodeStorage submitNodeStorage;
-
-    @Final
-    @Shadow
-    private RenderTarget entityOutlineTarget;
-
-    @Unique
-    private boolean liquid_bounce$hasCustomOutlineMesh = false;
 
     @Inject(
         method = "render",
@@ -119,26 +110,6 @@ public abstract class MixinLevelRenderer {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
 
-    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOutline(Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V", shift = At.Shift.AFTER))
-    private void onRenderGlow(CallbackInfo ci) {
-        var minecraft = Minecraft.getInstance();
-        var entityOutlineFb = entityOutlineTarget;
-        if (entityOutlineFb == null
-            || !minecraft.gameRenderer.gameRenderState().levelRenderState.shouldShowEntityOutlines) {
-            return;
-        }
-
-        liquid_bounce$hasCustomOutlineMesh = false;
-        var matrixStack = Pools.MatStack.borrow();
-        var event = new DrawOutlinesEvent(
-            entityOutlineFb, matrixStack,
-            minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false)
-        );
-        EventManager.INSTANCE.callEvent(event);
-        liquid_bounce$hasCustomOutlineMesh = event.getDirtyFlag();
-        Pools.MatStack.recycle(matrixStack);
-    }
-
     @Inject(
         method = "lambda$addMainPass$0",
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Lighting;setupFor(Lcom/mojang/blaze3d/platform/Lighting$Entry;)V", shift = At.Shift.AFTER)
@@ -168,22 +139,6 @@ public abstract class MixinLevelRenderer {
     )
     private PostChain replaceEntityOutlinePostChain(PostChain original) {
         return OutlineGlow.replace(original);
-    }
-
-    @ModifyExpressionValue(
-        method = {"submitFeatures", "lambda$addMainPass$0"},
-        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;shouldShowEntityOutlines:Z", opcode = Opcodes.GETFIELD)
-    )
-    private boolean includeCustomOutlines(boolean original) {
-        return original || liquid_bounce$hasCustomOutlineMesh;
-    }
-
-    @ModifyExpressionValue(
-        method = {"render", "addMainPass"},
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;hasAnyOutline()Z")
-    )
-    private boolean includeCustomOutlineTargetInMainPass(boolean original) {
-        return original || liquid_bounce$hasCustomOutlineMesh;
     }
 
     @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)
