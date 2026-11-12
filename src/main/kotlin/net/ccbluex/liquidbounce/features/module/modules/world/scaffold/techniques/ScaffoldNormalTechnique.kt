@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.RandomTargetPositionFa
 import net.ccbluex.liquidbounce.utils.block.targetfinding.ReverseYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.StabilizedRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.placementTargetClickedBy
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -55,7 +56,8 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -63,7 +65,7 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.round
 
-/** Ticks ahead a held aim may still line up the next block, see [ScaffoldNormalTechnique.getRotations]. */
+/** Ticks ahead a held aim may still place the next block, see [ScaffoldNormalTechnique.findPlacementTarget]. */
 private const val HOLD_TICKS = 3
 
 /**
@@ -83,12 +85,20 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         tree(ScaffoldHeadHitterFeature)
     }
 
+    /** Whether scaffold keeps its aim this tick, see [findPlacementTarget]. */
+    private var holdsAim = false
+
+    /**
+     * The best placement for the block the player needs, unless the aim scaffold holds already makes one that does as
+     * well: a bridging player keeps the mouse still for as long as each click still puts the next block down.
+     */
     override fun findPlacementTarget(
         predictedPos: Vec3,
         predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
+        holdsAim = false
         val priorityComparator = priorityComparator(predictedPos, optimalLine)
 
         val offsets = if (ModuleFreeze.running) {
@@ -101,6 +111,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
         // Face position factory for current config
         val facePositionFactory = getFacePositionFactory(optimalLine)
+        val held = ModuleScaffold.aim
 
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
@@ -116,10 +127,25 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
                 position = predictedPos,
                 pose = predictedPose,
                 // Nearest to where scaffold aims rather than to a view still turning there
-                rotation = ModuleScaffold.aim ?: RotationManager.serverRotation,
+                rotation = held ?: RotationManager.serverRotation,
             ),
         )
-        return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
+        val needed = getTargetedPosition(predictedPos.toBlockPos())
+        val best = findBestBlockPlacementTarget(needed, searchOptions) ?: return null
+        if (held == null || !aimsNearest) {
+            return best
+        }
+
+        // Without a click that puts the block itself down, any block next to it brings it in reach as well
+        val positions = if (best.placedBlock == needed) {
+            listOf(needed)
+        } else {
+            Direction.Plane.HORIZONTAL.map(needed::relative) + best.placedBlock
+        }
+        val now = placementTargetClickedBy(held, player.eyePosition, bestStack, positions)
+            ?.takeIf { ModuleScaffold.isValidCrosshairTarget(it.blockHitResult) }
+        holdsAim = now != null || placesSoon(held, bestStack, positions)
+        return now ?: best
     }
 
     override fun getRotations(target: BlockPlacementTarget?): Rotation? {
@@ -134,10 +160,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             }
         }
 
-        // A bridging player keeps the mouse still while the next block comes under it
-        val held = ModuleScaffold.aim
-        if (target != null && held != null && aimsNearest && target.linesUp(held)) {
-            return held
+        if (holdsAim && target != null) {
+            return ModuleScaffold.aim
         }
 
         if (requiresSight) {
@@ -163,14 +187,10 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         get() = aimMode == AimMode.STABILIZED || aimMode == AimMode.NEAREST_ROTATION
 
     /**
-     * Whether [rotation] clicks this target now, or from where the player is in one of the next [HOLD_TICKS] ticks
-     * while still on the ground.
+     * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [HOLD_TICKS]
+     * ticks while still on the ground.
      */
-    private fun BlockPlacementTarget.linesUp(rotation: Rotation): Boolean {
-        if (clicks(rotation, player.eyePosition)) {
-            return true
-        }
-
+    private fun placesSoon(rotation: Rotation, stack: ItemStack, positions: List<BlockPos>): Boolean {
         val simulation = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
         )
@@ -179,16 +199,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             if (!simulation.onGround()) {
                 return false
             }
-            if (clicks(rotation, simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0))) {
+            val eyes = simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
+            if (placementTargetClickedBy(rotation, eyes, stack, positions) != null) {
                 return true
             }
         }
         return false
-    }
-
-    private fun BlockPlacementTarget.clicks(rotation: Rotation, eyes: Vec3): Boolean {
-        val hit = traceFromPoint(start = eyes, direction = rotation.directionVector)
-        return doesCrosshairTargetMatchRequirements(hit) && ModuleScaffold.isValidCrosshairTarget(hit)
     }
 
     private fun getFacePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (aimMode) {
