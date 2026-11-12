@@ -407,14 +407,16 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.position()
+        val prediction = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine)
+        val predictedPos = prediction ?: player.position()
         // Check if the player is probably going to sneak at the predicted position
-        val predictedPose =
-            if (ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input))) {
+        val predictedPose = when {
+            ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input)) ->
                 Pose.CROUCHING
-            } else {
-                Pose.STANDING
-            }
+            // Without a prediction the click comes from where the player is, sneaking at the ledge or not
+            prediction == null -> player.pose
+            else -> Pose.STANDING
+        }
 
         debugGeometry("predictedPos") {
             DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
