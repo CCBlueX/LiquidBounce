@@ -60,7 +60,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldTellyFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.sneaksAtLedge
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -236,9 +235,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             get() = super.running && ModuleClutch.fall == null
     }
 
-    // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
-    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
+    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 3) { ModuleSafeWalk.safeWalkChoices(it, ::missesNextBlock) }
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
@@ -280,9 +278,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
     private var cooldown = 0
 
-    /** Degrees the view may still be off [aim] for the aim to count as arrived. */
-    private const val SETTLED_AIM = 3f
-
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private object SimulatePlacementAttempts : ToggleableValueGroup(this, "SimulatePlacementAttempts", false) {
@@ -307,12 +302,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
-    private val ledge by boolean("Ledge", true)
-
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
     private var placementY = 0
-    private var forceSneak = 0
     private var startY = 0
     private var jumps = 0
 
@@ -380,7 +372,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
-        forceSneak = 0
         currentTarget = null
         aimed = false
         aim = null
@@ -579,28 +570,13 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
     }
 
-    @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(
-        // Runs after the model state
-        priority = EventPriorityConvention.SAFETY_FEATURE
-    ) { event ->
-        if (forceSneak > 0) {
-            event.sneak = true
-            forceSneak--
+    /** Whether an edge has to stop the player: no blocks left, or the view doesn't put the next block down. */
+    private fun missesNextBlock(): Boolean {
+        val target = currentTarget
+        if (blockCount <= 0 || target == null) {
+            return true
         }
-
-        // Ledge feature - AutoSneak
-        if (ledge) {
-            val view = RotationManager.currentRotation ?: player.rotation
-            // A block is still owed and the view has not come round to it yet
-            val turning = aimed && currentTarget != null &&
-                aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
-
-            if (sneaksAtLedge(turning) && forceSneak < 1) {
-                event.sneak = true
-                forceSneak = 1
-            }
-        }
+        return click(target, RotationManager.currentRotation ?: player.rotation) == null
     }
 
     @Suppress("unused")
