@@ -24,8 +24,8 @@ import com.mojang.authlib.properties.Property
 import com.mojang.authlib.properties.PropertyMap
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.bodyAsJson
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.features.creativetab.CustomCreativeModeTab
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -59,9 +59,11 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
             )
         )
 
+        // The profile codec only accepts printable-ASCII names up to 16 chars. An empty name is what
+        // vanilla itself uses for a name-less partial profile, and the skin comes from the textures property.
         val profile = GameProfile(
             uuid,
-            name,
+            "",
             PropertyMap(
                 ImmutableMultimap.of("textures", Property("textures", value))
             ),
@@ -76,14 +78,11 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
     }
 
 
-    companion object {
-        @JvmStatic
+    private companion object {
         private val CUSTOM_NAME_STYLE = Style.EMPTY.applyFormats(ChatFormatting.GOLD, ChatFormatting.BOLD)
 
-        @JvmStatic
         private val UUID_STYLE = Style.EMPTY.applyFormat(ChatFormatting.GRAY)
 
-        @JvmStatic
         private val CLIENT_LINK_STYLE = Style.EMPTY.withColor(Color4b.LIQUID_BOUNCE.argb)
     }
 }
@@ -102,18 +101,18 @@ class HeadsCreativeModeTab : CustomCreativeModeTab(
          * The API endpoint to fetch heads from which is owned by CCBlueX
          * and therefore can reliably depend on.
          */
-        const val HEAD_DB_API = "https://headdb.org/api/category/all"
+        private const val HEAD_DB_API = "https://headdb.org/api/category/all"
 
         val heads = ioScope.retrying(
             interval = 1.seconds,
             name = "player-heads",
             maxRetries = 3,
         ) {
-            val heads: HashMap<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).parse()
+            val heads: Map<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).bodyAsJson()
 
             heads.values.also {
                 logger.info("Successfully loaded ${it.size} heads from HeadDB")
-            } as Collection<Head>
+            }
         }
     }
 }

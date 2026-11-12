@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -51,12 +50,8 @@ object ItemStackListRenderer : EventListener {
      */
     private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
 
-    private const val BACKGROUND_OUTLINE_WIDTH = 1.0F
-    private const val BACKGROUND_GLOW_LAYERS = 3
-
     private val textRenderer = mc.font
     private val planned = ArrayList<ItemStackListRenderState>()
-    private val overlapRearranger = GuiOverlapRearranger()
 
     @JvmStatic
     fun Block.createItemStackForRendering(count: Int): ItemStack {
@@ -81,60 +76,6 @@ object ItemStackListRenderer : EventListener {
 
         state.updateBounds()
         planned += state
-    }
-
-    /**
-     * Draws the panel of a list, returns whether anything was drawn at all.
-     */
-    private fun drawPanel(
-        guiGraphics: GuiGraphicsExtractor,
-        width: Int,
-        height: Int,
-        panel: ItemStackListBackground.Panel,
-    ): Boolean {
-        if (panel.fillColor.isTransparent && panel.outlineColor.isTransparent) {
-            return false
-        }
-
-        val x1 = -panel.margin
-        val y1 = -panel.margin
-        val x2 = width + panel.margin
-        val y2 = height + panel.margin
-
-        if (panel.glow > 0F) {
-            val glowColor = if (panel.outlineColor.isTransparent) panel.fillColor else panel.outlineColor
-            for (layer in BACKGROUND_GLOW_LAYERS downTo 1) {
-                val spread = BACKGROUND_GLOW_SPREAD * layer / BACKGROUND_GLOW_LAYERS
-                guiGraphics.drawRoundedRect(
-                    x1 = x1 - spread,
-                    y1 = y1 - spread,
-                    x2 = x2 + spread,
-                    y2 = y2 + spread,
-                    radius = panel.radius + spread,
-                    fillColor = glowColor.fade(panel.glow / layer),
-                )
-            }
-        }
-
-        val darken = panel.gradient.toDouble()
-        guiGraphics.drawRoundedRect(
-            x1 = x1,
-            y1 = y1,
-            x2 = x2,
-            y2 = y2,
-            radius = panel.radius,
-            fillColor = panel.fillColor,
-            fillBottomColor = panel.fillColor.interpolateTo(
-                Color4b.BLACK,
-                tR = darken,
-                tG = darken,
-                tB = darken,
-                tA = 0.0,
-            ),
-            outlineColor = panel.outlineColor,
-            outlineWidth = BACKGROUND_OUTLINE_WIDTH,
-        )
-        return true
     }
 
     private fun drawSlotTexture(guiGraphics: GuiGraphicsExtractor, x: Int, y: Int) {
@@ -166,7 +107,9 @@ object ItemStackListRenderer : EventListener {
             translate(-width * 0.5F, -height * 0.5F)
 
             val background = state.background
-            if (background is ItemStackListBackground.Panel && drawPanel(graphics, width, height, background)) {
+            if (background is GuiPanel &&
+                graphics.drawPanel(width.toFloat(), height.toFloat(), background)
+            ) {
                 // Elements of a stratum are sorted by pipeline creation order, so pipelines of this mod are drawn
                 // after the vanilla item pipelines. Slots and items need a stratum of their own to stay above the
                 // background.
@@ -200,7 +143,7 @@ object ItemStackListRenderer : EventListener {
 
         try {
             if (planned.size > 1) {
-                overlapRearranger.rearrange(planned)
+                GuiOverlapRearranger.rearrange(planned)
             }
 
             with(it.context) {
@@ -232,11 +175,11 @@ object ItemStackListRenderer : EventListener {
             private val gradient by float("Gradient", DEFAULT_PANEL_GRADIENT, 0F..1F).onChanged(invalidate)
             private val glow by float("Glow", DEFAULT_PANEL_GLOW, 0F..1F).onChanged(invalidate)
 
-            private var snapshot: ItemStackListBackground.Panel? = null
+            private var snapshot: GuiPanel? = null
 
             // Configured values are trusted only up to the ranges above, an edited config file can hold anything.
-            override val background: ItemStackListBackground.Panel
-                get() = snapshot ?: ItemStackListBackground.Panel(
+            override val background: GuiPanel
+                get() = snapshot ?: GuiPanel(
                     fillColor = fillColor,
                     outlineColor = outlineColor,
                     margin = margin,

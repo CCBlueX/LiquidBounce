@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec2
-import kotlin.math.hypot
 
+@ValueClassCandidate
 @JvmRecord
 data class RotationDelta(val deltaYaw: Float, val deltaPitch: Float) {
-    fun length() = hypot(deltaYaw, deltaPitch)
+    fun length() = Mth.length(deltaYaw, deltaPitch)
+    fun lengthSqr() = Mth.lengthSquared(deltaYaw, deltaPitch)
     fun toVec2f() = Vec2(deltaYaw, deltaPitch)
 }

@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -34,11 +36,19 @@ import net.minecraft.world.level.block.Blocks
 
 object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
 
+    /**
+     * How long to keep trying to ignite the portal before giving up.
+     */
+    private val igniteTimeout by int("IgniteTimeout", 2000, 200..10000, "ms")
+
     private var phase = Phase.BUILD
     private var portal: NetherPortal? = null
+    private var missingItemReported = false
+    private val igniteChronometer = Chronometer()
 
     override fun enabled() {
         phase = Phase.BUILD
+        missingItemReported = false
         val portal = getPortal()
         this.portal = portal
         if (portal == null) {
@@ -55,25 +65,54 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
         placer.support.blockedPositions.addAll(portal.enclosedBlocks)
     }
 
+    /**
+     * [getSlot] is a pure query used by the placer as its slot finder, so the missing-item report lives here.
+     */
+    @Suppress("unused")
+    private val itemCheck = handler<GameTickEvent> {
+        if (getSlot() != null) {
+            missingItemReported = false
+            return@handler
+        }
+
+        if (missingItemReported) {
+            return@handler
+        }
+
+        missingItemReported = true
+        val message = if (phase == Phase.IGNITE) "noFlintAndSteel" else "noObsidian"
+        chat(markAsError(ModuleAutoBuild.message(message)), ModuleAutoBuild)
+        ModuleAutoBuild.enabled = false
+    }
+
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         val portal = portal ?: return@handler
+
+        if (phase == Phase.IGNITE) {
+            if (placer.isDone()) {
+                ModuleAutoBuild.enabled = false
+            } else if (igniteChronometer.hasElapsed(igniteTimeout.toLong())) {
+                // The ignition spot stayed unreachable, so stop instead of keeping the module hanging.
+                chat(markAsError(ModuleAutoBuild.message("igniteTimeout")), ModuleAutoBuild)
+                ModuleAutoBuild.enabled = false
+            }
+            return@handler
+        }
+
         if (!placer.isDone()) {
             return@handler
         }
 
-        if (phase == Phase.BUILD) {
-            val blocks = portal.confirmPlacements()
-            if (blocks.isNotEmpty()) {
-                placer.update(blocks)
-                return@handler
-            }
-
-            phase = Phase.IGNITE
-            placer.addToQueue(portal.ignitePos)
-        } else if (phase == Phase.IGNITE) {
-            ModuleAutoBuild.enabled = false
+        val blocks = portal.confirmPlacements()
+        if (blocks.isNotEmpty()) {
+            placer.update(blocks)
+            return@handler
         }
+
+        phase = Phase.IGNITE
+        igniteChronometer.reset()
+        placer.addToQueue(portal.ignitePos)
     }
 
     override fun disabled() {
@@ -133,12 +172,6 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
             }
         }
 
-        if (phase == Phase.IGNITE) {
-            chat(markAsError(ModuleAutoBuild.message("noFlintAndSteel")), ModuleAutoBuild)
-        } else {
-            chat(markAsError(ModuleAutoBuild.message("noObsidian")), ModuleAutoBuild)
-        }
-        ModuleAutoBuild.enabled = false
         return null
     }
 

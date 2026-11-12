@@ -59,7 +59,7 @@ object ConfigReportCommand {
             requireTracked()
             Triple(ConfigTracker.itemId, ConfigTracker.revisionId, ConfigTracker.itemName)
         } else {
-            val item = resolveConfig(input)
+            val item = findConfig(input)
             val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
             Triple(item.id, revisionId, item.name)
         }

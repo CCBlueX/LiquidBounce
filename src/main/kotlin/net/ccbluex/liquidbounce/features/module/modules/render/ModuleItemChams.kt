@@ -23,6 +23,7 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import net.ccbluex.liquidbounce.common.LightmapOverride
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -40,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.util.ARGB
 import org.joml.Vector2f
+import java.util.function.Supplier
 
 /**
  * Module ItemChams
@@ -53,6 +55,8 @@ import org.joml.Vector2f
  */
 object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
+    private val lightAccent = Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.3F)
+
     object Lightmap : ToggleableValueGroup(this, "Lightmap", true) {
         private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186)).markDirtyOnChanged()
         private val alpha by int("Alpha", 95, 1..255).markDirtyOnChanged()
@@ -61,8 +65,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
         private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-        @JvmField val OVERRIDE: ScopedValue<GpuTextureView> = ScopedValue.newInstance()
-
+        private var texture: GpuTexture? = null
         private var textureView: GpuTextureView? = null
 
         private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
@@ -73,9 +76,9 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
         @JvmStatic
-        fun <T : Any> doOverride(op: ScopedValue.CallableOp<T, Throwable>): T {
-            if (!this.running || this.textureView == null) return op.call()
-            return ScopedValue.where(OVERRIDE, this.textureView).call(op)
+        fun <T : Any> doOverride(op: Supplier<T>): T {
+            if (!this.running || this.textureView == null) return op.get()
+            return LightmapOverride.call(this.textureView!!, op)
         }
 
         /**
@@ -90,11 +93,11 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
             if (!this.running) return
 
             if (this.textureView == null) {
-                this.textureView = gpuDevice.createTexture(
+                this.texture = gpuDevice.createTexture(
                     "$name - Lightmap Texture",
                     GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
                     GpuFormat.RGBA8_UNORM, 16, 16, 1, 1,
-                ).asView()
+                ).also { this.textureView = it.asView() }
             }
 
             if (uboDirty) {
@@ -123,6 +126,8 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         override fun onDisabled() {
             uboDirty = true
+            texture?.close()
+            texture = null
             textureView?.close()
             textureView = null
             super.onDisabled()
@@ -154,7 +159,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
     object Effects : ToggleableValueGroup(this, "Effects", false) {
 
         object Flow : ToggleableValueGroup(Effects, "Flow", true) {
-            val color by color("Color", Color4b(90, 170, 255))
+            val color by color("Color", lightAccent)
             val speed by float("Speed", 0.6f, 0f..5f)
             val scale by float("Scale", 12f, 1f..64f)
             val sharpness by float("Sharpness", 6f, 1f..64f)
@@ -163,14 +168,14 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         }
 
         object Trail : ToggleableValueGroup(Effects, "Trail", true) {
-            val color by color("Color", Color4b(70, 130, 255))
+            val color by color("Color", Color4b.LIQUID_BOUNCE)
             val weight by float("Weight", 0.7f, 0f..4f)
             val decay by float("Decay", 0.86f, 0f..1f)
             val drift by vec2f("Drift", Vector2f(2f, 0f))
         }
 
         object Glow : ToggleableValueGroup(Effects, "Glow", false) {
-            val color by color("Color", Color4b(90, 170, 255))
+            val color by color("Color", lightAccent)
             val radius by float("Radius", 6f, 1f..32f, "px")
             val thickness by float("Thickness", 1.5f, 0.2f..8f)
             val intensity by float("Intensity", 0.9f, 0f..4f)
@@ -182,7 +187,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         }
 
         object Scanlines : ToggleableValueGroup(Effects, "Scanlines", false) {
-            val color by color("Color", Color4b(90, 170, 255))
+            val color by color("Color", lightAccent)
             val spacing by float("Spacing", 40f, 2f..256f, "px")
             val thickness by float("Thickness", 0.4f, 0.02f..1f)
             val speed by float("Speed", 0.3f, -5f..5f)

@@ -248,6 +248,47 @@ class AsyncLazyTest {
         assertEquals(2, attempts)
     }
 
+    @Test
+    fun `getOrNull does not start an initialization`() = runTest {
+        var attempts = 0
+        val lazy = AsyncLazy {
+            attempts++
+            "Value"
+        }
+
+        assertNull(lazy.getOrNull())
+        assertEquals(0, attempts)
+
+        assertEquals("Value", lazy.get())
+        assertEquals("Value", lazy.getOrNull())
+        assertEquals(1, attempts)
+    }
+
+    @Test
+    fun `getOrNull returns null while initialization is running`() = runTest {
+        val release = CompletableDeferred<Unit>()
+        val lazy = AsyncLazy {
+            release.await()
+            "Value"
+        }
+        val owner = async { lazy.get() }
+
+        runCurrent()
+        assertNull(lazy.getOrNull())
+
+        release.complete(Unit)
+        assertEquals("Value", owner.await())
+        assertEquals("Value", lazy.getOrNull())
+    }
+
+    @Test
+    fun `getOrNull reports a failed attempt as null`() = runTest {
+        val lazy = AsyncLazy<String> { throw IllegalStateException("Temporary failure") }
+
+        assertFailsWith<IllegalStateException> { lazy.get() }
+        assertNull(lazy.getOrNull())
+    }
+
     private fun assertFailure(expected: Throwable, actual: Throwable?) {
         val failure = assertNotNull(actual)
         assertEquals(expected::class, failure::class)

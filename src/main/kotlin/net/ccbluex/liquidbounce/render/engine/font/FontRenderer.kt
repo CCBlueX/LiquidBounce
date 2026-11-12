@@ -31,11 +31,12 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.element.TextRunGuiElementRenderState
-import net.ccbluex.liquidbounce.render.setColor
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.util.ARGB
 import net.minecraft.util.FormattedCharSequence
 import java.awt.Font
+import kotlin.math.round
 
 @Suppress("TooManyFunctions")
 class FontRenderer(
@@ -66,14 +67,18 @@ class FontRenderer(
      */
     private val quad = FloatArray(8)
 
-    override val height: Float = font.plainStyle.height
+    private val metrics: TextMetrics = font.plainMetrics
 
-    private val ascent: Float = font.plainStyle.ascent
+    override val height: Float = metrics.height
 
-    private val underlineOffset: Float = font.plainStyle.underlineOffset
-    private val underlineThickness: Float = font.plainStyle.underlineThickness
-    private val strikethroughOffset: Float = font.plainStyle.strikethroughOffset
-    private val strikethroughThickness: Float = font.plainStyle.strikethroughThickness
+    private val ascent: Float = metrics.ascent
+
+    private val underlineOffset: Float = metrics.underlineOffset
+    private val underlineThickness: Float = metrics.underlineThickness
+    private val strikethroughOffset: Float = metrics.strikethroughOffset
+    private val strikethroughThickness: Float = metrics.strikethroughThickness
+
+    private val gridFit = VerticalGridFit(metrics)
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
@@ -98,7 +103,7 @@ class FontRenderer(
         val processed = MinecraftTextProcessor.process(text, parameters.color)
         val glyphs = resolveGlyphs(processed)
         val scale = parameters.scale
-        val width = getStringWidth(processed, glyphs, parameters.shadow)
+        val width = getStringWidth(glyphs, parameters.shadow)
 
         val x = parameters.horizontalAnchor?.anchorToDrawX(
             x = parameters.x,
@@ -156,6 +161,9 @@ class FontRenderer(
         val overrideArgb = overrideColor?.argb
         var x = posX
         var y = posY + this.ascent * scale
+        if (posZ.isNaN()) {
+            y = fitToPixelGrid(ctx as GuiGraphicsExtractor, y, scale)
+        }
 
         // Decorations belong to the characters now, so a run lasts as long as the characters keep
         // sharing their style and colour. No style is negative, so the first character starts a run.
@@ -163,8 +171,6 @@ class FontRenderer(
         var runColor = 0
         var underlineStartX: Float = Float.NaN
         var strikeThroughStartX: Float = Float.NaN
-
-        val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
         // 2D glyphs join a run of quads per atlas page instead of becoming one element each.
         var run: TextRunGuiElementRenderState? = null
@@ -188,7 +194,11 @@ class FontRenderer(
                 run = it
             }
 
-            current.addQuad(quad, argb)
+            if (gridFit.active) {
+                current.addGridFittedQuad(y, argb)
+            } else {
+                current.addQuad(quad, argb)
+            }
         }
 
         text.forEachIndexed { charIdx, processedChar ->
@@ -220,11 +230,8 @@ class FontRenderer(
                 }
             }
 
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
-
-            x += layoutInfo.advanceX * scale
-            y += layoutInfo.advanceY * scale
+            x += glyph.renderInfo.advance.advanceX * scale
+            y += glyph.renderInfo.advance.advanceY * scale
         }
 
         if (!underlineStartX.isNaN()) {
@@ -243,32 +250,17 @@ class FontRenderer(
         shadow: Boolean
     ): Float {
         val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
-        val width = getStringWidth(processed, resolveGlyphs(processed), shadow)
+        val width = getStringWidth(resolveGlyphs(processed), shadow)
 
         MinecraftTextProcessor.TEXT_POOL.recycle(processed)
 
         return width
     }
 
-    private fun getStringWidth(
-        text: RecyclingProcessedText,
-        glyphs: List<GlyphDescriptor>,
-        shadow: Boolean,
-    ): Float {
-        if (text.chars.isEmpty()) {
-            return 0.0f
-        }
-
+    private fun getStringWidth(glyphs: List<GlyphDescriptor>, shadow: Boolean): Float {
         var x = 0.0f
 
-        val fallbackLayoutInfo = this.glyphManager.getFallbackGlyph(this.font).renderInfo.layoutInfo
-
-        text.forEachIndexed { index, processedChar ->
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyphs[index].renderInfo.layoutInfo else fallbackLayoutInfo
-
-            x += layoutInfo.advanceX
-        }
+        glyphs.forEach { x += it.renderInfo.advance.advanceX }
 
         return if (shadow) {
             x + 2.0f
@@ -333,6 +325,54 @@ class FontRenderer(
     }
 
     /**
+     * Puts the baseline at [baseline] on a device pixel row and readies [gridFit] for the text's size
+     * on screen, returning the moved baseline. Rotated or skewed text is left as it is.
+     */
+    private fun fitToPixelGrid(gui: GuiGraphicsExtractor, baseline: Float, scale: Float): Float {
+        val pose = gui.pose()
+        val guiScale = mc.window.guiScale.toFloat()
+        val pixelsPerUnit = pose.m11() * guiScale
+
+        if (pose.m01() != 0f || pose.m10() != 0f || pixelsPerUnit <= 0f) {
+            gridFit.disable()
+            return baseline
+        }
+
+        gridFit.update(pixelsPerUnit, scale)
+
+        val pixelY = (pose.m11() * baseline + pose.m21()) * guiScale
+        return baseline + (round(pixelY) - pixelY) / pixelsPerUnit
+    }
+
+    /**
+     * Adds [quad] cut at the heights [gridFit] bends at, each piece moved by the fit.
+     */
+    private fun TextRunGuiElementRenderState.addGridFittedQuad(baseline: Float, argb: Int) {
+        val quad = this@FontRenderer.quad
+        val top = baseline - quad[1]
+        val bottom = baseline - quad[3]
+        val topV = quad[5]
+        val bottomV = quad[7]
+
+        fun addPiece(upper: Float, lower: Float) {
+            quad[1] = baseline - gridFit.fit(upper)
+            quad[3] = baseline - gridFit.fit(lower)
+            quad[5] = topV + (top - upper) / (top - bottom) * (bottomV - topV)
+            quad[7] = topV + (top - lower) / (top - bottom) * (bottomV - topV)
+            addQuad(quad, argb)
+        }
+
+        var upper = top
+        for (cut in gridFit.cuts) {
+            if (cut < upper && cut > bottom) {
+                addPiece(upper, cut)
+                upper = cut
+            }
+        }
+        addPiece(upper, bottom)
+    }
+
+    /**
      * Fills [quad] with the geometry of [glyph] drawn at [x]/[y], returning false when the glyph has
      * nothing to draw.
      */
@@ -344,8 +384,8 @@ class FontRenderer(
 
         quad[0] = x + glyphBounds.xMin * scale
         quad[1] = y + glyphBounds.yMin * scale
-        quad[2] = x + (glyphBounds.xMin + atlasLocation.atlasWidth) * scale
-        quad[3] = y + (glyphBounds.yMin + atlasLocation.atlasHeight) * scale
+        quad[2] = x + (glyphBounds.xMin + atlasLocation.pixelWidth) * scale
+        quad[3] = y + (glyphBounds.yMin + atlasLocation.pixelHeight) * scale
 
         val uv = atlasLocation.uvCoordinatesOnTexture
         quad[4] = uv.min.u

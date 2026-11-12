@@ -31,14 +31,14 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.math.BY_Y
 import net.ccbluex.liquidbounce.utils.math.BY_Y_DESC
@@ -48,6 +48,7 @@ import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.util.Mth
+import net.minecraft.world.level.block.Block
 import kotlin.random.Random
 
 /**
@@ -61,7 +62,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     private val disableOn by multiEnumChoice("DisableOn", enumSetAllOf<DisableOn>())
     private val avoidBrokenBlocks by boolean("AvoidBrokenBlocks", true)
     private val brokenBlockWindow by int("BrokenBlockWindow", 1000, 0..10000, "ms")
-    private val placeOrder by enumChoice("PlaceOrder", Order.Normal)
+    private val placeOrder by enumChoice("PlaceOrder", Order.NORMAL)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
@@ -72,7 +73,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
 
     private enum class Order(override val tag: String) : Tagged {
 
-        Normal("Normal") {
+        NORMAL("Normal") {
             override fun positions(): Array<BlockPos> {
                 val playerHeight = Mth.ceil(player.bbHeight)
                 val result = ObjectArraySet<BlockPos>(10)
@@ -89,25 +90,25 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
             }
         },
 
-        Random("Random") {
+        RANDOM("Random") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.shuffle()
                 return array
             }
         },
 
-        BottomTop("BottomTop") {
+        BOTTOM_TOP("BottomTop") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.sortWith(Vec3i.BY_Y)
                 return array
             }
         },
 
-        TopBottom("TopBottom") {
+        TOP_BOTTOM("TopBottom") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.sortWith(Vec3i.BY_Y_DESC)
                 return array
             }
@@ -200,16 +201,19 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         }
     }
 
+    private val COMPARATOR: Comparator<Pair<*, Block>> =
+        Comparator.comparing({ it.second }, UnbreakableFirst)
+
     @JvmStatic
     private fun slotFinder(pos: BlockPos?): HotbarItemSlot? {
-        val blockSlots = Slots.OffhandWithHotbar.mapNotNull {
+        val blockSlots = HotbarItemSlot.entries.mapNotNull {
             it to (it.itemStack.getBlock()?.takeIf { b -> filter(b, blocks) } ?: return@mapNotNull null)
         }
 
         return if (pos in blockList) {
-            blockSlots.maxByOrNull { (_, block) -> block.defaultDestroyTime() }
+            blockSlots.minWithOrNull(COMPARATOR)
         } else {
-            blockSlots.minByOrNull { (_, block) -> block.defaultDestroyTime() }
+            blockSlots.maxWithOrNull(COMPARATOR)
         }?.first
     }
 

@@ -13,13 +13,26 @@
       "net.ccbluex.liquidbounce.gametest.PortalPositionGameTest",
       "net.ccbluex.liquidbounce.gametest.LocalConfigTrackingGameTest",
       "net.ccbluex.liquidbounce.gametest.HoleFillerBudgetGameTest",
-      "net.ccbluex.liquidbounce.gametest.FallDamageTrackerGameTest",
-      "net.ccbluex.liquidbounce.gametest.TeleportDisconnectGameTest",
-      "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest"
+      "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
+      "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
+      "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.HarnessGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.LegitMovementGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.SprintGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.AutoWindChargeGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.ChatReceiveTypeGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.ClutchGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.EnchantCommandGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.FallDamageTrackerGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.NoRotateSetGameTest",
+      "net.ccbluex.liquidbounce.gametest.navigation.NavigationGameTests",
+      "net.ccbluex.gametest.harness.ResultsGameTest"
     ]
   },
   "depends": {
     "liquidbounce": "*",
+    "liquidbounce-gametest-harness": "*",
+    "gametest-harness": "*",
     "fabric-client-gametest-api-v1": "*"
   }
 }

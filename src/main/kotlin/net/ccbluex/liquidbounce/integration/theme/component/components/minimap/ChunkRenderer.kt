@@ -76,10 +76,10 @@ object ChunkRenderer {
                 val chunkPos = ChunkPos(x shr 4, z shr 4)
                 val color = getColor(chunkPos, x and 15, z and 15)
 
-                textureAtlasManager.editChunk(chunkPos.pack()) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(chunkPos.pack()) { image, atlasPosition ->
                     val (texX, texY) = atlasPosition.getPosOnAtlas(x and 15, z and 15)
 
-                    texture.pixels.setPixel(texX, texY, color)
+                    image.setPixel(texX, texY, color)
                 }
             }
         }
@@ -231,14 +231,14 @@ object ChunkRenderer {
                     Triple(ChunkPos(x, z - 1), borderOffsets[1], borderOffsets[3]),
                 )
 
-            textureAtlasManager.editChunk(chunkPos.pack()) { texture, atlasPosition ->
+            textureAtlasManager.editChunk(chunkPos.pack()) { image, atlasPosition ->
                 for (offX in 0..15) {
                     for (offZ in 0..15) {
                         val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
                         val color = getColor(chunkPos, offX, offZ, chunk)
 
-                        texture.pixels.setPixel(texX, texY, color)
+                        image.setPixel(texX, texY, color)
                     }
                 }
             }
@@ -246,14 +246,14 @@ object ChunkRenderer {
             for ((otherPos, from, to) in chunkBordersToUpdate) {
                 val otherChunk = mc.level?.getChunk(otherPos)
 
-                textureAtlasManager.editChunk(otherPos.pack()) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(otherPos.pack()) { image, atlasPosition ->
                     for (offX in from.x..to.x) {
                         for (offZ in from.y..to.y) {
                             val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
                             val color = getColor(otherPos, offX, offZ, otherChunk)
 
-                            texture.pixels.setPixel(texX, texY, color)
+                            image.setPixel(texX, texY, color)
                         }
                     }
                 }

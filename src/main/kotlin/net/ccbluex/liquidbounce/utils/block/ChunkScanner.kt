@@ -35,7 +35,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
@@ -53,6 +54,8 @@ import java.util.function.Predicate
 import kotlin.time.measureTime
 
 object ChunkScanner : EventListener, MinecraftShortcuts {
+
+    private val logger = clientLogger("ChunkScanner")
 
     private val loadedChunks = LongOpenHashSet()
 
@@ -146,11 +149,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
      */
     private val worldJob = SupervisorJob()
 
-    val scope = CoroutineScope(dispatcher + worldJob + CoroutineExceptionHandler { context, throwable ->
-        if (throwable !is CancellationException) {
-            logger.warn("Chunk update error", throwable)
-        }
-    })
+    private val scope = CoroutineScope(dispatcher + worldJob + CommonCoroutineExceptionHandler { logger })
 
     /**
      * Cancel all existing enqueue(emit) jobs and scanner jobs

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatComponentAccessor
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.minecraft.client.gui.components.ChatComponent
@@ -52,9 +53,10 @@ fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.e
     val guiMessage = GuiMessage(mc.gui.hud.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
     (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
     (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
-    this.logChatMessage(guiMessage)
-    this.addMessageToDisplayQueue(guiMessage)
-    this.addMessageToQueue(guiMessage)
+    this as MixinChatComponentAccessor
+    this.invokeLogChatMessage(guiMessage)
+    this.invokeAddMessageToDisplayQueue(guiMessage)
+    this.invokeAddMessageToQueue(guiMessage)
 }
 
 /**
@@ -62,6 +64,7 @@ fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.e
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.removeMessage(id: String?) = mc.execute {
+    this as MixinChatComponentAccessor
     allMessages.removeIf {
         val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()

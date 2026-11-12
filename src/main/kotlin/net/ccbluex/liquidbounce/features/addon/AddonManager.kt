@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.addon
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -134,6 +136,8 @@ object AddonManager {
         pendingRestarts.remove(itemId)
     }
 
+    internal fun isRestartRequired(itemId: Int) = itemId in pendingRestarts
+
     private inline fun forEachEnabled(
         phase: String,
         rollbackOnFailure: Boolean = true,
@@ -174,6 +178,17 @@ object AddonManager {
             step("mode ${mode.name}") { parent.removeMode(mode) }
         }
         addon.registeredModes.clear()
+
+        addon.registeredValueGroups.forEach { (parent, group) ->
+            step("value group ${group.name}") {
+                if (group is ToggleableValueGroup && group.running) {
+                    group.onToggled(false, isParentUpdate = true)
+                }
+                parent.drop(group)
+                (group as? EventListener)?.unregister()
+            }
+        }
+        addon.registeredValueGroups.clear()
 
         addon.registeredModules.forEach { module ->
             step("module ${module.name}") { ModuleManager.removeModule(module) }

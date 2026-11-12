@@ -39,7 +39,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @anticheatVersion b3901 and b3896
  * @testedOn anticheat-test.com and eu.loyisa.cn
  */
-internal object LiquidWalkVerusB3901 : Mode("VerusB3901") {
+internal object LiquidWalkVerusB3901 : Mode("Verus-b3901", aliases = listOf("VerusB3901")) {
 
     override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes

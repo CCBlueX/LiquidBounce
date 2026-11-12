@@ -157,7 +157,7 @@ object AddonInstaller {
             }
 
             val target = modsDir.resolve(staged.fileName)
-            runCatching { stage(item, item.addonJar(revisionDir), target) }
+            runCatching { stage(item, item.getAddonJar(revisionDir), target) }
                 .onSuccess { expected.add(target) }
                 .onFailure { error ->
                     logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)

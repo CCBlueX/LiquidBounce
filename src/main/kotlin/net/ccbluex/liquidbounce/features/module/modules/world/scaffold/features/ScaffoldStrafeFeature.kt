@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -51,18 +52,18 @@ object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", fa
     }
 
     @Suppress("unused")
-    private val moveTickHandler = tickHandler {
+    private val moveTickHandler = handler<GameTickEvent> {
         if (player.moving) {
             moveTicks++
-            return@tickHandler
+            return@handler
         }
         moveTicks = 0
     }
 
     @Suppress("unused")
-    private val strafeHandler = tickHandler {
+    private val strafeHandler = handler<GameTickEvent> {
         if (onlyOnGround && !player.onGround()) {
-            return@tickHandler
+            return@handler
         }
 
         if (hypixel) {

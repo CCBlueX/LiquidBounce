@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.fastutil.weightedMinByOrNullAtMost
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
@@ -68,12 +68,12 @@ object ModuleAnchor : ClientModule(
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         // if we're already in a hole, we should just center us in that
         val playerBB = player.boundingBox
         HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.boundingBox) }?.let { hole ->
             goal = hole.positions.centerOnSide(Direction.DOWN)
-            return@tickHandler
+            return@handler
         }
 
         val playerPos = player.position()

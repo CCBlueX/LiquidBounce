@@ -6,6 +6,7 @@
     import {listen} from "../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/utils";
+    import {escapeLayer} from "../../../integration/escape";
 
     export let setting: ModuleSetting;
 
@@ -38,6 +39,9 @@
         dispatch("change");
     }
 
+    const layer = escapeLayer(toggleBinding);
+    $: layer.setOpen(binding);
+
     listen("keyboardKey", async (e: KeyboardKeyEvent) => {
         if (!isClickGuiScreen(e.screen)) {
             return;
@@ -49,7 +53,7 @@
 
         binding = false;
 
-        if (e.keyCode !== 256) {
+        if (e.keyCode !== 27 /* SDLK_ESCAPE */) {
             cSetting.value = e.key;
         } else {
             cSetting.value = UNKNOWN_KEY;
@@ -65,7 +69,7 @@
             return;
         }
 
-        if (!binding || (e.button === 0 && isHovered)) {
+        if (!binding || (e.button === 1 /* SDL_BUTTON_LEFT */ && isHovered)) {
             return;
         }
 

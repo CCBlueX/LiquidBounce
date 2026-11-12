@@ -29,7 +29,9 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.theme.ThemeSounds
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.loader.impl.FabricLoaderImpl
@@ -65,6 +67,9 @@ object SelfDestruct {
                 ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
             }
         }
+
+        HitFXRegistry.unregisterSounds()
+        ThemeSounds.unregister()
 
         mc.gui.hud.chat.recentChat.removeIf {
             it.startsWith(CommandManager.GlobalSettings.prefix)

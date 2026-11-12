@@ -20,19 +20,23 @@
 package net.ccbluex.liquidbounce.api.interceptors
 
 import okhttp3.Interceptor
+import okhttp3.Response
 
-class DefaultHeaderInterceptor @JvmOverloads constructor(
+class DefaultHeaderInterceptor(
     val key: String,
-    val value: String,
-    val skipIfExists: Boolean = true,
+    val value: () -> String,
+    val skipIfExists: Boolean,
 ) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
+
+    constructor(key: String, value: () -> String) : this(key, value, true)
+
+    override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         if (skipIfExists && request.header(key) != null) {
             return chain.proceed(request)
         }
         val newRequest = request.newBuilder()
-            .header(key, value)
+            .header(key, value())
             .build()
         return chain.proceed(newRequest)
     }

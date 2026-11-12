@@ -31,9 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Edits the listing of the tracked config
- */
 object ConfigSetCommand {
 
     private val LIST_SEPARATOR = Regex("[,\\s]+")
@@ -94,9 +91,13 @@ object ConfigSetCommand {
         description: String? = null,
         details: MarketplaceApi.ItemDetails = MarketplaceApi.ItemDetails(),
     ) {
-        requireOwnTracked()
-
-        val session = session()
+        // Visibility stays with the owner; everything else is open to editors.
+        val session = if (details.visibility != null) {
+            requireOwnTracked()
+            session()
+        } else {
+            requireEditableTracked()
+        }
         val updated = request {
             val item = MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session)
             MarketplaceApi.updateMarketplaceItem(

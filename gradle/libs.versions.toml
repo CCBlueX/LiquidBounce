@@ -7,30 +7,35 @@ jdk = "25"
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
 minecraft = "26.3"
-fabric-loom = "1.18-SNAPSHOT"
+fabric-loom = "1.19-SNAPSHOT"
 fabric-loader = "0.19.5"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.160.5+26.3"
+fabric-api = "0.165.0+26.3"
 
 # https://github.com/CCBlueX/LiquidBounce-Addon-CEF
-liquidbounce-cef = "1.0.1+26.3"
+liquidbounce-cef = "1.1.0+26.3"
+
+# https://github.com/CCBlueX/gametest
+gametest-harness = "1.2.0+26.3"
 
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
+# https://github.com/CCBlueX/axochat/tree/master/client
+axochat-client = "1.1.0"
 # TheAltening
 thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
 retrofit = "3.0.0"
 # djl
-djl = "0.38.0"
+djl = "0.40.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-okhttp = "5.5.0"
+okhttp = "5.5.1"
 
-ktor = "3.6.0"
+ktor = "3.6.1"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.10"
-discord-ipc = "-SNAPSHOT"
+discord-ipc = "1.0.0"
 
 # Recommended mods
 modmenu = "21.0.0"
@@ -62,7 +67,7 @@ lwjgl = "3.4.3"
 # Other plugins
 detekt = "2.0.0-alpha.6"
 gradleGitProperties = "4.0.1"
-dokka = "2.2.0"
+dokka = "2.3.0"
 nodeGradle = "7.1.0"
 
 [libraries]
@@ -78,16 +83,18 @@ lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 minecraftauth = { group = "net.ccbluex", name = "MinecraftAuth", version.ref = "minecraftauth" }
+axochat-client = { group = "net.ccbluex", name = "axochat-client", version.ref = "axochat-client" }
 thealtening = { group = "com.thealtening.api", name = "api", version.ref = "thealtening" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 liquidbounce-cef = { group = "net.ccbluex", name = "liquidbounce-cef", version.ref = "liquidbounce-cef" }
+gametest-harness = { group = "net.ccbluex", name = "gametest-harness", version.ref = "gametest-harness" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
 fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
-discord-ipc = { group = "com.github.CCBlueX", name = "discord-ipc", version.ref = "discord-ipc" }
+discord-ipc = { group = "net.ccbluex", name = "discord-ipc", version.ref = "discord-ipc" }
 
 djl-api = { group = "ai.djl", name = "api", version.ref = "djl" }
 djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref = "djl" }

@@ -111,6 +111,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         val blockPos = player.blockPosition()
         val selfInHole = holes.any { it.contains(blockPos) }
         if (Features.ONLY_WHEN_SELF_IN_HOLE in features && !selfInHole) {
+            // The placer keeps working from its queue, so the queue has to be emptied for this to stop.
+            placer.clear()
             return@handler
         }
 
@@ -128,8 +130,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
 
             // the range in which entities are considered as a target
-            val range = this.range.sq() + 10.0
-            collectHolesSmart(range, holeContext, availableItems)
+            val rangeSqr = this.range.sq() + 10.0
+            collectHolesSmart(rangeSqr, holeContext, availableItems)
         }
 
         placer.update(blocks)
@@ -161,12 +163,12 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         }
     }
 
-    fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
+    fun collectHolesSmart(rangeSqr: Double, holeContext: HoleContext, availableItems: Int) {
         val checkedHoles = hashSetOf<Hole>()
         var remainingItems = availableItems
 
         world.entitiesForRendering().forEach { entity ->
-            if (entity.distanceToSqr(player) > range || entity === player || !entity.shouldBeAttacked()) {
+            if (entity.distanceToSqr(player) > rangeSqr || entity === player || !entity.shouldBeAttacked()) {
                 return@forEach
             }
 

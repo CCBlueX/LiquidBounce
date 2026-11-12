@@ -20,19 +20,27 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
 
 // GET /api/v1/client/theme
 private fun Route.getCurrentTheme() = get {
@@ -76,12 +84,34 @@ private fun Route.getFonts() = get { call.respond(FontManager.fontFaces.keys) }
 private fun Route.getFont() = get("/{name}") {
     val name = call.parameters["name"] ?: call.badRequest("Missing font name")
     val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
-    val file = font.file ?: run {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    val (file) = font.source as? FontFace.Source.LocalFile ?: run {
+        call.respond(HttpStatusCode.NoContent)
         return@get
     }
 
     call.respondFile(file)
+}
+
+// POST /api/v1/client/sound
+// Plays any registered sound, theme sounds included, in the UI category, so the game's volume sliders apply
+private fun Route.postSound() = post {
+    data class Request(val sound: String?, val volume: Float?, val pitch: Float?)
+    val request = call.receive<Request>()
+    val id = request.sound?.let(Identifier::tryParse) ?: call.badRequest("Invalid sound")
+
+    val played = withContext(Dispatchers.Main) {
+        if (mc.soundManager.getSoundEvent(id) == null) {
+            return@withContext false
+        }
+
+        val event = SoundEvent.createVariableRangeEvent(id)
+        mc.soundManager.play(SimpleSoundInstance.forUI(event, request.pitch ?: 1F, request.volume ?: 1F))
+        true
+    }
+    if (!played) {
+        call.notFound(id.toString(), "Unknown sound")
+    }
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.themeRoutes() {
@@ -95,5 +125,8 @@ internal fun Route.themeRoutes() {
     }
     route("/basic-mode") {
         postToggleBasicMode()
+    }
+    route("/sound") {
+        postSound()
     }
 }

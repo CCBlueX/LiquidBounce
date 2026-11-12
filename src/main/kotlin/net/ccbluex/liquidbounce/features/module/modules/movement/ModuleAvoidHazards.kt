@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.world.anyMatched
-import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
@@ -58,7 +57,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * Prevents you walking into blocks that might be malicious for you.
  */
 object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
-    private var mode by enumChoice("Mode", AvoidMode.SHAPE)
+    private val mode by enumChoice("Mode", AvoidMode.SHAPE)
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
     // Solid webs keep NoWeb from ever handling one; steering around them does not
@@ -125,7 +124,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
-        simulatedPlayer.pos = player.position()
+        simulatedPlayer.setPos(player.position())
         var previousBoundingBox = simulatedPlayer.boundingBox
         // Do not reject every candidate while already on a ladder. We only block
         // transitions that newly enter climb-state.
@@ -179,7 +178,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             return true
         }
 
-        return world.findBlocksIntersects(boundingBox).anyMatched { pos, blockState ->
+        return world.findBlocksIn(boundingBox).anyMatched { pos, blockState ->
             val fluidState = blockState.fluidState
             val block = blockState.block
 
@@ -252,7 +251,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             pos.below().getBlock() is MagmaBlock
         }),
         LAVA("Lava", test = { _, fluidState, _ ->
-            fluidState.`is`(Fluids.LAVA) || fluidState.`is`(Fluids.FLOWING_LAVA)
+            fluidState.type.isSame(Fluids.LAVA)
         }),
         WITHER_ROSE("WitherRose", test = { block, _, _ ->
             block is WitherRoseBlock

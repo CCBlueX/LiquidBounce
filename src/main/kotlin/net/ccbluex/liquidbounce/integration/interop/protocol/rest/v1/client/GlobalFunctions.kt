@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -28,7 +29,6 @@ import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import org.apache.commons.io.input.CharSequenceReader
 
 // GET /api/v1/client/global
 private fun Route.getGlobalConfig() = get {
@@ -37,9 +37,9 @@ private fun Route.getGlobalConfig() = get {
 
 // PUT /api/v1/client/global
 private fun Route.putGlobalConfig() = put {
-    ConfigSystem.deserializeValueGroup(GlobalManager, CharSequenceReader(call.receiveText()))
+    ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText())
     ConfigSystem.store(GlobalManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.globalRoutes() = route("/global") {
