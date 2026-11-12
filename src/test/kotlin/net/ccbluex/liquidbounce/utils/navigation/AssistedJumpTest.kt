@@ -216,6 +216,18 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a run off a bed onto the floor beside it jumps from the edge of the floor`() {
+        // Everything Parkour, the bed run: the next bed is out of reach from the checkpoint bed, but not from the edge
+        // of the floor beside it. Stepping down off the bed was taken for the edge, and the jump there fell short.
+        val world = TestWorld().fill(22, 90, 844, 24, 90, 846, Blocks.QUARTZ_BLOCK.defaultBlockState())
+            .fill(23, 91, 845, 24, 91, 845, Blocks.BED.white().defaultBlockState())
+            .fill(18, 90, 849, 18, 90, 850, Blocks.BED.orange().defaultBlockState())
+        val course = listOf(BlockPos(23, 91, 845), BlockPos(18, 90, 849))
+
+        assertEquals(course, run(world, Vec3(23.5, 91.5625, 845.5), course))
+    }
+
+    @Test
     fun `a chain of single slime blocks is jumped along on every bounce`() {
         // Ultimate Slime Challenge 1-2, "DO press SPACE": single slime blocks five and four apart. The bounce off one
         // is lower than a jump, so only a jump on the bounce with the speed of the jump before reaches the next one.

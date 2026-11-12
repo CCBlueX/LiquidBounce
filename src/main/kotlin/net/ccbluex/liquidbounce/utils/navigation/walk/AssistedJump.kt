@@ -182,7 +182,7 @@ internal class AssistedJump {
         }
         this.target = target
         if (target == null) {
-            return if (ticksSinceLanding < BRAKE_TICKS) brake(state, yaw, keys) else null
+            return untargeted(state, yaw, keys)
         }
 
         val step = target.step
@@ -379,18 +379,34 @@ internal class AssistedJump {
         return Target(pos, top, jump, settles = true)
     }
 
-    /** After a landing, holds back when [keys] would run off a block too small to stop on later. */
-    private fun brake(state: PlayerMotion, yaw: Float, keys: LeapInput): LeapInput? {
+    /**
+     * The keys without a target, or null to leave [keys] to the jump at the edge. After a landing, holds back when
+     * they would run off a block too small to stop on later. Where they only step down onto ground a little lower,
+     * like off a bed onto the floor beside it, goes on without a jump, as the one at the edge would take off there,
+     * short of the edge after.
+     */
+    private fun untargeted(state: PlayerMotion, yaw: Float, keys: LeapInput): LeapInput? {
         val probe = state.copy()
-        val runsOff = (0 until BRAKE_LOOKAHEAD).any {
+        var leaves = -1
+        var lands = false
+        for (tick in 0 until STEP_DOWN_TICKS) {
             probe.tick(yaw, keys.forward, keys.strafe, jump = false, sprint = state.sprinting)
-            !probe.onGround
-        }
-        if (!runsOff || state.horizontalSpeed <= BRAKE_SPEED) {
-            return null
+            if (!probe.onGround && leaves < 0) {
+                leaves = tick
+            } else if (probe.onGround && leaves >= 0) {
+                lands = true
+                break
+            }
         }
 
-        return LeapInput(-1, 0, jump = keys.jump, sprint = false)
+        val brakes = ticksSinceLanding < BRAKE_TICKS && leaves in 0 until BRAKE_LOOKAHEAD &&
+            state.horizontalSpeed > BRAKE_SPEED
+        return when {
+            brakes -> LeapInput(-1, 0, jump = keys.jump, sprint = false)
+            leaves == 0 && lands && state.motionY <= 0.0 && state.y - probe.y <= MAX_STEP_DOWN ->
+                LeapInput(keys.forward, keys.strafe, jump = false, sprint = keys.sprint)
+            else -> null
+        }
     }
 
 
@@ -435,6 +451,10 @@ internal class AssistedJump {
         const val BRAKE_TICKS = 10
         const val BRAKE_LOOKAHEAD = 3
         const val BRAKE_SPEED = 0.1
+
+        /** How far and for how many ticks a step down falls, which is walked rather than jumped off. */
+        const val MAX_STEP_DOWN = 0.6
+        const val STEP_DOWN_TICKS = 5
     }
 
 }
