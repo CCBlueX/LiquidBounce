@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.gametest.harness
 
+import net.ccbluex.gametest.harness.GameTestResults
 import net.ccbluex.gametest.harness.connection.GameTestEnvironment
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
@@ -41,7 +42,7 @@ abstract class LocalGameTest : FabricClientGameTest {
         check(context.computeOnClient<Boolean, RuntimeException> { LiquidBounce.isInitialized }) {
             "LiquidBounce did not finish initializing"
         }
-        test(context)
+        GameTestResults.local(name) { test(context) }
     }
 
     protected abstract fun test(context: ClientGameTestContext)

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
@@ -113,7 +114,9 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     @Volatile
     private var timestamp = Instant.now()
 
-    private var doNotTryToConnect = false
+    private val isSkipping = env("LB_DISCORD_SKIP", "net.ccbluex.liquidbounce.discord.skip")?.toBoolean() ?: false
+
+    private var doNotTryToConnect = isSkipping
 
     init {
         doNotIncludeAlways()
@@ -121,7 +124,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
 
     override fun onEnabled() {
         timestamp = Instant.now()
-        doNotTryToConnect = false
+        doNotTryToConnect = isSkipping
     }
 
     private fun connectIpc() {

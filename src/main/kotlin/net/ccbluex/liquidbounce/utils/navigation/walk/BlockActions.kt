@@ -21,15 +21,18 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -41,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetP
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -60,8 +64,8 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 
 /**
- * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts in
- * [GameTickEvent] once the server has the aim.
+ * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts on
+ * the tick the rotation going out hits the block.
  */
 class BlockActions(
     private val owner: EventListener,
@@ -74,8 +78,10 @@ class BlockActions(
     var rotation: Rotation? = null
         private set
 
+    /** What the rotation system is asked for this tick, see [rotation]. */
+    private var target: RotationTarget? = null
+
     private var useCooldown = 0
-    private var ready: BlockHitResult? = null
 
     val isActive: Boolean
         get() = action != null
@@ -123,56 +129,59 @@ class BlockActions(
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        if (useCooldown > 0) {
+            useCooldown--
+        }
+
         rotation = null
-        ready = null
+        target = null
         val action = action ?: return@handler
-        val aim = when (action) {
+        val (aim, surface) = when (action) {
             is Action.Place -> {
                 action.plan = placementPlan(action.pos)
-                action.plan?.placementTarget?.rotation
+                action.plan?.placementTarget?.let { it.rotation to it.surface() }
             }
 
             else -> {
                 val state = world.getBlockState(action.pos)
                 val reach = player.blockInteractionRange()
-                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)?.rotation
+                // Any face does, also through blocks within reach
+                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)
+                    ?.let { it.rotation to Surface.of(action.pos, throughWalls = true) }
             }
         } ?: return@handler
 
         rotation = aim
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(aim, considerInventory = true, whenReady = readiness(action)),
-            Priority.IMPORTANT_FOR_USAGE_1,
-            owner,
-        )
+        target = rotations.toRotationTarget(aim, considerInventory = true, surface = surface)
     }
 
-    /** Ready once the rotation going out hits what [action] works on, the way vanilla acts on its look. */
-    private fun readiness(action: Action) = Readiness({ rotation ->
-        when (action) {
-            is Action.Place -> action.plan?.placementTarget?.verifyClick(rotation)
-            else -> {
-                // Mining may go on a little past the reach the break started from
-                val reach = player.blockInteractionRange() + if (action is Action.Mine) 1.0 else 0.0
-                raytraceBlock(reach, rotation, action.pos, world.getBlockState(action.pos))
-                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == action.pos }
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
+        target ?: return@tickHandler
+
+        guarded {
+            val planned by tracked { target }
+            val current by tracked { action }
+            val (worked, hit) = owner.lookAt(Priority.IMPORTANT_FOR_USAGE_1, { planned }) { going ->
+                hitOn(current, going)?.let { current to it }
+            }
+
+            when (worked) {
+                is Action.Mine -> breakTick(worked.pos, hit)
+                is Action.Open -> openTick(worked.pos, hit)
+                is Action.Place -> worked.plan?.takeIf { worked.ready }?.let { placeTick(it, hit) }
             }
         }
-    }) { ready = it }
+    }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        if (useCooldown > 0) {
-            useCooldown--
-        }
-
-        val hit = ready ?: return@handler
-        ready = null
-        when (val action = action) {
-            is Action.Mine -> breakTick(action.pos, hit)
-            is Action.Open -> openTick(action.pos, hit)
-            is Action.Place -> action.plan?.takeIf { action.ready }?.let { placeTick(it, hit) }
-            null -> Unit
+    /** What [action] works on when the rotation going out is [rotation], the way vanilla acts on its look. */
+    private fun hitOn(action: Action, rotation: Rotation): BlockHitResult? = when (action) {
+        is Action.Place -> action.plan?.placementTarget?.verifyClick(rotation)
+        else -> {
+            // Mining may go on a little past the reach the break started from
+            val reach = player.blockInteractionRange() + if (action is Action.Mine) 1.0 else 0.0
+            raytraceBlock(reach, rotation, action.pos, world.getBlockState(action.pos))
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == action.pos }
         }
     }
 
@@ -218,6 +227,7 @@ class BlockActions(
     private val worldChangeHandler = handler<WorldChangeEvent> {
         action = null
         rotation = null
+        target = null
     }
 
     override fun parent() = owner

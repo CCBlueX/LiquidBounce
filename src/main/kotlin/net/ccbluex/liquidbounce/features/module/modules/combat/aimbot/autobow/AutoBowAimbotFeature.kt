@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -53,9 +55,15 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
         tree(TargetRenderer(AutoBowAimbotFeature, targetTracker))
     }
 
+    /**
+     * Where to aim at [TargetTracker.target], planned once per tick for the next rotation update.
+     */
+    private var aim: Rotation? = null
+
     @Suppress("unused")
     private val tickRepeatable = handler<GameTickEvent> {
         targetTracker.reset()
+        aim = null
 
         // Should check if player is using bow
         val activeStack = player.usingItemOrNull ?: player.handItems.firstOrNull {
@@ -84,14 +92,23 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             rotation != null
         } ?: return@handler
 
-        val aim = rotation!!
-        RotationManager.setRotationTarget(
-            aim,
-            priority = Priority.IMPORTANT_FOR_USAGE_1,
-            provider = ModuleAutoBow,
-            valueGroup = rotations,
-            whenReady = AutoBowAutoShootFeature.whenAimedAt(aim),
-        )
+        aim = rotation
+    }
+
+    @Suppress("unused")
+    private val aimHandler = tickHandler {
+        if (aim == null) {
+            return@tickHandler
+        }
+
+        guarded {
+            val planned by tracked { aim }
+            val onTarget = ModuleAutoBow.lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
+                rotations.toRotationTarget(planned, considerInventory = true)
+            }) { going -> AutoBowAutoShootFeature.isAimedAt(going, planned) }
+
+            AutoBowAutoShootFeature.shootWithAim(onTarget)
+        }
     }
 
 }

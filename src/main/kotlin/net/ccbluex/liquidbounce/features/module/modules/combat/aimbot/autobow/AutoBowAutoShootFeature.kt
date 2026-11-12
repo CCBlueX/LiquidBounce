@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -78,14 +77,22 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         aimedLastTick = aimed
         aimed = false
+        forceUncharged = false
     }
 
+    fun isAimedAt(going: Rotation, rotation: Rotation) = going.directionAngleTo(rotation) <= aimThreshold
+
     /**
-     * Tells this feature once the rotation going out is within [aimThreshold] of [rotation].
+     * Shoots once the aimbot's rotation went out, [onTarget] telling whether this tick's is within [aimThreshold].
      */
-    fun whenAimedAt(rotation: Rotation) = Readiness({ going ->
-        going.takeIf { it.directionAngleTo(rotation) <= aimThreshold }
-    }) { aimed = true }
+    internal fun shootWithAim(onTarget: Boolean) {
+        if (!running || requiresHypotheticalHit) {
+            return
+        }
+
+        aimed = onTarget
+        shoot()
+    }
 
     private fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
@@ -108,13 +115,20 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        forceUncharged = false
+        if (!requiresHypotheticalHit && AutoBowAimbotFeature.enabled) {
+            return@handler
+        }
 
+        shoot()
+    }
+
+    @Suppress("CognitiveComplexMethod", "ReturnCount")
+    private fun shoot() {
         val usingItemHand = player.usingItemHand
             ?: if (usePrechargedCrossbow) {
-                InteractionHand.entries.find { player.getItemInHand(it).isChargedCrossbow } ?: return@handler
+                InteractionHand.entries.find { player.getItemInHand(it).isChargedCrossbow } ?: return
             } else {
-                return@handler
+                return
             }
 
         val usingItemStack = player.usingItemOrNull ?: player.getItemInHand(usingItemHand)
@@ -124,43 +138,43 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 val pullTime = CrossbowItem.getChargeDuration(usingItemStack, player)
                 val isChargedNow = usingItemStack.isChargedCrossbow
                 if (!isChargedNow && player.ticksUsingItem < pullTime) {
-                    return@handler
+                    return
                 }
             }
 
             is BowItem -> {
                 if (player.ticksUsingItem < charged + getChargedRandom()) {
-                    return@handler
+                    return
                 }
             }
 
             is TridentItem -> {
                 if (player.ticksUsingItem <= TridentItem.THROW_THRESHOLD_TIME) {
-                    return@handler
+                    return
                 }
             }
 
-            else -> return@handler
+            else -> return
         }
 
         if (!ModuleAutoBow.lastShotTimer.hasElapsed((delayBetweenShots * 1000.0F).toLong())) {
-            return@handler
+            return
         }
 
         if (requiresHypotheticalHit) {
             val hypotheticalHit = getHypotheticalHit()
 
             if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
-                return@handler
+                return
             }
         } else if (AutoBowAimbotFeature.enabled) {
             if (AutoBowAimbotFeature.targetTracker.target == null) {
-                return@handler
+                return
             }
 
             val onTarget = if (usingItemStack.item is CrossbowItem) aimed else aimedLastTick
             if (!onTarget) {
-                return@handler
+                return
             }
         }
 

@@ -20,11 +20,14 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.getOrNull
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -82,50 +85,52 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
         currentTarget = null
     }
 
-    val repeatable = handler<GameTickEvent> {
-        val target = currentTarget ?: return@handler
+    val repeatable = tickHandler {
+        val target = currentTarget ?: return@tickHandler
 
         if (!chronometer.hasElapsed(delay.toLong())) {
-            return@handler
+            return@tickHandler
         }
 
         if (wouldKill(target)) {
             clearTarget()
-            return@handler
+            return@tickHandler
         }
 
-        // find the best spot (and skip if no spot was found)
-        val (rotation, _) =
-            raytraceBox(
-                player.eyePosition,
-                target.boundingBox,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble(),
-            ) ?: return@handler
-
-        rotationMode.activeMode.rotate(rotation, isFinished = { view ->
-            isLookingAtEntity(
-                toEntity = target,
-                rotation = view,
-                range = range.toDouble(),
-                throughWallsRange = wallRange.toDouble()
-            ) != null
-        }, onFinished = {
-            if (!chronometer.hasElapsed(delay.toLong())) {
-                return@rotate
+        val surface = Surface(target.boundingBox, throughWalls = wallRange > 0f)
+        guarded({ currentTarget === target }) {
+            // The best spot; stops once no spot is in reach
+            val spot by tracked {
+                raytraceBox(
+                    player.eyePosition,
+                    target.boundingBox,
+                    range = range.toDouble(),
+                    wallsRange = wallRange.toDouble(),
+                )
             }
 
-            val target = currentTarget ?: return@rotate
-
-            if (wouldKill(target)) {
-                clearTarget()
-                return@rotate
+            rotationMode.activeMode.look({ spot.rotation }, surface) { view ->
+                isLookingAtEntity(
+                    toEntity = target,
+                    rotation = view,
+                    range = range.toDouble(),
+                    throughWallsRange = wallRange.toDouble()
+                )
             }
+        }.getOrNull() ?: return@tickHandler
 
-            attackEntity(target, swingMode)
-            chronometer.reset()
+        if (!chronometer.hasElapsed(delay.toLong())) {
+            return@tickHandler
+        }
+
+        if (wouldKill(target)) {
             clearTarget()
-        })
+            return@tickHandler
+        }
+
+        attackEntity(target, swingMode)
+        chronometer.reset()
+        clearTarget()
     }
 
     /**

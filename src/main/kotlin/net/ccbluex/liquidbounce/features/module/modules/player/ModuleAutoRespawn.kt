@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -37,12 +38,15 @@ object ModuleAutoRespawn : ClientModule("AutoRespawn", ModuleCategories.PLAYER) 
 
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {
-            if (delay > 0) {
-                waitTicks(delay)
-            }
+            // Respawning by hand during the delay leaves nothing to do
+            guarded({ player.isDeadOrDying }) {
+                if (delay > 0) {
+                    waitTicks(delay)
+                }
 
-            player.respawn()
-            mc.gui.setScreen(null)
+                player.respawn()
+                mc.gui.setScreen(null)
+            }
         }
     }
 

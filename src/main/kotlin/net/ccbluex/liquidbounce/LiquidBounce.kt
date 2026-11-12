@@ -80,7 +80,6 @@ import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
-import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
@@ -301,7 +300,6 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         ConfigSystem.root(ConfigTracker)
-        PostRotationExecutor
         ServerObserver
         KillDeathTracker
         PlayerStatisticsTracker
@@ -333,58 +331,72 @@ object LiquidBounce : EventListener {
         dispatcher: CoroutineDispatcher,
     ) = withContext(dispatcher) {
         logger.info("Initializing API...")
-        // Lookup API config
-        ApiConfig.config
+        if (ApiConfig.isSkipping) {
+            logger.warn("Environment variable 'LB_API_SKIP' is set to 'true'.")
+        } else {
+            // Lookup API config
+            ApiConfig.config
+        }
 
         supervisorScope {
             launch {
                 // Load translations
                 LanguageManager.loadDefault()
             }
-            launch {
-                val update = withTimeoutOrNull(8.seconds) { ClientUpdate.update.await() } ?: return@launch
-                logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
+            if (!ApiConfig.isSkipping) {
+                requestApi()
             }
             launch {
-                // Load cosmetics
-                CosmeticService.refreshCarriers(force = true)
-            }
-            launch {
-                MarketplaceConfigs.refresh()
-            }
-            launch {
-                MarketplaceItems.refresh()
-            }
-            launch {
-                MarketplaceManager.updateMissingAuthors()
-            }
-            launch {
-                IpInfoApi.original
-            }
-            launch {
-                ConfigSystem.load(ClientAccountManager)
-                if (ClientAccount.ENV_ACCOUNT != null) {
-                    ClientAccountManager.clientAccount = ClientAccount.ENV_ACCOUNT
-                }
-
-                if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
-                    runCatching {
-                        ClientAccountManager.clientAccount.renew()
-                    }.onFailure {
-                        logger.error("Failed to renew client account token.", it)
-                        if (it.httpException?.isInvalidGrant == true) {
-                            ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
-                            ConfigSystem.store(ClientAccountManager)
-                        }
-                    }.onSuccess {
-                        logger.info("Successfully renewed client account token.")
-                    }
-                }
-                ClientAccountManager.restored.complete(Unit)
+                restoreClientAccount()
             }
         }
 
         logger.info("API initialization done.")
+    }
+
+    private fun CoroutineScope.requestApi() {
+        launch {
+            val update = withTimeoutOrNull(8.seconds) { ClientUpdate.update.await() } ?: return@launch
+            logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
+        }
+        launch {
+            // Load cosmetics
+            CosmeticService.refreshCarriers(force = true)
+        }
+        launch {
+            MarketplaceConfigs.refresh()
+        }
+        launch {
+            MarketplaceItems.refresh()
+        }
+        launch {
+            MarketplaceManager.updateMissingAuthors()
+        }
+        launch {
+            IpInfoApi.original
+        }
+    }
+
+    private suspend fun restoreClientAccount() {
+        ConfigSystem.load(ClientAccountManager)
+        if (ClientAccount.ENV_ACCOUNT != null) {
+            ClientAccountManager.clientAccount = ClientAccount.ENV_ACCOUNT
+        }
+
+        if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT && !ApiConfig.isSkipping) {
+            runCatching {
+                ClientAccountManager.clientAccount.renew()
+            }.onFailure {
+                logger.error("Failed to renew client account token.", it)
+                if (it.httpException?.isInvalidGrant == true) {
+                    ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
+                    ConfigSystem.store(ClientAccountManager)
+                }
+            }.onSuccess {
+                logger.info("Successfully renewed client account token.")
+            }
+        }
+        ClientAccountManager.restored.complete(Unit)
     }
 
     /**
@@ -422,30 +434,36 @@ object LiquidBounce : EventListener {
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)
 
-            // Initialize deep learning engine as task, because we cannot know if DJL will request
-            // resources from the internet.
-            launch("Deep Learning") { task ->
-                runCatching {
-                    DeepLearningEngine.init(task)
-                    DeepLearningEngine.markInitialized()
-                }.onFailure { exception ->
-                    task.subTasks.clear()
-                    DeepLearningEngine.markUnavailable()
+            if (DeepLearningEngine.isSkipping) {
+                logger.warn("Environment variable 'LB_DEEPLEARNING_SKIP' is set to 'true'.")
+            } else {
+                // Initialize deep learning engine as task, because we cannot know if DJL will request
+                // resources from the internet.
+                launch("Deep Learning") { task ->
+                    runCatching {
+                        DeepLearningEngine.init(task)
+                        DeepLearningEngine.markInitialized()
+                    }.onFailure { exception ->
+                        task.subTasks.clear()
+                        DeepLearningEngine.markUnavailable()
 
-                    // LiquidBounce can still run without deep learning,
-                    // and we don't want to crash the client if it fails.
-                    logger.info("Failed to initialize deep learning.", exception)
+                        // LiquidBounce can still run without deep learning,
+                        // and we don't want to crash the client if it fails.
+                        logger.info("Failed to initialize deep learning.", exception)
+                    }
                 }
             }
 
-            launch("Marketplace") { task ->
-                runCatching {
-                    MarketplaceManager.updateAll(task)
-                }.onFailure { exception ->
-                    logger.error("Failed to update marketplace items.", exception)
-                }
+            if (!ApiConfig.isSkipping) {
+                launch("Marketplace") { task ->
+                    runCatching {
+                        MarketplaceManager.updateAll(task)
+                    }.onFailure { exception ->
+                        logger.error("Failed to update marketplace items.", exception)
+                    }
 
-                task.isCompleted = true
+                    task.isCompleted = true
+                }
             }
         }
 

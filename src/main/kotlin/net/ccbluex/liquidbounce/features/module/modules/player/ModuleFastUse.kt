@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -113,11 +114,13 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
                     resetAfterTicks = 1 + delay
                 )
 
-                waitTicks(delay)
-                repeat(speed) {
-                    network.send(packetType.generatePacket())
+                guarded({ accelerateNow }) {
+                    waitTicks(delay)
+                    repeat(speed) {
+                        network.send(packetType.generatePacket())
+                    }
+                    player.releaseUsingItem()
                 }
-                player.releaseUsingItem()
             }
         }
 

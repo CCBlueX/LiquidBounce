@@ -110,9 +110,12 @@ data class Proxy(
          * - `socks5://` or `socks5h://` for SOCKS5 proxy
          *
          * Accepts the following formats:
+         * - `hostname:port`
          * - `hostname:port:username:password`
          * - `username:password:hostname:port`
          * - `username:password@hostname:port`
+         *
+         * IPv6 hosts must be enclosed in brackets, for example `[2001:db8::1]:1080`.
          */
         fun parse(text: String): Proxy {
             val proxyType = when {
@@ -122,50 +125,31 @@ data class Proxy(
             }
 
             val proxyText = text.substringAfter("://")
-            return when {
-                '@' in proxyText -> {
-                    val (credentials, addr) = proxyText.split('@', limit = 2)
-                    val (username, password) = credentials.split(':', limit = 2)
-                    val (host, port) = addr.split(':', limit = 2)
+            return FORMATS.firstNotNullOfOrNull { format -> format.parse(proxyText, proxyType) }
+                ?: throw IllegalArgumentException("Invalid proxy format: expected a host and valid port")
+        }
 
-                    Proxy(host, port.toInt(), credentials(username, password), proxyType)
-                }
-
-                proxyText.count { it == ':' } == 3 -> {
-                    val parts = proxyText.split(':', limit = 4)
-
-                    when {
-                        // host:port:username:password
-                        parts[1].isValidPort() -> Proxy(
-                            parts[0],
-                            parts[1].toInt(),
-                            credentials(parts[2], parts[3]),
-                            proxyType
-                        )
-
-                        // username:password:host:port
-                        parts[3].isValidPort() -> Proxy(
-                            parts[2],
-                            parts[3].toInt(),
-                            credentials(parts[0], parts[1]),
-                            proxyType
-                        )
-
-                        else -> error("Invalid proxy format: no valid port found")
-                    }
-                }
-
-                else -> {
-                    val (host, port) = proxyText.split(':', limit = 2)
-                    Proxy(host, port.toInt(), null, proxyType)
-                }
+        /** The proxy [text] is written in, or null if it is not in this format or its port is not one */
+        private fun Regex.parse(text: String, type: Type): Proxy? {
+            val groups = matchEntire(text)?.groups ?: return null
+            val host = groups["host"]!!.value.removeSurrounding("[", "]")
+            val port = groups["port"]!!.value.toIntOrNull()?.takeIf { it in 1..65535 } ?: return null
+            val credentials = groups["username"]?.let { username ->
+                credentials(username.value, groups["password"]!!.value)
             }
+
+            return Proxy(host, port, credentials, type)
         }
 
-        private fun String.isValidPort(): Boolean {
-            val port = toIntOrNull() ?: return false
-            return port in 1..65535
-        }
+        /** A hostname or IPv4 address, or an IPv6 address in the brackets that tell its colons from separators */
+        private const val ADDRESS = """(?<host>[^:@\[\]]+|\[[^\[\]]+]):(?<port>\d+)"""
+
+        /** Tried in this order, so a numeric password does not turn `host:port:username:password` around */
+        private val FORMATS = arrayOf(
+            Regex("""(?<username>[^:]+):(?<password>.+)@$ADDRESS"""),
+            Regex("""$ADDRESS(?::(?<username>[^:]+):(?<password>[^:]+))?"""),
+            Regex("""(?<username>[^:]+):(?<password>[^:]+):$ADDRESS"""),
+        )
 
         @JvmStatic
         fun credentials(username: String, password: String): Credentials? {

@@ -23,13 +23,15 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge.Rotate.rotations
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.isMetBy
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
@@ -70,13 +72,15 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     private var holdJump = false
     private var aimTicks = 0
     private var horizontalPitch: Float? = null
-    private var ready: Rotation? = null
+
+    /** The yaw, if any, and pitch the next rotation update turns to. */
+    private var aim: Pair<Float?, Float>? = null
 
     override fun onDisabled() {
         holdJump = false
         aimTicks = 0
         horizontalPitch = null
-        ready = null
+        aim = null
     }
 
     @Suppress("unused")
@@ -93,10 +97,20 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      */
     @Suppress("unused")
     private val autoWindChargeHandler = tickHandler {
+        // Runs once a tick: after the rotation update when this asked it to turn, else at the start of the tick
+        val angles = aim
+        aim = null
+        val readyRotation = if (angles == null) {
+            waitTicks(1)
+            null
+        } else {
+            val (yaw, pitch) = angles
+            val target = rotations.toRotationTarget(yaw = yaw, pitch = pitch, tolerance = AIM_TOLERANCE)
+            // Resumes on the next rotation going out, met or not
+            lookAt(Priority.IMPORTANT_FOR_USAGE_3, { target }) { it }.takeIf { target.isMetBy(it) }
+        }
+
         holdJump = false
-        // An aim asked for on an earlier tick turns, and is found ready, before this handler runs
-        val readyRotation = ready
-        ready = null
 
         if (player.isFallFlying || player.isSwimming || player.isInLiquid || !mc.options.keyJump.isDown) {
             aimTicks = 0
@@ -148,16 +162,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
 
     private fun aim(yaw: Float?, pitch: Float) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                yaw = yaw,
-                pitch = pitch,
-                tolerance = AIM_TOLERANCE,
-                whenReady = Readiness.reached { ready = it },
-            ),
-            Priority.IMPORTANT_FOR_USAGE_3,
-            this
-        )
+        aim = yaw to pitch
     }
 
 }

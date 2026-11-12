@@ -376,7 +376,7 @@ class Hand(private val random: RandomGenerator) {
         const val RAMP = 3
 
         /** Share of its drift the arm keeps per tick until the next correction sets it again. */
-        const val COAST = 0.6f
+        const val COAST = 0.8f
         const val MAX_DRIFT_TICKS = 100
 
         /** A submovement takes at least this many ticks, however short. */

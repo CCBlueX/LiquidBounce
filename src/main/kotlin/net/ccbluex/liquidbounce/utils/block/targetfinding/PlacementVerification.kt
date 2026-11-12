@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -97,6 +98,12 @@ fun BlockPlacementTarget.verifyClick(
         FailedClick.PLANNED_HIT -> blockHitResult
     }
 }
+
+/**
+ * The face a look has to meet to click [this]; [throughWalls] where the click goes through blocks in front of it.
+ */
+fun BlockPlacementTarget.surface(throughWalls: Boolean = false) =
+    Surface.of(interactedBlockPos, direction, throughWalls)
 
 /**
  * The context vanilla would place with when [this] is the context of clicking [pos], or null when that click does not

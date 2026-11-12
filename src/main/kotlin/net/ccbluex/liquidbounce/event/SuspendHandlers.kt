@@ -24,9 +24,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.coroutines.ContinuationInterceptor
@@ -69,6 +72,18 @@ inline fun EventListener.tickHandler(
 }
 
 /**
+ * Starts [block] in place, the way [sequenceHandler] does, unless [running] has not finished yet; then that one keeps
+ * going and is returned instead. For work started from plain handlers that must not overlap with itself.
+ */
+fun EventListener.launchSequence(running: Job?, block: suspend CoroutineScope.() -> Unit): Job {
+    if (running?.isActive == true) {
+        return running
+    }
+
+    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED, block)
+}
+
+/**
  * Start a [Job] on event.
  *
  * It's fully async, so modifying the [Event] instance makes no sense.
@@ -94,34 +109,59 @@ suspend fun <T : Event> EventListener.waitMatches(
     eventClass: Class<T>,
     priority: Short,
     predicate: Predicate<T>,
-): T = suspendCancellableCoroutine { continuation ->
-    val handler = object : CompletionHandler, Consumer<T> {
-        @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
+): T {
+    val context = currentCoroutineContext()
+    val guard = context[GuardScope]
+    val event = suspendCancellableCoroutine { continuation ->
+        val handler = object : CompletionHandler, Consumer<T>, BooleanSupplier {
+            @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
 
-        private fun unregisterAndResume(result: Result<T>) {
-            EventManager.unregisterEventHook(eventClass, eventHook)
-            if (continuation.isActive) {
-                continuation.resumeWith(result)
-            }
-        }
-
-        override fun invoke(p1: Throwable?) {
-            EventManager.unregisterEventHook(eventClass, eventHook)
-        }
-
-        override fun accept(event: T) {
-            try {
-                if (predicate.test(event)) {
-                    unregisterAndResume(Result.success(event))
+            private fun unregisterAndResume(result: Result<T>) {
+                EventManager.unregisterEventHook(eventClass, eventHook)
+                if (continuation.isActive) {
+                    continuation.resumeWith(result)
                 }
-            } catch (e: Throwable) {
-                unregisterAndResume(Result.failure(e))
             }
+
+            override fun invoke(p1: Throwable?) {
+                EventManager.unregisterEventHook(eventClass, eventHook)
+            }
+
+            override fun accept(event: T) {
+                try {
+                    if (predicate.test(event)) {
+                        unregisterAndResume(Result.success(event))
+                    }
+                } catch (e: Throwable) {
+                    unregisterAndResume(Result.failure(e))
+                }
+            }
+
+            // Guard conditions may read the world, so they are checked on game ticks, not on the event thread.
+            override fun getAsBoolean(): Boolean {
+                if (!continuation.isActive) {
+                    return true
+                }
+
+                val broken = try {
+                    guard!!.broken() ?: return false
+                } catch (e: Throwable) {
+                    e
+                }
+                // Unlike a resume, cancel stays safe when the event thread resumes at the same moment.
+                continuation.cancel(broken)
+                return true
+            }
+        }
+
+        continuation.invokeOnCancellation(handler)
+        EventManager.registerEventHook(eventClass, handler.eventHook)
+        if (guard != null) {
+            context.ticker.register(handler)
         }
     }
-
-    continuation.invokeOnCancellation(handler)
-    EventManager.registerEventHook(eventClass, handler.eventHook)
+    guard?.ensure()
+    return event
 }
 
 /**
@@ -130,6 +170,9 @@ suspend fun <T : Event> EventListener.waitMatches(
  * The continuation resumes on the event handler thread. For example:
  * - [net.ccbluex.liquidbounce.event.events.PacketEvent]: client Netty IO (EventLoopGroup)
  * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
+ *
+ * Inside a [guarded] scope the conditions are checked on every game tick while waiting and once more
+ * on the resuming thread before returning.
  *
  * @param priority The priority of the event hook.
  * @param predicate The predicate to match the event.

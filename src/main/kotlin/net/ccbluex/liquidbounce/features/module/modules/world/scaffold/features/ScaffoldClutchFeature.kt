@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
@@ -42,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
@@ -133,10 +133,9 @@ internal object ScaffoldClutchFeature {
      * What a look has to point at to place [target]: the whole block it clicks, see [allowedClick]. As a target of
      * that size, a hand flicks onto it no slower than onto any other.
      */
-    fun box(target: BlockPlacementTarget): AABB? {
-        val shape = target.interactedBlockPos.outlineShape
-        return if (aimsAhead && !shape.isEmpty) shape.bounds().move(target.interactedBlockPos) else null
-    }
+    fun surface(target: BlockPlacementTarget): Surface? = target.interactedBlockPos
+        .takeIf { aimsAhead && !it.outlineShape.isEmpty }
+        ?.let { Surface.of(it, throughWalls = true) }
 
     /**
      * The click [rotation] allows. It only has to meet the clicked block, not the face to click: no anticheat can

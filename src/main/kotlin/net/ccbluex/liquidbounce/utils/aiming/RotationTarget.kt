@@ -21,9 +21,14 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.phys.AABB
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * What a module wants the view to do. An axis left null is up to the rotation system: it stays with the player's own
@@ -49,17 +54,14 @@ class RotationTarget @JvmOverloads constructor(
     val considerInventory: Boolean = false,
     val movementCorrection: MovementCorrection = MovementCorrection.SILENT,
     /**
-     * What the view has to point at: any rotation whose ray hits it is on target. Defaults to the box of [entity].
+     * What the view has to meet, with [yaw] and [pitch] as the point on it the module recommends. Defaults to the box
+     * of [entity].
      */
-    val box: AABB? = null,
+    val surface: Surface? = null,
     /**
-     * Degrees [yaw] and [pitch] may be missed by, when there is no [box].
+     * Degrees [yaw] and [pitch] may be missed by, when there is no [surface].
      */
     val tolerance: Float = 0f,
-    /**
-     * Told on the tick the rotation going out meets what the module needs, which is when vanilla acts on a look too.
-     */
-    val whenReady: Readiness<*>? = null,
 ) {
 
     init {
@@ -74,9 +76,8 @@ class RotationTarget @JvmOverloads constructor(
         ticksUntilReset: Int = 1,
         considerInventory: Boolean = false,
         movementCorrection: MovementCorrection = MovementCorrection.SILENT,
-        box: AABB? = null,
+        surface: Surface? = null,
         tolerance: Float = 0f,
-        whenReady: Readiness<*>? = null,
     ) : this(
         rotation.yaw,
         rotation.pitch,
@@ -85,16 +86,31 @@ class RotationTarget @JvmOverloads constructor(
         ticksUntilReset,
         considerInventory,
         movementCorrection,
-        box,
+        surface,
         tolerance,
-        whenReady,
     )
 
-    /** The box to hit, if there is one. */
-    val hitBox: AABB?
-        get() = box ?: entity?.let { entity -> entity.boundingBox.inflate(entity.pickRadius.toDouble()) }
+    /** The surface to hit, if there is one. */
+    val hitSurface: Surface?
+        get() = surface ?: entity?.let(Surface::of)
 
     /** This target's angles, with [otherwise] on an axis it leaves free. */
     fun rotation(otherwise: Rotation) = Rotation(yaw ?: otherwise.yaw, pitch ?: otherwise.pitch)
 
+}
+
+/**
+ * Whether [rotation] meets this target: the ray from the player's eyes meets [RotationTarget.hitSurface], or else the
+ * turned axes are within [RotationTarget.tolerance], at least half a mouse step.
+ */
+internal fun RotationTarget.isMetBy(rotation: Rotation): Boolean {
+    hitSurface?.let { surface ->
+        return surface.isHitBy(player.eyePosition, rotation)
+    }
+
+    val margin = max(tolerance, RotationUtil.gcd.toFloat() / 2)
+    val yaw = yaw
+    val pitch = pitch
+    return (yaw == null || abs(angleDifference(rotation.yaw, yaw)) <= margin) &&
+        (pitch == null || abs(rotation.pitch - pitch) <= margin)
 }
