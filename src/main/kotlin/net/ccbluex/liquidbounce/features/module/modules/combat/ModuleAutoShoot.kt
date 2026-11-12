@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -142,7 +143,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         }
     }
 
-    private fun getRotation(target: LivingEntity, slot: HotbarItemSlot): Rotation? {
+    private fun getRotation(target: LivingEntity, slot: HotbarItemSlot): Pair<Rotation, Surface?>? {
         return GravityType.from(slot).rotationFor(target)
     }
 
@@ -171,13 +172,14 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowableSlot() ?: return@handler
-        val rotation = getRotation(target, slot) ?: return@handler
+        val (rotation, surface) = getRotation(target, slot) ?: return@handler
 
         // Set the rotation with the usage priority of 2.
         RotationManager.setRotationTarget(
             rotations.toRotationTarget(
                 rotation,
                 considerInventory = considerInventory,
+                surface = surface,
                 whenReady = Readiness({ going -> going.takeIf { it.directionAngleTo(rotation) <= aimOffThreshold } }) {
                     aimed = true
                 },
@@ -245,27 +247,28 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     private enum class GravityType(override val tag: String) : Tagged {
         AUTO("Auto") {
-            override fun rotationFor(target: LivingEntity): Rotation? = null
+            override fun rotationFor(target: LivingEntity): Pair<Rotation, Surface?>? = null
         },
         LINEAR("Linear") {
-            override fun rotationFor(target: LivingEntity): Rotation {
+            override fun rotationFor(target: LivingEntity): Pair<Rotation, Surface?> {
                 // On linear we likely don't need to care about gravity,
                 // but instead aim exactly at the hitbox of the target.
                 val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
-                return Rotation.lookingAt(point.pos, eyes)
+                return Rotation.lookingAt(point.pos, eyes) to Surface(point.box)
             }
         },
         PROJECTILE("Projectile") {
-            override fun rotationFor(target: LivingEntity): Rotation? {
+            override fun rotationFor(target: LivingEntity): Pair<Rotation, Surface?>? {
                 return SituationalProjectileAngleCalculator.calculateAngleForEntity(
                     TrajectoryInfo.GENERIC,
                     target
-                )
+                )?.let { it to null }
             }
         };
 
-        abstract fun rotationFor(target: LivingEntity): Rotation?
+        /** The rotation to throw with, and the box it meets when the throw flies straight. */
+        abstract fun rotationFor(target: LivingEntity): Pair<Rotation, Surface?>?
 
         companion {
             fun from(slot: HotbarItemSlot): GravityType =

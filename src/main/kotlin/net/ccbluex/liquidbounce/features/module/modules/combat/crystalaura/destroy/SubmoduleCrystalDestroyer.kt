@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -95,9 +96,10 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     }
 
     private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
+        val surface = Surface(target.boundingBox, throughWalls = wallsRange > 0f)
         // create the action chain to execute
         val action = {
-            ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = { view ->
+            ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, surface, isFinished = { view ->
                 isLookingAtEntity(
                     toEntity = target,
                     rotation = view,

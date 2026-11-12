@@ -53,7 +53,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -208,7 +208,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
 
         val onTickRotation = if (rotations.rotationTiming == ON_TICK) {
-            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation?.normalize()
+            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.first?.normalize()
         } else {
             null
         }
@@ -348,7 +348,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         range: Float,
         wallsRange: Float
     ): Boolean {
-        val (rotation, _) = findRotation(entity, range, wallsRange) ?: return false
+        val (rotation, surface) = findRotation(entity, range, wallsRange) ?: return false
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
@@ -378,6 +378,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                 rotation,
                 entity,
                 considerInventory = !ignoreOpenInventory,
+                surface = surface,
                 whenReady = Readiness({ going -> attackHit(entity, going) }) { hit -> readyHit = hit },
             ),
             priority = Priority.IMPORTANT_FOR_USAGE_2,
@@ -411,9 +412,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      * @param entity The entity to attack
      * @param range The range to attack the entity (NOT SQUARED)
      *
-     *  @return The best spot to attack the entity
+     *  @return The best spot to attack the entity and the box it is on
      */
-    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): Pair<Rotation, Surface>? {
+        val throughWalls = wallsRange > 0f || rotations.aimThroughWalls
         if (rotations.lazyRotation) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentHit = isLookingAtEntity(
@@ -426,7 +428,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             if (currentHit != null) {
                 debugParameter("Lazy Rotation") { true }
-                return RotationWithVector(currentRotation, currentHit.location)
+                return currentRotation to Surface(Surface.of(entity).box, throughWalls = throughWalls)
             }
         }
 
@@ -448,7 +450,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             rotationPreference = rotationPreference
         )
 
-        return if (rotation == null && rotations.aimThroughWalls) {
+        val found = if (rotation == null && rotations.aimThroughWalls) {
             val rotationThroughWalls = raytraceBox(
                 eyes = eyes,
                 box = point.box,
@@ -462,6 +464,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         } else {
             rotation
         }
+
+        return found?.let { it.rotation to Surface(point.box, throughWalls = throughWalls) }
     }
 
     /**

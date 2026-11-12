@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -231,6 +232,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             rotations,
             this,
             whenReady = ::readiness,
+            throughWalls = false,
         ) ?: return false
 
         // set currentTarget to the new target
@@ -279,7 +281,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
         val collisionContext = CollisionContext.of(player)
         for ((pos, sides) in blocksToPlace) {
-            val (rotation, _) = sides.firstNotNullOfOrNull { side ->
+            val (rotation, side) = sides.firstNotNullOfOrNull { side ->
                 raytraceBlockSide(
                     side,
                     pos,
@@ -287,14 +289,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                     rangeSquared = range.sq().toDouble() - 0.1,
                     wallsRangeSquared = wallRange.sq().toDouble() - 0.1,
                     collisionContext,
-                )
+                )?.let { it.rotation to side }
             } ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
             RotationManager.setRotationTarget(
-                rotations.toRotationTarget(rotation, considerInventory = true, whenReady = readiness(pos)),
+                rotations.toRotationTarget(
+                    rotation,
+                    considerInventory = true,
+                    surface = Surface.of(pos, side),
+                    whenReady = readiness(pos),
+                ),
                 Priority.IMPORTANT_FOR_USAGE_1,
                 this@ModuleAutoFarm
             )

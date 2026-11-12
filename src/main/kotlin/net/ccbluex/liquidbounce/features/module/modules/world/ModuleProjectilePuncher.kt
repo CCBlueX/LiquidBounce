@@ -116,12 +116,14 @@ object ModuleProjectilePuncher : ClientModule(
 
             // aim at target
             RotationManager.setRotationTarget(
-                spot.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
+                rotations.toRotationTarget(
+                    spot.rotation,
+                    entity,
+                    considerInventory = !ignoreOpenInventory,
+                    whenReady = Readiness.entity(entity, range.toDouble()) { punchable = entity },
+                ),
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher,
-                whenReady = Readiness.entity(entity, range.toDouble()) { punchable = entity },
             )
             break
         }

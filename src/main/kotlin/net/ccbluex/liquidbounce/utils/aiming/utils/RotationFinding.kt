@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.preference.RotationPreference
 import net.ccbluex.liquidbounce.utils.block.state
@@ -108,7 +109,7 @@ fun raytraceBlockRotation(
  * Aims at the first block from [candidates] whose face is reachable within the given ranges and
  * returns its position, or null if none is reachable. Skips setting the rotation target when
  * [rotate] is false, e.g. when another module owns the rotation. [whenReady] makes what to do once
- * the rotation at the chosen block goes out.
+ * the rotation at the chosen block goes out; [throughWalls] lets the view meet the block behind others.
  */
 @Suppress("LongParameterList")
 fun selectBlockTarget(
@@ -121,6 +122,7 @@ fun selectBlockTarget(
     considerInventory: Boolean = true,
     rotate: Boolean = true,
     whenReady: (BlockPos) -> Readiness<*>? = { null },
+    throughWalls: Boolean = wallsRange > 0f,
 ): BlockPos? {
     for ((blockPos, state) in candidates) {
         val (rotation, _) = raytraceBlockRotation(
@@ -136,6 +138,7 @@ fun selectBlockTarget(
                 valueGroup.toRotationTarget(
                     rotation,
                     considerInventory = considerInventory,
+                    surface = Surface.of(blockPos, throughWalls = throughWalls),
                     whenReady = whenReady(blockPos),
                 ),
                 Priority.IMPORTANT_FOR_USAGE_1,

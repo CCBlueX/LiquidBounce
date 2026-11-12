@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -88,6 +90,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private data class UseAction(
         val slot: HotbarItemSlot,
         val rotation: Rotation,
+        val surface: Surface,
         val resolveHitResult: (BlockHitResult) -> BlockHitResult?,
         val onSuccess: (BlockHitResult) -> Unit,
     )
@@ -141,6 +144,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             rotations.toRotationTarget(
                 action.rotation,
                 considerInventory = true,
+                surface = action.surface,
                 whenReady = Readiness({ rotation ->
                     action.resolveHitResult(traceFromPlayer(rotation))?.let { hit -> hit to rotation }
                 }) { ready = it },
@@ -199,6 +203,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         return UseAction(
             slot = plan.hotbarItemSlot,
             rotation = plan.placementTarget.rotation,
+            surface = plan.placementTarget.surface(),
             resolveHitResult = { rayTraceResult ->
                 if (plan.placementTarget.doesCrosshairTargetMatchRequirements(rayTraceResult)) rayTraceResult else null
             },
@@ -215,12 +220,16 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         directions: Array<Direction>,
     ): UseAction? {
         val side = pickBestSide(webPos, directions) ?: return null
-        val faceCenter = AABB(webPos).centerOnSide(side)
+        val webBox = AABB(webPos)
+        val faceCenter = webBox.centerOnSide(side)
         val fallbackHitResult = BlockHitResult(faceCenter, side, webPos, false)
+        val eyes = player.eyePosition
 
         return UseAction(
             slot = waterSlot,
-            rotation = Rotation.lookingAt(point = faceCenter, from = player.eyePosition),
+            rotation = Rotation.lookingAt(point = faceCenter, from = eyes),
+            // Any look clicks the planned face, also through blocks; from inside the web no face can be met
+            surface = Surface(webBox, side.takeUnless { webBox.contains(eyes) }, throughWalls = true),
             resolveHitResult = { rayTraceResult ->
                 resolveDirectionalPlacementHitResult(rayTraceResult, webPos, side, fallbackHitResult)
             },
@@ -252,6 +261,8 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         return UseAction(
             slot = bucketSlot,
             rotation = Rotation.lookingAt(point = pickupCenter, from = player.eyePosition),
+            // Any look clicks the source block, also through blocks
+            surface = Surface.of(pickupPos, throughWalls = true),
             resolveHitResult = { rayTraceResult ->
                 resolvePickupHitResult(rayTraceResult, pickupPos, pickupCenter)
             },

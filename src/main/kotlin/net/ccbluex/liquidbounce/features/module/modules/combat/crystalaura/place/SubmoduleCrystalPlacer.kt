@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.findClosestPointOnBlockInLineWithCrystal
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -163,7 +164,8 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = { view ->
+        val surface = Surface.of(targetPos, side, throughWalls = wallsRange > 0f)
+        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, surface, isFinished = { view ->
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
                 view,

@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -213,6 +214,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
                 rotations.toRotationTarget(
                     raytrace.rotation,
                     considerInventory = !ignoreOpenInventory,
+                    surface = Surface.of(mineTarget.targetPos, throughWalls = wallsRange > 0f),
                     whenReady = Readiness({ rotation -> hitOn(mineTarget, rotation) }) { ready = it },
                 ),
                 Priority.IMPORTANT_FOR_USAGE_2,

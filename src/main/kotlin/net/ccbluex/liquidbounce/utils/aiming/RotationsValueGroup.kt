@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.aim.ConstantAim
 import net.ccbluex.liquidbounce.utils.aiming.aim.HumanAim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.phys.AABB
 
 /**
  * The rotation settings of a module.
@@ -56,10 +56,10 @@ open class RotationsValueGroup(
         rotation: Rotation,
         entity: Entity? = null,
         considerInventory: Boolean = false,
-        box: AABB? = null,
+        surface: Surface? = null,
         tolerance: Float = 0f,
         whenReady: Readiness<*>? = null,
-    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, box, tolerance, whenReady)
+    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, surface, tolerance, whenReady)
 
     /**
      * A target with these settings; leave out the axis the module does not care about.
@@ -72,7 +72,7 @@ open class RotationsValueGroup(
         pitch: Float? = null,
         entity: Entity? = null,
         considerInventory: Boolean = false,
-        box: AABB? = null,
+        surface: Surface? = null,
         tolerance: Float = 0f,
         whenReady: Readiness<*>? = null,
     ) = RotationTarget(
@@ -83,7 +83,7 @@ open class RotationsValueGroup(
         ticksUntilReset,
         considerInventory,
         movementCorrection,
-        box,
+        surface,
         tolerance,
         whenReady,
     )

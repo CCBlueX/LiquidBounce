@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.resolvePlacementAt
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
@@ -166,6 +167,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 rotations.toRotationTarget(
                     placementTarget.rotation,
                     considerInventory = true,
+                    surface = placementTarget.surface(),
                     whenReady = Readiness({ rotation ->
                         placementTarget.verifyClick(rotation)?.let { hit -> hit to rotation }
                     }) { ready = it },

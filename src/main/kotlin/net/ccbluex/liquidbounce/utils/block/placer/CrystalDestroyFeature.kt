@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -103,7 +104,8 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
                 wallsRange = wallRange.toDouble(),
             ) ?: return@handler
 
-        rotationMode.activeMode.rotate(rotation, isFinished = { view ->
+        val surface = Surface(target.boundingBox, throughWalls = wallRange > 0f)
+        rotationMode.activeMode.rotate(rotation, surface, isFinished = { view ->
             isLookingAtEntity(
                 toEntity = target,
                 rotation = view,

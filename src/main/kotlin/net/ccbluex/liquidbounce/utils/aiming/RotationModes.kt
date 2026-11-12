@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -50,9 +51,15 @@ sealed class RotationMode(
     val instant by boolean("Instant", false)
 
     /**
-     * Turns to [rotation] and runs [onFinished] once [isFinished] holds for the rotation the action goes out with.
+     * Turns to [rotation] on [surface] and runs [onFinished] once [isFinished] holds for the rotation the action goes
+     * out with.
      */
-    abstract fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable)
+    abstract fun rotate(
+        rotation: Rotation,
+        surface: Surface?,
+        isFinished: (Rotation) -> Boolean,
+        onFinished: Runnable,
+    )
 
     override val parent: ModeValueGroup<*>
         get() = modeValueGroup
@@ -72,7 +79,12 @@ class NormalRotationMode(
     val rotations = tree(RotationsValueGroup(this))
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+    override fun rotate(
+        rotation: Rotation,
+        surface: Surface?,
+        isFinished: (Rotation) -> Boolean,
+        onFinished: Runnable,
+    ) {
         // Sent at once, so the server judges it with the rotation it already has
         if (instant && isFinished(RotationManager.serverRotation)) {
             onFinished.run()
@@ -83,7 +95,8 @@ class NormalRotationMode(
                         !ignoreOpenInventory,
                         rotations,
                         priority,
-                        eventListener
+                        eventListener,
+                        surface = surface,
                     )
                 }
             }
@@ -100,7 +113,8 @@ class NormalRotationMode(
                 priority = priority,
                 whenReady = Readiness({ next -> next.takeIf(isFinished) }, {
                     PostRotationExecutor.addTask(eventListener, postMove, task = onFinished, priority = true)
-                })
+                }),
+                surface = surface,
             )
         }
     }
@@ -112,7 +126,12 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
 
     val send by boolean("SendRotationPacket", false)
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+    override fun rotate(
+        rotation: Rotation,
+        surface: Surface?,
+        isFinished: (Rotation) -> Boolean,
+        onFinished: Runnable,
+    ) {
         fun task() {
             if (send) {
                 val fixedRotation = rotation.normalize()
@@ -144,7 +163,12 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
 class CrosshairRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener: EventListener)
     : RotationMode("Crosshair", modeValueGroup, eventListener) {
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+    override fun rotate(
+        rotation: Rotation,
+        surface: Surface?,
+        isFinished: (Rotation) -> Boolean,
+        onFinished: Runnable,
+    ) {
         fun task() {
             if (isFinished(player.rotation)) {
                 onFinished.run()

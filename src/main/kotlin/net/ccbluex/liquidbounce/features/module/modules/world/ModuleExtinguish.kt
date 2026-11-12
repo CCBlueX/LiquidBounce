@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -101,6 +102,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             rotations.toRotationTarget(
                 target.placementTarget.rotation,
                 considerInventory = true,
+                surface = target.placementTarget.surface(),
                 whenReady = Readiness({ rotation ->
                     target.placementTarget.verifyClick(rotation)?.let { hit -> hit to rotation }
                 }) { ready = it },

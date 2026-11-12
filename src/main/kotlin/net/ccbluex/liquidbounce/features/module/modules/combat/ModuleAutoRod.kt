@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -163,11 +164,12 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
-        val rotation = gravityType.apply(target) ?: return@handler
+        val (rotation, surface) = gravityType.apply(target) ?: return@handler
         RotationManager.setRotationTarget(
             rotations.toRotationTarget(
                 rotation,
                 considerInventory = false,
+                surface = surface,
                 whenReady = Readiness({ going -> going.takeIf { it.directionAngleTo(rotation) <= aimOffThreshold } }) {
                     aimed = true
                 },
@@ -239,17 +241,18 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         LINEAR("Linear"),
         PROJECTILE("Projectile");
 
-        fun apply(target: LivingEntity): Rotation? = when (this) {
+        /** The rotation to throw the rod with, and the box it meets when the throw flies straight. */
+        fun apply(target: LivingEntity): Pair<Rotation, Surface?>? = when (this) {
             LINEAR -> {
                 val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
-                Rotation.lookingAt(point.pos, eyes)
+                Rotation.lookingAt(point.pos, eyes) to Surface(point.box)
             }
 
             PROJECTILE -> {
                 SituationalProjectileAngleCalculator.calculateAngleForEntity(
                     TrajectoryInfo.FISHING_ROD, target
-                )
+                )?.let { it to null }
             }
         }
     }

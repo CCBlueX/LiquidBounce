@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -118,6 +119,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
                 rotations.toRotationTarget(
                     blockChangeInfo.blockPlacementTarget.rotation,
                     considerInventory = !ignoreOpenInventory,
+                    surface = blockChangeInfo.blockPlacementTarget.surface(),
                     whenReady = Readiness({ rotation ->
                         traceFromPlayer(rotation).takeIf { intent.validate(it) }?.let { hit -> hit to rotation }
                     }) { ready = it },

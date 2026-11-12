@@ -25,18 +25,14 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.ClipContext
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.Vec3
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -129,13 +125,12 @@ class Readiness<T : Any> private constructor(
 }
 
 /**
- * Whether [rotation] meets this target: the ray from the player's eyes hits [RotationTarget.hitBox], in sight for an
- * entity, or else the turned axes are within [RotationTarget.tolerance], at least half a mouse step.
+ * Whether [rotation] meets this target: the ray from the player's eyes meets [RotationTarget.hitSurface], or else the
+ * turned axes are within [RotationTarget.tolerance], at least half a mouse step.
  */
 internal fun RotationTarget.isMetBy(rotation: Rotation): Boolean {
-    val box = hitBox
-    if (box != null) {
-        return player.eyePosition.hits(rotation, box, inSight = entity != null)
+    hitSurface?.let { surface ->
+        return surface.isHitBy(player.eyePosition, rotation)
     }
 
     val margin = max(tolerance, RotationUtil.gcd.toFloat() / 2)
@@ -143,17 +138,4 @@ internal fun RotationTarget.isMetBy(rotation: Rotation): Boolean {
     val pitch = pitch
     return (yaw == null || abs(angleDifference(rotation.yaw, yaw)) <= margin) &&
         (pitch == null || abs(rotation.pitch - pitch) <= margin)
-}
-
-/**
- * Whether the ray of [rotation] from these eyes hits [box], and with [inSight] does so with no block in the way.
- */
-internal fun Vec3.hits(rotation: Rotation, box: AABB, inSight: Boolean): Boolean {
-    if (box.contains(this)) {
-        return true
-    }
-
-    val reach = distanceTo(box.center) + box.size
-    val point = box.clip(this, fma(reach, rotation.directionVector)).getOrNull() ?: return false
-    return !inSight || hasLineOfSight(this, point)
 }

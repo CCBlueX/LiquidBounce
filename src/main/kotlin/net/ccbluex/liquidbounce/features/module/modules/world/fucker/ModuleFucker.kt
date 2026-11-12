@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -375,6 +376,7 @@ object ModuleFucker : ClientModule(
                 rotations.toRotationTarget(
                     raytrace.rotation,
                     considerInventory = !ignoreOpenInventory,
+                    surface = Surface.of(pos, throughWalls = throughWallsRange > 0.0),
                     whenReady = Readiness({ rotation ->
                         // The ray may pass through other blocks within the wall range
                         val blockState = pos.state ?: return@Readiness null

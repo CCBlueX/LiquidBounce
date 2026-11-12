@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.doBreak
@@ -161,6 +162,7 @@ object LegitNukerMode : Mode("Legit") {
                     rotations.toRotationTarget(
                         raytraceResult.rotation,
                         considerInventory = !ignoreOpenInventory,
+                        surface = Surface.of(pos, throughWalls = wallRange > 0f),
                         whenReady = readiness(pos),
                     ),
                     Priority.IMPORTANT_FOR_USAGE_1,

@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
@@ -206,10 +207,11 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: EventListener,
-        whenReady: Readiness<*>? = null
+        whenReady: Readiness<*>? = null,
+        surface: Surface? = null,
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
-            rotation, considerInventory = considerInventory, whenReady = whenReady
+            rotation, considerInventory = considerInventory, surface = surface, whenReady = whenReady
         ), priority, provider)
     }
 
@@ -331,10 +333,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         step: Float,
     ): AimGoal {
         val owner = yawTarget.takeIf { it === pitchTarget }
-        val box = owner?.hitBox
-        if (box != null) {
+        val surface = owner?.hitSurface
+        if (surface != null) {
             val eyes = player.eyePosition
-            return boxGoal(goal, eyes, box, eyes.hits(view, box, inSight = owner.entity != null))
+            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view))
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
@@ -345,27 +347,21 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     }
 
     /**
-     * [goal] on [box], with the yaw and pitch extents of the box as seen from [eyes].
+     * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
      */
-    private fun boxGoal(goal: Rotation, eyes: Vec3, box: AABB, reached: Boolean): AimGoal {
-        if (box.contains(eyes)) {
+    private fun surfaceGoal(goal: Rotation, eyes: Vec3, surface: Surface, reached: Boolean): AimGoal {
+        if (surface.box.contains(eyes)) {
             return AimGoal(goal, 180f, 180f, reached)
         }
 
-        val center = Rotation.lookingAt(box.center, eyes)
-        var minYaw = 0f
-        var maxYaw = 0f
-        var minPitch = center.pitch
-        var maxPitch = center.pitch
-        for (corner in 0 until 8) {
-            val rotation = Rotation.lookingAt(
-                Vec3(
-                    if (corner and 1 == 0) box.minX else box.maxX,
-                    if (corner and 2 == 0) box.minY else box.maxY,
-                    if (corner and 4 == 0) box.minZ else box.maxZ,
-                ),
-                eyes,
-            )
+        val corners = surface.corners
+        val center = Rotation.lookingAt(corners.fold(Vec3.ZERO, Vec3::add).scale(1.0 / corners.size), eyes)
+        var minYaw = Float.POSITIVE_INFINITY
+        var maxYaw = Float.NEGATIVE_INFINITY
+        var minPitch = Float.POSITIVE_INFINITY
+        var maxPitch = Float.NEGATIVE_INFINITY
+        for (corner in corners) {
+            val rotation = Rotation.lookingAt(corner, eyes)
             val yaw = angleDifference(rotation.yaw, center.yaw)
             minYaw = min(minYaw, yaw)
             maxYaw = max(maxYaw, yaw)

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetP
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -126,22 +128,24 @@ class BlockActions(
         rotation = null
         ready = null
         val action = action ?: return@handler
-        val aim = when (action) {
+        val (aim, surface) = when (action) {
             is Action.Place -> {
                 action.plan = placementPlan(action.pos)
-                action.plan?.placementTarget?.rotation
+                action.plan?.placementTarget?.let { it.rotation to it.surface() }
             }
 
             else -> {
                 val state = world.getBlockState(action.pos)
                 val reach = player.blockInteractionRange()
-                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)?.rotation
+                // Any face does, also through blocks within reach
+                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)
+                    ?.let { it.rotation to Surface.of(action.pos, throughWalls = true) }
             }
         } ?: return@handler
 
         rotation = aim
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(aim, considerInventory = true, whenReady = readiness(action)),
+            rotations.toRotationTarget(aim, considerInventory = true, surface = surface, whenReady = readiness(action)),
             Priority.IMPORTANT_FOR_USAGE_1,
             owner,
         )

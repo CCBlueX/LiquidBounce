@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.phys.AABB
 
 /**
  * What a module wants the view to do. An axis left null is up to the rotation system: it stays with the player's own
@@ -49,11 +49,12 @@ class RotationTarget @JvmOverloads constructor(
     val considerInventory: Boolean = false,
     val movementCorrection: MovementCorrection = MovementCorrection.SILENT,
     /**
-     * What the view has to point at: any rotation whose ray hits it is on target. Defaults to the box of [entity].
+     * What the view has to meet, with [yaw] and [pitch] as the point on it the module recommends. Defaults to the box
+     * of [entity].
      */
-    val box: AABB? = null,
+    val surface: Surface? = null,
     /**
-     * Degrees [yaw] and [pitch] may be missed by, when there is no [box].
+     * Degrees [yaw] and [pitch] may be missed by, when there is no [surface].
      */
     val tolerance: Float = 0f,
     /**
@@ -74,7 +75,7 @@ class RotationTarget @JvmOverloads constructor(
         ticksUntilReset: Int = 1,
         considerInventory: Boolean = false,
         movementCorrection: MovementCorrection = MovementCorrection.SILENT,
-        box: AABB? = null,
+        surface: Surface? = null,
         tolerance: Float = 0f,
         whenReady: Readiness<*>? = null,
     ) : this(
@@ -85,14 +86,14 @@ class RotationTarget @JvmOverloads constructor(
         ticksUntilReset,
         considerInventory,
         movementCorrection,
-        box,
+        surface,
         tolerance,
         whenReady,
     )
 
-    /** The box to hit, if there is one. */
-    val hitBox: AABB?
-        get() = box ?: entity?.let { entity -> entity.boundingBox.inflate(entity.pickRadius.toDouble()) }
+    /** The surface to hit, if there is one. */
+    val hitSurface: Surface?
+        get() = surface ?: entity?.let(Surface::of)
 
     /** This target's angles, with [otherwise] on an axis it leaves free. */
     fun rotation(otherwise: Rotation) = Rotation(yaw ?: otherwise.yaw, pitch ?: otherwise.pitch)

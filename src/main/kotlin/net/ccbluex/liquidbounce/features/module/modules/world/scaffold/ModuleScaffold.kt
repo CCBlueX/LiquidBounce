@@ -449,7 +449,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 ScaffoldRotationValueGroup.toRotationTarget(
                     rotation,
                     considerInventory = considerInventory,
-                    box = target?.takeIf { ModuleClutch.fall != null }?.let(ScaffoldClutchFeature::box),
+                    surface = target?.takeIf { ModuleClutch.fall != null }?.let(ScaffoldClutchFeature::surface),
                     whenReady = target?.let(::placeWhenReady),
                 ),
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,

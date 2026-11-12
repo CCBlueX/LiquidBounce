@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -86,7 +87,8 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
                     placer.doPlacement(isSupport, pos, placementTarget)
                     placer.ranAction = true
                 }
-            })
+            }),
+            surface = placementTarget.surface(throughWalls = placer.wallRange > 0f || placer.constructFailResult),
         )
 
         return true
