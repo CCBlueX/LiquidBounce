@@ -28,8 +28,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -61,6 +59,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldExpandTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
@@ -70,8 +69,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -263,7 +264,15 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     }
 
-    private var currentTarget: BlockPlacementTarget? = null
+    /** The block scaffold wants to place this tick; null again once it is placed. */
+    internal var currentTarget: BlockPlacementTarget? = null
+        private set
+
+    /** Whether [currentTarget] waits for the rotation to hit it rather than going down with the view as it is. */
+    private var aimed = false
+
+    /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
+    private var cooldown = 0
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
@@ -364,6 +373,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         updateRenderCount(null)
         forceSneak = 0
         currentTarget = null
+        aimed = false
+        cooldown = 0
         renderer.clearSilently()
     }
 
@@ -379,6 +390,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         NoFallBlink.waitUntilGround = true
+        if (cooldown > 0) {
+            cooldown--
+        }
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
@@ -424,18 +438,86 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             )
         }
 
-        // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
+        aimed = false
         if (rotationTiming == NORMAL) {
-            val rotation = technique.getRotations(target)
+            val rotation = technique.getRotations(target) ?: return@handler
+            aimed = target != null
 
             RotationManager.setRotationTarget(
-                rotation ?: return@handler,
-                considerInventory = considerInventory,
-                valueGroup = ScaffoldRotationValueGroup,
-                provider = this@ModuleScaffold,
-                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                ScaffoldRotationValueGroup.toRotationTarget(
+                    rotation,
+                    considerInventory = considerInventory,
+                    whenReady = target?.let { target -> placeWhenReady(technique, target) },
+                ),
+                Priority.IMPORTANT_FOR_PLAYER_LIFE,
+                this@ModuleScaffold,
             )
         }
+    }
+
+    /**
+     * Places [target] on the tick the rotation going out clicks it.
+     */
+    private fun placeWhenReady(technique: ScaffoldTechnique, target: BlockPlacementTarget) =
+        Readiness({ rotation ->
+            if (target !== currentTarget || cooldown > 0) {
+                null
+            } else {
+                technique.click(target, rotation)?.let { hit -> hit to rotation.normalize() }
+            }
+        }) { (hit, rotation) -> place(target, hit, rotation) }
+
+    private fun ScaffoldTechnique.click(target: BlockPlacementTarget, rotation: Rotation) =
+        getCrosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
+
+    /**
+     * Clicks [hit] to place [target]. [beforeClick] runs once there is a block to place.
+     *
+     * @return whether it clicked
+     */
+    private fun place(
+        target: BlockPlacementTarget,
+        hit: BlockHitResult,
+        rotation: Rotation,
+        beforeClick: () -> Unit = {},
+    ): Boolean {
+        val hand = handToPlaceWith() ?: return false
+        beforeClick()
+
+        // Taken before the block changes it
+        val previousFallOffPos = currentOptimalLine?.let(ScaffoldMovementPrediction::getFallOffPositionOnLine)
+
+        doPlacement(hit, rotation, hand, {
+            onPlaced(target.placedBlock)
+            currentTarget = null
+            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+            cooldown = delay.random() + 1
+            true
+        }, swingMode = swingMode)
+        return true
+    }
+
+    private fun handToPlaceWith(): InteractionHand? {
+        var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offhandItem)
+
+        if (!ScaffoldAutoBlockFeature.alwaysHoldBlock) {
+            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
+        }
+
+        return when {
+            hasBlockInMainHand -> InteractionHand.MAIN_HAND
+            hasBlockInOffHand -> InteractionHand.OFF_HAND
+            else -> null
+        }
+    }
+
+    private fun onPlaced(placed: BlockPos) {
+        ScaffoldMovementPlanner.trackPlacedBlock(placed)
+        renderer.addBlock(placed)
+        ScaffoldEagleFeature.onBlockPlacement()
+        ScaffoldBlinkFeature.onBlockPlacement()
+        ScaffoldSprintControlFeature.onBlockPlacement()
     }
 
     var currentOptimalLine: Line? = null
@@ -509,7 +591,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         updateRenderCount(blockCount)
 
         if (player.onGround()) {
@@ -529,75 +611,40 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         val target = currentTarget
         val technique = activeTechnique
+        val onTick = rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP
 
-        val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            technique.getRotations(target) ?: (RotationManager.currentRotation ?: player.rotation)
-        } else {
-            RotationManager.currentRotation ?: player.rotation
-        }.normalize()
-        val currentCrosshairTarget = technique.getCrosshairTarget(target, currentRotation)
-        // The clicker decides on the hit the technique would place with, falling back to the raw crosshair hit when
-        // the technique has none: it also fires without a placement target, and on hits the technique rejected.
-        val clickerTarget = if (SimulatePlacementAttempts.enabled) {
-            currentCrosshairTarget ?: traceFromPlayer(currentRotation)
-        } else {
-            null
-        }
-        val currentDelay = delay.random()
-
-        var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
-        val hasBlockInOffHand = isValidBlock(player.offhandItem)
+        val currentRotation = (target?.takeIf { onTick }?.let(technique::getRotations)
+            ?: RotationManager.currentRotation ?: player.rotation).normalize()
 
         if (ScaffoldAutoBlockFeature.alwaysHoldBlock) {
-            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
+            handleSilentBlockSelection(
+                isValidBlock(player.inventory.getItem(player.inventory.selectedSlot)),
+                isValidBlock(player.offhandItem),
+            )
         }
 
-        // Prioritize by all means the main hand if it has a block
-        val suitableHand = InteractionHand.entries.firstOrNull {
-            isValidBlock(player.getItemInHand(it))
+        if (SimulatePlacementAttempts.enabled) {
+            // The clicker decides on the hit the technique would place with, falling back to the raw crosshair hit
+            // when the technique has none: it also fires without a placement target, and on hits the technique
+            // rejected.
+            simulatePlacementAttempt(
+                technique.getCrosshairTarget(target, currentRotation) ?: traceFromPlayer(currentRotation),
+                currentRotation,
+            )
         }
 
-        fun commonPlaceSucceed(placed: BlockPos) {
-            ScaffoldMovementPlanner.trackPlacedBlock(placed)
-            renderer.addBlock(placed)
-            ScaffoldEagleFeature.onBlockPlacement()
-            ScaffoldBlinkFeature.onBlockPlacement()
-            ScaffoldSprintControlFeature.onBlockPlacement()
+        // An aimed target goes down once the rotation hits it, see placeWhenReady
+        if (target == null || aimed || cooldown > 0) {
+            return@handler
         }
 
-        if (simulatePlacementAttempts(clickerTarget, suitableHand) && player.moving
-            && SimulatePlacementAttempts.clicker.isClickTick
-        ) {
-            SimulatePlacementAttempts.clicker.click {
-                doPlacement(clickerTarget!!, currentRotation, suitableHand!!, {
-                    commonPlaceSucceed(clickerTarget.targetBlockPos)
-                    true
-                }, swingMode = swingMode)
-                true
+        val hit = technique.click(target, currentRotation) ?: return@handler
+
+        val clicked = place(target, hit, currentRotation) {
+            if (!onTick) {
+                return@place
             }
-        }
 
-        if (target == null || currentCrosshairTarget == null) {
-            return@tickHandler
-        }
-
-        // Does the crosshair target meet the requirements?
-        if (!isValidCrosshairTarget(currentCrosshairTarget)) {
-            return@tickHandler
-        }
-
-        if (!ScaffoldAutoBlockFeature.alwaysHoldBlock) {
-            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
-        }
-
-        if (!hasBlockInMainHand && !hasBlockInOffHand) {
-            return@tickHandler
-        }
-
-        val handToInteractWith = if (hasBlockInMainHand) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
-        var wasSuccessful = false
-
-        if (rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) {
             // Check if server rotation matches the current rotation
             if (currentRotation != RotationManager.serverRotation) {
                 network.send(
@@ -622,17 +669,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             }
         }
 
-        // Take the fall off position before placing the block
-        val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
-
-        doPlacement(currentCrosshairTarget, currentRotation, handToInteractWith, {
-            commonPlaceSucceed(target.placedBlock)
-            currentTarget = null
-            wasSuccessful = true
-            true
-        }, swingMode = swingMode)
-
-        if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
+        if (clicked && rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
             network.send(
                 PosRot(
                     player.x, player.y, player.z, player.withFixedYaw(currentRotation), player.xRot, player.onGround(),
@@ -640,11 +677,24 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 )
             )
         }
+    }
 
-        if (wasSuccessful) {
-            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+    private fun simulatePlacementAttempt(clickerTarget: BlockHitResult, rotation: Rotation) {
+        // Prioritize by all means the main hand if it has a block
+        val suitableHand = InteractionHand.entries.firstOrNull {
+            isValidBlock(player.getItemInHand(it))
+        }
 
-            waitTicks(currentDelay)
+        if (simulatePlacementAttempts(clickerTarget, suitableHand) && player.moving
+            && SimulatePlacementAttempts.clicker.isClickTick
+        ) {
+            SimulatePlacementAttempts.clicker.click {
+                doPlacement(clickerTarget, rotation, suitableHand!!, {
+                    onPlaced(clickerTarget.targetBlockPos)
+                    true
+                }, swingMode = swingMode)
+                true
+            }
         }
     }
 
