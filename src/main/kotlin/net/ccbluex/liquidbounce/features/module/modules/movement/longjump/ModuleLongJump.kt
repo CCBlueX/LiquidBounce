@@ -24,19 +24,19 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.Matrix7145FlagLongJump
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.VulcanLongJump
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBoost
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBow
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.LongJumpVulcan289
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.LongJumpNCP3161Boost
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.LongJumpNCP3161Bow
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
 
     val mode = choices(
-        "Mode", NoCheatPlusBoost, arrayOf(
+        "Mode", LongJumpNCP3161Boost, arrayOf(
             // NoCheatPlus
-            NoCheatPlusBoost,
-            NoCheatPlusBow,
-            VulcanLongJump,
+            LongJumpNCP3161Boost,
+            LongJumpNCP3161Bow,
+            LongJumpVulcan289,
             Matrix7145FlagLongJump
         )
     ).apply { tagBy(this) }
@@ -60,7 +60,7 @@ object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
 
         // AutoJump
         if (autoJump && player.onGround() && player.moving
-            && mode.activeMode != NoCheatPlusBow) {
+            && mode.activeMode != LongJumpNCP3161Bow) {
             player.jumpFromGround()
             jumped = true
         }

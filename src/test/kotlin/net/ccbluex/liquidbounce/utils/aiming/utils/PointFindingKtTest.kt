@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.test.assertVec3Equals
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -85,6 +86,6 @@ class PointFindingKtTest {
     }
 
     private fun almostEquals(a: Double, b: Double, tolerance: Double): Boolean {
-        return kotlin.math.abs(a - b) <= tolerance
+        return abs(a - b) <= tolerance
     }
 }

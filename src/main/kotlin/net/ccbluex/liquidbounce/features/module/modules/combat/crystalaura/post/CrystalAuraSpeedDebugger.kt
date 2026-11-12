@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import java.util.concurrent.ConcurrentLinkedQueue
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 
 /**
  * Counts how many crystals the crystal aura places.
@@ -38,11 +39,7 @@ object CrystalAuraSpeedDebugger : CrystalPostAttackTracker() {
         val cpsTime = currentTime - 1000L
         cps.removeIf { it < cpsTime }
 
-        ModuleDebug.debugParameter(
-            ModuleCrystalAura,
-            "CPS",
-            cps.size
-        )
+        ModuleCrystalAura.debugParameter("CPS") { cps.size }
     }
 
     override fun confirmed(id: Int) {

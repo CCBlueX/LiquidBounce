@@ -26,9 +26,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Unsubscribe from a marketplace item
- */
 object MarketplaceUnsubscribeCommand {
 
     fun CmdLiteralScope.unsubscribe() {

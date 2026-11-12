@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import kotlin.math.abs
 import kotlin.math.pow
 
 /**
@@ -59,4 +60,39 @@ enum class Easing(override val tag: String) : Tagged {
         return transform(factor)
     }
 
+}
+
+/**
+ * CSS-style cubic bezier from (0, 0) over ([x1], [y1]) and ([x2], [y2]) to (1, 1), solved for [x].
+ */
+fun cubicBezier(x1: Float, y1: Float, x2: Float, y2: Float, x: Float): Float {
+    fun curve(t: Float, a: Float, b: Float) = ((1 - 3 * b + 3 * a) * t + (3 * b - 6 * a)) * t * t + 3 * a * t
+    fun slope(t: Float, a: Float, b: Float) = 3 * (1 - 3 * b + 3 * a) * t * t + 2 * (3 * b - 6 * a) * t + 3 * a
+
+    var t = x
+    repeat(8) {
+        val error = curve(t, x1, x2) - x
+        if (abs(error) < 1e-5f) {
+            return curve(t, y1, y2)
+        }
+        val d = slope(t, x1, x2)
+        if (abs(d) < 1e-6f) {
+            return@repeat
+        }
+        t -= error / d
+    }
+
+    // Newton did not settle, bisect
+    var low = 0f
+    var high = 1f
+    t = x
+    repeat(32) {
+        val value = curve(t, x1, x2)
+        if (abs(value - x) < 1e-5f) {
+            return curve(t, y1, y2)
+        }
+        if (value < x) low = t else high = t
+        t = (low + high) / 2
+    }
+    return curve(t, y1, y2)
 }

@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render.utils
 
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 
 object RenderingDebug : DebuggedOwner {
 
