@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -224,9 +225,17 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     override val running: Boolean
         get() = super.running || ModuleClutch.fall != null
 
+    private object SafeWalk : EventListener {
+        override fun parent() = ModuleScaffold
+
+        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
+        override val running: Boolean
+            get() = super.running && ModuleClutch.fall == null
+    }
+
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
-    private val safeWalkMode = choices("SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
+    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 

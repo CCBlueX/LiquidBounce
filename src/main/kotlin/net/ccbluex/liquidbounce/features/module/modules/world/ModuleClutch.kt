@@ -69,8 +69,6 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val fallHandler = handler<RotationUpdateEvent>(priority = FIRST_PRIORITY) {
         val wasFalling = path != null
-        // Predicted with scaffold off: its safe walk would keep the simulated player from the very fall
-        path = null
         path = predictFall()
 
         if (wasFalling && path == null) {
