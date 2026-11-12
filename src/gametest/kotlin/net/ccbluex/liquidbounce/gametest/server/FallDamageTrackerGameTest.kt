@@ -44,6 +44,8 @@ class FallDamageTrackerGameTest : LiquidBounceGameTest({
     run("damage $playerName 1 minecraft:player_attack")
     awaitClient("the attack") { it.hurt() }
     check(!client { LocalPlayerFallDamageTracker.isCurrentFallDamage }) { "an attack is tracked as fall damage" }
-})
+}) {
+    override val integrated = true
+}
 
 private fun Minecraft.hurt() = (player?.hurtTime ?: 0) > 0

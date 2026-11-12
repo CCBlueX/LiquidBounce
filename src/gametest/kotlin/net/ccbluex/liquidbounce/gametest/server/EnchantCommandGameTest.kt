@@ -49,7 +49,9 @@ class EnchantCommandGameTest : LiquidBounceGameTest({
     checkSingleLevel("max", null)
     checkSingleLevel("7", 7)
     checkSingleLevel(Int.MAX_VALUE.toString(), CAPPED_LEVEL)
-})
+}) {
+    override val integrated = true
+}
 
 private fun GameTestScope.checkBulkLevels(command: String, levelArgument: String?, explicitLevel: Int?) {
     holdSword()

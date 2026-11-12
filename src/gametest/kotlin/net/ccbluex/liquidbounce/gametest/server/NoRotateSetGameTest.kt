@@ -81,7 +81,9 @@ class NoRotateSetGameTest : LiquidBounceGameTest({
             }
         }
     }
-})
+}) {
+    override val integrated = true
+}
 
 /** Has the server rotate the player and waits until the client received it. */
 private fun GameTestScope.rotate(rotations: AtomicInteger) {

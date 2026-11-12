@@ -42,4 +42,6 @@ class ChatReceiveTypeGameTest : LiquidBounceGameTest({
     }
 
     check(types.single() == ChatReceiveEvent.ChatType.GAME_MESSAGE) { "a server message arrived as $types" }
-})
+}) {
+    override val integrated = true
+}
