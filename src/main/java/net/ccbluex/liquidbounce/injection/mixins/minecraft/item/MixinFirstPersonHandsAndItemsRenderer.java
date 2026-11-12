@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
 import net.ccbluex.liquidbounce.utils.item.ItemExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.FirstPersonHandsAndItems;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -69,8 +69,8 @@ public abstract class MixinFirstPersonHandsAndItemsRenderer {
 
         // AutoBlock re-blocks after every hit, each use would drop the sword out of the block pose
         var player = Minecraft.getInstance().player;
-        if (player != null && KillAuraAutoBlock.INSTANCE.getBlockVisual()
-            && player.getItemInHand(hand).getUseAnimation() == ItemUseAnimation.BLOCK) {
+        if (player != null && KillAuraAutoBlock.INSTANCE.getRunning()
+            && ItemCategorizationsKt.isSword(player.getItemInHand(hand))) {
             ci.cancel();
         }
     }

@@ -161,15 +161,13 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
 }
 
 /**
- * ViaVersion keeps the 1.8 item tag, `Damage` included, in [DataComponents.CUSTOM_DATA], so every durability update
- * from a 1.8 server would otherwise play the swap animation.
+ * Through ViaVersion, items from a 1.8 server keep their old tag, `Damage` included, in [DataComponents.CUSTOM_DATA],
+ * whatever protocol the client speaks, so every durability update would otherwise play the swap animation.
  */
 fun ItemStack.matchesIgnoringLegacyDamage(other: ItemStack): Boolean =
-    isOlderThanOrEqual1_8 &&
-        ItemStack.matchesIgnoringComponents(this, other) {
-            it.ignoreSwapAnimation() || it === DataComponents.CUSTOM_DATA
-        } &&
-        legacyTagWithoutDamage() == other.legacyTagWithoutDamage()
+    ItemStack.matchesIgnoringComponents(this, other) {
+        it.ignoreSwapAnimation() || it === DataComponents.CUSTOM_DATA
+    } && legacyTagWithoutDamage() == other.legacyTagWithoutDamage()
 
 private fun ItemStack.legacyTagWithoutDamage() = get(DataComponents.CUSTOM_DATA)?.update { it.remove("Damage") }
 
