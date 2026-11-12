@@ -497,11 +497,19 @@ private fun isWithinAllowedRange(
 ): Boolean = distanceSquared < (if (visible) rangeSquared else wallsRangeSquared)
 
 /**
- * Determines if the player is able to see a [AABB].
+ * Determines if the player is able to see a [AABB], testing up to [maxPoints] points of it.
  *
  * Will return `true` if the player is inside the [box].
  */
-fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expectedTarget: BlockPos? = null): Boolean {
+@Suppress("LongParameterList")
+fun canSeeBox(
+    eyes: Vec3,
+    box: AABB,
+    range: Double,
+    wallsRange: Double,
+    expectedTarget: BlockPos? = null,
+    maxPoints: Int = 256,
+): Boolean {
     if (box.contains(eyes)) {
         return true
     }
@@ -509,7 +517,7 @@ fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expected
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
-    scanBoxPoints(eyes, box) { posInBox ->
+    scanBoxPoints(eyes, box, maxPoints) { posInBox ->
         // skip because of out of range
         val distance = eyes.distanceToSqr(posInBox)
 
@@ -539,9 +547,10 @@ fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expected
 private inline fun scanBoxPoints(
     eyes: Vec3,
     box: AABB,
+    maxPoints: Int = 256,
     fn: (Vec3) -> Unit,
 ) {
-    if (projectPointsOnBox(eyes, box, maxPoints = 256, fn)) {
+    if (projectPointsOnBox(eyes, box, maxPoints, fn)) {
         return
     }
 
