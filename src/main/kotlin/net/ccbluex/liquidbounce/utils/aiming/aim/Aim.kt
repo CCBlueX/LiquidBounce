@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
+import net.minecraft.world.entity.Entity
 
 /**
  * How the view turns towards a goal. The result is rounded to whole mouse counts afterwards, so the view only ever
@@ -48,7 +49,13 @@ abstract class Aim(
 
 /**
  * Where the view has to go: [rotation] is the point to aim at, [width] and [height] the angular size of what has to be
- * hit (0 for the rotation itself), and [reached] whether the view hits it already.
+ * hit (0 for the rotation itself), [reached] whether the view hits it already, and [entity] whose box it is, if any.
  */
 @AddonApi
-class AimGoal(val rotation: Rotation, val width: Float, val height: Float, val reached: Boolean)
+class AimGoal(
+    val rotation: Rotation,
+    val width: Float,
+    val height: Float,
+    val reached: Boolean,
+    val entity: Entity? = null,
+)

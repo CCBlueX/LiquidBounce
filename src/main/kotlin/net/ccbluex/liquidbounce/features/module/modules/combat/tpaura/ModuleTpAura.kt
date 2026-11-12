@@ -68,7 +68,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
     private val clicker = tree(Clicker(this, mc.options.keyAttack))
-    private val rotations = tree(RotationsValueGroup(this))
+    private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
     private val steps = tree(StepsValueGroup())
 
     private val trip = Trip(this, steps)

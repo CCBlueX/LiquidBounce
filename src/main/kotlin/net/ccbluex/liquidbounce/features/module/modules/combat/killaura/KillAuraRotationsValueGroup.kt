@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 
-object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura) {
+object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatSpecific = true) {
 
     private val rotationTimingChoice by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
     val aimThroughWalls by boolean("ThroughWalls", false)
@@ -32,8 +32,8 @@ object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura) {
     private val lazyRotationChoice by boolean("LazyRotation", false)
 
     // The AI turns every tick, like the players it learned from
-    val rotationTiming get() = if (usesAiRotations) KillAuraRotationTiming.NORMAL else rotationTimingChoice
-    val lazyRotation get() = lazyRotationChoice && !usesAiRotations
+    val rotationTiming get() = if (usesAiAim) KillAuraRotationTiming.NORMAL else rotationTimingChoice
+    val lazyRotation get() = lazyRotationChoice && !usesAiAim
 
     enum class KillAuraRotationTiming(override val tag: String) : Tagged {
         NORMAL("Normal"),

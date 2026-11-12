@@ -66,7 +66,7 @@ class AiCombatGameTest : LocalGameTest() {
             context.waitTicks(5)
             context.client {
                 ModuleManager.filter { it.enabled && it !== ModuleHud }.forEach { it.enabled = false }
-                KillAuraRotationsValueGroup.get().first { it.name == "AngleSmooth" }.setByString("AI")
+                KillAuraRotationsValueGroup.get().first { it.name == "Aim" }.setByString("AI")
                 ModuleKillAura.clicker.get().first { it.name == "Technique" }.setByString("Butterfly")
             }
             fight(context)
@@ -83,7 +83,7 @@ class AiCombatGameTest : LocalGameTest() {
                 client.level!!.addEntity(this)
             }
         }
-        val controller = checkNotNull(KillAuraRotationsValueGroup.aiAngleSmooth).controller
+        val controller = checkNotNull(KillAuraRotationsValueGroup.aiAim).controller
         val decisions = HashSet<Int>()
         var travel = 0f
         var lastYaw: Float? = null

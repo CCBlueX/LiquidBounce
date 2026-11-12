@@ -334,22 +334,22 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         val box = owner?.hitBox
         if (box != null) {
             val eyes = player.eyePosition
-            return boxGoal(goal, eyes, box, eyes.hits(view, box, inSight = owner.entity != null))
+            return boxGoal(goal, eyes, box, eyes.hits(view, box, inSight = owner.entity != null), owner.entity)
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
         val margin = max(tolerance, step / 2)
         val delta = view.rotationDeltaTo(goal)
         val reached = abs(delta.deltaYaw) < margin && abs(delta.deltaPitch) < margin
-        return AimGoal(goal, tolerance * 2, tolerance * 2, reached)
+        return AimGoal(goal, tolerance * 2, tolerance * 2, reached, owner?.entity)
     }
 
     /**
      * [goal] on [box], with the yaw and pitch extents of the box as seen from [eyes].
      */
-    private fun boxGoal(goal: Rotation, eyes: Vec3, box: AABB, reached: Boolean): AimGoal {
+    private fun boxGoal(goal: Rotation, eyes: Vec3, box: AABB, reached: Boolean, entity: Entity?): AimGoal {
         if (box.contains(eyes)) {
-            return AimGoal(goal, 180f, 180f, reached)
+            return AimGoal(goal, 180f, 180f, reached, entity)
         }
 
         val center = Rotation.lookingAt(box.center, eyes)
@@ -372,7 +372,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             minPitch = min(minPitch, rotation.pitch)
             maxPitch = max(maxPitch, rotation.pitch)
         }
-        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached)
+        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached, entity)
     }
 
     private fun release() {

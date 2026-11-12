@@ -1540,8 +1540,8 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
 }
 
 public class net/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
-	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;)V
-	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Z)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun calculateTicks (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)I
 	public final fun toRotationTarget ()Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Ljava/lang/Float;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
@@ -1570,7 +1570,9 @@ public abstract class net/ccbluex/liquidbounce/utils/aiming/aim/Aim : net/ccblue
 }
 
 public final class net/ccbluex/liquidbounce/utils/aiming/aim/AimGoal {
-	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZ)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZLnet/minecraft/world/entity/Entity;)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZLnet/minecraft/world/entity/Entity;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getEntity ()Lnet/minecraft/world/entity/Entity;
 	public final fun getHeight ()F
 	public final fun getReached ()Z
 	public final fun getRotation ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;

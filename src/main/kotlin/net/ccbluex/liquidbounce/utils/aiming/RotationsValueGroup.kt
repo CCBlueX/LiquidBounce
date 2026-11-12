@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
+import net.ccbluex.liquidbounce.utils.aiming.aim.AiAim
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.aim.ConstantAim
 import net.ccbluex.liquidbounce.utils.aiming.aim.HumanAim
@@ -31,20 +33,29 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 
 /**
- * The rotation settings of a module.
+ * The rotation settings of a module. [combatSpecific] also offers the AI aim, which aims at living entities.
  */
 @AddonApi
 open class RotationsValueGroup(
     owner: EventListener,
     movementCorrection: MovementCorrection = MovementCorrection.SILENT,
+    combatSpecific: Boolean = false,
 ) : ValueGroup("Rotations") {
 
     private val aim = modes<Aim>(owner, "Aim", listOf("AngleSmooth"), { 0 }) {
-        arrayOf(ConstantAim(it), HumanAim(it))
+        val human = HumanAim(it)
+        listOfNotNull(ConstantAim(it), human, if (combatSpecific) AiAim(it, human) else null).toTypedArray()
     }
 
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+
+    @UnstableAddonApi
+    val aiAim: AiAim?
+        get() = aim.modes.firstNotNullOfOrNull { it as? AiAim }
+
+    internal val usesAiAim: Boolean
+        get() = aim.activeMode is AiAim
 
     /**
      * A target on both axes, with these settings.

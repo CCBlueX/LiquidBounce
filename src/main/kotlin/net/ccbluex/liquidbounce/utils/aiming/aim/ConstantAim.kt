@@ -29,10 +29,14 @@ import kotlin.math.max
 /**
  * Turns straight at the goal with a fixed speed, instantly by default.
  */
-class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("Linear")) {
+class ConstantAim(
+    parent: ModeValueGroup<*>,
+    horizontalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+    verticalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+) : Aim("Constant", parent, listOf("Linear")) {
 
-    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0f..180f)
-    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0f..180f)
+    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", horizontalTurnSpeed, 0f..180f)
+    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", verticalTurnSpeed, 0f..180f)
 
     override fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta = view.rotationDeltaTo(
         view.towardsLinear(goal.rotation, horizontalTurnSpeed.random(), verticalTurnSpeed.random())

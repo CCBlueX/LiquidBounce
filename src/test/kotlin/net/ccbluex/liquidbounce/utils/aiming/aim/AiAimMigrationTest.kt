@@ -16,16 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.aim
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.migrateAiAngleSmooth
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class AiAngleSmoothMigrationTest {
+class AiAimMigrationTest {
     private fun JsonObject.names() = getAsJsonArray("value").map { it.asJsonObject["name"].asString }
+
+    private fun JsonObject.active(name: String) = getAsJsonArray("value").map { it.asJsonObject }
+        .first { it["name"].asString == name }["active"].asString
 
     @Test
     fun `the old model choice goes and Correction becomes Assist`() {
@@ -36,9 +38,18 @@ class AiAngleSmoothMigrationTest {
                 {"name":"OutputMultiplier","value":[]}
             ]}"""
         ).asJsonObject
-        migrateAiAngleSmooth(ai)
+        migrateAiAim(ai)
         assertEquals(listOf("Assist", "OutputMultiplier"), ai.names())
-        assertEquals("Linear", ai.getAsJsonArray("value")[0].asJsonObject["active"].asString)
+        assertEquals("Linear", ai.active("Assist"))
+    }
+
+    @Test
+    fun `the Interpolation assist becomes Constant`() {
+        val ai = JsonParser.parseString(
+            """{"name":"AI","value":[{"name":"Assist","active":"Interpolation","value":[],"choices":{}}]}"""
+        ).asJsonObject
+        migrateAiAim(ai)
+        assertEquals("Constant", ai.active("Assist"))
     }
 
     @Test
@@ -51,7 +62,7 @@ class AiAngleSmoothMigrationTest {
             ]}"""
         ).asJsonObject
         val before = ai.toString()
-        migrateAiAngleSmooth(ai)
+        migrateAiAim(ai)
         assertEquals(before, ai.toString())
     }
 }
