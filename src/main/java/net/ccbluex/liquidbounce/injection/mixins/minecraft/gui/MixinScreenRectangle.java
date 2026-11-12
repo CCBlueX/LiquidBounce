@@ -38,7 +38,7 @@ public abstract class MixinScreenRectangle {
         method = "transformAxisAligned",
         at = @At(value = "NEW", target = "()Lorg/joml/Vector2f;", remap = false)
     )
-    private Vector2f reuseVec_transform(Operation<Vector2f> original) {
+    private Vector2f reuseVecTransformAxisAligned(Operation<Vector2f> original) {
         return Pools.Vec2f.borrow();
     }
 
@@ -46,7 +46,7 @@ public abstract class MixinScreenRectangle {
         method = "transformMaxBounds",
         at = @At(value = "NEW", target = "()Lorg/joml/Vector2f;", remap = false)
     )
-    private Vector2f reuseVec_transformEachVertex(Operation<Vector2f> original) {
+    private Vector2f reuseVecTransformMaxBounds(Operation<Vector2f> original) {
         return Pools.Vec2f.borrow();
     }
 
@@ -54,7 +54,7 @@ public abstract class MixinScreenRectangle {
         method = "transformAxisAligned",
         at = @At("RETURN")
     )
-    private void recycleVec_transform(
+    private void recycleVecTransformAxisAligned(
         Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(name = "topLeft") Vector2f v0, @Local(name = "bottomRight") Vector2f v1
     ) {
         Pools.Vec2f.recycle(v0);
@@ -65,7 +65,7 @@ public abstract class MixinScreenRectangle {
         method = "transformMaxBounds",
         at = @At("RETURN")
     )
-    private void recycleVec_transformEachVertex(
+    private void recycleVecTransformMaxBounds(
         Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRectangle> cir, @Local(name = "topLeft") Vector2f v0,
         @Local(name = "topRight") Vector2f v1, @Local(name = "bottomLeft") Vector2f v2, @Local(name = "bottomRight") Vector2f v3
     ) {

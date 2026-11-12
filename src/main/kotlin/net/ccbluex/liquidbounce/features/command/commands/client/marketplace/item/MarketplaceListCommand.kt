@@ -49,9 +49,6 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 
-/**
- * Lists and searches marketplace items
- */
 object MarketplaceListCommand {
 
     fun CmdLiteralScope.list() {
@@ -82,12 +79,11 @@ object MarketplaceListCommand {
             argument("query", ClientStringArgumentType.string()) { query ->
                 optional("page", IntegerArgumentType.integer(1), default = 1) { page ->
                     execSuspend { ctx ->
-                        val response = request {
-                            MarketplaceApi.getMarketplaceItems(ctx.get(page), query = ctx.get(query))
-                        }
-                        header(t("search.header", ctx.get(query)), t("search.count", response.pagination.items))
+                        val text = ctx.get(query)
+                        val response = request { MarketplaceApi.getMarketplaceItems(ctx.get(page), query = text) }
+                        header(t("search.header", text), t("search.count", response.pagination.items))
                         printItems(response.items, withType = true)
-                        printNavigation(response.pagination) { "marketplace search ${quoted(ctx.get(query))} $it" }
+                        printNavigation(response.pagination) { "marketplace search ${quoted(text)} $it" }
                     }
                 }
             }
@@ -125,9 +121,6 @@ object MarketplaceListCommand {
         }
     }
 
-    /**
-     * `author/name`, clickable to subscribe or, once subscribed, to unsubscribe.
-     */
     private fun CmdI18n.addressText(item: MarketplaceItem, subscribed: Boolean): MutableComponent {
         val action = if (subscribed) "unsubscribe" else "subscribe"
         return regular("")

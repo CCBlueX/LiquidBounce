@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.render.mesh
 
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectFunction
@@ -83,7 +83,10 @@ internal class BatchCollector {
         return ConsolidatedMeshBuildScope(draw.builder)
     }
 
-    fun flush(renderTarget: RenderTarget, dynamicTransforms: GpuBufferSlice?) {
+    val isEmpty: Boolean
+        get() = drawOrder.isEmpty
+
+    fun flush(color: GpuTextureView, depth: GpuTextureView?, dynamicTransforms: GpuBufferSlice?) {
         try {
             if (drawOrder.isEmpty) {
                 return
@@ -107,7 +110,7 @@ internal class BatchCollector {
 
             builtBuffers.sort()
 
-            renderTarget.createRenderPass({ "BatchCollector draw" }).use { pass ->
+            color.createRenderPass({ "BatchCollector draw" }, depthAttachment = depth).use { pass ->
                 pass.setupRenderTypeScissor()
                 pass.bindDefaultUniforms()
                 dynamicTransforms?.let(pass::bindDynamicTransformsUniform)

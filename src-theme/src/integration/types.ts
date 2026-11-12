@@ -312,6 +312,12 @@ export interface Server {
     lan?: boolean;
 }
 
+export interface ConnectionDetails {
+    remoteAddress: string;
+    serverAddress: string;
+    proxy: boolean;
+}
+
 export interface TextComponent {
     type?: string;
     extra?: (TextComponent | string)[];

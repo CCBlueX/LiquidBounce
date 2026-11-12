@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLine
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.player
@@ -106,7 +108,7 @@ object ScaffoldMovementPlanner {
 
         // Debug optimal line
         ModuleScaffold.debugGeometry("optimalLine") {
-            ModuleDebug.DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
+            DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
         }
 
         return optimalLine
@@ -146,7 +148,7 @@ object ScaffoldMovementPlanner {
             val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 200.0).toInt()
 
             ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
+                DebuggedBox(AABB(pos), Color4b(133, 155, 255, alpha))
             }
         }
     }

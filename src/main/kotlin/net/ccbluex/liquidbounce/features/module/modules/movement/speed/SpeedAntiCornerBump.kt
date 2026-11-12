@@ -78,7 +78,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
             simulatedPlayer.tick()
 
             // Jump is already good. No need to change anything about it.
-            if (simulatedPlayer.onGround) {
+            if (simulatedPlayer.onGround()) {
                 if (jumpCount++ >= n) {
                     break
                 }

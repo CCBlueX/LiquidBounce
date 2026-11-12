@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
 import kotlin.math.cos
@@ -63,7 +62,7 @@ internal object HatsCone : HatsMode("Cone") {
                 val nextCosine = cos(nextAngle)
                 val nextSine = sin(nextAngle)
 
-                val color = if (!isHurt) colors.getCurrentStepColor(angle) else Color4b(255, 0, 0, colors.firstColor.a)
+                val color = shapeColor(colors.getColor(angle, isHurt))
 
                 addVertex(
                     matrix,

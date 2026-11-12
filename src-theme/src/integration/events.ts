@@ -1,6 +1,7 @@
 import type {
     BedState,
     ConfigurableSetting,
+    ConnectionDetails,
     HudComponent,
     ItemStack,
     MinecraftKey,
@@ -73,6 +74,7 @@ export interface EventMap {
     chatSend: ChatSendEvent;
     chatReceive: ChatReceiveEvent;
     disconnect: void;
+    connectionDetails: ConnectionDetailsEvent;
     overlayMessage: OverlayMessageEvent;
 
     //PlayerEvents.kt
@@ -190,6 +192,10 @@ export interface AccountManagerLoginEvent {
 
 export interface ServerPingedEvent {
     server: Server;
+}
+
+export interface ConnectionDetailsEvent {
+    details: ConnectionDetails;
 }
 
 export interface ClientPlayerInventoryEvent {

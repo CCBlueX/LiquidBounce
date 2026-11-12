@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 
-sealed class AntiBotMode(name: String) : Mode(name), AntiBotPredicate {
+sealed class AntiBotMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases), AntiBotPredicate {
     final override val parent: ModeValueGroup<*>
         get() = ModuleAntiBot.modes
 
