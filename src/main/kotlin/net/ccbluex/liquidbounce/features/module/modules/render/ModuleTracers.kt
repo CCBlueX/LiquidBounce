@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.drawLinesWithWidth
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -60,6 +61,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
+    private val shader = tree(ShaderLayer(solid = true))
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
@@ -73,7 +76,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             return@handler
         }
 
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             val eyeVector = Vec3f.eyeVector(camera)
 
             val maxDistanceSq = maximumDistance.sq()

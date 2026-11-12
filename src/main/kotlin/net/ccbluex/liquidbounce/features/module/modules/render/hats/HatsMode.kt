@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
 import org.joml.Quaternionf
 
 private val ROTATION = Quaternionf()
@@ -63,47 +65,56 @@ abstract class HatsMode(name: String) : Mode(name) {
 
     protected val showInFirstPerson by boolean("FirstPersonView", true)
 
+    /**
+     * The layer the hat is drawn into as a silhouette. Textured hats have none and are drawn onto the scene.
+     */
+    protected open val shader: ShaderLayer? get() = null
+
     // --- Render ---
     protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val player = mc.player ?: return@handler
+        val shader = shader
+        if (shader != null) {
+            event.renderEnvironment(shader) { drawHats(event) }
+        } else {
+            event.renderEnvironment { drawHats(event) }
+        }
+    }
 
-        event.renderEnvironment {
-            for (entity in world.players()) {
-                val isMe = entity == player
-                val isFriend = FriendManager.isFriend(entity)
-                val inDistance = player.distanceTo(entity) <= friendsOptions.distance
+    private fun WorldRenderEnvironment.drawHats(event: WorldRenderEvent) {
+        val player = mc.player ?: return
 
-                val shouldRender = if (isMe) {
-                    !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+        for (entity in world.players()) {
+            if (wearsHat(entity, player)) {
+                val hurtMarked = entity.hurtTime > 0 && hurtMarked
+                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                val rotation = entity.interpolateCurrentRotation(event.partialTicks)
+
+                val height = ModuleHats.HeightOffset.current()
+                val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
+                    equipOffset.equipmentOffset
                 } else {
-                    inDistance && isFriend && friendsOptions.friendView
+                    0.0F
                 }
 
-                if (shouldRender) {
-                    val hurtMarked = entity.hurtTime > 0 && hurtMarked
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                    val rotation = entity.interpolateCurrentRotation(event.partialTicks)
-
-                    val height = ModuleHats.HeightOffset.current()
-                    val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
-                        equipOffset.equipmentOffset
-                    } else {
-                        0.0F
-                    }
-
-                    withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
-                        poseStack.withPush {
-                            if (followRotation) rotate(rotation.toQuaternion(ROTATION))
-                            translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
-                            drawHat(hurtMarked)
-                        }
+                withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
+                    poseStack.withPush {
+                        if (followRotation) rotate(rotation.toQuaternion(ROTATION))
+                        translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
+                        drawHat(hurtMarked)
                     }
                 }
             }
         }
+    }
+
+    private fun wearsHat(entity: Player, player: Player) = if (entity == player) {
+        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+    } else {
+        friendsOptions.friendView && FriendManager.isFriend(entity) &&
+            player.closerThan(entity, friendsOptions.distance.toDouble())
     }
 
     protected inline fun WorldRenderEnvironment.withHatRotation(

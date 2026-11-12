@@ -33,9 +33,11 @@ import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -108,31 +110,6 @@ public abstract class MixinLevelRenderer {
         ModuleChams.INSTANCE.clearEntityContext();
     }
 
-    // TODO: removed because of vanilla changes
-//    // After ModelViewMatrix setup
-//    @Inject(method = "render", at = @At(value = "NEW", target = "Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
-//    private void onRender(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
-//        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
-//        if (!renderer.shouldRender()) {
-//            return;
-//        }
-//
-//        var matrixStack = Pools.MatStack.borrow();
-//        var event = new DrawOutlinesEvent(
-//            renderer.prepareRenderTarget(),
-//            matrixStack,
-//            cameraState,
-//            deltaTracker.getGameTimeDeltaPartialTick(false),
-//            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
-//        );
-//        EventManager.INSTANCE.callEvent(event);
-//        Pools.MatStack.recycle(matrixStack);
-//
-//        if (event.getDirtyFlag()) {
-//            renderer.setDirty(true);
-//        }
-//    }
-
     @ModifyArg(
         method = "lambda$render$0",
         at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"),
@@ -141,11 +118,6 @@ public abstract class MixinLevelRenderer {
     private Vector4fc customFogClearColor(Vector4fc original) {
         return ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyClearColor(original);
     }
-
-//    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeOutline()V", shift = At.Shift.AFTER))
-//    private void onDrawOutlines(CallbackInfo ci) {
-//        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(Minecraft.getInstance().gameRenderer.mainRenderTarget());
-//    }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOutline(Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V", shift = At.Shift.AFTER))
     private void onRenderGlow(CallbackInfo ci) {
@@ -188,6 +160,14 @@ public abstract class MixinLevelRenderer {
         FramePass pass = frame.addPass((LiquidBounce.CLIENT_NAME + ' ' + ModuleChams.INSTANCE.getName()).toLowerCase(Locale.ROOT));
         pass.disableCulling();
         pass.executes(() -> ModuleChams.INSTANCE.compositeIfNeeded(Minecraft.getInstance().gameRenderer.mainRenderTarget()));
+    }
+
+    @ModifyExpressionValue(
+        method = "render",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ShaderManager;getPostChain(Lnet/minecraft/resources/Identifier;Ljava/util/Set;)Lnet/minecraft/client/renderer/PostChain;")
+    )
+    private PostChain replaceEntityOutlinePostChain(PostChain original) {
+        return EspGlowMode.replace(original);
     }
 
     @ModifyExpressionValue(

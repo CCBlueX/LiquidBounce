@@ -29,6 +29,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -81,6 +82,13 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
 @AddonApi
 inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
     environment.draw()
+}
+
+/**
+ * Draws silhouettes for [layer], which its shader style turns into the picture on screen.
+ */
+inline fun WorldRenderEvent.renderEnvironment(layer: ShaderLayer, draw: WorldRenderEnvironment.() -> Unit) {
+    layer.environment(this).draw()
 }
 
 @AddonApi
@@ -281,11 +289,11 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
     }
 }
 
-fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList) {
+fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList, noDepthTest: Boolean = true) {
     if (positions.size == 0) return
     require(positions.size and 1 == 0)
 
-    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest)) { pose ->
         positions.forEachVertex { x, y, z ->
             addVertex(pose, x, y, z).setColor(argb)
         }
@@ -392,8 +400,8 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
         val distRatio = (Mth.length(dx, dy) / outerRadius).coerceIn(0f, 1f)
 
         val t = when (distRatio <= effectiveRatio) {
-            true -> 0.0
-            else -> ((distRatio - effectiveRatio) / (1.0 - effectiveRatio)).coerceIn(0.0, 1.0)
+            true -> 0.0f
+            else -> ((distRatio - effectiveRatio) / (1.0f - effectiveRatio)).coerceIn(0.0f, 1.0f)
         }
 
         return innerColor.interpolateTo(outerColor, t).argb

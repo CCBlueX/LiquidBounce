@@ -352,20 +352,15 @@ private fun findTargetPointOnFace(
     outlineShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
         val face = AlignedFace.get(direction, minX, minY, minZ, maxX, maxY, maxZ)
 
-        var searchFace = face
+        // TODO: stair/slab should have a stable half (up/down) of side face to click
 
-        // Try to aim at the upper portion of the block which makes it easier to switch from full blocks to half blocks
-        if (searchFace.to.y >= 0.9) {
-            searchFace = searchFace.truncateY(0.51).requireNonEmpty() ?: face
-        }
-
-        if (rejectFacingAway && eyeNormal - searchFace.from.dot(normal) < 0.0) {
+        if (rejectFacingAway && eyeNormal - face.from.dot(normal) < 0.0) {
             return@forAllBoxes
         }
 
         val targetPos =
             options.faceHandlingOptions.facePositionFactory.producePositionOnFace(
-                searchFace,
+                face,
                 clickedBlockPos,
                 options.playerLocationOnPlacement,
             ) ?: return@forAllBoxes

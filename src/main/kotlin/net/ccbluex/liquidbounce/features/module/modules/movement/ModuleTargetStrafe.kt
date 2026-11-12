@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
-import net.ccbluex.liquidbounce.render.drawCircleOutline
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20250125
 import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -131,16 +131,15 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         private val width by float("Width", 0.12f, 0.01f..1.0f)
         private val heightOffset by float("HeightOffset", 0.05f, -1.0f..1.0f)
 
-        private val outerColor by color("OuterColor", Color4b.LIQUID_BOUNCE.alpha(100))
+        private val outerColor by color("OuterColor", Color4b.LIQUID_BOUNCE)
         private val innerColor by color("InnerColor", Color4b.LIQUID_BOUNCE.alpha(20))
-        private val outlineColor by color("OutlineColor", Color4b.LIQUID_BOUNCE.alpha(180))
 
         private val showNextPoint by boolean("ShowNextPoint", true)
         private val pointRadius by float("PointRadius", 0.18f, 0.05f..1.0f)
-        private val pointColor by color("PointColor", Color4b.LIQUID_BOUNCE.alpha(90))
-        private val pointOutlineColor by color("PointOutlineColor", Color4b.LIQUID_BOUNCE.alpha(180))
-        private val invalidPointColor by color("InvalidPointColor", Color4b(255, 90, 90, 90))
-        private val invalidPointOutlineColor by color("InvalidPointOutlineColor", Color4b(255, 90, 90, 180))
+        private val pointColor by color("PointColor", Color4b.LIQUID_BOUNCE)
+        private val invalidPointColor by color("InvalidPointColor", Color4b(255, 90, 90))
+
+        private val shader = tree(ShaderLayer())
 
         override fun onDisabled() {
             renderState.reset()
@@ -155,7 +154,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 return@handler
             }
 
-            event.renderEnvironment {
+            event.renderEnvironment(shader) {
                 val orbitOuterRadius = state.orbitRadius + width / 2f
                 val orbitInnerRadius = (state.orbitRadius - width / 2f).coerceAtLeast(0f)
                 val orbitPosition = target.interpolateCurrentPosition(event.partialTicks)
@@ -163,7 +162,6 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
                 withPositionRelativeToCamera(orbitPosition) {
                     drawGradientCircle(orbitOuterRadius, orbitInnerRadius, outerColor, innerColor)
-                    drawCircleOutline(orbitOuterRadius, outlineColor)
                 }
 
                 if (!showNextPoint) {
@@ -171,11 +169,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 }
 
                 val markerColor = if (state.nextPointValid) pointColor else invalidPointColor
-                val markerOutlineColor = if (state.nextPointValid) pointOutlineColor else invalidPointOutlineColor
 
                 withPositionRelativeToCamera(state.nextPoint.add(0.0, heightOffset.toDouble(), 0.0)) {
                     drawGradientCircle(pointRadius, 0f, markerColor, Color4b.TRANSPARENT)
-                    drawCircleOutline(pointRadius, markerOutlineColor)
                 }
             }
         }
@@ -256,6 +252,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
+
         private val hypixel by boolean("Hypixel", false)
 
         // Event handler for player movement
@@ -287,7 +285,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                     0.281
                 }
 
-                if (SpeedHypixelLowHop.shouldStrafe) {
+                if (SpeedHypixel20250125.shouldStrafe) {
                     event.movement = event.movement.withStrafe(
                         yaw = strafePlan.strafeVec.yaw,
                         speed = player.horizontalSpeed.coerceAtLeast(minSpeed),

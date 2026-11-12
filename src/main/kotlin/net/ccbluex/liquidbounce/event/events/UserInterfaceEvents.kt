@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
+import net.ccbluex.liquidbounce.utils.client.PlayerStatistics
 import net.minecraft.network.chat.Component
 import net.minecraft.world.effect.MobEffectInstance
 
@@ -47,6 +48,9 @@ class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event(), W
 @Tag("clientPlayerInventory")
 @Suppress("unused")
 class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent
+
+@Tag("clientPlayerStatistics")
+class ClientPlayerStatisticsEvent(val statistics: PlayerStatistics) : Event(), WebSocketEvent
 
 sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     sealed class TextContent : TitleEvent() {

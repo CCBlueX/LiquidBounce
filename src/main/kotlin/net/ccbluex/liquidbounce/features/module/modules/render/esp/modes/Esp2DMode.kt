@@ -227,8 +227,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f, 1f)
 
-                        val healthColor = Color4b.RED
-                            .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
+                        val healthColor = Color4b.RED.interpolateTo(Color4b.GREEN, healthPercentage)
                         val healthHeight = rectHeight * healthPercentage
 
                         if (Border.enabled) {

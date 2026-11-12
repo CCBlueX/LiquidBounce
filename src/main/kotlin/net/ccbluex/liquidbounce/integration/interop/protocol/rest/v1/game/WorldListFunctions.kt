@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -100,7 +101,7 @@ private fun Route.postJoinWorld() = post("/join") {
         }
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/worlds/edit
@@ -144,7 +145,7 @@ private fun Route.postEditWorld() = post("/edit") {
         }
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/worlds/delete
@@ -159,7 +160,7 @@ private fun Route.postDeleteWorld() = post("/delete") {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 private data class LevelRequest(val name: String)

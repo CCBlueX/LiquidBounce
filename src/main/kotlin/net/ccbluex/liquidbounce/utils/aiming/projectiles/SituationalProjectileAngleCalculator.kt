@@ -44,7 +44,7 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
 
         val actualImplementation = when {
             // Our flagship implementation is unstable at low distances...
-            basePos.distanceToSqr(sourcePos) < 5.0 * 5.0 -> PolynomialProjectileAngleCalculator
+            basePos.closerThan(sourcePos, 5.0) -> PolynomialProjectileAngleCalculator
             else -> CydhranianProjectileAngleCalculator
         }
 
@@ -54,29 +54,29 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
     object VerifyHitResult : ProjectileAngleCalculator {
         private fun resolveTrajectoryType(projectileInfo: TrajectoryInfo): TrajectoryType {
             return when {
-                projectileInfo == TrajectoryInfo.POTION -> TrajectoryType.Potion
-                projectileInfo == TrajectoryInfo.EXP_BOTTLE -> TrajectoryType.ExpBottle
-                projectileInfo == TrajectoryInfo.FISHING_ROD -> TrajectoryType.FishingBobber
-                projectileInfo == TrajectoryInfo.TRIDENT -> TrajectoryType.Trident
-                projectileInfo == TrajectoryInfo.FIREWORK_ROCKET -> TrajectoryType.FireworkRocket
-                projectileInfo == TrajectoryInfo.GENERIC -> TrajectoryType.Snowball
+                projectileInfo == TrajectoryInfo.POTION -> TrajectoryType.POTION
+                projectileInfo == TrajectoryInfo.EXP_BOTTLE -> TrajectoryType.EXP_BOTTLE
+                projectileInfo == TrajectoryInfo.FISHING_ROD -> TrajectoryType.FISHING_BOBBER
+                projectileInfo == TrajectoryInfo.TRIDENT -> TrajectoryType.TRIDENT
+                projectileInfo == TrajectoryInfo.FIREWORK_ROCKET -> TrajectoryType.FIREWORK_ROCKET
+                projectileInfo == TrajectoryInfo.GENERIC -> TrajectoryType.SNOWBALL
                 projectileInfo.hitboxRadius == TrajectoryInfo.BOW_FULL_PULL.hitboxRadius
                     && projectileInfo.gravity == TrajectoryInfo.BOW_FULL_PULL.gravity
                     && projectileInfo.drag == TrajectoryInfo.BOW_FULL_PULL.drag
                     && projectileInfo.dragInWater == TrajectoryInfo.BOW_FULL_PULL.dragInWater
                     && projectileInfo.copiesPlayerVelocity == TrajectoryInfo.BOW_FULL_PULL.copiesPlayerVelocity -> {
-                    TrajectoryType.Arrow
+                    TrajectoryType.ARROW
                 }
 
                 projectileInfo.gravity == 0.0 && projectileInfo.hitboxRadius >= 1.0 -> {
                     if (projectileInfo.copiesPlayerVelocity) {
-                        TrajectoryType.Fireball
+                        TrajectoryType.FIREBALL
                     } else {
-                        TrajectoryType.WindCharge
+                        TrajectoryType.WIND_CHARGE
                     }
                 }
 
-                else -> TrajectoryType.Arrow
+                else -> TrajectoryType.ARROW
             }
         }
 

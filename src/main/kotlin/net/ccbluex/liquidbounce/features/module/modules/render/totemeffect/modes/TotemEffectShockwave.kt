@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.Totem
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 
 internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
@@ -34,6 +35,8 @@ internal object TotemEffectShockwave : TotemEffectMode("Shockwave") {
     init {
         tree(color)
     }
+
+    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment
         .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float) {

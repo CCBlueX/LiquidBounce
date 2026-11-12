@@ -54,7 +54,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
             abstract fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot)
 
             object Border : Mode("Border") {
-                val color by color("Color", Color4b.GREEN)
+                val color by color("Color", Color4b.LIQUID_BOUNCE)
 
                 override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.drawBorder(

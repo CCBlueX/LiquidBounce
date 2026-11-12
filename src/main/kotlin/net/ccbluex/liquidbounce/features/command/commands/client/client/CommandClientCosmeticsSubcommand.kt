@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import kotlin.coroutines.resume
 
 object CommandClientCosmeticsSubcommand {
     fun CmdLiteralScope.cosmetics() {
@@ -53,15 +53,17 @@ object CommandClientCosmeticsSubcommand {
         CosmeticService.carriersCosmetics.clear()
         ClientAccountManager.clientAccount.cosmetics = null
 
-        suspendCancellableCoroutine { continuation ->
-            CosmeticService.refreshCarriers(true) {
-                chat(
-                    regular(
-                        "Cosmetic System has been refreshed."
-                    )
+        CosmeticService.refreshCarriers(force = true).onSuccess {
+            chat(
+                regular(
+                    "Cosmetics have been refreshed."
                 )
-                continuation.resume(Unit)
-            }
+            )
+        }.onFailure { error ->
+            val reason = error.httpException?.let { "the API answered with code ${it.code}" }
+                ?: error.message
+                ?: error.javaClass.simpleName
+            chat(markAsError("Failed to refresh cosmetics: $reason"))
         }
     }
 }

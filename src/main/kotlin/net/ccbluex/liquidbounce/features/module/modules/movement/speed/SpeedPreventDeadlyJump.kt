@@ -29,14 +29,14 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
         val simulatedPlayer = createSimulatedPlayer(player)
 
-        simulatedPlayer.jump()
+        simulatedPlayer.jumpFromGround()
 
         var groundPos: Vec3? = null
 
         for (ignored in 0..40) {
             simulatedPlayer.tick()
 
-            if (simulatedPlayer.onGround) {
+            if (simulatedPlayer.onGround()) {
                 groundPos = simulatedPlayer.pos
 
                 break
@@ -80,7 +80,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
         for (ignored in 0..40) {
             simulatedPlayer.tick()
 
-            if (simulatedPlayer.onGround) {
+            if (simulatedPlayer.onGround()) {
                 groundPos = simulatedPlayer.pos
 
                 break
@@ -98,7 +98,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
             for (ignored in 0..40) {
                 simulatedPlayer.tick()
 
-                groundPos = if (simulatedPlayer.onGround) {
+                groundPos = if (simulatedPlayer.onGround()) {
                     simulatedPlayer.pos
                 } else {
                     null
