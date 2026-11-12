@@ -38,24 +38,29 @@ class LazyRenderTargetHolder private constructor(
     constructor(name: String, useDepth: Boolean) :
         this(name, GpuFormat.RGBA8_UNORM, if (useDepth) GpuFormat.D32_FLOAT else null)
 
-    private var raw: RenderTarget? = null
+    /**
+     * The targets used lately, most recent first. Views of background clients draw at another size than the
+     * window in the same frame, so a holder keeps one target per size instead of resizing back and forth.
+     */
+    private val targets = ArrayList<RenderTarget>(SIZES)
 
-    override fun get(): RenderTarget? {
-        return this.raw
-    }
+    override fun get(): RenderTarget? = targets.firstOrNull()
 
     /**
-     * Destroys the buffers and releases the RenderTarget.
+     * Destroys the buffers and releases the RenderTargets.
      */
     override fun close() {
-        this.raw?.destroyBuffers()
-        this.raw = null
+        targets.forEach(RenderTarget::destroyBuffers)
+        targets.clear()
     }
 
     /**
-     * Initializes the RenderTarget if needed, or resizes/clears it if it already exists, then returns it.
+     * Initializes a RenderTarget of the size of the target drawn to now, or clears the one there is.
      */
-    fun initAndGet(): RenderTarget = initAndGet(mc.window.width, mc.window.height)
+    fun initAndGet(): RenderTarget {
+        val main = mc.gameRenderer.mainRenderTarget()
+        return initAndGet(main.width, main.height)
+    }
 
     /**
      * Initializes the RenderTarget with the requested size.
@@ -63,19 +68,19 @@ class LazyRenderTargetHolder private constructor(
     fun initAndGet(width: Int, height: Int): RenderTarget {
         require(width > 0 && height > 0) { "RenderTarget dimensions must be positive: ${width}x$height" }
 
-        val current = this.raw
-
-        if (current == null) {
-            val new = TextureTarget(name, width, height, colorFormat, depthFormat)
-            this.raw = new
-            return new
-        } else {
-            if (width != current.width || height != current.height) {
-                current.resize(width, height) // Resizing includes clearing the framebuffer
-            } else {
-                current.clearColorAndDepth()
-            }
-            return current
+        val index = targets.indexOfFirst { it.width == width && it.height == height }
+        val target = when {
+            index >= 0 -> targets.removeAt(index).also { it.clearColorAndDepth() }
+            targets.size < SIZES -> TextureTarget(name, width, height, colorFormat, depthFormat)
+            // Resizing includes clearing the framebuffer
+            else -> targets.removeAt(targets.lastIndex).also { it.resize(width, height) }
         }
+        targets.add(0, target)
+        return target
     }
+
+    private companion object {
+        const val SIZES = 2
+    }
+
 }

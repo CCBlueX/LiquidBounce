@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -48,9 +49,9 @@ import kotlin.math.min
 @Suppress("TooManyFunctions")
 class Follower(private val actions: BlockActions) : RouteProgress {
 
-    var path: Path? = null
+    var path: Path? by clientState { null }
         private set
-    private var index = 0
+    private var index by clientState { 0 }
 
     private val step: Step?
         get() = path?.steps?.getOrNull(index)
@@ -59,10 +60,10 @@ class Follower(private val actions: BlockActions) : RouteProgress {
         get() = path != null && step == null
 
     /** The block the step given up last leads into. */
-    var stuckAt: BlockPos? = null
+    var stuckAt: BlockPos? by clientState { null }
         private set
 
-    private var movement = Movement.NONE
+    private var movement by clientState { Movement.NONE }
 
     val target get() = movement.target
     val sprint get() = movement.sprint
@@ -73,16 +74,16 @@ class Follower(private val actions: BlockActions) : RouteProgress {
     val building: Boolean
         get() = step?.builds == true || path?.steps?.getOrNull(index + 1)?.builds == true
 
-    var remainingBreaks = emptyList<BlockPos>()
+    var remainingBreaks by clientState { emptyList<BlockPos>() }
         private set
-    var remainingPlaces = emptyList<BlockPos>()
+    var remainingPlaces by clientState { emptyList<BlockPos>() }
         private set
 
-    private var progress = Progress()
-    private var breathing = false
+    private var progress by clientState { Progress() }
+    private var breathing by clientState { false }
 
     /** Where the sprint hop in the air was aimed; the steps it passes over lie behind the player. */
-    private var hopAim: Vec3? = null
+    private var hopAim: Vec3? by clientState { null }
 
     private val Player.isStable: Boolean
         get() = onGround() || isInWater || onClimbable()
@@ -196,7 +197,8 @@ class Follower(private val actions: BlockActions) : RouteProgress {
         val aim = movement.target?.takeUnless { movement.dive } ?: return true
         val sprint = movement.sprint
         val body = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayerInput(event.directionalInput, event.jump, sprint, event.sneak)
+            SimulatedPlayerInput(event.directionalInput, event.jump, sprint, event.sneak),
+            withModules = false,
         )
         body.yRot = frameYaw
 

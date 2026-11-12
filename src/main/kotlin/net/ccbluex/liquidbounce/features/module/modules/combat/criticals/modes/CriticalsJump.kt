@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
@@ -65,7 +66,7 @@ object CriticalsJump : Mode("Jump") {
      * Only true when auto-jumping is currently taking place so that normal jumps
      * are not affected.
      */
-    private var adjustNextJump = false
+    private var adjustNextJump by clientState { false }
 
     @Suppress("unused")
     private val movementInputEvent = handler<MovementInputEvent> { event ->

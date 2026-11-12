@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
@@ -35,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 /**
  * Runs one route search at a time off the game thread, a slice per [poll]. The search reads a copy of its region
@@ -45,15 +49,15 @@ class BackgroundSearch<T>(
     private val newTerrain: (WorldBlocks) -> Terrain = ::Terrain,
 ) : EventListener {
 
-    private var job: Job<T>? = null
-    private val changes = ArrayList<BlockPos>()
-    private var changesOverflowed = false
+    private var job: Job<T>? by clientState { null }
+    private val changes by clientState { ArrayList<BlockPos>() }
+    private var changesOverflowed by clientState { false }
 
     val isIdle: Boolean
         get() = job == null
 
     /** The best route of the running search so far, see [RouteSearch.preview]. */
-    var preview: List<Vec3>? = null
+    var preview: List<Vec3>? by clientState { null }
         private set
 
     /** Searches with [newSearch] over [region], unless a search for an equal [key] is running or done. */
@@ -92,7 +96,8 @@ class BackgroundSearch<T>(
         }
 
         if (job.result == RouteResult.Searching) {
-            job.slice = CompletableFuture.supplyAsync(job.search::advance, Dispatchers.Default.asExecutor())
+            job.slice = CompletableFuture
+                .supplyAsync(ClientContext.pinned(Supplier(job.search::advance)), Dispatchers.Default.asExecutor())
                 .exceptionally { throwable ->
                     logger.error("Route search failed", throwable)
                     RouteResult.Failed(RouteFailure.NO_PATH)
@@ -110,14 +115,14 @@ class BackgroundSearch<T>(
     }
 
     private fun start(key: Any, region: BlockRegion, newSearch: (Terrain) -> RouteSearch<T>): Job<T>? {
-        val level = mc.level ?: return null
+        val level = currentClient.level ?: return null
         val terrain = newTerrain(SectionCache.capture(level, region))
         return Job(key, region, newSearch, terrain, newSearch(terrain))
     }
 
     /** Whether a recorded change alters how a block the search looked at is moved through. */
     private fun applyChanges(terrain: Terrain): Boolean {
-        val level = mc.level ?: return false
+        val level = currentClient.level ?: return false
 
         var affected = changesOverflowed
         for (pos in changes) {

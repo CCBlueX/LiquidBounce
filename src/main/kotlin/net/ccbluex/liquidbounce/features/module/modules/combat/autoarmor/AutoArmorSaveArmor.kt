@@ -23,6 +23,7 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -37,8 +38,8 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
     val durabilityThreshold by int("DurabilityThreshold", 24, 0..100)
     private val autoOpen by boolean("AutoOpenInventory", true)
 
-    private var hasOpenedInventory = false
-    private var prevArmor = 0
+    private var hasOpenedInventory by clientState { false }
+    private var prevArmor by clientState { 0 }
 
     /**
      * Opens the inventory to save armor (as if the player has opened it manually) if the following conditions are met:

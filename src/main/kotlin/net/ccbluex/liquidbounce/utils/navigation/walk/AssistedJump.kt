@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -122,24 +123,24 @@ internal class AssistedJump {
         }
     }
 
-    var target: Target? = null
+    var target: Target? by clientState { null }
         private set
 
     /**
      * The way to [target] as [trace] predicted it, jump by jump: from its run-up when it has one, and on to the next
      * block when the landing takes off again.
      */
-    val arcs = ArrayList<Arc>()
+    val arcs by clientState { ArrayList<Arc>() }
 
-    private var leap = Leap()
+    private var leap by clientState { Leap() }
 
     /** The run-up targets planned while standing on [plannedFrom], by the block jumped to; null where none works. */
-    private val planned = HashMap<BlockPos, Target?>()
-    private var plannedFrom: BlockPos? = null
+    private val planned by clientState { HashMap<BlockPos, Target?>() }
+    private var plannedFrom: BlockPos? by clientState { null }
 
     /** Whether an assisted jump is in the air. */
-    private var airborne = false
-    private var ticksSinceLanding = BRAKE_TICKS
+    private var airborne by clientState { false }
+    private var ticksSinceLanding by clientState { BRAKE_TICKS }
 
     /**
      * [Target.aimYaw] of [target], or NaN without one: towards where [Leap] looks on the way to a run-up, which it

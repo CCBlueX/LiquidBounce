@@ -27,6 +27,9 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.features.client.ownClientState
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -40,20 +43,30 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 
 object PlayerSimulationCache: EventListener {
-    private val otherPlayerCache = ConcurrentHashMap<Player, SimulatedPlayerCache>()
-    private var localPlayerCache: SimulatedPlayerCache? = null
+    private val otherPlayerCache by clientState { ConcurrentHashMap<Player, SimulatedPlayerCache>() }
+
+    /**
+     * A simulated client simulates its own local player, so it does not take over the simulation of its parent.
+     */
+    private var localPlayerCache: SimulatedPlayerCache? by ownClientState { null }
+
+    /**
+     * The keys of the tick while modules decide on them.
+     */
+    private var movementInput: MovementInputEvent? by ownClientState { null }
 
     /**
      * The local player is between the start of its movement tick and the end of its tick.
      * A simulation made now has to finish this tick instead of running a whole one.
      */
-    var isLocalPlayerMoving = false
+    var isLocalPlayerMoving by clientState { false }
         private set
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         this.otherPlayerCache.clear()
         this.isLocalPlayerMoving = false
+        this.movementInput = null
     }
 
     @Suppress("unused")
@@ -64,6 +77,16 @@ object PlayerSimulationCache: EventListener {
     @Suppress("unused")
     private val postTickHandler = handler<PlayerPostTickEvent>(priority = FIRST_PRIORITY) {
         this.isLocalPlayerMoving = false
+        this.movementInput = null
+    }
+
+    /**
+     * The simulation of the last tick is outdated before any module of this one asks for it.
+     */
+    @Suppress("unused")
+    private val firstMovementHandler = handler<MovementInputEvent>(priority = FIRST_PRIORITY) { event ->
+        this.localPlayerCache = null
+        this.movementInput = event
     }
 
     @Suppress("unused")
@@ -99,6 +122,12 @@ object PlayerSimulationCache: EventListener {
             return
         }
 
+        // Simulating each tick of a simulation again only pays off when a module asks for it
+        if (currentClient.isSimulated) {
+            localPlayerCache = null
+            return
+        }
+
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
         )
@@ -124,8 +153,9 @@ object PlayerSimulationCache: EventListener {
             return cached
         }
 
+        val directionalInput = movementInput?.directionalInput ?: DirectionalInput(player.input)
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
         )
 
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.world.entity.player.Inventory
@@ -38,17 +39,17 @@ import org.jetbrains.annotations.Range
 @AddonApi
 object SilentHotbar : EventListener {
 
-    private var hotbarState: SilentHotbarState? = null
-    private var ticksSinceLastUpdate: Int = 0
+    private var hotbarState: SilentHotbarState? by clientState { null }
+    private var ticksSinceLastUpdate: Int by clientState { 0 }
 
     /**
      * Returns the slot that interactions would take place with
      */
     val serversideSlot: Int
-        get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.realSelectedSlot ?: 0
+        get() = hotbarState?.enforcedHotbarSlot ?: currentClient.player?.inventory?.realSelectedSlot ?: 0
 
     val clientsideSlot: Int
-        get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.realSelectedSlot ?: 0
+        get() = hotbarState?.clientsideSlot ?: currentClient.player?.inventory?.realSelectedSlot ?: 0
 
     /**
      * Silently selects a main-hand hotbar slot for duration of [ticksUntilReset].

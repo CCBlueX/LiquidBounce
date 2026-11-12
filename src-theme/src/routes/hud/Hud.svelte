@@ -24,6 +24,7 @@
     import Text from "./elements/Text.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
+    import Clients from "./elements/Clients.svelte";
     import ClosedCaptions from "./elements/ClosedCaptions.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
@@ -132,6 +133,8 @@
                     <Image componentId={c.id} settings={c.settings}/>
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
+                {:else if c.name === "Clients"}
+                    <Clients/>
                 {:else if c.name === "ClosedCaptions"}
                     <ClosedCaptions/>
                 {:else if c.width !== undefined && c.height !== undefined}

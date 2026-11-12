@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.ClientManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -185,7 +187,7 @@ object ConfigSystem {
         }
     }
 
-    fun load(config: Config) {
+    fun load(config: Config): Unit = ClientContext.within(ClientManager.main) {
         config.jsonFile.runCatching {
             if (!exists()) {
                 // Do not try to load a non-existing file
@@ -218,8 +220,9 @@ object ConfigSystem {
      * Store config to a file (will be created if not exists).
      *
      * The config should be known to the config system.
+     * Files hold the settings of the main client, whichever client asks for them to be written.
      */
-    fun store(config: Config) {
+    fun store(config: Config): Unit = ClientContext.within(ClientManager.main) {
         runCatching {
             config.jsonFile.toPath().atomicWrite { tmp ->
                 Files.newBufferedWriter(tmp).use {

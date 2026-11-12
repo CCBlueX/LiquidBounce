@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
@@ -38,13 +39,13 @@ import kotlin.math.min
  */
 class Follower : RouteProgress {
 
-    private var route: Route? = null
-    private var takeOffTicks = 0
+    private var route: Route? by clientState { null }
+    private var takeOffTicks by clientState { 0 }
 
-    var target: Vec3? = null
+    var target: Vec3? by clientState { null }
         private set
 
-    var sprint = false
+    var sprint by clientState { false }
         private set
 
     val path: Path?

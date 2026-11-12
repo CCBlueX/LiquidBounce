@@ -29,6 +29,7 @@ import com.google.gson.JsonSerializer
 import com.mojang.serialization.Codec
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.sanitizeForSerialization
 import net.minecraft.core.RegistryAccess
@@ -43,7 +44,8 @@ import java.lang.reflect.Type
 class CodecBasedAdapter<T : Any>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
 
     private val jsonOps
-        get() = (mc.level?.registryAccess() ?: RegistryAccess.EMPTY).createSerializationContext(JsonOps.INSTANCE)
+        get() = (currentClient.level?.registryAccess() ?: RegistryAccess.EMPTY)
+            .createSerializationContext(JsonOps.INSTANCE)
 
     override fun deserialize(
         jsonElement: JsonElement?,

@@ -28,7 +28,7 @@ import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntList
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.ActiveClientListener
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandClients
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
@@ -106,7 +107,7 @@ import kotlin.math.min
  * @author superblaubeere27 (@team CCBlueX)
  */
 @Suppress("detekt:TooManyFunctions")
-object CommandManager : EventListener {
+object CommandManager : ActiveClientListener {
 
     @AddonApi
     object GlobalSettings : ValueGroup("Commands") {
@@ -172,6 +173,7 @@ object CommandManager : EventListener {
         register(CommandRemoteView)
         register(CommandDebug)
         register(CommandFriend)
+        register(CommandClients)
         register(CommandLiquidChat)
         register(CommandClient)
         register(CommandConfig)

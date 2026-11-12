@@ -25,11 +25,14 @@ import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.currentClient
 
 
 /**
@@ -44,6 +47,7 @@ object ModuleAutoAccount : ClientModule(
     ModuleCategories.MISC,
     aliases = listOf("AutoLogin", "AutoRegister")
 ) {
+    override val clientScope get() = ClientScope.EVERY
 
     private val password by text("Password", "a1b2c3d4")
         .doNotIncludeAlways()
@@ -71,7 +75,7 @@ object ModuleAutoAccount : ClientModule(
     override val running
         get() = !SelfDestruct.isDestructed && enabled
 
-    private var sending = false
+    private var sending by clientState { false }
 
     override fun onDisabled() {
         sending = false
@@ -79,7 +83,7 @@ object ModuleAutoAccount : ClientModule(
 
     private suspend inline fun action(operation: () -> Unit) {
         sending = true
-        tickUntil { mc.connection != null }
+        tickUntil { currentClient.connection != null }
         waitTicks(delay.random())
         operation()
         sending = false

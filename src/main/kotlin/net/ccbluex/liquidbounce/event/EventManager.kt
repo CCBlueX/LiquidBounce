@@ -129,6 +129,8 @@ import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.events.ServerPingedEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.events.ClientSwitchEvent
+import net.ccbluex.liquidbounce.event.events.ClientsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
@@ -150,6 +152,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -242,6 +246,8 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     AccountManagerAdditionResultEvent::class.java,
     AccountManagerRemovalResultEvent::class.java,
     AccountManagerLoginResultEvent::class.java,
+    ClientSwitchEvent::class.java,
+    ClientsUpdateEvent::class.java,
     VirtualScreenEvent::class.java,
     FpsChangeEvent::class.java,
     FpsLimitEvent::class.java,
@@ -383,6 +389,12 @@ object EventManager {
 
         handlers.addIfAbsent(hook)
 
+        val client = hook.client
+        if (client != null && client.isSimulated) {
+            val hooks = client.hooks ?: ArrayList<Pair<Class<out Event>, EventHook<*>>>().also { client.hooks = it }
+            hooks += eventClass to hook
+        }
+
         return eventHook
     }
 
@@ -397,6 +409,27 @@ object EventManager {
     fun unregisterEventHandler(eventListener: EventListener) {
         tables.registry.values.forEach {
             it.remove(eventListener)
+        }
+    }
+
+    /**
+     * Drops the hooks that were waiting for an event of [client].
+     */
+    internal fun unregisterClient(client: Client) {
+        if (client.isSimulated) {
+            client.hooks?.forEach { (eventClass, hook) -> unregisterEventHook(eventClass, hook) }
+            client.hooks = null
+            return
+        }
+
+        for (hooks in tables.registry.values) {
+            for (hook in hooks.snapshot) {
+                @Suppress("UNCHECKED_CAST")
+                hook as EventHook<in Event>
+                if (hook.client === client) {
+                    hooks.remove(hook)
+                }
+            }
         }
     }
 
@@ -424,6 +457,10 @@ object EventManager {
         for (eventHook in target.snapshot) {
             @Suppress("UNCHECKED_CAST")
             eventHook as EventHook<T>
+            val client = eventHook.client
+            if (client != null && client !== ClientContext.current) {
+                continue
+            }
             if (!eventHook.handlerClass.running) {
                 continue
             }

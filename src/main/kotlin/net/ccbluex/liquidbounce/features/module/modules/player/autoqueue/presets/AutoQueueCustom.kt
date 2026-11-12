@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
@@ -67,9 +68,12 @@ object AutoQueueCustom : Mode("Custom") {
         val killAura by boolean("KillAura", true)
         val speed by boolean("Speed", false)
 
-        var wasInQueue = false
+        private val wasInQueueState = clientState { false }
+
+        var wasInQueue: Boolean
+            get() = wasInQueueState.get()
             set(value) {
-                field = value
+                wasInQueueState.set(value)
 
                 if (!enabled) {
                     return
@@ -86,7 +90,7 @@ object AutoQueueCustom : Mode("Custom") {
     }
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
-    private var worldChangeOccurred = false
+    private var worldChangeOccurred by clientState { false }
 
     @Suppress("unused")
     private val tickHandler = tickHandler(Dispatchers.Main) {

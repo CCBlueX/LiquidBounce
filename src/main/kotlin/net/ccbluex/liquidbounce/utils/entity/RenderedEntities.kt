@@ -25,8 +25,10 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.Targets
@@ -34,18 +36,23 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.world.entity.LivingEntity
 
-private val entities = ReferenceArrayList<LivingEntity>()
-
 /**
  * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition.
  *
  * This collection will be auto updated on [GameTickEvent],
  * and be cleared on [WorldChangeEvent] or at the unsubscription of last [EventListener].
  */
-object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
-    private val registry = ReferenceOpenHashSet<EventListener>()
+object RenderedEntities : AbstractCollection<LivingEntity>(), EventListener {
+    private val entities by clientState { ReferenceArrayList<LivingEntity>() }
 
-    private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
+    override val size: Int
+        get() = entities.size
+
+    override fun iterator(): Iterator<LivingEntity> = entities.iterator()
+
+    private val registry by clientState { ReferenceOpenHashSet<EventListener>() }
+
+    private val onUpdate by clientState { ReferenceArrayList<Pair<EventListener, Runnable>>() }
 
     context(listener: EventListener)
     fun onUpdated(callback: Runnable) {
@@ -84,7 +91,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
         val shouldCheckCombineMobs = ModuleCombineMobs.running
 
-        for (entity in mc.level?.entitiesForRendering() ?: return) {
+        for (entity in currentClient.level?.entitiesForRendering() ?: return) {
             if (entity is LivingEntity && entity.shouldBeShown()) {
                 if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
                     continue

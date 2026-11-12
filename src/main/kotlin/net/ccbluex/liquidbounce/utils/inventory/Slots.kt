@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.Item
@@ -64,7 +65,7 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
     // Java takes the Predicate overload; both would match a lambda otherwise.
     @JvmSynthetic
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {
-        return if (mc.player == null) null else find { predicate(it.itemStack) }
+        return if (currentClient.player == null) null else find { predicate(it.itemStack) }
     }
 
     fun findSlot(predicate: Predicate<ItemStack>): T? = findSlot(predicate::test)

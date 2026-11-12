@@ -1,9 +1,9 @@
 <script lang="ts">
     import type {ConfigurableSetting, Module} from "../../integration/types";
     import {getModuleSettings, setModuleEnabled} from "../../integration/rest";
-    import {listen} from "../../integration/ws";
+    import {listen, listenClient} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
-    import {highlightModuleName} from "./clickgui_store";
+    import {highlightModuleName, pickedClient} from "./clickgui_store";
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import {isClickGuiScreen} from "../../util/utils";
@@ -106,7 +106,7 @@
     }
 
     async function toggleModule(name: string, enabled: boolean) {
-        await setModuleEnabled(name, enabled);
+        await setModuleEnabled(name, enabled, $pickedClient);
     }
 
     function handleWindowClick(e: MouseEvent) {
@@ -143,7 +143,7 @@
         }
     });
 
-    listen("moduleToggle", (e: ModuleToggleEvent) => {
+    listenClient("moduleToggle", $pickedClient, (e: ModuleToggleEvent) => {
         const mod = modules.find((m) => m.name === e.moduleName);
         if (!mod) {
             return;

@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -93,6 +94,15 @@ open class ValueGroup @JvmOverloads constructor(
     valueType,
     independentDescription = independentDescription
 ) {
+
+    /**
+     * A group has no value of its own, so the client is given its children.
+     */
+    override fun giveTo(client: Client) {
+        for (value in inner) {
+            value.giveTo(client)
+        }
+    }
 
     /**
      * Allows dynamic groups to create their children before stored values are applied.

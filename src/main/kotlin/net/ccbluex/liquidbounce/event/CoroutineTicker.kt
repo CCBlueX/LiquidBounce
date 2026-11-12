@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
@@ -44,18 +45,21 @@ interface Ticker {
     fun tick()
 }
 
+/**
+ * Every client ticks on its own, so each has its own callbacks.
+ */
 object CoroutineTicker : Ticker {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
 
     // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
-    private var minecraftTickDepth = 0
+    private var minecraftTickDepth by clientState { 0 }
 
     // Running callbacks
-    private val runningList = ReferenceArrayList<BooleanSupplier>()
+    private val runningList by clientState { ReferenceArrayList<BooleanSupplier>() }
 
     // Next tick callbacks
-    private val pendingList = ReferenceArrayList<BooleanSupplier>()
+    private val pendingList by clientState { ReferenceArrayList<BooleanSupplier>() }
 
     fun beginMinecraftTick() {
         minecraftTickDepth++

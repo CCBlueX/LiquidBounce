@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueCustom
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueGommeDuels
@@ -33,6 +34,9 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import java.util.function.BooleanSupplier
 
 object ModuleAutoQueue : ClientModule("AutoQueue", ModuleCategories.PLAYER, aliases = listOf("AutoPlay")) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     val presets = choices("Presets", AutoQueueHypixelSW, arrayOf(
         AutoQueueHypixelSW,
         AutoQueueGommeDuels,

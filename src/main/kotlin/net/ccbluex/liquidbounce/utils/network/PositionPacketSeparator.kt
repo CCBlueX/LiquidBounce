@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.isOlderThan26_3
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
@@ -35,7 +36,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  */
 internal object PositionPacketSeparator : EventListener {
 
-    private var positionSinceTickEnd = false
+    private var positionSinceTickEnd by clientState { false }
 
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         if (event.origin != TransferOrigin.OUTGOING || event.isCancelled) {

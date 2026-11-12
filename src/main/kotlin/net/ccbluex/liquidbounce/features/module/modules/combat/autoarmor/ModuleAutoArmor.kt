@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
@@ -45,6 +46,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * Automatically puts on the best armor.
  */
 object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     val inventoryConstraints = tree(PlayerInventoryConstraints())
 

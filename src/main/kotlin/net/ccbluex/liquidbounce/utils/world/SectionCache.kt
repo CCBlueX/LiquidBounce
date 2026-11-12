@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.SectionPos
 import net.minecraft.world.level.block.state.BlockState
@@ -42,7 +43,7 @@ object SectionCache : EventListener {
 
     private const val MAX_SECTIONS = 4096
 
-    private val copies = Long2ObjectLinkedOpenHashMap<PalettedContainer<BlockState>?>()
+    private val copies by clientState { Long2ObjectLinkedOpenHashMap<PalettedContainer<BlockState>?>() }
 
     /** Call on the render thread. */
     fun capture(level: ClientLevel, region: BlockRegion): WorldSnapshot {

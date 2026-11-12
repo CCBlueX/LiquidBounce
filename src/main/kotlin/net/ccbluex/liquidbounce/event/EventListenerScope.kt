@@ -28,6 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.ownClientState
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
@@ -38,17 +41,19 @@ import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Simple cache.
+ * The scopes of the current client. A listener has one in every client it launched something in.
+ * A simulated client launches in its own, which end with it.
  */
-private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, CoroutineScope>()
+private val scopeState = ownClientState { ConcurrentHashMap<EventListener, CoroutineScope>() }
+private val scopes by scopeState
 
 /**
- * Get the related [CoroutineScope] of receiver [EventListener].
+ * Get the related [CoroutineScope] of receiver [EventListener] in the current client.
  *
- * All tasks will check [EventListener.running] on suspend.
+ * All tasks will check [EventListener.running] on suspend, and stay in the client they were launched in.
  */
 val EventListener.eventListenerScope: CoroutineScope
-    get() = eventListenerScopeHolder.computeIfAbsent(this) {
+    get() = scopes.computeIfAbsent(this) {
         CoroutineScope(
             SupervisorJob() // Prevent exception canceling
                 + CoroutineExceptionHandler { _, throwable -> // logging
@@ -61,6 +66,7 @@ val EventListener.eventListenerScope: CoroutineScope
                 }
             }
                 + CoroutineName(it.toString()) // Name
+                + ClientContext.Element(ClientContext.current)
                 // Render thread + Auto cancel on not listening
                 + it.wrapContinuationInterceptor(Dispatchers.Main)
         )
@@ -72,7 +78,26 @@ val EventListener.eventListenerScope: CoroutineScope
  * Remember to do this!
  */
 fun EventListener.removeEventListenerScope() {
-    eventListenerScopeHolder.remove(this)?.cancel(EventListenerNotListeningException(this))
+    scopes.remove(this)?.cancel(EventListenerNotListeningException(this))
+}
+
+/**
+ * Cancels whatever the listeners still have running in the current client.
+ */
+internal fun cancelEventListenerScopes() {
+    for ((listener, scope) in scopes) {
+        scope.cancel(EventListenerNotListeningException(listener))
+    }
+    scopes.clear()
+}
+
+/**
+ * Cancels what listeners launched in the simulated [client], if anything.
+ */
+internal fun cancelEventListenerScopes(client: Client) {
+    if (scopeState.isSetIn(client)) {
+        ClientContext.within(client) { cancelEventListenerScopes() }
+    }
 }
 
 /**
@@ -118,6 +143,16 @@ private class EventListenerRunningContinuationInterceptor(
             override val context get() = continuation.context
 
             override fun resumeWith(result: Result<T>) {
+                // Whoever resumes may be on a thread of another client, like the one that sent a packet
+                val client = context[ClientContext.Element]?.client
+                if (client == null) {
+                    resumeIfRunning(result)
+                } else {
+                    ClientContext.within(client) { resumeIfRunning(result) }
+                }
+            }
+
+            private fun resumeIfRunning(result: Result<T>) {
                 // if the event listener is no longer active, abort the result
                 val result = if (eventListener.running) {
                     result

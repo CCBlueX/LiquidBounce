@@ -27,6 +27,7 @@ import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.coroutines.ContinuationInterceptor
@@ -96,7 +97,7 @@ suspend fun <T : Event> EventListener.waitMatches(
     predicate: Predicate<T>,
 ): T = suspendCancellableCoroutine { continuation ->
     val handler = object : CompletionHandler, Consumer<T> {
-        @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
+        @JvmField val eventHook: EventHook<T> = EventHook(this@waitMatches, priority, ClientContext.current, this)
 
         private fun unregisterAndResume(result: Result<T>) {
             EventManager.unregisterEventHook(eventClass, eventHook)

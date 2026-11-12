@@ -1,13 +1,37 @@
 accessWidener	v1	official
 
 accessible field net/minecraft/world/entity/AreaEffectCloud potionContents Lnet/minecraft/world/item/alchemy/PotionContents;
-accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
-mutable field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
-accessible field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
-mutable field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
 accessible field net/minecraft/client/Minecraft missTime I
-accessible field net/minecraft/client/Minecraft services Lnet/minecraft/server/Services;
-mutable field net/minecraft/client/Minecraft services Lnet/minecraft/server/Services;
+accessible field net/minecraft/client/Minecraft rightClickDelay I
+accessible field net/minecraft/client/Minecraft pendingConnection Lnet/minecraft/network/Connection;
+accessible field net/minecraft/client/Minecraft singleplayerServer Lnet/minecraft/client/server/IntegratedServer;
+accessible field net/minecraft/client/Minecraft isLocalServer Z
+accessible method net/minecraft/client/Minecraft pick (F)V
+accessible method net/minecraft/client/Minecraft handleKeybinds ()V
+accessible method net/minecraft/client/Minecraft updateLevelInEngines (Lnet/minecraft/client/multiplayer/ClientLevel;Z)V
+accessible field net/minecraft/client/gui/Gui screen Lnet/minecraft/client/gui/screens/Screen;
+accessible field net/minecraft/client/gui/Hud chat Lnet/minecraft/client/gui/components/ChatComponent;
+mutable field net/minecraft/client/gui/Hud chat Lnet/minecraft/client/gui/components/ChatComponent;
+accessible field net/minecraft/client/gui/Hud tabList Lnet/minecraft/client/gui/components/PlayerTabOverlay;
+mutable field net/minecraft/client/gui/Hud tabList Lnet/minecraft/client/gui/components/PlayerTabOverlay;
+accessible field net/minecraft/client/gui/Hud bossOverlay Lnet/minecraft/client/gui/components/BossHealthOverlay;
+mutable field net/minecraft/client/gui/Hud bossOverlay Lnet/minecraft/client/gui/components/BossHealthOverlay;
+accessible field net/minecraft/client/Options serverRenderDistance I
+accessible field net/minecraft/client/Camera entity Lnet/minecraft/world/entity/Entity;
+mutable field net/minecraft/client/Minecraft levelRenderer Lnet/minecraft/client/renderer/LevelRenderer;
+mutable field net/minecraft/client/Minecraft levelExtractor Lnet/minecraft/client/renderer/extract/LevelExtractor;
+accessible field net/minecraft/client/renderer/GameRenderer mainRenderTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+mutable field net/minecraft/client/renderer/GameRenderer mainRenderTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+accessible field net/minecraft/client/renderer/GameRenderer mainCamera Lnet/minecraft/client/Camera;
+mutable field net/minecraft/client/renderer/GameRenderer mainCamera Lnet/minecraft/client/Camera;
+accessible field net/minecraft/client/renderer/GameRenderer lightmap Lnet/minecraft/client/renderer/Lightmap;
+accessible field net/minecraft/client/renderer/GameRenderer lightmapRenderStateExtractor Lnet/minecraft/client/renderer/LightmapRenderStateExtractor;
+accessible field net/minecraft/client/renderer/GameRenderer fogRenderer Lnet/minecraft/client/renderer/fog/FogRenderer;
+accessible field net/minecraft/client/renderer/GameRenderer globalSettingsUniform Lnet/minecraft/client/renderer/GlobalSettingsUniform;
+accessible method net/minecraft/client/renderer/GameRenderer extractCamera (Lnet/minecraft/client/DeltaTracker;F)V
+accessible field net/minecraft/client/renderer/SectionOcclusionGraph loadedChunks Lit/unimi/dsi/fastutil/longs/LongOpenHashSet;
+accessible field net/minecraft/client/renderer/SectionOcclusionGraph emptySections Lit/unimi/dsi/fastutil/longs/LongOpenHashSet;
+accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 
 accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
 accessible field net/minecraft/world/entity/HumanoidArm id I

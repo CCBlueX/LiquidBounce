@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -107,17 +108,17 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val canLag: Boolean
         get() = !lagRequireKillAura || ModuleKillAura.running
 
-    private var target: Entity? = null
-    private var renderTarget: Entity? = null
-    private var renderTargetPos: TrackedEntityPosition? = null
+    private var target: Entity? by clientState { null }
+    private var renderTarget: Entity? by clientState { null }
+    private var renderTargetPos: TrackedEntityPosition? by clientState { null }
 
-    var remainingAttackCount = 0
+    var remainingAttackCount by clientState { 0 }
         private set
-    private var currentGameTick = 0L
-    private var forwardInputAttackGameTick = -1L
-    private var receiveDamage = false
-    private var lagTicks = -1
-    private var releaseReason: ReleaseReason? = null
+    private var currentGameTick by clientState { 0L }
+    private var forwardInputAttackGameTick by clientState { -1L }
+    private var receiveDamage by clientState { false }
+    private var lagTicks by clientState { -1 }
+    private var releaseReason: ReleaseReason? by clientState { null }
 
     private enum class ReleaseReason(val debugSuffix: String?) {
         TARGET_REACHED(null),

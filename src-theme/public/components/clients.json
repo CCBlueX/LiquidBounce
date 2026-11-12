@@ -1,0 +1,12 @@
+{
+  "name": "Clients",
+  "description": "Shows live views of your other clients.",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 15,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  }
+}

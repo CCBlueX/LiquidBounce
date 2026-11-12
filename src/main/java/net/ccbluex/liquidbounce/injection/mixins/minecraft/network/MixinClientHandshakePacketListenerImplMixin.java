@@ -19,19 +19,48 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferClient;
+import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientHandshakePacketListenerImpl.class)
 public abstract class MixinClientHandshakePacketListenerImplMixin {
+
+    @Shadow
+    @Final
+    private Connection connection;
+
+    /**
+     * Runs on a worker thread and has to join the server as the account of its own client.
+     */
+    @WrapMethod(method = "authenticateServer")
+    private Component authenticateAsClient(String digest, Operation<Component> original) {
+        var client = ((ConnectionAddition) this.connection).liquid_bounce$getClient();
+        if (client == null) {
+            return original.call(digest);
+        }
+
+        var previous = ClientContext.enter(client);
+        try {
+            return original.call(digest);
+        } finally {
+            ClientContext.exit(previous);
+        }
+    }
 
     @ModifyExpressionValue(method = "handleLoginFinished", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ClientBrandRetriever;getClientModName()Ljava/lang/String;", remap = false))
     private String getClientModName(String original) {

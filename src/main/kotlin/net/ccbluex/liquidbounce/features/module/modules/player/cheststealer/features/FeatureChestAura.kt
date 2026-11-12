@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -109,18 +110,19 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     private val rotations = tree(RotationsValueGroup(this))
 
     // The block position currently being interacted with
-    private var currentTargetBlock: BlockPos? = null
+    private var currentTargetBlock: BlockPos? by clientState { null }
+    private val interactedBlocks by clientState { hashSetOf<BlockPos>() }
     val interactedBlocksSet: Set<BlockPos>
-        field = hashSetOf<BlockPos>()
+        get() = interactedBlocks
 
     // Counter for the number of tries performed to interact with a block
-    private var interactionAttempts = 0
+    private var interactionAttempts by clientState { 0 }
 
     override val running: Boolean
         get() = super.running && pauseOn.none { it.asBoolean }
 
     override fun onDisabled() {
-        interactedBlocksSet.clear()
+        interactedBlocks.clear()
         interactionAttempts = 0
         currentTargetBlock = null
         super.onDisabled()
@@ -238,10 +240,10 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
 
     private fun track(blockPos: BlockPos) {
         fun BlockPos.recordAnotherChestPart(state: BlockState?) {
-            interactedBlocksSet += relative(state.anotherChestPartDirection() ?: return)
+            interactedBlocks += relative(state.anotherChestPartDirection() ?: return)
         }
 
-        interactedBlocksSet += blockPos
+        interactedBlocks += blockPos
         blockPos.recordAnotherChestPart(blockPos.state)
     }
 

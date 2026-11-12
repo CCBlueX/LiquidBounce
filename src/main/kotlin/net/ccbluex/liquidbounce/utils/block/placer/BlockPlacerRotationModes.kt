@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -111,7 +112,7 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, pl
      */
     private val placements by int("Placements", 1, 1..10, "b/o")
 
-    private var placementsDone = 0
+    private var placementsDone by clientState { 0 }
 
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
         PostRotationExecutor.addTask(placer.parent, postMove, task = {

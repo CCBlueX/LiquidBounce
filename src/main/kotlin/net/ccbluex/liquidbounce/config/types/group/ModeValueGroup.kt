@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import java.util.function.ToIntFunction
 
@@ -43,8 +45,36 @@ class ModeValueGroup<T : Mode>(
     var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set
     private var defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]
-    var activeMode: T = defaultMode
-        private set
+    private var mainMode: T = defaultMode
+
+    /**
+     * The mode the current client has selected. A simulated client follows its parent until it selects one.
+     */
+    var activeMode: T
+        get() {
+            var client = ClientContext.current
+            while (!client.isMain) {
+                @Suppress("UNCHECKED_CAST")
+                client.activeModes[this]?.let { return it as T }
+                client = client.parent ?: break
+            }
+            return mainMode
+        }
+        private set(mode) {
+            val client = ClientContext.current
+            when {
+                client.isSimulated -> client.activeModes[this] = mode
+                client.isMain || client.activeModes.replace(this, mode) == null -> mainMode = mode
+            }
+        }
+
+    override fun giveTo(client: Client) {
+        client.activeModes[this] = activeMode
+        super.giveTo(client)
+        for (mode in modes) {
+            mode.giveTo(client)
+        }
+    }
 
     init {
         for (choice in modes) {

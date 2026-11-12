@@ -211,9 +211,14 @@ data class MessageMetadata(
 @AddonApi
 @JvmOverloads
 fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
+    val client = currentClient
+    if (client.isSimulated) {
+        return
+    }
+
     val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
 
-    if (mc.player == null) {
+    if (client.player == null) {
         logger.info("(Chat) ${realText.string}")
         return
     }

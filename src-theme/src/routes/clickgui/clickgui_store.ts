@@ -24,3 +24,8 @@ export const snappingEnabled: Writable<boolean> = writable(true);
 export const gridSize: Writable<number> = writable(10);
 
 export const darken = writable(true);
+
+/**
+ * The client whose modules the panels show and edit, null for the active one.
+ */
+export const pickedClient: Writable<number | null> = writable(null);

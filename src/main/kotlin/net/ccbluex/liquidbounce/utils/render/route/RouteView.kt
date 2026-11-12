@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render.route
 
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.core.BlockPos
@@ -67,39 +68,39 @@ internal class TargetProgress(
 /** What a navigating module shows, drawn by [RouteRenderer]. */
 class RouteView {
 
-    var state = RouteState.NONE
+    var state by clientState { RouteState.NONE }
         private set
 
-    var since = 0L
+    var since by clientState { 0L }
         private set
 
-    var start: Vec3? = null
+    var start: Vec3? by clientState { null }
         private set
 
-    var destination: Vec3? = null
+    var destination: Vec3? by clientState { null }
         private set
 
     /** Corners of the route, feet positions. */
-    var path: List<Vec3>? = null
+    var path: List<Vec3>? by clientState { null }
         private set
 
-    var progress: RouteProgress? = null
+    var progress: RouteProgress? by clientState { null }
         private set
 
-    var breaks: Collection<BlockPos> = emptyList()
-    var places: Collection<BlockPos> = emptyList()
+    var breaks: Collection<BlockPos> by clientState { emptyList() }
+    var places: Collection<BlockPos> by clientState { emptyList() }
 
     /** Where the server has the player when that differs from the client. */
-    var ghost: ((partialTicks: Float) -> Vec3?)? = null
+    var ghost: ((partialTicks: Float) -> Vec3?)? by clientState { null }
 
-    var target: Entity? = null
-    var attackPosition: Vec3? = null
+    var target: Entity? by clientState { null }
+    var attackPosition: Vec3? by clientState { null }
 
-    var engaged = false
+    var engaged by clientState { false }
 
     /** A destination the player could pick right now, shown while nothing else is. */
-    var preview: Vec3? = null
-    var isPreviewValid = false
+    var preview: Vec3? by clientState { null }
+    var isPreviewValid by clientState { false }
 
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start

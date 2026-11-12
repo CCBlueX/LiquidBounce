@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -37,7 +38,7 @@ object VelocityIntave20261002 : VelocityMode("Intave-2026-10-02", aliases = list
         private val reduceFactor by float("Factor", 0.6f, 0.6f..1f)
         private val hurtTime by intRange("HurtTime", 5..7, 1..10)
         private val lastAttackTimeToReduce by int("LastAttackTimeToReduce", 2000, 1..10000)
-        var lastAttackTime = 0L
+        var lastAttackTime by clientState { 0L }
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
@@ -67,8 +68,8 @@ object VelocityIntave20261002 : VelocityMode("Intave-2026-10-02", aliases = list
         }
 
         private val randomize = tree(Randomize())
-        private var currentDelay = 0
-        private var delayCounter = 0
+        private var currentDelay by clientState { 0 }
+        private var delayCounter by clientState { 0 }
 
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {

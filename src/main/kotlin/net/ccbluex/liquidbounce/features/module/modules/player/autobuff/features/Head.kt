@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -30,7 +31,7 @@ internal object Head : HealthBasedBuff("Head") {
 
     private val maxAbsorption by float("MaxAbsorption", 1f, 0f..8f)
     private val cooldown by float("Cooldown", 0f, 0f..120f, "s")
-    private val chronometer = Chronometer()
+    private val chronometer by clientState { Chronometer() }
 
     override val passesRequirements: Boolean
         get() = super.passesRequirements

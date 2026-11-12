@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
@@ -51,6 +53,8 @@ import kotlin.math.min
  */
 object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
+    override val clientScope get() = ClientScope.EVERY
+
     @Suppress("UnusedPrivateProperty")
     private val modes = choices("Mode", 1, ::safeWalkChoices) // Default safe mode
 
@@ -74,7 +78,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
     private class OnEdge(override val parent: ModeValueGroup<Mode>) : Mode("OnEdge") {
 
         private val edgeDistance = floatRange("Distance", 0.1f..0.15f, 0.05f..0.5f).asRefreshable()
-        private var center: Vec3? = null
+        private var center: Vec3? by clientState { null }
 
         private enum class OnEdgeMode(override val tag: String) : Tagged {
             STOP("Stop"),
@@ -86,11 +90,11 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
          * Defines how many ticks we should keep running the [mode]
          */
         private val keepTicks by intRange("Keep", 1..2, 1..20, suffix = "ticks")
-        private var overwriteTicks = 0
+        private var overwriteTicks by clientState { 0 }
 
         private val mode by enumChoice("Mode", OnEdgeMode.STOP)
         private val sneak by intRange("Sneak", 0..0, 0..20, suffix = "ticks")
-        private var sneakTicks = 0
+        private var sneakTicks by clientState { 0 }
         private val jump by boolean("Jump", false)
 
         /**

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Drink
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Gapple
@@ -42,6 +43,7 @@ object ModuleAutoBuff : ClientModule(
     category = ModuleCategories.PLAYER,
     aliases = listOf("AutoPot", "AutoGapple", "AutoSoup")
 ) {
+    override val clientScope get() = ClientScope.EVERY
 
     /**
      * All buff features

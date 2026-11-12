@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -38,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.world
  * Allows you to view from the perspective of another player in the game.
  */
 object CommandRemoteView : CommandRegistrar {
-    private var pName: String? = null
+    private var pName: String? by clientState { null }
 
     @Suppress("detekt:LongMethod", "detekt:CognitiveComplexMethod")
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {

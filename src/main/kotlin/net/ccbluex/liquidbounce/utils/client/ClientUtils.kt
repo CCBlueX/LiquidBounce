@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.client
 import com.mojang.blaze3d.Blaze3D
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.net.URI
@@ -33,9 +33,12 @@ internal fun clientLogger(name: String): Logger = LogManager.getLogger("$CLIENT_
 
 val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
+/**
+ * Whether the current client has joined a world.
+ */
 @AddonApi
 val inGame: Boolean
-    get() = mc()?.let { mc -> mc.player != null && mc.level != null } == true
+    get() = ClientContext.current.inGame
 
 inline val clientStartDurationMs: Long
     get() = System.currentTimeMillis() - mc.clientStartTimeMs

@@ -85,7 +85,7 @@ class ValueGroupSerializer(
                         add("value", serializeReadOnly(v.activeMode, context))
                     }
                     is ValueGroup -> serializeReadOnly(v, context)
-                    else -> context.serialize(v.inner)
+                    else -> context.serialize(v.get())
                 })
             }
         }

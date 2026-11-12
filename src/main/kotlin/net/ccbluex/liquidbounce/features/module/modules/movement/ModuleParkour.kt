@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -54,6 +56,8 @@ import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
+    override val clientScope get() = ClientScope.EVERY
+
     private val assisted = AssistedJump()
 
     private object Assist : ToggleableValueGroup(this, "Assist", true) {
@@ -66,9 +70,8 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         tree(Assist)
     }
 
-    private var aimYaw = Float.NaN
-    private var sprint = false
-
+    private var aimYaw by clientState { Float.NaN }
+    private var sprint by clientState { false }
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         assisted.target ?: return@handler

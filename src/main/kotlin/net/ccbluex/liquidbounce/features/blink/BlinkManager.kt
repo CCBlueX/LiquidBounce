@@ -37,12 +37,14 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -76,7 +78,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
-    val packetQueue = ConcurrentLinkedQueue<PacketSnapshot>()
+    val packetQueue by clientState { ConcurrentLinkedQueue<PacketSnapshot>() }
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
@@ -103,7 +105,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
-        if (mc.connection?.connection?.isConnected != true) {
+        if (currentClient.connection?.connection?.isConnected != true) {
             packetQueue.clear()
             return@handler
         }
@@ -115,7 +117,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     @Suppress("unused")
     private val flushReceiveHandler = handler<TickPacketProcessEvent> {
-        if (mc.connection?.connection?.isConnected != true) {
+        if (currentClient.connection?.connection?.isConnected != true) {
             packetQueue.clear()
             return@handler
         }

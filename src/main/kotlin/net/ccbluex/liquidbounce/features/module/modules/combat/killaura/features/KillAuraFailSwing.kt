@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.prepareForAttack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
@@ -57,7 +58,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
      * Current additional range - randomized from [additionalRange].
      * This will change every time we attack an entity.
      */
-    private var currentAdditionalRange: Float = this.additionalRange.random()
+    private var currentAdditionalRange: Float by clientState { this.additionalRange.random() }
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent>{

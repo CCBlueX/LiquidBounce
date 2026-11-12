@@ -34,8 +34,11 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.copyIfMutable
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
@@ -220,15 +223,44 @@ open class Value<T : Any>(
     }
 
 
-    fun get() = inner
+    /**
+     * The value as the current client has it. Only settings of modules differ between clients,
+     * see [giveTo]; everything else reads [inner] of the main client. A simulated client reads the value
+     * of its parent until it sets its own.
+     */
+    fun get(): T {
+        var client = ClientContext.current
+        while (!client.isMain) {
+            @Suppress("UNCHECKED_CAST")
+            client.values[this]?.let { return it as T }
+            client = client.parent ?: break
+        }
+        return inner
+    }
 
     fun set(t: T) {
         // Do nothing if value is the same
-        if (t == inner) {
+        if (t == get()) {
             return
         }
 
-        set(t) { inner = it }
+        set(t) { store(it) }
+    }
+
+    private fun store(value: T) {
+        val client = ClientContext.current
+        when {
+            client.isSimulated -> client.values[this] = value as Any
+            client.isMain || client.values.replace(this, value) == null -> inner = value
+        }
+    }
+
+    /**
+     * Lets [client] keep its own copy of this value, starting from the one of the current client.
+     */
+    internal open fun giveTo(client: Client) {
+        // Collections are changed in place by the settings holding them.
+        client.values[this] = copyIfMutable(get()) as Any
     }
 
     fun set(t: T, apply: ValueChangedListener<T>) {
@@ -243,11 +275,17 @@ open class Value<T : Any>(
             }
         }.onSuccess {
             apply.accept(currT)
+            // What a simulated client changes is thrown away with it, nobody else needs to hear of it.
+            if (ClientContext.current.isSimulated) {
+                return
+            }
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it.accept(currT) }
-            stateFlow.value = currT
+            if (ClientContext.current.isActive) {
+                stateFlow.value = currT
+            }
         }.onFailure { ex ->
-            logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
+            logger.error("Failed to set ${this.name} from ${get()} to $t", ex)
         }
     }
 
@@ -316,7 +354,7 @@ open class Value<T : Any>(
      */
     @Suppress("UNCHECKED_CAST")
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val currValue = this.inner
+        val currValue = get()
 
         var clazz: Class<*>? = currValue.javaClass
         var r: T? = null

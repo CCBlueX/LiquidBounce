@@ -22,7 +22,9 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
@@ -41,15 +43,16 @@ object ModuleEagle : ClientModule(
     "Eagle", ModuleCategories.PLAYER,
     aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
+    override val clientScope get() = ClientScope.EVERY
 
     private val edgeDistance by floatRange("EdgeDistance", 0.4f..0.6f, 0.01f..1.3f)
         .onChanged {
             currentEdgeDistance = it.random()
         }
 
-    private var currentEdgeDistance: Float = edgeDistance.random()
-    private var wasSneaking = false
-    private var sneakCaptured = false
+    private var currentEdgeDistance: Float by clientState { edgeDistance.random() }
+    private var wasSneaking by clientState { false }
+    private var sneakCaptured by clientState { false }
 
     private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
         if (player.abilities.flying || !conditionsMet) {

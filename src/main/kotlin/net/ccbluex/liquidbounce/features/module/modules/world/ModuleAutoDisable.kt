@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -46,34 +48,20 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  * Command: [CommandAutoDisable]
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
-    val modules: Set<ClientModule>
-        field: MutableSet<ClientModule> = ReferenceOpenHashSet()
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val moduleNames by registryList("Modules", objectRBTreeSetOf<String>(), ValueType.CLIENT_MODULE)
     private val disableOn by multiEnumChoice<DisableOn>("On", DisableOn.entries, canBeNone = false)
 
-    fun clear() {
-        modules.clear()
-        moduleNames.clear()
-    }
+    val modules: Set<ClientModule>
+        get() = moduleNames.mapNotNullTo(ReferenceOpenHashSet()) { ModuleManager[it] }
 
-    fun add(module: ClientModule): Boolean {
-        return if (modules.add(module)) {
-            moduleNames.add(module.name)
-            true
-        } else {
-            false
-        }
-    }
+    fun clear() = moduleNames.clear()
 
-    fun remove(module: ClientModule): Boolean {
-        return if (modules.remove(module)) {
-            moduleNames.remove(module.name)
-            true
-        } else {
-            false
-        }
-    }
+    fun add(module: ClientModule): Boolean = moduleNames.add(module.name)
+
+    fun remove(module: ClientModule): Boolean = moduleNames.remove(module.name)
 
     init {
         add(ModuleFly)

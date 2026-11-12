@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
@@ -45,6 +47,8 @@ import net.minecraft.world.item.FishingRodItem
  */
 
 object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")
 
@@ -86,7 +90,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
         tree(AutoCastRod)
     }
 
-    private var caughtFish = false
+    private var caughtFish by clientState { false }
 
     override fun onDisabled() {
         caughtFish = false

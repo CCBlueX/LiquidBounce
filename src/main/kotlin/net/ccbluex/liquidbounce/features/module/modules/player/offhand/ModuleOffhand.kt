@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -58,6 +60,8 @@ import java.util.function.Predicate
  * Manages your offhand.
  */
 object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases = listOf("AutoTotem")) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val switchMode by enumChoice(
@@ -108,12 +112,12 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
     private val INVENTORY_HOTBAR_PRIORITY = Slots.Hotbar + Slots.Inventory
-    private val chronometer = Chronometer()
-    private var activeMode: Mode = Mode.NONE
-    private var lastMode: Mode? = null
-    private var lastTagMode: Mode = Mode.NONE
-    private var staticMode = Mode.NONE
-    private var last: LastSwitch? = null
+    private val chronometer by clientState { Chronometer() }
+    private var activeMode: Mode by clientState { Mode.NONE }
+    private var lastMode: Mode? by clientState { null }
+    private var lastTagMode: Mode by clientState { Mode.NONE }
+    private var staticMode by clientState { Mode.NONE }
+    private var last: LastSwitch? by clientState { null }
 
     override val tag: String
         get() = activeMode.modeName

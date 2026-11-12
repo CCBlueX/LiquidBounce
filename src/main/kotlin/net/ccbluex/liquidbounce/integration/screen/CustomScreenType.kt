@@ -23,6 +23,7 @@ import com.google.common.base.Predicates
 import com.mojang.realmsclient.RealmsMainScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screens.ConnectScreen
@@ -46,7 +47,7 @@ import java.util.function.Predicate
  * TODO: Do not simply replace any Lunar Screen with the title screen, if not in a world
  */
 private val Screen.isLunar
-    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.level == null
+    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && currentClient.level == null
 
 enum class CustomScreenType(
     val routeName: String,

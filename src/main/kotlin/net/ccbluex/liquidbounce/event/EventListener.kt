@@ -20,6 +20,9 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
@@ -30,9 +33,19 @@ import kotlin.reflect.KProperty
 
 class EventHook<T : Event>(
     val handlerClass: EventListener,
-    val priority: Short = 0,
+    val priority: Short,
+    /**
+     * Set on hooks that wait for something to happen in one client. Events of other clients pass them by.
+     */
+    val client: Client?,
     val handler: Consumer<T>,
-)
+) {
+
+    @JvmOverloads
+    constructor(handlerClass: EventListener, priority: Short = 0, handler: Consumer<T>) :
+        this(handlerClass, priority, null, handler)
+
+}
 
 @AddonApi
 interface EventListener : DebuggedOwner {
@@ -119,6 +132,17 @@ interface EventListener : DebuggedOwner {
 
 }
 
+/**
+ * A listener that serves the window: the theme, the browser, the HUD. It only hears the events of the
+ * active client, where a plain [EventListener] hears those of every client.
+ */
+interface ActiveClientListener : EventListener {
+
+    override val running: Boolean
+        get() = super.running && ClientContext.current.isActive
+
+}
+
 inline fun <E : Event> EventListener.newEventHook(
     priority: Short = 0,
     handler: Consumer<E>,
@@ -140,12 +164,12 @@ inline fun <reified T : Event> EventListener.until(
     crossinline handler: (T) -> Boolean
 ): EventHook<T> {
     lateinit var eventHook: EventHook<T>
-    eventHook = handler(T::class.java, priority) {
+    eventHook = EventHook(this, priority, ClientContext.current) {
         if (!this.running || handler(it)) {
             EventManager.unregisterEventHook(T::class.java, eventHook)
         }
     }
-    return eventHook
+    return EventManager.registerEventHook(T::class.java, eventHook)
 }
 
 inline fun <reified T : Event> EventListener.once(
@@ -190,17 +214,14 @@ inline fun <reified E : Event, V> EventListener.computedOn(
     priority: Short = 0,
     crossinline accumulator: (event: E, prev: V) -> V,
 ): ReadWriteProperty<EventListener, V> = object : ReadWriteProperty<EventListener, V> {
-    @Volatile // Make this value visible to all threads
-    private var value = initialValue
+    private val state = clientState { initialValue }
 
     @Suppress("unused") // May be useful?
     private val eventHook = handler<E>(priority) { event ->
-        value = accumulator(event, value)
+        state.set(accumulator(event, state.get()))
     }
 
-    override fun getValue(thisRef: EventListener, property: KProperty<*>): V = value
-    override fun setValue(thisRef: EventListener, property: KProperty<*>, value: V) {
-        this.value = value
-    }
-    override fun toString(): String = "ComputedProperty<${E::class.java.simpleName}>($value)"
+    override fun getValue(thisRef: EventListener, property: KProperty<*>): V = state.get()
+    override fun setValue(thisRef: EventListener, property: KProperty<*>, value: V) = state.set(value)
+    override fun toString(): String = "ComputedProperty<${E::class.java.simpleName}>(${state.get()})"
 }

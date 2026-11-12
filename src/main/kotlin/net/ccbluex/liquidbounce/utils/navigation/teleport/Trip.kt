@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.navigation.route.BackgroundSearch
@@ -40,7 +41,7 @@ class Trip(private val owner: EventListener, private val steps: StepsValueGroup)
     val renderer = RouteRenderer(owner, view)
 
     /** The run that was dispatched last, also after it ended. */
-    var run: Teleport? = null
+    var run: Teleport? by clientState { null }
         private set
 
     val isAvailable: Boolean

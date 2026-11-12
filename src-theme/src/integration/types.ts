@@ -29,6 +29,8 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    /** False for modules that serve the window and are shared by every client */
+    perClient: boolean;
     aliases: string[];
     tag: string | null;
 }
@@ -291,6 +293,20 @@ export interface Session {
     avatar: string;
     online: boolean;
     uuid: string;
+}
+
+/**
+ * One of the accounts playing at the same time, see GET /api/v1/client/clients.
+ */
+export interface Client {
+    id: number;
+    username: string;
+    avatar: string;
+    active: boolean;
+    status: "MENU" | "CONNECTING" | "IN_GAME" | "DISCONNECTED";
+    server?: string;
+    health?: number;
+    maxHealth?: number;
 }
 
 export interface Server {

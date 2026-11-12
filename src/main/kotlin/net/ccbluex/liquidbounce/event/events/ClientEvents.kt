@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.ClientSnapshot
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -167,6 +168,18 @@ class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 
 @Tag("accountManagerLogin")
 class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
+
+/**
+ * The window was handed to another client. Everything on screen belongs to it from now on.
+ */
+@Tag("clientSwitch")
+class ClientSwitchEvent(val id: Int) : Event(), WebSocketEvent
+
+/**
+ * What every open client is doing. Only fired while there is more than one.
+ */
+@Tag("clientsUpdate")
+class ClientsUpdateEvent(val clients: List<ClientSnapshot>) : Event(), WebSocketEvent
 
 @Tag("accountManagerAddition")
 class AccountManagerAdditionResultEvent(

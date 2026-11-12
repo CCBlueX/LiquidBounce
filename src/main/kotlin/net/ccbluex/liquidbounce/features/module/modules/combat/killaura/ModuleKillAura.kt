@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
@@ -83,6 +85,8 @@ import net.minecraft.world.item.ItemStack
 @Suppress("MagicNumber")
 object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
+    override val clientScope get() = ClientScope.EVERY
+
     // Attack speed
     val clicker = tree(KillAuraClicker)
     val range = tree(KillAuraRange)
@@ -111,7 +115,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      * risky for a large and complex module
      * such as KillAura. So back to the basics.
      */
-    internal var waitTicks = 0
+    internal var waitTicks by clientState { 0 }
 
     init {
         tree(KillAuraAutoBlock)

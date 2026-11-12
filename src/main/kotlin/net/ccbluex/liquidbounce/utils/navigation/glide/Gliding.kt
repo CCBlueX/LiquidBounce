@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -54,15 +55,15 @@ import net.minecraft.world.phys.Vec3
 class Gliding(private val owner: EventListener, private val view: RouteView) : EventListener {
 
     private val search = BackgroundSearch<Path>(this)
-    private var glide: Glide? = null
-    private var ticks = 0
-    private var retryAt = 0
-    private var fireRocket = false
+    private var glide: Glide? by clientState { null }
+    private var ticks by clientState { 0 }
+    private var retryAt by clientState { 0 }
+    private var fireRocket by clientState { false }
 
     val isActive: Boolean
         get() = glide != null
 
-    var sprint = false
+    var sprint by clientState { false }
         private set
 
     override fun parent() = owner
@@ -269,7 +270,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
 
     /** A glide from take-off to touch-down: planned along [path], or a cruise without one. */
     private class Glide(val goal: Vec3, val steering: Steering, private val path: Path? = null) {
-        var ticks = 0
+        var ticks by clientState { 0 }
         var hasOpened = false
         var pressedAt = -REOPEN_TICKS
 

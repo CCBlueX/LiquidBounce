@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -41,8 +42,8 @@ import kotlin.math.min
 @AddonApi
 object Timer : EventListener {
 
-    private val requestHandler = RequestHandler<Float>()
-    private val holds = RequestHandler<Unit>()
+    private val requestHandler by clientState { RequestHandler<Float>() }
+    private val holds by clientState { RequestHandler<Unit>() }
 
     /**
      * You cannot set this manually. Use [requestTimerSpeed] instead.
@@ -53,42 +54,42 @@ object Timer : EventListener {
     /**
      * Ticks the client is behind the server, negative once it runs ahead.
      */
-    var balance = 0f
+    var balance by clientState { 0f }
         private set
 
     /**
      * The speed the ticks of the current frame run at.
      */
-    private var frameSpeed = 1f
+    private var frameSpeed by clientState { 1f }
 
     /**
      * Extra ticks still to run, see [burst].
      */
-    private var burstTicks = 0
+    private var burstTicks by clientState { 0 }
 
     /**
      * Whether the current tick is an extra one of a [burst].
      */
-    var bursting = false
+    var bursting by clientState { false }
         private set
 
     /**
      * Ticks held back since the last tick that ran.
      */
-    private var heldTicks = 0
+    private var heldTicks by clientState { 0 }
 
     /**
      * Ticks of real time, counted like [balance] but never clamped or reset: held ticks count, burst ticks do not,
      * and a tick at a faster timer counts as less than one. Only differences between two readings mean anything.
      */
-    var realTicks = 0.0
+    var realTicks by clientState { 0.0 }
         private set
 
     /**
      * Ticks held back before each of the last ticks that ran, a ring ending before [heldHistoryEnd].
      */
-    private val heldHistory = IntArray(20)
-    private var heldHistoryEnd = 0
+    private val heldHistory by clientState { IntArray(20) }
+    private var heldHistoryEnd by clientState { 0 }
 
     /**
      * Whether the last tick was held back. Its interpolated values are then still those of the tick before,
@@ -100,7 +101,7 @@ object Timer : EventListener {
     /**
      * Ticks the tick loop of the current frame runs, see [frameTicks].
      */
-    private var frameEnd = 0
+    private var frameEnd by clientState { 0 }
 
     /**
      * Scales the ticks a frame advances by the requested speed.
@@ -194,7 +195,7 @@ object Timer : EventListener {
      * @return the ticks that will run
      */
     fun burst(ticks: Int, range: IntRange): Int {
-        if (mc.player == null) {
+        if (currentClient.player == null) {
             return 0
         }
 

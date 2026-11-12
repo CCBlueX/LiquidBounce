@@ -319,20 +319,34 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
 
     val future = CompletableFuture<BufferedImage>()
     this.copyTo(gpuBuffer, mipLevel = mipLevel) {
-        gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
-            val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-            for (y in 0..<height) {
-                for (x in 0..<width) {
-                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
-                    bufferedImage.setRGB(x, height - y - 1, ARGB.fromABGR(abgr))
-                }
-            }
-            future.complete(bufferedImage)
-        }
+        future.complete(gpuBuffer.readBufferedImage(width, height))
         gpuBuffer.close()
     }
 
     return future
+}
+
+/**
+ * Reads the RGBA pixels a texture was copied into this buffer with, which come bottom row first, into [destination].
+ * It has to keep its pixels as ints, like [BufferedImage.TYPE_INT_ARGB] and [BufferedImage.TYPE_INT_RGB] do.
+ */
+fun GpuBuffer.readBufferedImage(
+    width: Int,
+    height: Int,
+    destination: BufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB),
+): BufferedImage {
+    val pixels = (destination.raster.dataBuffer as DataBufferInt).data
+    val pixelSize = GpuFormat.RGBA8_UNORM.blockSize()
+    mapBuffer(read = true, write = false).use { mappedView ->
+        val data = mappedView.data()
+        for (y in 0..<height) {
+            val row = (height - 1 - y) * width
+            for (x in 0..<width) {
+                pixels[row + x] = ARGB.fromABGR(data.getInt((x + y * width) * pixelSize))
+            }
+        }
+    }
+    return destination
 }
 
 fun NativeImage.toBufferedImage(): BufferedImage {

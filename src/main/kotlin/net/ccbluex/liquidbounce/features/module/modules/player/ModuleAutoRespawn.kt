@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.client.gui.screens.DeathScreen
 
@@ -31,6 +32,8 @@ import net.minecraft.client.gui.screens.DeathScreen
  * Automatically respawns the player after dying.
  */
 object ModuleAutoRespawn : ClientModule("AutoRespawn", ModuleCategories.PLAYER) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     // There is a delay until the button is clickable on the death screen (20 ticks)
     private val delay by int("Delay", 0, 0..20, "ticks")

@@ -7,7 +7,8 @@ console.log("Connecting to server at: ", WS_BASE);
 let ws: WebSocket;
 
 function connect() {
-    ws = new WebSocket(WS_BASE);
+    // Also asks for what happens in clients in the background, which only listenClient hears
+    ws = new WebSocket(`${WS_BASE}/?clients=all`);
 
     ws.onopen = () => {
         console.log("[WS] Connected to server");
@@ -30,13 +31,24 @@ function connect() {
         const eventName = json.name;
         const eventData = json.event;
 
-        alwaysListeners.get(eventName)?.forEach(callback => callback(eventData));
-        listeners.get(eventName)?.forEach(callback => callback(eventData));
+        if (!json.background) {
+            alwaysListeners.get(eventName)?.forEach(callback => callback(eventData));
+            listeners.get(eventName)?.forEach(callback => callback(eventData));
+        }
+        clientListeners.get(eventName)
+            ?.filter(listener => listener.client === json.client)
+            .forEach(listener => listener.callback(eventData));
     }
+}
+
+interface ClientListener {
+    client: number;
+    callback: Function;
 }
 
 const alwaysListeners = new Map<keyof EventMap, Function[]>();
 const listeners = new Map<keyof EventMap, Function[]>();
+const clientListeners = new Map<keyof EventMap, ClientListener[]>();
 
 export function listenAlways<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!alwaysListeners.has(eventName)) {
@@ -79,6 +91,29 @@ export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (
 }
 
 /**
+ * Like {@link listen}, but for the events of the given client, whether it is the active one or not.
+ * Clients in the background only send module and setting changes. Without a client it is {@link listen}.
+ *
+ * Should only be used inside a Svelte component.
+ */
+export function listenClient<NAME extends keyof EventMap>(
+    eventName: NAME,
+    client: number | null,
+    callback: (event: EventMap[NAME]) => void
+) {
+    if (client === null) {
+        listen(eventName, callback);
+        return;
+    }
+
+    const listener = {client, callback};
+    clientListeners.set(eventName, [...clientListeners.get(eventName) ?? [], listener]);
+    onDestroy(() => {
+        clientListeners.set(eventName, clientListeners.get(eventName)?.filter(l => l !== listener) ?? []);
+    });
+}
+
+/**
  * Wait next event which matches given {@link predicate}.
  */
 export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, predicate: (event: EventMap[NAME]) => boolean): Promise<EventMap[NAME]> {
@@ -99,6 +134,7 @@ export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, 
 
 export function cleanupListeners() {
     listeners.clear();
+    clientListeners.clear();
     console.log("[WS] Cleaned up event listeners");
 }
 

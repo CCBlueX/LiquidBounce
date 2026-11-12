@@ -25,6 +25,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.minecraft.client.player.AbstractClientPlayer
 import java.util.concurrent.CompletableFuture
 
@@ -52,8 +53,8 @@ object WorldPlayerArgumentType : ArgumentType<AbstractClientPlayer> {
 
     private fun otherPlayers(): List<AbstractClientPlayer> {
         val mc = mc() ?: return emptyList()
-        val player = mc.player
-        return mc.level?.players()?.filter { it !== player }.orEmpty()
+        val player = currentClient.player
+        return currentClient.level?.players()?.filter { it !== player }.orEmpty()
     }
 
     override fun getExamples(): Collection<String> = listOf("SenkJu")

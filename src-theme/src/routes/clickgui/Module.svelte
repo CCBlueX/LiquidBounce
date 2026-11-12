@@ -9,7 +9,7 @@
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
+    import {description as descriptionStore, highlightModuleName, pickedClient} from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import {scaleFactor} from "./clickgui_store";
@@ -50,17 +50,17 @@
     });
 
     async function fetchModuleSettings() {
-        configurable = await getModuleSettings(name);
+        configurable = await getModuleSettings(name, $pickedClient);
         hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
     }
 
     async function updateModuleSettings() {
-        await setModuleSettings(name, configurable);
+        await setModuleSettings(name, configurable, $pickedClient);
         await fetchModuleSettings();
     }
 
     async function toggleModule() {
-        await setModuleEnabled(name, !enabled);
+        await setModuleEnabled(name, !enabled, $pickedClient);
     }
 
     function setDescription() {

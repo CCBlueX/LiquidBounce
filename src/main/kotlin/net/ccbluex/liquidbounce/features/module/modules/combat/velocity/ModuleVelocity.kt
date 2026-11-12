@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityAAC442
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC20241123
@@ -54,6 +56,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
 
+    override val clientScope get() = ClientScope.EVERY
+
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
             // Generic modes
@@ -81,7 +85,7 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 0, 0..20, "ticks")
 
-    internal var pause = 0
+    internal var pause by clientState { 0 }
 
     @Suppress("unused")
     private val pauseHandler = handler<GameTickEvent> {

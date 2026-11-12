@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
@@ -172,7 +173,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!liquid_bounce$movesAsClientPlayer()) {
             return;
         }
 
@@ -206,7 +207,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookAfterJumpEvent(CallbackInfo ci) {
         jumpEvent = null;
 
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!liquid_bounce$movesAsClientPlayer()) {
             return;
         }
 
@@ -223,7 +224,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
         var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
 
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!liquid_bounce$movesAsClientPlayer()) {
             return original;
         }
 
@@ -355,7 +356,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var maxHealth = this.getMaxHealth();
         var newHealth = Math.clamp(health, 0.0F, maxHealth);
 
-        if (oldHealth != newHealth && !((Object) this instanceof SimulatedPlayer)) {
+        if (oldHealth != newHealth && !((Object) this instanceof SimulatedPlayer) && !ClientContext.getCurrent().isSimulated()) {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
         }
     }

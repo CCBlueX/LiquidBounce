@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.ride
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
@@ -55,18 +56,18 @@ class Riding(
     private val routes = Replanner<Path>(this, VERTICAL_MARGIN)
     private val steering = Steering()
 
-    private var vehicle: Entity? = null
-    private var path: Path? = null
-    private var index = 0
+    private var vehicle: Entity? by clientState { null }
+    private var path: Path? by clientState { null }
+    private var index by clientState { 0 }
 
-    private var stuck = false
-    private var stuckCount = 0
-    private val watch = ProgressWatch(MIN_PROGRESS, STUCK_TICKS)
+    private var stuck by clientState { false }
+    private var stuckCount by clientState { 0 }
+    private val watch by clientState { ProgressWatch(MIN_PROGRESS, STUCK_TICKS) }
 
     /** Whether the vehicle is in the goal node, so only the last bit is left to ride straight. */
-    private var atGoal = false
-    private var approachTicks = 0
-    private var dismountTicks = 0
+    private var atGoal by clientState { false }
+    private var approachTicks by clientState { 0 }
+    private var dismountTicks by clientState { 0 }
 
     /**
      * Moves the ridden vehicle one tick towards [goal], within [radius], or gets off it; false when the player rides

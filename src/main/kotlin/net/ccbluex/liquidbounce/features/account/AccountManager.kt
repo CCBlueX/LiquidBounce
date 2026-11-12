@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsAvailabilityAccessor
 import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsClientAccessor
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
@@ -46,20 +48,10 @@ object AccountManager : Config("Accounts"), EventListener {
 
     val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 
-    private var initialSession: SessionBundle
-
     private val loggingIn = AtomicBoolean(false)
 
     init {
         ConfigSystem.root(this)
-
-        try {
-            initialSession = SessionBundle(mc.user, mc.services.sessionService, mc.profileKeyPairManager)
-            logger.info("Initial session saved: ${mc.user.name} (${mc.user.profileId})")
-        } catch (e: Exception) {
-            logger.error("Failed to save initial session", e)
-            initialSession = SessionBundle(mc.user, null, ProfileKeyPairManager.EMPTY_KEY_MANAGER)
-        }
     }
 
     fun loginAccount(id: Int) {
@@ -76,7 +68,21 @@ object AccountManager : Config("Accounts"), EventListener {
         loggingIn.set(false)
     }
 
+    /**
+     * Logs the current client in as [account].
+     */
     fun loginDirectAccount(account: MinecraftAccount) = try {
+        ClientContext.current.account = authenticate(account)
+        invalidateRealms()
+
+        EventManager.callEvent(SessionEvent(mc.user))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = account.username))
+    } catch (e: Exception) {
+        logger.error("Failed to login into account", e)
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = e.message ?: "Unknown error"))
+    }
+
+    fun authenticate(account: MinecraftAccount): SessionBundle {
         logger.info("Start logging in with username '${account.username}'")
         val (session, service) = account.login()
 
@@ -90,20 +96,12 @@ object AccountManager : Config("Accounts"), EventListener {
             logger.error("Failed to create profile keys for ${session.name} due to ${it.message}")
         }.getOrDefault(ProfileKeyPairManager.EMPTY_KEY_MANAGER)
 
-        mc.user = session
-        mc.services = mc.services.with(
+        val services = (mc as MinecraftAccessor).launchServices.with(
             sessionService = account.createMinecraftSessionService(service),
             servicesKeySet = service.servicesKeySet,
             profileRepository = service.createProfileRepository(),
         )
-        mc.profileKeyPairManager = profileKeys
-        invalidateRealms()
-
-        EventManager.callEvent(SessionEvent(session))
-        EventManager.callEvent(AccountManagerLoginResultEvent(username = account.username))
-    } catch (e: Exception) {
-        logger.error("Failed to login into account", e)
-        EventManager.callEvent(AccountManagerLoginResultEvent(error = e.message ?: "Unknown error"))
+        return SessionBundle(session, services, profileKeys)
     }
 
     /**
@@ -350,13 +348,11 @@ object AccountManager : Config("Accounts"), EventListener {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.name))
     }
 
+    /**
+     * Returns the current client to the account the game was started with.
+     */
     fun restoreInitial() {
-        val initialSession = initialSession
-        mc.user = initialSession.session
-        mc.services = mc.services.with(
-            initialSession.sessionService ?: mc.services.sessionService
-        )
-        mc.profileKeyPairManager = initialSession.profileKeys
+        ClientContext.current.account = null
         invalidateRealms()
 
         EventManager.callEvent(SessionEvent(mc.user))

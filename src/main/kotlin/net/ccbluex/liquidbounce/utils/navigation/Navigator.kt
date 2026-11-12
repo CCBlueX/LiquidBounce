@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -101,20 +102,20 @@ class Navigator(
     private val stuckSpots = StuckSpots()
 
     /** Searches in a row that found nothing; each widens the next one. */
-    private var failures = 0
-    private var stuck = false
-    private var wasOffPath = false
+    private var failures by clientState { 0 }
+    private var stuck by clientState { false }
+    private var wasOffPath by clientState { false }
 
     /** When a search last found nothing closer to walk to. */
-    private var settledAt: Int? = null
+    private var settledAt: Int? by clientState { null }
 
     /** Whether the goal is reached by walking straight on, as of the last tick on the ground. */
-    private var straight = false
-    private var straightGoal: Vec3? = null
-    private var steeringTarget: Vec3? = null
-    private var sprintWanted = false
+    private var straight by clientState { false }
+    private var straightGoal: Vec3? by clientState { null }
+    private var steeringTarget: Vec3? by clientState { null }
+    private var sprintWanted by clientState { false }
 
-    private var lastLookYaw = Float.NaN
+    private var lastLookYaw by clientState { Float.NaN }
 
     val isActing: Boolean
         get() = actions.isActive
@@ -564,14 +565,14 @@ class Navigator(
 /** Feet blocks the walk got stuck at, which searches avoid until [FORGET_TICKS] passed or the goal changed. */
 private class StuckSpots {
 
-    val blocks = LongOpenHashSet()
+    val blocks by clientState { LongOpenHashSet() }
 
     /** Changes with [blocks], so a search for the set before is not kept. */
-    var version = 0
+    var version by clientState { 0 }
         private set
 
-    private var goal: Vec3? = null
-    private var age = 0
+    private var goal: Vec3? by clientState { null }
+    private var age by clientState { 0 }
 
     fun add(pos: BlockPos) {
         blocks.add(pos.asLong())

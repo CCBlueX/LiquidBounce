@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -76,11 +77,11 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
     private val rotations = tree(RotationsValueGroup(this))
 
-    private var currentTarget: PlacementAction? = null
-    private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
-    private var scaffoldingTarget: BlockPos? = null
-    private var scaffoldingPlacedAtTick = 0
-    private var forceSneak = false
+    private var currentTarget: PlacementAction? by clientState { null }
+    private val pickupTracker by clientState { TimedPickupTracker(PICKUP_TRACKER_CAPACITY) }
+    private var scaffoldingTarget: BlockPos? by clientState { null }
+    private var scaffoldingPlacedAtTick by clientState { 0 }
+    private var forceSneak by clientState { false }
 
     private val netherItems =
         setOf(

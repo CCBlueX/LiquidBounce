@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.network.useItem
@@ -37,7 +38,7 @@ fun InteractionResult.shouldSwingHand() =
     this is InteractionResult.Success && this.swingSource === SwingSource.PREDICTED
 
 private inline val gameMode: MultiPlayerGameMode
-    get() = mc.gameMode!!
+    get() = currentClient.gameMode!!
 
 /**
  * ## Vanilla use item packet sequence

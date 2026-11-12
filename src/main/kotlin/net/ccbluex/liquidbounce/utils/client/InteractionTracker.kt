@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.player
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
@@ -38,9 +39,9 @@ object InteractionTracker : EventListener {
     val blockingHand: InteractionHand?
         get() = if (isBlocking) currentInteraction?.hand else null
 
-    var currentInteraction: Interaction? = null
+    var currentInteraction: Interaction? by clientState { null }
         private set
-    private var doNotHandle = false
+    private var doNotHandle by clientState { false }
 
     internal inline fun untracked(block: () -> Unit) {
         doNotHandle = true

@@ -32,6 +32,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleTwerk
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleVomit
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
@@ -82,13 +92,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleD
 import net.ccbluex.liquidbounce.features.module.modules.exploit.dupe.ModuleDupe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleTwerk
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleVomit
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
@@ -197,7 +200,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDamageParticles
-import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright
@@ -231,6 +233,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
 import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
@@ -290,10 +293,15 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
     private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
 
-    private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
-    private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
+    private val smartKeyboardStates by clientState { Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>() }
+    private val smartMouseStates by clientState { Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>() }
 
-    private fun modulesWithOwnBinds() = modules.filterNot(ClientModule::externalBind)
+    /**
+     * Binds work on the client on screen, so modules that do not run there are left alone.
+     */
+    private fun modulesWithOwnBinds() = modules.filter {
+        !it.externalBind && it.clientScope.includes(ClientContext.current)
+    }
 
     /**
      * Handles keystrokes for module binds.
@@ -712,6 +720,23 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             addModule(module)
             module.walkKeyPath()
             module.verifyFallbackDescription()
+        }
+    }
+
+    /**
+     * Gives [client] its own copy of every module: the settings of the current client, with only the
+     * modules running that cannot do anything on a server.
+     */
+    internal fun copyTo(client: Client) {
+        for (module in modules) {
+            if (module.clientScope != ClientScope.EVERY) {
+                continue
+            }
+
+            module.giveTo(client)
+            if (module.category != ModuleCategories.RENDER) {
+                client.values[module.enabledValue] = false
+            }
         }
     }
 

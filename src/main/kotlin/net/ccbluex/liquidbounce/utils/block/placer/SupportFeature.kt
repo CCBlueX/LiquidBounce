@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -51,10 +52,10 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     val blocks by blocks("Blocks", blockSortedSetOf())
 
     // we don't have to consistently search, every once in a while is okay, see `delay`
-    val chronometer = Chronometer()
+    val chronometer by clientState { Chronometer() }
 
     // positions we may not place at
-    val blockedPositions = objectHashSetOf<BlockPos>()
+    val blockedPositions by clientState { objectHashSetOf<BlockPos>() }
 
     /**
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.

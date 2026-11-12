@@ -20,11 +20,27 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.User;
+import net.minecraft.client.multiplayer.ProfileKeyPairManager;
+import net.minecraft.server.Services;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Minecraft.class)
 public interface MinecraftAccessor {
     @Invoker("startUseItem")
     void callStartUseItem();
+
+    /**
+     * The account the game was started with. {@link Minecraft#getUser()} answers for the current client.
+     */
+    @Accessor("user")
+    User getLaunchUser();
+
+    @Accessor("services")
+    Services getLaunchServices();
+
+    @Accessor("profileKeyPairManager")
+    ProfileKeyPairManager getLaunchProfileKeys();
 }

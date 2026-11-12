@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
@@ -59,32 +60,32 @@ import kotlin.time.Duration.Companion.seconds
 
 object ServerObserver : EventListener {
 
-    var serverInfo: ServerData? = null
+    var serverInfo: ServerData? by clientState { null }
         private set
-    var serverAddress: ServerAddress? = null
+    var serverAddress: ServerAddress? by clientState { null }
         private set
-    var serverId: String? = null
+    var serverId: String? by clientState { null }
         private set
-    var serverType: ServerType? = null
+    var serverType: ServerType? by clientState { null }
         private set
-    val payloadChannels: TreeSet<Identifier> = TreeSet<Identifier>()
+    val payloadChannels: TreeSet<Identifier> by clientState { TreeSet<Identifier>() }
 
-    val transactions = mutableListOf<Int>()
-    var isCapturingTransactions = false
+    val transactions by clientState { mutableListOf<Int>() }
+    var isCapturingTransactions by clientState { false }
     private const val TRANSACTIONS = 5
 
-    private val keepAlives = mutableListOf<Long>()
+    private val keepAlives by clientState { mutableListOf<Long>() }
     private const val KEEP_ALIVES = 5
 
     // defines how many packets are recorded to get the average
     private const val AVERAGE_OF = 15
 
     // stores last intervals between WorldTimeUpdateS2CPackets
-    private val intervals = ArrayDeque<Double>(AVERAGE_OF + 1)
-    private val chronometer = Chronometer()
-    private var wasDisconnected = true
+    private val intervals by clientState { ArrayDeque<Double>(AVERAGE_OF + 1) }
+    private val chronometer by clientState { Chronometer() }
+    private var wasDisconnected by clientState { true }
 
-    var tps = Double.NaN
+    var tps by clientState { Double.NaN }
         private set
 
     /**
@@ -93,16 +94,16 @@ object ServerObserver : EventListener {
      */
     val tickSpeed: Double
         get() {
-            val level = mc.level
+            val level = currentClient.level
             return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
         }
 
-    var serverVersion: String? = null
+    var serverVersion: String? by clientState { null }
         private set
-    var hostingInformation: IpInfoApi.IpData? = null
+    var hostingInformation: IpInfoApi.IpData? by clientState { null }
         private set
 
-    var plugins: Set<String>? = null
+    var plugins: Set<String>? by clientState { null }
         private set
 
     val formattedPluginList: List<Component>?

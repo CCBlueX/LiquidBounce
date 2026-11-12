@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
@@ -54,6 +56,9 @@ import java.util.function.BiPredicate
  * Automatically chooses the best tool in your inventory to mine a block.
  */
 object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     val toolSelector =
         choices(
             "ToolSelector",
@@ -169,8 +174,8 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     private val switchDelay by int("SwitchDelay", 0, 0..100, "ticks")
 
     // Tracks the current block breaking session so the switch is delayed only once per block
-    private var breakingPos: BlockPos? = null
-    private var breakingStartedTick = 0
+    private var breakingPos: BlockPos? by clientState { null }
+    private var breakingStartedTick by clientState { 0 }
 
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)

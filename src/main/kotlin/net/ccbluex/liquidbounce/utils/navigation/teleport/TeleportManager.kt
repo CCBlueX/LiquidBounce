@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -44,23 +46,20 @@ import net.minecraft.world.phys.Vec3
 object TeleportManager : EventListener {
 
     /** The latest run, also after it ended. */
-    var run: Teleport? = null
+    var run: Teleport? by clientState { null }
         private set
 
-    @Volatile
-    private var holder: EventListener? = null
+    private var holder: EventListener? by clientState { null }
 
     /** The last step the server got, while it has the player somewhere else than the client. */
-    @Volatile
-    private var lastSent: Route.Step? = null
+    private var lastSent: Route.Step? by clientState { null }
 
-    @Volatile
-    private var setback = false
+    private var setback by clientState { false }
 
     /** Where the current excursion began, followed by the route points it passed. */
-    private val trail = ArrayList<Vec3>()
-    private var stepLength = StepsValueGroup.DEFAULT_STEP_LENGTH
-    private var packetsPerTick = StepsValueGroup.DEFAULT_PACKETS_PER_TICK
+    private val trail by clientState { ArrayList<Vec3>() }
+    private var stepLength by clientState { StepsValueGroup.DEFAULT_STEP_LENGTH }
+    private var packetsPerTick by clientState { StepsValueGroup.DEFAULT_PACKETS_PER_TICK }
 
     val serverPosition: Vec3?
         get() = lastSent?.position
@@ -182,7 +181,7 @@ object TeleportManager : EventListener {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val run = run ?: return@handler
-        if (mc.player == null) {
+        if (currentClient.player == null) {
             return@handler
         }
 

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import java.util.function.IntSupplier
 
@@ -40,13 +41,13 @@ class AnchoredHotbarSwapController(
     },
 ) : EventListener {
 
-    private var requestedSourceSlot: ItemSlot? = null
-    private var anchorSwapAction: InventoryAction? = null
-    private var anchorHotbarSlot: HotbarItemSlot? = null
-    private var pendingRestore = false
-    private var restoreDue = false
-    private var waitingTicks = 0
-    private var lastSwitchScheduledEvent: ScheduleInventoryActionEvent? = null
+    private var requestedSourceSlot: ItemSlot? by clientState { null }
+    private var anchorSwapAction: InventoryAction? by clientState { null }
+    private var anchorHotbarSlot: HotbarItemSlot? by clientState { null }
+    private var pendingRestore by clientState { false }
+    private var restoreDue by clientState { false }
+    private var waitingTicks by clientState { 0 }
+    private var lastSwitchScheduledEvent: ScheduleInventoryActionEvent? by clientState { null }
 
     override fun parent() = owner
 

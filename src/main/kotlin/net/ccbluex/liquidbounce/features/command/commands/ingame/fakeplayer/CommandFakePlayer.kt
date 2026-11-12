@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -39,6 +40,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -68,11 +70,11 @@ object CommandFakePlayer : EventListener, CommandRegistrar {
     /**
      * Stores all fake players.
      */
-    private val fakePlayers = ReferenceOpenHashSet<FakePlayer>()
+    private val fakePlayers by clientState { ReferenceOpenHashSet<FakePlayer>() }
     private val suggestions = suggestions<ClientCommandSource> { fakePlayers.map { it.name.string } }
 
-    private var recording = false
-    private val snapshots = ArrayList<PosPoseSnapshot>()
+    private var recording by clientState { false }
+    private val snapshots by clientState { ArrayList<PosPoseSnapshot>() }
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("fakeplayer") {
@@ -267,7 +269,7 @@ object CommandFakePlayer : EventListener, CommandRegistrar {
      * Verifies that the user is in a world and the player object exists.
      */
     private fun CmdI18n.checkInGame() {
-        if (mc.level == null || mc.player == null) {
+        if (currentClient.level == null || currentClient.player == null) {
             throw CommandException(t("mustBeInGame"))
         }
     }
@@ -332,7 +334,7 @@ object CommandFakePlayer : EventListener, CommandRegistrar {
             return@handler
         }
 
-        if (mc.level == null || mc.player == null) {
+        if (currentClient.level == null || currentClient.player == null) {
             chat(markAsError(translation("liquidbounce.command.fakeplayer.mustBeInGame")))
             stopRecording()
             return@handler

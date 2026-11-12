@@ -24,6 +24,7 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -42,8 +43,8 @@ import net.minecraft.world.phys.Vec3
 
 internal object KillAuraNotifyWhenFail {
 
-    internal val failedHits = ObjectArrayList<ObjectLongMutablePair<Vec3>>()
-    var failedHitsIncrement = 0
+    internal val failedHits by clientState { ObjectArrayList<ObjectLongMutablePair<Vec3>>() }
+    var failedHitsIncrement by clientState { 0 }
 
     object Box : Mode("Box") {
         override val parent: ModeValueGroup<Mode>

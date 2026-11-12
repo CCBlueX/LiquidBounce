@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.screen
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.ActiveClientListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -63,7 +64,7 @@ import com.mojang.blaze3d.platform.cursor.CursorType
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
-object ScreenManager : EventListener {
+object ScreenManager : ActiveClientListener {
 
     private val logger = clientLogger("ScreenManager")
 
@@ -278,7 +279,7 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val effectUpdateHandler = handler<GameTickEvent> {
-        val player = mc.player ?: return@handler
+        val player = currentClient.player ?: return@handler
         if (player.activeEffects.isNotEmpty()) {
             EventManager.callEvent(ClientPlayerEffectEvent(player.activeEffects.toList()))
         }
@@ -357,7 +358,7 @@ object ScreenManager : EventListener {
         }
 
         // Are we currently playing the game?
-        if (mc.level != null && screen == null) {
+        if (currentClient.level != null && screen == null) {
             closeScreen()
             return false
         }

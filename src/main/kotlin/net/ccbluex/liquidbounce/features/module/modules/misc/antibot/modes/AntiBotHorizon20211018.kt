@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.entity.player.Player
@@ -28,7 +29,7 @@ import java.util.UUID
 
 object AntiBotHorizon20211018 : AntiBotMode("Horizon-2021-10-18", aliases = listOf("Horizon")) {
 
-    private val botList = objectHashSetOf<UUID>()
+    private val botList by clientState { objectHashSetOf<UUID>() }
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {

@@ -19,9 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
@@ -29,8 +26,10 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -42,20 +41,17 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
     private val DEFAULT = Array(27) { ItemStack.EMPTY }.asList()
 
-    private val flow = MutableStateFlow(DEFAULT)
-    @Volatile
-    private var isInEnderChestScreen = false
+    var stacks: List<ItemStack> by clientState { DEFAULT }
+        private set
 
-    init {
-        ioScope.launch {
-            flow.collect {
-                val player = mc.player ?: return@collect
-                EventManager.callEvent(ClientPlayerInventoryEvent(PlayerInventoryData.fromPlayer(player)))
-            }
-        }
+    private var isInEnderChestScreen by clientState { false }
+
+    private fun remember(stacks: List<ItemStack>) {
+        this.stacks = stacks
+
+        val player = currentClient.player ?: return
+        EventManager.callEvent(ClientPlayerInventoryEvent(PlayerInventoryData.fromPlayer(player)))
     }
-
-    val stacks: List<ItemStack> get() = flow.value
 
     private fun Screen.isEnderChest() = this is ContainerScreen
         && menu.typeOrNull === MenuType.GENERIC_9x3
@@ -68,7 +64,7 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        flow.value = DEFAULT
+        remember(DEFAULT)
     }
 
     @Suppress("unused")
@@ -87,9 +83,11 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
         if (screen.isEnderChest()) {
             mc.schedule {
                 isInEnderChestScreen = true
-                flow.value = screen.menu.slots
-                    .filter { it.container !== player.inventory }
-                    .map { it.item.copy() }
+                remember(
+                    screen.menu.slots
+                        .filter { it.container !== player.inventory }
+                        .map { it.item.copy() }
+                )
             }
         } else {
             isInEnderChestScreen = false

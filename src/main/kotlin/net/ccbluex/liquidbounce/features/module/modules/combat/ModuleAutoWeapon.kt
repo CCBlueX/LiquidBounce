@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
@@ -56,6 +57,8 @@ import net.minecraft.world.item.enchantment.Enchantments
  * Automatically selects the best weapon in your hotbar
  */
 object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     /**
      * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,

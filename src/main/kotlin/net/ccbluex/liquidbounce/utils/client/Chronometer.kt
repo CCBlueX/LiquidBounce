@@ -43,6 +43,8 @@ class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
         this.lastUpdate = this.lastUpdate.coerceAtLeast(System.currentTimeMillis() + ms)
     }
 
+    fun copy() = Chronometer(lastUpdate)
+
     override fun toString(): String {
         return "Chronometer(lastUpdate=$lastUpdate)"
     }

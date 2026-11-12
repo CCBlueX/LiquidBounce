@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -112,7 +113,7 @@ open class Clicker<T>(
     }
 
     // Clicks that were executed by [click] in the current tick
-    var clickAmount: Int? = null
+    var clickAmount: Int? by clientState { null }
         private set
 
     open val isClickTick: Boolean
@@ -121,7 +122,7 @@ open class Clicker<T>(
     val ticksUntilClick: Int
         get() = (0 until TICKS_AHEAD).firstOrNull(::willClickAt) ?: TICKS_AHEAD
 
-    var ticksSinceLastClick = 0
+    var ticksSinceLastClick by clientState { 0 }
         private set
 
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0

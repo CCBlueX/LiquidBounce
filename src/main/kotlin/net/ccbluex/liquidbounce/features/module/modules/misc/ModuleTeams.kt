@@ -24,13 +24,14 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
-import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -42,6 +43,8 @@ import java.util.function.Predicate
  * Prevents KillAura from attacking teammates.
  */
 object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val matches by multiEnumChoice(
         "Matches",

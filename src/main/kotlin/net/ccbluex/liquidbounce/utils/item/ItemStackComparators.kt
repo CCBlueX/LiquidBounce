@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.core.BlockPos
@@ -56,7 +57,7 @@ object PreferFavourableBlocks : Comparator<ItemStack> {
 object PreferSolidBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValuesBy(o1, o2) {
-            it.defaultBlockState().isRedstoneConductor(mc.level!!, BlockPos.ZERO)
+            it.defaultBlockState().isRedstoneConductor(currentClient.level!!, BlockPos.ZERO)
         }
     }
 }
@@ -64,7 +65,7 @@ object PreferSolidBlocks : Comparator<ItemStack> {
 object PreferFullCubeBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValuesBy(o1, o2) {
-            it.defaultBlockState().isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
+            it.defaultBlockState().isCollisionShapeFullBlock(currentClient.level!!, BlockPos.ZERO)
         }
     }
 
@@ -111,7 +112,7 @@ class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<It
     }
 
     private fun hardnessDist(stack: ItemStack): Double {
-        val hardness = stack.defaultBlockState().getDestroySpeed(mc.level!!, BlockPos.ZERO)
+        val hardness = stack.defaultBlockState().getDestroySpeed(currentClient.level!!, BlockPos.ZERO)
 
         // If neutral range is enabled, items with a specific range of hardness values should be considered ideal.
         if (this.neutralRange && hardness in GOOD_HARDNESS_RANGE) {

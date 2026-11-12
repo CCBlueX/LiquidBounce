@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option.MixinServerListAccessor
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
@@ -374,7 +375,8 @@ object ActiveServerList : EventListener {
         }
     }
 
-    override val running = true
+    override val running
+        get() = ClientContext.current.isActive
 
 }
 
