@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.navigation.terrain.BlockColliders
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5
@@ -89,6 +90,10 @@ internal class PlayerMotion(
     private var supportY = 0
     private var supportZ = 0
     private var hasSupport = false
+
+    /** Entity.mainSupportingBlockPos: the block the feet stand on, null without one. */
+    val supportingBlock: BlockPos?
+        get() = if (hasSupport) BlockPos(supportX, supportY, supportZ) else null
 
     /** Entity.onGroundNoBlocks */
     private var groundWithoutBlocks = false
