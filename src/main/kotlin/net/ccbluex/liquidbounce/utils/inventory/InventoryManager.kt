@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.isInterrupted
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -181,36 +183,40 @@ object InventoryManager : EventListener {
                         }
                     }
 
+                    // The chain is checked before the action and while waiting for it,
+                    // the click delay after it runs either way
+                    val performed = guarded({ inGame }, { chained.canPerformAction() }) {
+                        // Check if this is the first action in the chain, which allows us to simulate a miss click
+                        // This is only possible for container-type slots and also does not make much sense when
+                        // the action is a throw action (you cannot miss-click really when throwing)
+                        if (index == 0 && action is InventoryAction.Click
+                            && constraints.missChance.random() > Random.nextInt(100)
+                            && action.actionType != ContainerInput.THROW
+                        ) {
+                            // Simulate a miss click (this is only possible for container-type slots)
+                            // TODO: Add support for inventory slots
+                            if (action.performMissClick()) {
+                                waitTicks(constraints.clickDelay.random())
+                                cycles = 0
+                            }
+                        }
+
+                        if (action is InventoryAction.CloseScreen) {
+                            waitTicks(constraints.closeDelay.random())
+                            cycles = 0
+                        }
+                        action.performAction()
+                    }
+
                     // This should usually not happen, but we have to check it
-                    if (!chained.canPerformAction()) {
+                    if (performed.isInterrupted()) {
                         logger.warn("Cannot perform action $action because it is not possible")
                         break
                     }
 
-                    // Check if this is the first action in the chain, which allows us to simulate a miss click
-                    // This is only possible for container-type slots and also does not make much sense when
-                    // the action is a throw action (you cannot miss-click really when throwing)
-                    if (index == 0 && action is InventoryAction.Click
-                        && constraints.missChance.random() > Random.nextInt(100)
-                        && action.actionType != ContainerInput.THROW
-                    ) {
-                        // Simulate a miss click (this is only possible for container-type slots)
-                        // TODO: Add support for inventory slots
-                        if (action.performMissClick()) {
-                            waitTicks(constraints.clickDelay.random())
-                            cycles = 0
-                        }
-                    }
-
-                    if (action is InventoryAction.CloseScreen) {
-                        waitTicks(constraints.closeDelay.random())
+                    if (performed.value && action !is InventoryAction.CloseScreen) {
+                        waitTicks(constraints.clickDelay.random())
                         cycles = 0
-                    }
-                    if (action.performAction()) {
-                        if (action !is InventoryAction.CloseScreen) {
-                            waitTicks(constraints.clickDelay.random())
-                            cycles = 0
-                        }
                     }
                 }
             }
@@ -218,8 +224,10 @@ object InventoryManager : EventListener {
 
         // When all scheduled actions are done, we can close the inventory
         if (isInventoryOpen && canCloseMainInventory) {
-            waitTicks(maximumCloseDelay)
-            network.sendCloseInventory()
+            guarded({ inGame }) {
+                waitTicks(maximumCloseDelay)
+                network.sendCloseInventory()
+            }
         }
 
         lastClickedSlot = -1
