@@ -564,7 +564,10 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
                 return margin(motion.x, motion.z)
             }
             val back = !catches && overshoots()
-            motion.tick(yawToTarget(), if (back) -1 else 1, 0, jump = false, sprint = abilities.canSprint && !back)
+            // Past the middle of the target, the player holds back instead of turning round, which does not sprint.
+            val sprint = abilities.canSprint && !back &&
+                motion.motionX * (targetX - motion.x) + motion.motionZ * (targetZ - motion.z) >= 0.0
+            motion.tick(yawToTarget(), if (back) -1 else 1, 0, jump = false, sprint = sprint)
             noteObstruction()
             airTicks++
         }

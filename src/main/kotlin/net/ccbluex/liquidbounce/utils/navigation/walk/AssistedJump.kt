@@ -53,19 +53,24 @@ internal class AssistedJump {
             get() = jump.aim
 
         fun isLanded(position: Vec3, onGround: Boolean) = onGround && abs(position.y - feet) < FEET_PROBE &&
+            isOver(position)
+
+        private fun isOver(position: Vec3) =
             abs(position.x - pos.x - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH &&
-            abs(position.z - pos.z - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH
+                abs(position.z - pos.z - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH
 
         /**
          * The yaw a player at [position], moving by [motion], turns to for the jump towards [look], or NaN to hold the
          * one it has: close to it, where the way there turns around once it is passed, past it in the air, and down on
-         * the block until the next tick picks the jump after it.
+         * the block until the next tick picks the jump after it. Over a landing that [takesOff], it keeps facing on,
+         * as the jump off the bounce goes the way it faces.
          */
         fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean, look: Vec3 = aim): Float {
             val delta = look.subtract(position)
             val passed = !onGround && delta.x * motion.x + delta.z * motion.z < 0.0
             val near = delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE * MIN_AIM_DISTANCE
-            return if (near || passed || isLanded(position, onGround)) Float.NaN else delta.yaw
+            val bouncesOn = takesOff && isOver(position)
+            return if (near || passed || bouncesOn || isLanded(position, onGround)) Float.NaN else delta.yaw
         }
 
         /**
@@ -317,9 +322,10 @@ internal class AssistedJump {
                 return@forEach true
             }
 
-            // Below a course is where a missed jump ends, so any block level with it or higher comes first. Slime
-            // bounces back up.
-            val bounces = terrain.isBouncy(x, y - 1, z)
+            // Below a course is where a missed jump ends, so any block level with it or higher comes first. Slime and
+            // beds bounce back up.
+            val restitution = terrain.restitution(x, top, z)
+            val bounces = restitution > 0.0
             val drop = maxOf(0.0, height - top)
             val intent = angle / maxAngle + if (bounces) 0.0 else drop * DROP_PENALTY
             val pos = BlockPos(x, y, z)
@@ -327,7 +333,9 @@ internal class AssistedJump {
             if (jump == null) {
                 found.missed += Missed(pos, top, intent)
             } else if (intent - jump.margin < found.bestScore) {
-                found.best = Target(pos, top, jump, bounces = bounces, takesOff = bounces && drop >= BOOST_DROP)
+                // The bounce gets as high as the fall times the restitution squared.
+                val takesOff = bounces && drop * restitution * restitution >= BOOST_DROP
+                found.best = Target(pos, top, jump, bounces = bounces, takesOff = takesOff)
                 found.bestScore = intent - jump.margin
                 found.bestIntent = intent
             }

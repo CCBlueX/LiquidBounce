@@ -203,6 +203,17 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a fall onto a bed bounces up to a block higher than a jump reaches`() {
+        // A bed bounces back three quarters of the speed. The feet stand in the bed block, so the block below it was
+        // taken for the floor, and the bed far below did not count as a landing; the block beside it was jumped to.
+        val world = TestWorld().fill(-3, 8, 0, -1, 8, 0).set(4, 8, 1, TestWorld.STONE)
+        val course = course(world, BlockPos(0, 8, 0), BlockPos(4, 0, 0), BlockPos(8, 2, 0))
+        world.set(4, 0, 0, Blocks.BED.red().defaultBlockState())
+
+        assertEquals(course, run(world, TestWorld.feet(-2, 9, 0), course))
+    }
+
+    @Test
     fun `a chain of single slime blocks is jumped along on every bounce`() {
         // Ultimate Slime Challenge 1-2, "DO press SPACE": single slime blocks five and four apart. The bounce off one
         // is lower than a jump, so only a jump on the bounce with the speed of the jump before reaches the next one.
@@ -215,6 +226,18 @@ class AssistedJumpTest {
         )
 
         assertEquals(course, run(world, TestWorld.feet(19, 10, -41), course, platform = 1))
+    }
+
+    @Test
+    fun `a slab on slime far below is no landing`() {
+        // A slab on slime stops a fall like any slab: 0.2 below the feet is the slab, not the slime. It was taken for a
+        // bounce pad, an easier landing than the next block of the course four blocks on.
+        val world = TestWorld().fill(-3, 8, 0, -1, 8, 0)
+            .fill(2, 0, -1, 4, 0, 1, Blocks.SLIME_BLOCK.defaultBlockState())
+            .fill(2, 1, -1, 4, 1, 1, Blocks.STONE_SLAB.defaultBlockState())
+        val course = course(world, BlockPos(0, 8, 0), BlockPos(5, 8, 0))
+
+        assertEquals(course, run(world, TestWorld.feet(-2, 9, 0), course))
     }
 
     @Test

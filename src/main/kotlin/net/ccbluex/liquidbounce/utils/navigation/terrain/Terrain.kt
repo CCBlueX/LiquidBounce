@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2
 import net.minecraft.world.entity.Entity.DEFAULT_BB_HEIGHT
 import net.minecraft.world.entity.Entity.DEFAULT_BB_WIDTH
 import net.minecraft.world.level.block.BaseFireBlock
@@ -176,8 +177,12 @@ class Terrain(
 
     fun isClimbable(x: Int, y: Int, z: Int) = state(x, y, z).block in CLIMBABLE
 
-    /** Whether a fall onto the block at [x] [y] [z] bounces back up, as off slime. */
-    fun isBouncy(x: Int, y: Int, z: Int) = state(x, y, z).block.bounceRestitution > 0f
+    /**
+     * How much of a fall onto feet at [top] in column [x] [z] bounces back up, 0 for none: the restitution of the block
+     * 0.2 below the feet, Entity.getOnPosLegacy, so slime under a carpet and the bed itself count.
+     */
+    fun restitution(x: Int, top: Double, z: Int) =
+        state(x, Mth.floor(top - DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2), z).block.bounceRestitution.toDouble()
 
     /**
      * Height the feet rest at when standing in the block, always within it, or NaN when nothing carries the player

@@ -83,7 +83,8 @@ internal class JumpTargets(
                 }
                 val top = terrain.standHeight(tx, ty, tz).ifNaN { catchHeight(tx, ty, tz) }
                 val rise = top - height
-                val inRange = !top.isNaN() && rise <= rises && (ty >= y - maxDrop || terrain.isBouncy(tx, ty - 1, tz))
+                val inRange = !top.isNaN() && rise <= rises &&
+                    (ty >= y - maxDrop || terrain.restitution(tx, top, tz) > 0.0)
                 if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing)) {
                     continue
                 }
