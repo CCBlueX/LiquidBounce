@@ -20,51 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 
-@JvmRecord
-data class LedgeAction(
-    val jump: Boolean = false,
-    val sneakTime: Int = 0,
-    val stopInput: Boolean = false,
-    val stepBack: Boolean = false,
-) {
-    companion object {
-        @JvmField
-        val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false, stepBack = false)
-    }
-
-}
-
 /**
- * At the edge the player waits, sneaking, while it has no blocks or while [turning] towards the block it still owes.
+ * Whether the player waits at the edge, sneaking, because it has no blocks or is still [turning] towards the block it
+ * owes.
  */
-fun ledge(
-    target: BlockPlacementTarget?,
-    rotation: Rotation,
-    turning: Boolean,
-    extension: ScaffoldLedgeExtension? = null
-): LedgeAction {
-    if (player.isCloseToEdge()) {
-        ModuleScaffold.debugParameter("Turning") { turning }
-
-        if (ModuleScaffold.blockCount <= 0 || turning) {
-            return LedgeAction(jump = false, sneakTime = 1)
-        }
+fun sneaksAtLedge(turning: Boolean): Boolean {
+    if (!player.isCloseToEdge()) {
+        return false
     }
 
-    return extension?.ledge(
-        target = target,
-        rotation = rotation
-    ) ?: LedgeAction.NO_LEDGE
-}
-
-fun interface ScaffoldLedgeExtension {
-    fun ledge(
-        target: BlockPlacementTarget?,
-        rotation: Rotation
-    ): LedgeAction
+    ModuleScaffold.debugParameter("Turning") { turning }
+    return ModuleScaffold.blockCount <= 0 || turning
 }

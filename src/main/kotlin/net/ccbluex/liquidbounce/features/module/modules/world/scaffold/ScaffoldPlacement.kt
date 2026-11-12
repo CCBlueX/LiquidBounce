@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldStabilizeMovementFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature.Mode
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isValidCrosshairTarget
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldTellyFeature
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -50,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.StabilizedRotationTarg
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.placementTargetClickedBy
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -65,61 +62,48 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.round
 
-/** Ticks ahead a held aim may still place the next block, see [ScaffoldNormalTechnique.findPlacementTarget]. */
+/** Ticks ahead a kept look may still place the next block, see [ScaffoldPlacement.findTarget]. */
 private const val HOLD_TICKS = 3
 
 /**
- * Normal technique, which is basically just normal scaffold.
+ * Where scaffold puts the next block while it bridges, and how it looks at it.
  */
-object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
+internal object ScaffoldPlacement {
 
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    private val requiresSight by boolean("RequiresSight", false)
+    /** The look scaffold keeps this tick because it places the next block now or soon, see [findTarget]. */
+    private var keptLook: Rotation? = null
 
-    init {
-        tree(ScaffoldEagleFeature)
-        tree(ScaffoldTellyFeature)
-        tree(ScaffoldDownFeature)
-        tree(ScaffoldStabilizeMovementFeature)
-        tree(ScaffoldCeilingFeature)
-        tree(ScaffoldHeadHitterFeature)
-    }
-
-    /** Whether scaffold keeps its aim this tick, see [findPlacementTarget]. */
-    private var holdsAim = false
+    /** Whether the face position factory aims at the point nearest to where scaffold looks. */
+    val aimsNearest
+        get() = ModuleScaffold.aimMode == AimMode.STABILIZED || ModuleScaffold.aimMode == AimMode.NEAREST_ROTATION
 
     /**
-     * The best placement for the block the player needs, unless the aim scaffold holds already makes one that does as
+     * The best placement for the block the player needs, unless the look scaffold has already makes one that does as
      * well: a bridging player keeps the mouse still for as long as each click still puts the next block down.
      */
-    override fun findPlacementTarget(
+    fun findTarget(
         predictedPos: Vec3,
         predictedPose: Pose,
         optimalLine: Line?,
-        bestStack: ItemStack
+        bestStack: ItemStack,
     ): BlockPlacementTarget? {
-        holdsAim = false
-        val priorityComparator = priorityComparator(predictedPos, optimalLine)
-
-        val offsets = if (ModuleFreeze.running) {
-            BlockPosOffsets.FULL.offsets
-        } else if (ScaffoldDownFeature.shouldGoDown) {
-            BlockPosOffsets.DOWN.offsets
+        keptLook = null
+        val offsets = when {
+            ModuleFreeze.running -> BlockPosOffsets.FULL.offsets
+            ScaffoldDownFeature.shouldGoDown -> BlockPosOffsets.DOWN.offsets
+            else -> BlockPosOffsets.NORMAL.offsets
+        }
+        val priorityComparator = if (optimalLine != null) {
+            // Prioritize the block that is closest to the line
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
         } else {
-            BlockPosOffsets.NORMAL.offsets
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
         }
 
-        // Face position factory for current config
-        val facePositionFactory = getFacePositionFactory(optimalLine)
-        val held = ModuleScaffold.aim
-
         val searchOptions = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                offsets,
-                priorityComparator,
-            ),
+            BlockOffsetOptions(offsets, priorityComparator),
             FaceHandlingOptions(
-                facePositionFactory,
+                facePositionFactory(optimalLine),
                 considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
             ),
             stackToPlaceWith = bestStack,
@@ -127,12 +111,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
                 position = predictedPos,
                 pose = predictedPose,
                 // Nearest to where scaffold aims rather than to a view still turning there
-                rotation = held ?: RotationManager.serverRotation,
+                rotation = ModuleScaffold.aim ?: RotationManager.serverRotation,
             ),
         )
         val needed = getTargetedPosition(predictedPos.toBlockPos())
         val best = findBestBlockPlacementTarget(needed, searchOptions) ?: return null
-        if (held == null || !aimsNearest) {
+        if (!aimsNearest) {
             return best
         }
 
@@ -142,29 +126,34 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         } else {
             Direction.Plane.HORIZONTAL.map(needed::relative) + best.placedBlock
         }
-        val now = placementTargetClickedBy(held, player.eyePosition, bestStack, positions)
-            ?.takeIf { ModuleScaffold.isValidCrosshairTarget(it.blockHitResult) }
-        holdsAim = now != null || placesSoon(held, bestStack, positions)
+        val view = RotationManager.currentRotation ?: player.rotation
+        // Once the hand has settled near the aim, the view on the mouse grid is what clicks, and it may just miss
+        val look = ModuleScaffold.aim?.takeIf { aim -> view.rotationDeltaLengthTo(aim) > RotationUtil.gcd } ?: view
+        val now = placementTargetClickedBy(look, player.eyePosition, bestStack, positions)
+            ?.takeIf { isValidCrosshairTarget(it.blockHitResult) }
+        keptLook = look.takeIf { now != null || placesSoon(look, bestStack, positions) }
         return now ?: best
     }
 
-    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
+    fun rotation(target: BlockPlacementTarget?): Rotation? {
         if (ScaffoldTellyFeature.enabled && ScaffoldTellyFeature.doNotAim) {
             return when (ScaffoldTellyFeature.resetMode) {
-                Mode.REVERSE -> Rotation(
+                ScaffoldTellyFeature.Mode.REVERSE -> Rotation(
                     round(player.rotation.yaw / 45) * 45,
                     if (player.xRot < 45f) 45f else player.xRot
                 )
 
-                Mode.RESET -> null
+                ScaffoldTellyFeature.Mode.RESET -> null
             }
         }
 
-        if (holdsAim && target != null) {
-            return ModuleScaffold.aim
+        keptLook?.let { look ->
+            if (target != null) {
+                return look
+            }
         }
 
-        if (requiresSight) {
+        if (ModuleScaffold.requiresSight) {
             val target = target ?: return null
             val raycast = traceFromPlayer(rotation = target.rotation)
 
@@ -173,18 +162,14 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             }
         }
 
-        return super.getRotations(target)
+        return target?.rotation
     }
 
-    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        target?.verifyClick(
-            rotation,
-            // Going down allows a non-visible hit result
-            onFailure = if (ScaffoldDownFeature.shouldGoDown) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
-        )
-
-    private val aimsNearest
-        get() = aimMode == AimMode.STABILIZED || aimMode == AimMode.NEAREST_ROTATION
+    // Going down allows a non-visible hit result
+    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? = target?.verifyClick(
+        rotation,
+        onFailure = if (ScaffoldDownFeature.shouldGoDown) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
+    )
 
     /**
      * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [HOLD_TICKS]
@@ -207,7 +192,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         return false
     }
 
-    private fun getFacePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (aimMode) {
+    private fun facePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (ModuleScaffold.aimMode) {
         AimMode.CENTER -> CenterTargetPositionFactory
         AimMode.RANDOM -> RandomTargetPositionFactory
         AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(optimalLine)

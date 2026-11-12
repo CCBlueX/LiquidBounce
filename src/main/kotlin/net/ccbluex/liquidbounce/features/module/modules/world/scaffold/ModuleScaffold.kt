@@ -46,22 +46,21 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAccelerationFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoBlockFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldClutchFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldEagleFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldExpandFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldJumpStrafe
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ledge
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldExpandTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldTellyFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.sneaksAtLedge
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -77,6 +76,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
+import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -114,7 +114,9 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
+import kotlin.math.round
 
 /**
  * Scaffold module
@@ -134,16 +136,19 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         tree(ScaffoldMovementPrediction)
     }
 
-    internal val technique = choices(
-        "Technique",
-        ScaffoldNormalTechnique,
-        arrayOf(
-            ScaffoldNormalTechnique,
-            ScaffoldExpandTechnique,
-            ScaffoldGodBridgeTechnique,
-            ScaffoldBreezilyTechnique
-        )
-    ).apply(::tagBy)
+    internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    internal val requiresSight by boolean("RequiresSight", false)
+
+    init {
+        tree(ScaffoldEagleFeature)
+        tree(ScaffoldTellyFeature)
+        tree(ScaffoldDownFeature)
+        tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldCeilingFeature)
+        tree(ScaffoldHeadHitterFeature)
+        tree(ScaffoldExpandFeature)
+        tree(ScaffoldBreezilyFeature)
+    }
 
     private val sameYMode by enumChoice("SameY", SameYMode.OFF)
 
@@ -214,11 +219,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     private var wasTowering: Boolean = false
 
-    private val activeTechnique get() = when {
-        ModuleClutch.fall != null -> ScaffoldClutchTechnique
-        isTowering -> ScaffoldNormalTechnique
-        else -> technique.activeMode
-    }
+    /** Whether the next block comes from [ScaffoldExpandFeature]; a tower always builds right under the player. */
+    private val expanding get() = ScaffoldExpandFeature.running && !isTowering
 
     /**
      * [ModuleClutch] has scaffold build under a fall without enabling it.
@@ -430,9 +432,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
-        val technique = activeTechnique
-
-        val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
+        val target = findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
         debugGeometry("lineToBlock") {
@@ -450,7 +450,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         aimed = false
         if (rotationTiming == NORMAL) {
-            val rotation = technique.getRotations(target) ?: return@handler
+            val rotation = aimAt(target) ?: return@handler
             aimed = target != null
             aim = rotation
 
@@ -458,7 +458,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 ScaffoldRotationValueGroup.toRotationTarget(
                     rotation,
                     considerInventory = considerInventory,
-                    whenReady = target?.let { target -> placeWhenReady(technique, target) },
+                    box = target?.takeIf { ModuleClutch.fall != null }?.let(ScaffoldClutchFeature::box),
+                    whenReady = target?.let(::placeWhenReady),
                 ),
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this@ModuleScaffold,
@@ -469,17 +470,43 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /**
      * Places [target] on the tick the rotation going out clicks it.
      */
-    private fun placeWhenReady(technique: ScaffoldTechnique, target: BlockPlacementTarget) =
+    private fun placeWhenReady(target: BlockPlacementTarget) =
         Readiness({ rotation ->
             if (target !== currentTarget || cooldown > 0) {
                 null
             } else {
-                technique.click(target, rotation)?.let { hit -> hit to rotation.normalize() }
+                click(target, rotation)?.let { hit -> hit to rotation.normalize() }
             }
         }) { (hit, rotation) -> place(target, hit, rotation) }
 
-    private fun ScaffoldTechnique.click(target: BlockPlacementTarget, rotation: Rotation) =
-        getCrosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
+    private fun click(target: BlockPlacementTarget?, rotation: Rotation) =
+        crosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
+
+    /** The block to place next, see [aimAt] and [crosshairTarget]. */
+    private fun findPlacementTarget(
+        predictedPos: Vec3,
+        predictedPose: Pose,
+        optimalLine: Line?,
+        bestStack: ItemStack,
+    ): BlockPlacementTarget? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.findPlacementTarget(bestStack)
+        expanding -> ScaffoldExpandFeature.findPlacementTarget(predictedPos, predictedPose, bestStack)
+        else -> ScaffoldPlacement.findTarget(predictedPos, predictedPose, optimalLine, bestStack)
+    }
+
+    /** Where scaffold looks to place [target]. */
+    private fun aimAt(target: BlockPlacementTarget?): Rotation? = when {
+        ModuleClutch.fall != null -> target?.rotation
+        expanding -> ScaffoldExpandFeature.rotation(target)
+        else -> ScaffoldPlacement.rotation(target)
+    }
+
+    /** The hit a click with [rotation] places [target] with, if it does. */
+    private fun crosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.click(target, rotation)
+        expanding -> ScaffoldExpandFeature.click(target, rotation)
+        else -> ScaffoldPlacement.click(target, rotation)
+    }
 
     /**
      * Clicks [hit] to place [target]. [beforeClick] runs once there is a block to place.
@@ -562,39 +589,16 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             forceSneak--
         }
 
-        // Ledge feature - AutoJump and AutoSneak
+        // Ledge feature - AutoSneak
         if (ledge) {
-            val technique = activeTechnique
             val view = RotationManager.currentRotation ?: player.rotation
             // A block is still owed and the view has not come round to it yet
             val turning = aimed && currentTarget != null &&
                 aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
 
-            val ledgeAction = ledge(
-                this.currentTarget,
-                view,
-                turning,
-                technique as? ScaffoldLedgeExtension
-            )
-
-            if (ledgeAction.jump) {
-                event.jump = true
-            }
-
-            if (ledgeAction.stopInput) {
-                event.directionalInput = DirectionalInput.NONE
-            }
-
-            if (ledgeAction.stepBack) {
-                event.directionalInput = event.directionalInput.copy(
-                    forwards = false,
-                    backwards = true
-                )
-            }
-
-            if (ledgeAction.sneakTime > forceSneak) {
+            if (sneaksAtLedge(turning) && forceSneak < 1) {
                 event.sneak = true
-                forceSneak = ledgeAction.sneakTime
+                forceSneak = 1
             }
         }
     }
@@ -626,10 +630,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-        val technique = activeTechnique
         val onTick = rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP
 
-        val currentRotation = (target?.takeIf { onTick }?.let(technique::getRotations)
+        val currentRotation = (target?.takeIf { onTick }?.let(::aimAt)
             ?: RotationManager.currentRotation ?: player.rotation).normalize()
 
         if (ScaffoldAutoBlockFeature.alwaysHoldBlock) {
@@ -640,11 +643,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         if (SimulatePlacementAttempts.enabled) {
-            // The clicker decides on the hit the technique would place with, falling back to the raw crosshair hit
-            // when the technique has none: it also fires without a placement target, and on hits the technique
-            // rejected.
+            // The clicker decides on the hit scaffold would place with, falling back to the raw crosshair hit when
+            // there is none: it also fires without a placement target, and on hits scaffold rejected.
             simulatePlacementAttempt(
-                technique.getCrosshairTarget(target, currentRotation) ?: traceFromPlayer(currentRotation),
+                crosshairTarget(target, currentRotation) ?: traceFromPlayer(currentRotation),
                 currentRotation,
             )
         }
@@ -654,7 +656,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             return@handler
         }
 
-        val hit = technique.click(target, currentRotation) ?: return@handler
+        val hit = click(target, currentRotation) ?: return@handler
 
         val clicked = place(target, hit, currentRotation) {
             if (!onTick) {
