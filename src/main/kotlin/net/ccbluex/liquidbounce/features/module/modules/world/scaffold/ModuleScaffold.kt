@@ -271,8 +271,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /** Whether [currentTarget] waits for the rotation to hit it rather than going down with the view as it is. */
     private var aimed = false
 
-    /** Where scaffold aims this tick, while [aimed]. */
-    private var aim: Rotation? = null
+    /** Where scaffold aimed last, kept over the ticks it has nothing to aim at. */
+    internal var aim: Rotation? = null
+        private set
 
     /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
     private var cooldown = 0
@@ -448,7 +449,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         aimed = false
-        aim = null
         if (rotationTiming == NORMAL) {
             val rotation = technique.getRotations(target) ?: return@handler
             aimed = target != null
@@ -567,7 +567,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             val technique = activeTechnique
             val view = RotationManager.currentRotation ?: player.rotation
             // A block is still owed and the view has not come round to it yet
-            val turning = currentTarget != null && aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
+            val turning = aimed && currentTarget != null &&
+                aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
 
             val ledgeAction = ledge(
                 this.currentTarget,

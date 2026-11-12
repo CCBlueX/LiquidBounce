@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature.Mode
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPositionFactory
@@ -47,16 +49,22 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.ReverseYawTargetPositi
 import net.ccbluex.liquidbounce.utils.block.targetfinding.StabilizedRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.round
+
+/** Ticks ahead a held aim may still line up the next block, see [ScaffoldNormalTechnique.getRotations]. */
+private const val HOLD_TICKS = 3
 
 /**
  * Normal technique, which is basically just normal scaffold.
@@ -104,7 +112,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
                 considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
             ),
             stackToPlaceWith = bestStack,
-            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
+            PlayerLocationOnPlacement(
+                position = predictedPos,
+                pose = predictedPose,
+                // Nearest to where scaffold aims rather than to a view still turning there
+                rotation = ModuleScaffold.aim ?: RotationManager.serverRotation,
+            ),
         )
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
     }
@@ -119,6 +132,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
                 Mode.RESET -> null
             }
+        }
+
+        // A bridging player keeps the mouse still while the next block comes under it
+        val held = ModuleScaffold.aim
+        if (target != null && held != null && aimsNearest && target.linesUp(held)) {
+            return held
         }
 
         if (requiresSight) {
@@ -139,6 +158,38 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             // Going down allows a non-visible hit result
             onFailure = if (ScaffoldDownFeature.shouldGoDown) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
         )
+
+    private val aimsNearest
+        get() = aimMode == AimMode.STABILIZED || aimMode == AimMode.NEAREST_ROTATION
+
+    /**
+     * Whether [rotation] clicks this target now, or from where the player is in one of the next [HOLD_TICKS] ticks
+     * while still on the ground.
+     */
+    private fun BlockPlacementTarget.linesUp(rotation: Rotation): Boolean {
+        if (clicks(rotation, player.eyePosition)) {
+            return true
+        }
+
+        val simulation = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
+        )
+        repeat(HOLD_TICKS) {
+            simulation.tick()
+            if (!simulation.onGround()) {
+                return false
+            }
+            if (clicks(rotation, simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0))) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun BlockPlacementTarget.clicks(rotation: Rotation, eyes: Vec3): Boolean {
+        val hit = traceFromPoint(start = eyes, direction = rotation.directionVector)
+        return doesCrosshairTargetMatchRequirements(hit) && ModuleScaffold.isValidCrosshairTarget(hit)
+    }
 
     private fun getFacePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (aimMode) {
         AimMode.CENTER -> CenterTargetPositionFactory
