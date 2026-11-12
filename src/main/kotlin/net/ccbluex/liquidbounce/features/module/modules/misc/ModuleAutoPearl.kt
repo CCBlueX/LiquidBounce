@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -61,6 +62,9 @@ private const val REFINE_STEP = 0.1f
  * How close an arc has to land to the enemy's pearl to be preferred for its shorter flight.
  */
 private const val LANDING_TOLERANCE = 1.0
+
+/** Degrees the throw may be off the simulated rotation. */
+private const val AIM_TOLERANCE = 1f
 
 /**
  * Auto pearl module
@@ -95,6 +99,7 @@ object ModuleAutoPearl : ClientModule(
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     private val queue = ArrayDeque<Rotation>()
+    private var ready: Rotation? = null
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
@@ -125,7 +130,11 @@ object ModuleAutoPearl : ClientModule(
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
         if (Rotate.enabled) {
             RotationManager.setRotationTarget(
-                Rotate.rotations.toRotationTarget(rotation),
+                Rotate.rotations.toRotationTarget(
+                    rotation,
+                    tolerance = AIM_TOLERANCE,
+                    whenReady = Readiness.reached { ready = it },
+                ),
                 Priority.IMPORTANT_FOR_USAGE_3,
                 this@ModuleAutoPearl
             )
@@ -134,30 +143,25 @@ object ModuleAutoPearl : ClientModule(
 
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
-        val rotation = queue.removeFirstOrNull() ?: return@tickHandler
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
-
-        if (Rotate.enabled) {
-            fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
-            }
-
-            tickConditional(20) {
-                RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleAutoPearl
-                )
-
-                isRotationSufficient()
-            }
-
-            if (!isRotationSufficient()) {
-                return@tickHandler
-            }
+        val rotation = queue.firstOrNull() ?: return@tickHandler
+        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
+        if (itemSlot == null) {
+            queue.removeFirst()
+            return@tickHandler
         }
 
-        val (yaw, pitch) = rotation.normalize()
+        if (!Rotate.enabled) {
+            queue.removeFirst()
+            val (yaw, pitch) = rotation.normalize()
+            useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+            return@tickHandler
+        }
+
+        // The rotation update keeps aiming at the head of the queue until it is ready
+        tickConditional(20) { ready != null }
+        queue.removeFirstOrNull()
+        val (yaw, pitch) = ready ?: return@tickHandler
+        ready = null
         useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
     }
 
@@ -273,6 +277,7 @@ object ModuleAutoPearl : ClientModule(
 
     override fun onDisabled() {
         queue.clear()
+        ready = null
     }
 
     private enum class Modes(override val tag: String) : Tagged {

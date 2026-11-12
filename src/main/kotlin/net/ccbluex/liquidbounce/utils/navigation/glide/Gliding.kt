@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -218,22 +219,27 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
     private val rotationHandler = handler<RotationUpdateEvent> {
         val glide = glide ?: return@handler
 
+        var rocket = false
         val rotation = if (player.isFallFlying) {
             val input = glide.steering.steer(player.position(), player.deltaMovement)
-            fireRocket = input.fireRocket
+            rocket = input.fireRocket
             Rotation(input.yaw, input.pitch)
         } else {
             Rotation(glide.goal.subtract(player.position()).yaw, 0f)
         }
 
         RotationManager.setRotationTarget(
-            RotationTarget(rotation, movementCorrection = MovementCorrection.STRICT),
+            RotationTarget(
+                rotation,
+                movementCorrection = MovementCorrection.STRICT,
+                whenReady = if (rocket) Readiness.reached { fireRocket = true } else null,
+            ),
             Priority.IMPORTANT_FOR_USAGE_2,
             owner,
         )
     }
 
-    /** Fires once this tick's rotation is set, which the server expects the rocket to be used with. */
+    /** Fires on the tick the rotation the rocket is used with goes out. */
     @Suppress("unused")
     private val rocketHandler = handler<GameTickEvent> {
         if (fireRocket) {

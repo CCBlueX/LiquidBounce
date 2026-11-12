@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -74,6 +75,7 @@ object ModuleEasyPearl :
     private val showDistance by boolean("ShowDistance", true)
 
     private var targetPosition: Vec3? = null
+    private var ready: Rotation? = null
 
     private val fontRenderer get() = FontManager.FONT_RENDERER
 
@@ -85,6 +87,8 @@ object ModuleEasyPearl :
 
     override fun onDisabled() {
         currentTargetRotation = null
+        targetPosition = null
+        ready = null
         super.onDisabled()
     }
 
@@ -107,25 +111,23 @@ object ModuleEasyPearl :
             targetPosition = null
             return@handler
         }
-        targetPosition = hitResult.location
 
-        // check if we are rotating to the target position correctly
-        if (isRotationDone(targetPosition!!)) {
-            targetPosition = null
-        } else {
-            event.cancelEvent()
-        }
+        // The pearl goes once the rotation towards the target is ready
+        targetPosition = hitResult.location
+        event.cancelEvent()
     }
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
-        /**
-         * handler for rotation update event,and rotate to the target rotation
-         */
         val finalTargetRotation = getTargetRotation(targetPosition ?: return@handler) ?: return@handler
+        currentTargetRotation = finalTargetRotation
 
         RotationManager.setRotationTarget(
-            rotation.toRotationTarget(finalTargetRotation),
+            rotation.toRotationTarget(
+                finalTargetRotation,
+                tolerance = aimOffThreshold,
+                whenReady = Readiness.reached { ready = it },
+            ),
             Priority.IMPORTANT_FOR_PLAYER_LIFE,
             this@ModuleEasyPearl,
         )
@@ -133,21 +135,15 @@ object ModuleEasyPearl :
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        /**
-         * handler for tick event,and check if we are rotating to the target rotation correctly,if yes,throw the pearl
-         */
-        currentTargetRotation = targetPosition?.let(::getTargetRotation) ?: return@handler
-
-        if (isRotationDone(targetPosition ?: return@handler)) {
-            useHotbarSlotOrOffhand(
-                enderPearlSlot ?: return@handler,
-                0,
-                currentTargetRotation!!.yaw,
-                currentTargetRotation!!.pitch,
-            )
-            targetPosition = null
-            currentTargetRotation = null
+        val ready = ready ?: return@handler
+        this.ready = null
+        if (targetPosition == null) {
+            return@handler
         }
+
+        useHotbarSlotOrOffhand(enderPearlSlot ?: return@handler, 0, ready.yaw, ready.pitch)
+        targetPosition = null
+        currentTargetRotation = null
     }
 
     /**
@@ -230,18 +226,6 @@ object ModuleEasyPearl :
         } else {
             Color4b(0xD7, 0x09, 0x09)
         }
-
-    /**
-     * check if we are rotating to the target rotation correctly
-     * @param targetPosition the target position
-     * @return true if we are rotating to the target rotation correctly, false otherwise
-     */
-    @Suppress("ReturnCount")
-    private fun isRotationDone(targetPosition: Vec3): Boolean {
-        return RotationManager.serverRotation.directionAngleTo(
-            getTargetRotation(targetPosition) ?: return true,
-        ) <= aimOffThreshold
-    }
 
     /**
      * get the position player look at

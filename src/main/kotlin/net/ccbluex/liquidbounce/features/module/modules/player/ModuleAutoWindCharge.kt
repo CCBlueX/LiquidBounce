@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge.Rotate.rotations
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -64,15 +65,18 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      * How long we stay on the ground while turning down, before jumping without a charge.
      */
     private const val MAX_AIM_TICKS = 10
+    private const val AIM_TOLERANCE = 1f
 
     private var holdJump = false
     private var aimTicks = 0
     private var horizontalPitch: Float? = null
+    private var ready: Rotation? = null
 
     override fun onDisabled() {
         holdJump = false
         aimTicks = 0
         horizontalPitch = null
+        ready = null
     }
 
     @Suppress("unused")
@@ -90,6 +94,9 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     @Suppress("unused")
     private val autoWindChargeHandler = tickHandler {
         holdJump = false
+        // An aim asked for on an earlier tick turns, and is found ready, before this handler runs
+        val readyRotation = ready
+        ready = null
 
         if (player.isFallFlying || player.isSwimming || player.isInLiquid || !mc.options.keyJump.isDown) {
             aimTicks = 0
@@ -101,49 +108,53 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
             return@tickHandler
         }
 
-        val rotation = throwRotation()
+        val (yaw, pitch) = throwAngles()
 
         if (!player.onGround()) {
             // Face down before landing, so the throw does not wait for the turn
-            if (Rotate.enabled && isLandingWithin(rotations.calculateTicks(rotation) + 1)) {
-                aim(rotation)
+            val turn = Rotation(yaw ?: RotationManager.serverRotation.yaw, pitch)
+            if (Rotate.enabled && isLandingWithin(rotations.calculateTicks(turn) + 1)) {
+                aim(yaw, pitch)
             }
             return@tickHandler
         }
 
-        if (Rotate.enabled) {
-            aim(rotation)
-
-            if (RotationManager.serverRotation.directionAngleTo(rotation) > 1f) {
-                holdJump = aimTicks++ < MAX_AIM_TICKS
-                return@tickHandler
-            }
+        if (Rotate.enabled && readyRotation == null) {
+            aim(yaw, pitch)
+            holdJump = aimTicks++ < MAX_AIM_TICKS
+            return@tickHandler
         }
 
         aimTicks = 0
         holdJump = true
         horizontalPitch = null
 
-        val (yaw, pitch) = if (Rotate.enabled) RotationManager.serverRotation else rotation.normalize()
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+        val (throwYaw, throwPitch) = readyRotation ?: Rotation(yaw ?: player.yRot, pitch).normalize()
+        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), throwYaw, throwPitch)
     }
 
-    private fun throwRotation(): Rotation {
+    /** Straight down needs no particular yaw; a horizontal boost throws against the direction of the input. */
+    private fun throwAngles(): Pair<Float?, Float> {
         if (!HorizontalBoost.enabled || !HorizontalBoost.boostKey.isPressed) {
-            return Rotation(player.yRot, 90f)
+            return null to 90f
         }
 
         val pitch = horizontalPitch ?: HorizontalBoost.pitch.random().also { horizontalPitch = it }
-        return Rotation(player.getMovementDirectionOfInput() - 180f, pitch)
+        return player.getMovementDirectionOfInput() - 180f to pitch
     }
 
     private fun isLandingWithin(ticks: Int) =
         FallingPlayer.fromPlayer(player, RotationManager.movementYaw).findCollision(ticks) != null
 
-    private fun aim(rotation: Rotation) {
+    private fun aim(yaw: Float?, pitch: Float) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation),
+            rotations.toRotationTarget(
+                yaw = yaw,
+                pitch = pitch,
+                tolerance = AIM_TOLERANCE,
+                whenReady = Readiness.reached { ready = it },
+            ),
             Priority.IMPORTANT_FOR_USAGE_3,
             this
         )
