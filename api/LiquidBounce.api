@@ -1336,6 +1336,7 @@ public final class net/ccbluex/liquidbounce/render/WorldRenderEnvironment {
 	public final fun getCamera ()Lnet/minecraft/client/Camera;
 	public final fun getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;
 	public final fun getRenderTarget ()Lcom/mojang/blaze3d/pipeline/RenderTarget;
+	public final fun shapeColor (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun start (Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
 	public static synthetic fun start$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
 }
