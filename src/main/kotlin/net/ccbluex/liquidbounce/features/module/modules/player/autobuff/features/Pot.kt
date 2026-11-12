@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
+import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.onInterrupted
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
@@ -107,9 +109,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                tickUntil {
-                    !inGame || (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1
-                }
+                guarded({ inGame }, usable(slot)) {
+                    tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
+                }.onInterrupted { return }
 
                 rotation = rotation.normalize()
             }
@@ -126,8 +128,6 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 rotation = rotation.normalize()
             }
         }
-
-        if (!inGame) return // TODO: I think we should edit the continuation interceptor here
 
         useHotbarSlotOrOffhand(
             slot,
