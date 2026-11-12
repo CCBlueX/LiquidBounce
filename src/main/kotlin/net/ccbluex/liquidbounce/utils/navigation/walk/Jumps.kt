@@ -64,9 +64,17 @@ class Jump(
     }
 }
 
-/** Finds out by simulation whether and how a jump between two feet blocks works. Not thread-safe. */
+/**
+ * Finds out by simulation whether and how a jump between two feet blocks works. Not thread-safe. A player that
+ * [holdsYaw] keeps facing on in the air once past the middle of the target, as the Parkour assist does, so it pulls
+ * back without sprinting; otherwise it turns to the target and sprints back.
+ */
 @Suppress("TooManyFunctions")
-internal class Jumps(private val terrain: Terrain, private val abilities: Abilities) {
+internal class Jumps(
+    private val terrain: Terrain,
+    private val abilities: Abilities,
+    private val holdsYaw: Boolean = false,
+) {
 
     val canSprint: Boolean
         get() = abilities.canSprint
@@ -564,9 +572,11 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
                 return margin(motion.x, motion.z)
             }
             val back = !catches && overshoots()
-            // Past the middle of the target, the player holds back instead of turning round, which does not sprint.
-            val sprint = abilities.canSprint && !back &&
-                motion.motionX * (targetX - motion.x) + motion.motionZ * (targetZ - motion.z) >= 0.0
+            // Moving away from the middle of the target, a player that holds its yaw faces away and pulls back, which
+            // does not sprint.
+            val pullsBack = holdsYaw &&
+                motion.motionX * (targetX - motion.x) + motion.motionZ * (targetZ - motion.z) < 0.0
+            val sprint = abilities.canSprint && !back && !pullsBack
             motion.tick(yawToTarget(), if (back) -1 else 1, 0, jump = false, sprint = sprint)
             noteObstruction()
             airTicks++

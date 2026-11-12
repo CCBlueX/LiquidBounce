@@ -71,7 +71,7 @@ class AssistedJumpTest {
     ): List<BlockPos> {
         val terrain = world.terrain()
         val abilities = walkAbilities(canParkour = true, riskyJumps = true)
-        val jumps = Jumps(terrain, abilities)
+        val jumps = Jumps(terrain, abilities, holdsYaw = true)
         val targets = JumpTargets(terrain)
         val assisted = AssistedJump()
         val state = PlayerMotion(terrain)
@@ -289,7 +289,7 @@ class AssistedJumpTest {
     fun `the traced way of a jump is the way the player takes`() {
         val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
         val terrain = world.terrain()
-        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true), holdsYaw = true)
         val targets = JumpTargets(terrain)
         val assisted = AssistedJump()
         val state = PlayerMotion(terrain)
@@ -352,7 +352,7 @@ class AssistedJumpTest {
      */
     private fun tracedAndLanded(world: TestWorld, start: Vec3, heading: Float): Pair<List<Vec3>, List<Vec3>> {
         val terrain = world.terrain()
-        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true), holdsYaw = true)
         val targets = JumpTargets(terrain)
         val assisted = AssistedJump()
         val state = PlayerMotion(terrain)

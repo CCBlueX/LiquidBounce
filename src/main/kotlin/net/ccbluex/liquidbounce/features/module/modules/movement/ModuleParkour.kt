@@ -140,7 +140,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
         val heading = getMovementDirectionOfInput(player.yRot, input)
         val yaw = RotationManager.movementYaw
-        val jumps = Jumps(terrain, abilities)
+        val jumps = Jumps(terrain, abilities, holdsYaw = true)
         val targets = JumpTargets(terrain, abilities.motion)
         val assist = assisted.tick(state, yaw, heading, keys, Assist.maxAngle, jumps, targets)
         if (Assist.render.enabled) {
