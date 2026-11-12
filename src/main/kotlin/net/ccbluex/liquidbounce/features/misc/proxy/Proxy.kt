@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
-import com.google.common.net.HostAndPort
-import com.google.common.net.InetAddresses
 import io.netty.handler.proxy.HttpProxyHandler
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.api.core.HttpClient
@@ -112,6 +110,7 @@ data class Proxy(
          * - `socks5://` or `socks5h://` for SOCKS5 proxy
          *
          * Accepts the following formats:
+         * - `hostname:port`
          * - `hostname:port:username:password`
          * - `username:password:hostname:port`
          * - `username:password@hostname:port`
@@ -126,91 +125,31 @@ data class Proxy(
             }
 
             val proxyText = text.substringAfter("://")
-            return when {
-                '@' in proxyText -> {
-                    val credentials = proxyText.substringBeforeLast('@').split(':', limit = 2)
-                    require(credentials.size == 2) { "Proxy credentials must be username:password" }
-                    val address = parseAddress(proxyText.substringAfterLast('@'))
-                    Proxy(address.host, address.port, credentials(credentials[0], credentials[1]), proxyType)
-                }
+            return FORMATS.firstNotNullOfOrNull { format -> format.parse(proxyText, proxyType) }
+                ?: throw IllegalArgumentException("Invalid proxy format: expected a host and valid port")
+        }
 
-                else -> {
-                    require(!InetAddresses.isInetAddress(proxyText)) {
-                        "IPv6 proxy hosts must be bracketed with a port"
-                    }
-                    val parts = splitFields(proxyText)
-
-                    when {
-                        parts.size == 2 -> {
-                            val address = parseAddress(proxyText)
-                            Proxy(address.host, address.port, null, proxyType)
-                        }
-
-                        // host:port:username:password
-                        parts.size == 4 && parts[1].isValidPort() -> {
-                            val address = parseAddress("${parts[0]}:${parts[1]}")
-                            Proxy(address.host, address.port, credentials(parts[2], parts[3]), proxyType)
-                        }
-
-                        // username:password:host:port
-                        parts.size == 4 && parts[3].isValidPort() -> {
-                            val address = parseAddress("${parts[2]}:${parts[3]}")
-                            Proxy(address.host, address.port, credentials(parts[0], parts[1]), proxyType)
-                        }
-
-                        else -> throw IllegalArgumentException("Invalid proxy format: expected a host and valid port")
-                    }
-                }
+        /** The proxy [text] is written in, or null if it is not in this format or its port is not one */
+        private fun Regex.parse(text: String, type: Type): Proxy? {
+            val groups = matchEntire(text)?.groups ?: return null
+            val host = groups["host"]!!.value.removeSurrounding("[", "]")
+            val port = groups["port"]!!.value.toIntOrNull()?.takeIf { it in 1..65535 } ?: return null
+            val credentials = groups["username"]?.let { username ->
+                credentials(username.value, groups["password"]!!.value)
             }
+
+            return Proxy(host, port, credentials, type)
         }
 
-        private fun parseAddress(text: String): HostAndPort {
-            val address = HostAndPort.fromString(text).requireBracketsForIPv6()
-            require(address.host.isNotBlank()) { "Proxy host must not be empty" }
-            require('[' !in address.host && ']' !in address.host) { "Invalid proxy host brackets" }
-            require(address.hasPort() && address.port in 1..65535) { "Proxy port must be in 1..65535" }
-            return address
-        }
+        /** A hostname or IPv4 address, or an IPv6 address in the brackets that tell its colons from separators */
+        private const val ADDRESS = """(?<host>[^:@\[\]]+|\[[^\[\]]+]):(?<port>\d+)"""
 
-        /** Split legacy formats without treating the colons inside an IPv6 host as separators. */
-        private fun splitFields(text: String): List<String> {
-            val fields = ArrayList<String>()
-            var start = 0
-            var bracketed = false
-            for ((index, char) in text.withIndex()) {
-                when (char) {
-                    '[' -> {
-                        require(!bracketed) { "Invalid proxy host brackets" }
-                        // Credentials may contain brackets, so only IP literals open a host field.
-                        if (index == start && (fields.isEmpty() || fields.size == 2)) {
-                            bracketed = startsBracketedHost(text, index)
-                        }
-                    }
-                    ']' -> {
-                        bracketed = false
-                    }
-                    ':' -> if (!bracketed) {
-                        fields.add(text.substring(start, index))
-                        start = index + 1
-                    }
-                }
-            }
-            fields.add(text.substring(start))
-            return fields
-        }
-
-        private fun startsBracketedHost(text: String, index: Int): Boolean {
-            val closing = text.indexOf(']', index + 1)
-            val host = text.substring(index + 1, if (closing >= 0) closing else text.length)
-            val isIp = InetAddresses.isInetAddress(host.substringBefore('%'))
-            require(!isIp || closing >= 0) { "Unclosed proxy host bracket" }
-            return isIp
-        }
-
-        private fun String.isValidPort(): Boolean {
-            val port = toIntOrNull() ?: return false
-            return port in 1..65535
-        }
+        /** Tried in this order, so a numeric password does not turn `host:port:username:password` around */
+        private val FORMATS = arrayOf(
+            Regex("""(?<username>[^:]+):(?<password>.+)@$ADDRESS"""),
+            Regex("""$ADDRESS(?::(?<username>[^:]+):(?<password>[^:]+))?"""),
+            Regex("""(?<username>[^:]+):(?<password>[^:]+):$ADDRESS"""),
+        )
 
         @JvmStatic
         fun credentials(username: String, password: String): Credentials? {
