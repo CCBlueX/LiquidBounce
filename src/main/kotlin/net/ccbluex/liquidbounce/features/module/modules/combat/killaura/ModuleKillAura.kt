@@ -131,8 +131,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment { renderFailedHits() }
-        KillAuraRangeIndicator.render(event)
+        event.renderEnvironment {
+            renderFailedHits()
+            KillAuraRangeIndicator.render(this, event.partialTicks)
+        }
     }
 
     @Suppress("unused")
