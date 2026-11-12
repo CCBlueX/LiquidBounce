@@ -102,6 +102,14 @@ object RotationUtil {
         return RotationDelta(deltaYaw, deltaPitch)
     }
 
+    /**
+     * [rotation] turned by whole mouse counts, with the same float math the player is turned with.
+     */
+    fun turnByCounts(rotation: Rotation, yawCounts: Int, pitchCounts: Int): Rotation {
+        val factor = mouseSensitivityFactor()
+        return applyMouseTurnDelta(rotation, yawCounts * factor, pitchCounts * factor)
+    }
+
     fun applyMouseTurnDelta(rotation: Rotation, cursorDeltaX: Double, cursorDeltaY: Double): Rotation {
         val delta = mouseTurnDelta(cursorDeltaX, cursorDeltaY)
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -145,9 +146,13 @@ class Navigator(
             return@handler
         }
         lastLookYaw = yaw
+        val dive = target != null && follower.dive
         RotationManager.setRotationTarget(
-            Rotation(yaw, if (target != null && follower.dive) divePitch(target) else player.xRot),
-            valueGroup = this.rotations,
+            this.rotations.toRotationTarget(
+                Rotation(yaw, if (dive) divePitch(target) else player.xRot),
+                considerInventory = true,
+                axes = if (dive) RotationAxes.BOTH else RotationAxes.YAW,
+            ),
             priority = Priority.NOT_IMPORTANT,
             provider = owner,
         )

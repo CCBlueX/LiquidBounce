@@ -619,8 +619,19 @@ open class ValueGroup @JvmOverloads constructor(
         name: String,
         activeCallback: ToIntFunction<List<T>>,
         modesCallback: (ModeValueGroup<T>) -> Array<T>,
+    ): ModeValueGroup<T> = modes(eventListener, name, emptyList(), activeCallback, modesCallback)
+
+    /**
+     * Like the other overload; [aliases] are the names the group was saved under before.
+     */
+    fun <T : Mode> modes(
+        eventListener: EventListener?,
+        name: String,
+        aliases: List<String>,
+        activeCallback: ToIntFunction<List<T>>,
+        modesCallback: (ModeValueGroup<T>) -> Array<T>,
     ): ModeValueGroup<T> {
-        return value(ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
+        return value(ModeValueGroup(eventListener, name, activeCallback, modesCallback, aliases).apply {
             this.base = this@ValueGroup
         })
     }

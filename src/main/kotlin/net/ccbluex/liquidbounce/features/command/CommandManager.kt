@@ -52,7 +52,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
 import net.ccbluex.liquidbounce.features.command.commands.client.liquidchat.CommandLiquidChat
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
-import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCoordinates
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandFollow
@@ -186,7 +185,6 @@ object CommandManager : EventListener {
         register(CommandTeleport)
         register(CommandPlayerTeleport)
         register(CommandServerInfo)
-        register(CommandModels)
     }
 
     /**

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
+import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -216,7 +217,7 @@ object ModuleFastExp : ClientModule(
             tickUntil {
                 val rotation = Rotation(player.yRot, 90f)
                 RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation),
+                    Rotate.rotations.toRotationTarget(rotation, axes = RotationAxes.PITCH),
                     Priority.IMPORTANT_FOR_USAGE_3,
                     this@ModuleFastExp
                 )

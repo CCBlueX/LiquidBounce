@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_USE
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
+import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -151,24 +152,31 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         }
     }
 
+    private const val PITCH_TOLERANCE = 3f
+
     override suspend fun execute(slot: HotbarItemSlot) {
         val midAir = isMidAir
         var rotation = if (midAir) Rotation(player.yRot, MidAir.pitch) else calculateSplashRotation()
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
-                RotationManager.setRotationTarget(
+                // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
+                val target = ModuleAutoBuff.Rotations.toRotationTarget(
                     rotation,
-                    valueGroup = ModuleAutoBuff.Rotations,
-                    provider = ModuleAutoBuff,
-                    priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                    considerInventory = true,
+                    axes = RotationAxes.PITCH,
+                    tolerance = PITCH_TOLERANCE,
                 )
 
                 tickUntil {
-                    !inGame || abs((currentRotation ?: player.rotation).pitch - rotation.pitch) <= 1
+                    !inGame || run {
+                        RotationManager.setRotationTarget(target, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleAutoBuff)
+                        abs((currentRotation ?: player.rotation).pitch - rotation.pitch) <= PITCH_TOLERANCE
+                    }
                 }
 
-                rotation = rotation.normalize()
+                if (!inGame) return
+                rotation = currentRotation ?: player.rotation
             }
 
             ON_TICK -> {
