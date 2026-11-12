@@ -401,8 +401,8 @@ object ModuleStrongholdFinder : ClientModule(
 
     private fun trackPortalBlock(pos: BlockPos, block: Block) {
         when (block) {
-            Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Portal
-            Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Frame
+            Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.PORTAL
+            Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.FRAME
             else -> detectedPortalBlocks.remove(pos)
         }
     }
@@ -414,8 +414,8 @@ object ModuleStrongholdFinder : ClientModule(
         for (sectionIndex in 0..chunk.highestFilledSectionIndex) {
             chunk.forEachSectionBlock(sectionIndex) { pos, state ->
                 when (state.block) {
-                    Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Portal
-                    Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.Frame
+                    Blocks.END_PORTAL -> detectedPortalBlocks[pos.immutable] = PortalBlockType.PORTAL
+                    Blocks.END_PORTAL_FRAME -> detectedPortalBlocks[pos.immutable] = PortalBlockType.FRAME
                 }
             }
         }
@@ -484,7 +484,7 @@ object ModuleStrongholdFinder : ClientModule(
     )
 
     private enum class PortalBlockType(val color: Color4b) {
-        Portal(Color4b(0, 220, 255, 170)),
-        Frame(Color4b(255, 215, 0, 170)),
+        PORTAL(Color4b(0, 220, 255, 170)),
+        FRAME(Color4b(255, 215, 0, 170)),
     }
 }

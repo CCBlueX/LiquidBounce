@@ -62,6 +62,7 @@ import net.minecraft.world.entity.player.PlayerSkin
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.HttpException
 import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
@@ -271,7 +272,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
     private inline fun request(block: MinecraftServicesApi.() -> Unit) {
         try {
             HttpClient.mojangApiClient.mcServicesApi.block()
-        } catch (e: retrofit2.HttpException) {
+        } catch (e: HttpException) {
             logger.error("Failed to upload skin: ${e.code()} ${e.message()}", e)
         } catch (e: IOException) {
             logger.error("Failed to upload skin", e)

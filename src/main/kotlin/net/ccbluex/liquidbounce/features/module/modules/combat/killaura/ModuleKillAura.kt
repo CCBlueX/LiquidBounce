@@ -46,9 +46,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraRangeIndicator
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -99,7 +100,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     // Bypass techniques
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
-    private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
+    internal val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
 
     // Inventory Handling
@@ -237,7 +238,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         KillAuraAutoBlock.makeSeemBlock()
 
         debugParameter("Rotation") { rotation }
-        debugParameter("Target") { target.scoreboardName }
+        debugParameter("Target") { target }
 
         val attackHitResult = isLookingAtEntity(
             toEntity = target,
@@ -313,7 +314,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
 
         debugParameter("Maximum Range") { maximumRange }
-        debugParameter("Range") { range }
         val squaredMaxRange = maximumRange.sq()
         val squaredNormalRange = range.interactionRange.sq()
 
@@ -422,8 +422,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 
-        debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
-        debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
+        debugGeometry("Box") { DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
+        debugGeometry("Point") { DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
 
         val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
 
