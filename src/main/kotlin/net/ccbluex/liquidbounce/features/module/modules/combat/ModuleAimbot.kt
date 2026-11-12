@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
@@ -123,11 +122,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         ModuleAutoWeapon.onTarget(targetTracker.target)
 
         val (entity, rotation) = target ?: return@handler
-        val axes = when {
-            Axis.HORIZONTAL in axis && Axis.VERTICAL in axis -> RotationAxes.BOTH
-            Axis.HORIZONTAL in axis -> RotationAxes.YAW
-            Axis.VERTICAL in axis -> RotationAxes.PITCH
-            else -> return@handler
+        val yaw = rotation.rotation.yaw.takeIf { Axis.HORIZONTAL in axis }
+        val pitch = rotation.rotation.pitch.takeIf { Axis.VERTICAL in axis }
+        if (yaw == null && pitch == null) {
+            return@handler
         }
 
         if (IgnoreOpened.SCREEN !in ignores && mc.gui.screen() != null) {
@@ -137,12 +135,12 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
         // ChangeLook: an aim assist turns the camera itself, and the mouse keeps turning it too
         RotationManager.setRotationTarget(
             RotationTarget(
-                rotation = rotation.rotation,
+                yaw = yaw,
+                pitch = pitch,
                 entity = entity,
                 aim = aim.activeMode,
                 considerInventory = IgnoreOpened.CONTAINER !in ignores,
                 movementCorrection = MovementCorrection.CHANGE_LOOK,
-                axes = axes,
             ),
             Priority.IMPORTANT_FOR_USAGE_1,
             this

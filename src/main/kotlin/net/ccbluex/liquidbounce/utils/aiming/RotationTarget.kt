@@ -22,20 +22,21 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 
 /**
- * A rotation a module wants the view to turn to.
+ * What a module wants the view to do. An axis left null is up to the rotation system: it stays with the player's own
+ * view, or with a target that does turn it.
  */
 @AddonApi
 @Suppress("LongParameterList")
 class RotationTarget @JvmOverloads constructor(
-    val rotation: Rotation,
+    val yaw: Float?,
+    val pitch: Float?,
     val entity: Entity? = null,
     /**
-     * How the view turns towards [rotation]; null turns it at once.
+     * How the view turns; null turns it at once.
      */
     val aim: Aim? = null,
     /**
@@ -47,30 +48,53 @@ class RotationTarget @JvmOverloads constructor(
      */
     val considerInventory: Boolean = false,
     val movementCorrection: MovementCorrection = MovementCorrection.SILENT,
-    val whenReached: RestrictedSingleUseAction? = null,
-    /**
-     * The axes this target turns. The others stay with the player's own view.
-     */
-    val axes: RotationAxes = RotationAxes.BOTH,
     /**
      * What the view has to point at: any rotation whose ray hits it is on target. Defaults to the box of [entity].
      */
     val box: AABB? = null,
     /**
-     * Degrees [rotation] may be missed by on each turned axis, when there is no [box].
+     * Degrees [yaw] and [pitch] may be missed by, when there is no [box].
      */
     val tolerance: Float = 0f,
+    /**
+     * Told on the tick the rotation going out meets what the module needs, which is when vanilla acts on a look too.
+     */
+    val whenReady: Readiness<*>? = null,
 ) {
+
+    init {
+        require(yaw != null || pitch != null) { "A rotation target has to turn at least one axis" }
+    }
+
+    @JvmOverloads
+    constructor(
+        rotation: Rotation,
+        entity: Entity? = null,
+        aim: Aim? = null,
+        ticksUntilReset: Int = 1,
+        considerInventory: Boolean = false,
+        movementCorrection: MovementCorrection = MovementCorrection.SILENT,
+        box: AABB? = null,
+        tolerance: Float = 0f,
+        whenReady: Readiness<*>? = null,
+    ) : this(
+        rotation.yaw,
+        rotation.pitch,
+        entity,
+        aim,
+        ticksUntilReset,
+        considerInventory,
+        movementCorrection,
+        box,
+        tolerance,
+        whenReady,
+    )
 
     /** The box to hit, if there is one. */
     val hitBox: AABB?
         get() = box ?: entity?.let { entity -> entity.boundingBox.inflate(entity.pickRadius.toDouble()) }
 
-}
+    /** This target's angles, with [otherwise] on an axis it leaves free. */
+    fun rotation(otherwise: Rotation) = Rotation(yaw ?: otherwise.yaw, pitch ?: otherwise.pitch)
 
-@AddonApi
-enum class RotationAxes(val yaw: Boolean, val pitch: Boolean) {
-    BOTH(true, true),
-    YAW(true, false),
-    PITCH(false, true),
 }

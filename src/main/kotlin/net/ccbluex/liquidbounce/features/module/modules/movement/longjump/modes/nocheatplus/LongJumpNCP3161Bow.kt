@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -79,11 +78,7 @@ internal object LongJumpNCP3161Bow : Mode("NCP-3.16.1-Bow", aliases = listOf("Lo
         if (arrowBoost <= arrowsToShoot) {
             forceUseKey = true
             RotationManager.setRotationTarget(
-                rotations.toRotationTarget(
-                    Rotation(player.yRot, -90f),
-                    considerInventory = true,
-                    axes = RotationAxes.PITCH,
-                ),
+                rotations.toRotationTarget(pitch = -90f, considerInventory = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleLongJump
             )

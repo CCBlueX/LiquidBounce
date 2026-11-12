@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -210,26 +210,33 @@ object ModuleFastExp : ClientModule(
         }
     }
 
+    private const val PITCH_TOLERANCE = 5f
+
     private suspend fun action(slot: HotbarItemSlot) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
+        var pitch = 90f
         if (Rotate.enabled) {
+            var ready: Rotation? = null
             tickUntil {
-                val rotation = Rotation(player.yRot, 90f)
                 RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation, axes = RotationAxes.PITCH),
+                    Rotate.rotations.toRotationTarget(
+                        pitch = 90f,
+                        tolerance = PITCH_TOLERANCE,
+                        whenReady = Readiness.reached { ready = it },
+                    ),
                     Priority.IMPORTANT_FOR_USAGE_3,
                     this@ModuleFastExp
                 )
-                RotationManager.serverRotation.pitch > 85f
+                ready != null
             }
+            pitch = ready?.pitch ?: return
         }
 
         itemsToThrow += throwMode.activeMode.nextTickItems()
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 
-        val pitch = if (Rotate.enabled) RotationManager.serverRotation.pitch else 90f
         repeat(times) {
             useHotbarSlotOrOffhand(
                 slot,

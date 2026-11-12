@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.aiming.aim.ConstantAim
 import net.ccbluex.liquidbounce.utils.aiming.aim.HumanAim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 
@@ -47,6 +46,9 @@ open class RotationsValueGroup(
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
 
+    /**
+     * A target on both axes, with these settings.
+     */
     @AddonApi
     @JvmOverloads
     @Suppress("LongParameterList")
@@ -54,21 +56,36 @@ open class RotationsValueGroup(
         rotation: Rotation,
         entity: Entity? = null,
         considerInventory: Boolean = false,
-        whenReached: RestrictedSingleUseAction? = null,
-        axes: RotationAxes = RotationAxes.BOTH,
         box: AABB? = null,
         tolerance: Float = 0f,
+        whenReady: Readiness<*>? = null,
+    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, box, tolerance, whenReady)
+
+    /**
+     * A target with these settings; leave out the axis the module does not care about.
+     */
+    @AddonApi
+    @JvmOverloads
+    @Suppress("LongParameterList")
+    fun toRotationTarget(
+        yaw: Float? = null,
+        pitch: Float? = null,
+        entity: Entity? = null,
+        considerInventory: Boolean = false,
+        box: AABB? = null,
+        tolerance: Float = 0f,
+        whenReady: Readiness<*>? = null,
     ) = RotationTarget(
-        rotation,
+        yaw,
+        pitch,
         entity,
         aim.activeMode,
         ticksUntilReset,
         considerInventory,
         movementCorrection,
-        whenReached,
-        axes,
         box,
         tolerance,
+        whenReady,
     )
 
     /**

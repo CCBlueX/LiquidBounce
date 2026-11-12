@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -70,15 +70,13 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
             valueGroup = rotations,
             provider = placer.parent,
             priority = placer.priority,
-            whenReached = RestrictedSingleUseAction({
-                val raytraceResult = raytraceBlock(
+            whenReady = Readiness({ next ->
+                raytraceBlock(
                     max(placer.range, placer.wallRange).toDouble(),
-                    RotationManager.currentRotation ?: return@RestrictedSingleUseAction false,
+                    next,
                     interactedBlockPos,
                     interactedBlockPos.stateOrEmpty
-                ) ?: return@RestrictedSingleUseAction false
-
-                raytraceResult.type == HitResult.Type.BLOCK && raytraceResult.blockPos == interactedBlockPos
+                )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == interactedBlockPos }
             }, {
                 PostRotationExecutor.addTask(placer.parent, postMove, priority = true) {
                     if (placer.ticksToWait > 0) {

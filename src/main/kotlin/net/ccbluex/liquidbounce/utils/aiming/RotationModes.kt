@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import java.util.function.BooleanSupplier
@@ -95,7 +94,7 @@ class NormalRotationMode(
                 valueGroup = rotations,
                 provider = eventListener,
                 priority = priority,
-                whenReached = RestrictedSingleUseAction(canExecute = isFinished, action = {
+                whenReady = Readiness({ next -> next.takeIf { isFinished.asBoolean } }, {
                     PostRotationExecutor.addTask(eventListener, postMove, task = onFinished, priority = true)
                 })
             )

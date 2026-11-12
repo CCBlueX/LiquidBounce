@@ -49,7 +49,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -63,7 +62,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toVec3f
-import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -74,7 +72,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.Relative
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -209,10 +206,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: EventListener,
-        whenReached: RestrictedSingleUseAction? = null
+        whenReady: Readiness<*>? = null
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
-            rotation, considerInventory = considerInventory, whenReached = whenReached
+            rotation, considerInventory = considerInventory, whenReady = whenReady
         ), priority, provider)
     }
 
@@ -278,12 +275,12 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     private fun turn(target: RotationTarget, lead: RotationTarget?) {
         val camera = player.rotation
         val view = currentRotation ?: camera
-        val yawTarget = requests.firstOrNull { it.axes.yaw }
-        val pitchTarget = requests.firstOrNull { it.axes.pitch }
+        val yawTarget = requests.firstOrNull { it.yaw != null }
+        val pitchTarget = requests.firstOrNull { it.pitch != null }
         val changeLook = target.movementCorrection == MovementCorrection.CHANGE_LOOK
         // Under ChangeLook the player looks through the view, so a free axis has nowhere else to go
         val own = if (changeLook) view else camera
-        val goal = Rotation(yawTarget?.rotation?.yaw ?: own.yaw, pitchTarget?.rotation?.pitch ?: own.pitch)
+        val goal = Rotation(yawTarget?.yaw ?: own.yaw, pitchTarget?.pitch ?: own.pitch)
         val step = RotationUtil.gcd.toFloat()
         val aim = target.aim
         val delta = if (aim == null) {
@@ -321,9 +318,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         }
 
         previousRotationTarget = target
-        yawTarget?.whenReached?.invoke()
-        if (pitchTarget !== yawTarget) {
-            pitchTarget?.whenReached?.invoke()
+        for (request in requests) {
+            request.whenReady?.offer(next, request)
         }
     }
 
@@ -338,7 +334,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         val box = owner?.hitBox
         if (box != null) {
             val eyes = player.eyePosition
-            return boxGoal(goal, eyes, box, hits(eyes, view, box, owner.entity != null))
+            return boxGoal(goal, eyes, box, eyes.hits(view, box, inSight = owner.entity != null))
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
@@ -377,15 +373,6 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             maxPitch = max(maxPitch, rotation.pitch)
         }
         return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached)
-    }
-
-    /**
-     * Whether the ray of [view] from [eyes] hits [box], and for an entity, does so in sight.
-     */
-    private fun hits(eyes: Vec3, view: Rotation, box: AABB, inSight: Boolean): Boolean {
-        val reach = eyes.distanceTo(box.center) + box.size
-        val point = box.clip(eyes, eyes.fma(reach, view.directionVector)).getOrNull() ?: return false
-        return !inSight || hasLineOfSight(eyes, point)
     }
 
     private fun release() {

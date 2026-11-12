@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -82,11 +81,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         RotationManager.setRotationTarget(
-            Assist.rotations.toRotationTarget(
-                Rotation(aimYaw, player.xRot),
-                considerInventory = true,
-                axes = RotationAxes.YAW,
-            ),
+            Assist.rotations.toRotationTarget(yaw = aimYaw, considerInventory = true),
             priority = Priority.NOT_IMPORTANT,
             provider = this,
         )

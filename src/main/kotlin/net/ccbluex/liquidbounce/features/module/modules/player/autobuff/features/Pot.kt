@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_USE
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -160,23 +160,26 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
-                // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
-                val target = ModuleAutoBuff.Rotations.toRotationTarget(
-                    rotation,
-                    considerInventory = true,
-                    axes = RotationAxes.PITCH,
-                    tolerance = PITCH_TOLERANCE,
-                )
-
+                var ready: Rotation? = null
                 tickUntil {
-                    !inGame || run {
-                        RotationManager.setRotationTarget(target, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleAutoBuff)
-                        abs((currentRotation ?: player.rotation).pitch - rotation.pitch) <= PITCH_TOLERANCE
+                    !inGame || ready != null || run {
+                        // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player
+                        // looks
+                        RotationManager.setRotationTarget(
+                            ModuleAutoBuff.Rotations.toRotationTarget(
+                                pitch = rotation.pitch,
+                                considerInventory = true,
+                                tolerance = PITCH_TOLERANCE,
+                                whenReady = Readiness.reached { ready = it },
+                            ),
+                            Priority.IMPORTANT_FOR_PLAYER_LIFE,
+                            ModuleAutoBuff,
+                        )
+                        false
                     }
                 }
 
-                if (!inGame) return
-                rotation = currentRotation ?: player.rotation
+                rotation = ready ?: return
             }
 
             ON_TICK -> {

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.utils.aiming.RotationAxes
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -91,11 +90,7 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(
-                rotations.toRotationTarget(
-                    Rotation(player.yRot, (80f..90f).random()),
-                    considerInventory = true,
-                    axes = RotationAxes.PITCH,
-                ),
+                rotations.toRotationTarget(pitch = (80f..90f).random(), considerInventory = true),
                 provider = ModuleFastUse,
                 priority = Priority.IMPORTANT_FOR_USAGE_2
             )
