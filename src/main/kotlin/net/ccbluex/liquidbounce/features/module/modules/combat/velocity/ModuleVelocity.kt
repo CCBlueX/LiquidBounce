@@ -28,13 +28,13 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityAAC442
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityDexland
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrim2344
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC20241123
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityDexland20241001
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrim2344MC117
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrim2371
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHylex
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHypixel
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityIntave
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHylex20241117
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHypixel20250127
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityIntave20261002
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityJumpReset
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityModify
@@ -65,16 +65,16 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
             VelocityReduce,
 
             // Server modes
-            VelocityHypixel,
-            VelocityDexland,
-            VelocityHylex,
-            VelocityBlocksMC,
+            VelocityHypixel20250127,
+            VelocityDexland20241001,
+            VelocityHylex20241117,
+            VelocityBlocksMC20241123,
 
             // Anti cheat modes
             VelocityGrim2371,
-            VelocityGrim2344,
+            VelocityGrim2344MC117,
             VelocityAAC442,
-            VelocityIntave,
+            VelocityIntave20261002,
         )
     ).apply(::tagBy)
 

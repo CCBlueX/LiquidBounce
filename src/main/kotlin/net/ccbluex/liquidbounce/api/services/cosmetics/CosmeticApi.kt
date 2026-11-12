@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.services.cosmetics
 
+import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import retrofit2.create
@@ -33,12 +34,17 @@ object CosmeticApi {
 
     suspend fun getCarrierCosmetics(uuid: UUID) = service.carrierCosmetics(uuid.toString())
 
+    suspend fun getEars(name: String) = service.ears(name)
+
     internal interface Service {
         @GET("cosmetics/carriers")
         suspend fun carriers(): Set<String>
 
-        @GET("cosmetics/carrier/{uuid}")
+        @GET("cosmetics/carrier/{uuid}?all=true")
         suspend fun carrierCosmetics(@Path("uuid") uuid: String): Set<Cosmetic>
+
+        @GET("cosmetics/ears/{name}")
+        suspend fun ears(@Path("name") name: String): NativeImage
     }
 
 }

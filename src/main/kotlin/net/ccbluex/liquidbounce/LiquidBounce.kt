@@ -74,6 +74,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
@@ -86,7 +87,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.KillDeathTracker
+import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -97,8 +101,10 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
+import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -107,6 +113,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
+import net.minecraft.util.Unit as MinecraftUnit
 
 /**
  * LiquidBounce
@@ -280,8 +287,11 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         BlinkManager
+        Timer
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
+        TeleportManager
+        SectionCache
         InteractionTracker
         CombatManager
         FriendManager
@@ -295,6 +305,8 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
+        KillDeathTracker
+        PlayerStatisticsTracker
         ItemImageAtlas
         EntityImageAtlas
         ItemStackListRenderer
@@ -338,9 +350,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Load cosmetics
-                CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
-                }
+                CosmeticService.refreshCarriers(force = true)
             }
             launch {
                 MarketplaceConfigs.refresh()
@@ -349,7 +359,7 @@ object LiquidBounce : EventListener {
                 MarketplaceItems.refresh()
             }
             launch {
-                MarketplaceManager.fillAuthors()
+                MarketplaceManager.updateMissingAuthors()
             }
             launch {
                 IpInfoApi.original
@@ -373,6 +383,7 @@ object LiquidBounce : EventListener {
                         logger.info("Successfully renewed client account token.")
                     }
                 }
+                ClientAccountManager.restored.complete(Unit)
             }
         }
 
@@ -533,7 +544,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen(translation("liquidbounce.splash.loadingLibraries"), taskManager))
         }
     }
 
@@ -553,7 +564,7 @@ object LiquidBounce : EventListener {
             synchronizer: PreparableReloadListener.PreparationBarrier,
             applyExecutor: Executor
         ): CompletableFuture<Void> {
-            return synchronizer.wait(net.minecraft.util.Unit.INSTANCE)
+            return synchronizer.wait(MinecraftUnit.INSTANCE)
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()

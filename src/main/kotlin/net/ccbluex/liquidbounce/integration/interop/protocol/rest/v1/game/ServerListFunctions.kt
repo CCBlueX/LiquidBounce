@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -43,6 +44,7 @@ import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.SharedConstants
@@ -88,6 +90,22 @@ private fun Route.getServers() = get {
     }.getOrElse { call.internalServerError("Failed to get servers due to ${it.message}") }
 }
 
+// GET /api/v1/client/servers/current
+private fun Route.getCurrentServer() = get("/current") {
+    val server = mc.currentServer
+    if (server == null) {
+        call.respond(HttpStatusCode.NoContent)
+        return@get
+    }
+
+    val json = interopGson.toJsonTree(server).asJsonObject.apply {
+        // The list's id, when the server is saved
+        serverList.servers.indexOfFirst { it.ip == server.ip }.takeIf { it >= 0 }?.let { addProperty("id", it) }
+        ServerObserver.tps.takeUnless { it.isNaN() }?.let { addProperty("tps", it) }
+    }
+    call.respond(json)
+}
+
 // POST /api/v1/client/servers/connect
 private fun Route.postConnect() = post("/connect") {
     data class ServerConnectRequest(val address: String)
@@ -101,7 +119,7 @@ private fun Route.postConnect() = post("/connect") {
     mc.execute {
         ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/servers/add
@@ -122,7 +140,7 @@ private fun Route.putAddServer() = put("/add") {
     serverList.add(serverInfo, false)
     serverList.save()
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/servers/remove
@@ -135,7 +153,7 @@ private fun Route.deleteServer() = delete("/remove") {
     serverList.remove(serverInfo)
     serverList.save()
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/servers/edit
@@ -157,7 +175,7 @@ private fun Route.putEditServer() = put("/edit") {
     }
     serverList.save()
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/servers/swap
@@ -168,7 +186,7 @@ private fun Route.postSwapServers() = post("/swap") {
 
     serverList.swap(serverSwapRequest.from, serverSwapRequest.to)
     serverList.save()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/servers/order
@@ -183,7 +201,7 @@ private fun Route.postOrderServers() = post("/order") {
         }
     serverList.save()
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/servers/lan
@@ -367,6 +385,7 @@ fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == ad
 
 internal fun Route.serverListRoutes() = route("/servers") {
     getServers()
+    getCurrentServer()
     getLanServers()
     putAddServer()
     deleteServer()

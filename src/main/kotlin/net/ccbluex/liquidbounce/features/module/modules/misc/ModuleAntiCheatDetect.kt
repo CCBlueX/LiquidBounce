@@ -51,8 +51,8 @@ object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", ModuleCategories.
     }
 
     private fun alertAboutAntiCheat() {
-        val antiCheat = ServerObserver.guessAntiCheat(mc.currentServer?.ip) ?: return
-        chat(regular(message("detected", variable(antiCheat))))
+        val guess = ServerObserver.guessAntiCheat(mc.currentServer?.ip) ?: return
+        chat(regular(message("detected", variable(guess.antiCheat.tag), variable("${guess.certainty}%"))))
     }
 
 }

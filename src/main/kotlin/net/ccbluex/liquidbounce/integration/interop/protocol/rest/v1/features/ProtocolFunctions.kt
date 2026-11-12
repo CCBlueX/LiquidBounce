@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -44,13 +45,13 @@ private fun Route.putProtocol() = put {
     val protocolRequest = call.receive<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/protocols/protocol
 private fun Route.deleteProtocol() = delete {
     selectProtocolVersion(defaultProtocolVersion.version)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.protocolRoutes() = route("/protocols") {

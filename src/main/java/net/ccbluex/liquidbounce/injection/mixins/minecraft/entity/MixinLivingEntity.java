@@ -25,18 +25,22 @@ import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
-import net.ccbluex.liquidbounce.features.module.modules.movement.*;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
@@ -351,7 +355,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var maxHealth = this.getMaxHealth();
         var newHealth = Math.clamp(health, 0.0F, maxHealth);
 
-        if (oldHealth != newHealth) {
+        if (oldHealth != newHealth && !((Object) this instanceof SimulatedPlayer)) {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
         }
     }
@@ -361,10 +365,30 @@ public abstract class MixinLivingEntity extends MixinEntity {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
-    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
-    private int hookSwingSpeed(int duration) {
-        var animations = ModuleAnimations.INSTANCE;
-        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"))
+    private int hookSwingDurationItem(int duration) {
+        return liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreItem()
+            ? SwingAnimation.DEFAULT.duration() : duration;
+    }
+
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectUtil;hasDigSpeed(Lnet/minecraft/world/entity/LivingEntity;)Z"))
+    private boolean hookSwingDurationHaste(boolean hasDigSpeed) {
+        return hasDigSpeed && !(liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreHaste());
+    }
+
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z"))
+    private boolean hookSwingDurationMiningFatigue(boolean hasMiningFatigue) {
+        return hasMiningFatigue && !(liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreMiningFatigue());
+    }
+
+    @ModifyReturnValue(method = "getModifiedSwingDuration", at = @At("RETURN"))
+    private int hookSwingDuration(int duration) {
+        return liquid_bounce$tweaksSwingDuration() ? GlobalSettingsViewModel.SwingDuration.INSTANCE.scale(duration) : duration;
+    }
+
+    @Unique
+    private boolean liquid_bounce$tweaksSwingDuration() {
+        return GlobalSettingsViewModel.SwingDuration.INSTANCE.getRunning() && liquid_bounce$isClientPlayer();
     }
 
     @Inject(method = "swing", at = @At(value = "HEAD"), cancellable = true)

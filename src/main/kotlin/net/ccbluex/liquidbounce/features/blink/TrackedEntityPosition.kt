@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.blink
 
+import net.ccbluex.liquidbounce.utils.entity.serverPosition
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
@@ -38,7 +39,7 @@ import net.minecraft.world.phys.Vec3
  */
 class TrackedEntityPosition(initialPos: Vec3 = Vec3.ZERO) {
 
-    constructor(entity: Entity) : this(entity.positionCodec.base)
+    constructor(entity: Entity) : this(entity.serverPosition)
 
     private val codec = VecDeltaCodec().apply {
         setBase(initialPos)
@@ -51,7 +52,7 @@ class TrackedEntityPosition(initialPos: Vec3 = Vec3.ZERO) {
         }
 
     fun setBaseFrom(entity: Entity) {
-        codec.setBase(entity.positionCodec.base)
+        codec.setBase(entity.serverPosition)
     }
 
     fun handlePacket(packet: Packet<*>, level: ClientLevel, target: Entity): Vec3? {
