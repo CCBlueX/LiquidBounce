@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntCollection
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.common.TweakedMethods
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
@@ -194,6 +195,20 @@ fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
 
     return outlineShape.boundsOrNull() ?: FULL_BOX
+}
+
+/**
+ * Runs [block] against the collision shapes the server has, without what modules change through
+ * [net.ccbluex.liquidbounce.event.events.BlockShapeEvent], such as the ghost blocks of AntiVoid or the floor of Fly.
+ */
+inline fun <T> withoutShapeChanges(block: () -> T): T {
+    val previous = ShapeFlag.noShapeChange
+    ShapeFlag.noShapeChange = true
+    try {
+        return block()
+    } finally {
+        ShapeFlag.noShapeChange = previous
+    }
 }
 
 /**

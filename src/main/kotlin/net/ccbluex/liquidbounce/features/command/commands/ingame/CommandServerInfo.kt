@@ -161,7 +161,8 @@ object CommandServerInfo : EventListener, CommandRegistrar {
         printStyledComponent("transactionDifferences", transactionDiffText)
 
         // Anti-cheat detection
-        val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.ip ?: "")?.let(::variable)
+        val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.ip)
+            ?.let { variable("${it.antiCheat.tag} (${it.certainty}%)") }
             ?: markAsError("N/A")
         printStyledComponent(
             "guessedAntiCheat",

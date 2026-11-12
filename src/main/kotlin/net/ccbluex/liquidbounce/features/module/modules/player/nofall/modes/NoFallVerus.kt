@@ -27,7 +27,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @anticheatVersion b3896
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVerus : NoFallMode("Verus") {
+internal object NoFallVerus : NoFallMode("Verus-b3896", aliases = listOf("Verus")) {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         if (packet is ServerboundMovePlayerPacket && player.fallDistance > 3.35) {

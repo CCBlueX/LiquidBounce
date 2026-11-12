@@ -339,6 +339,15 @@ fun Long.formatAsCapacity(): String {
     }
 }
 
+/**
+ * Whether this is a LiquidProxy route, whose hostname works as its owner's subscription
+ * and must never be shared.
+ */
+fun String.isSensitiveAddress(): Boolean {
+    val host = substringBeforeLast(':').lowercase().trimEnd('.')
+    return host.endsWith(".liquidbounce.net") || host.endsWith(".liquidproxy.net")
+}
+
 fun String.hideSensitiveAddress(): String {
     val idx = lastIndexOf(':')
     val host = if (idx == -1) this else substring(0, idx)

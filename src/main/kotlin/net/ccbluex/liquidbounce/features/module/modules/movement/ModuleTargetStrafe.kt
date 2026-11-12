@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20250125
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -256,6 +256,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
+
         private val hypixel by boolean("Hypixel", false)
 
         // Event handler for player movement
@@ -287,7 +289,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                     0.281
                 }
 
-                if (SpeedHypixelLowHop.shouldStrafe) {
+                if (SpeedHypixel20250125.shouldStrafe) {
                     event.movement = event.movement.withStrafe(
                         yaw = strafePlan.strafeVec.yaw,
                         speed = player.horizontalSpeed.coerceAtLeast(minSpeed),
