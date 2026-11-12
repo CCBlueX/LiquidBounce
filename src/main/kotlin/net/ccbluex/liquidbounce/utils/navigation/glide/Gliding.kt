@@ -19,16 +19,18 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.glide
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -58,7 +60,10 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
     private var glide: Glide? = null
     private var ticks = 0
     private var retryAt = 0
-    private var fireRocket = false
+
+    /** This tick's rotation while the steering wants a rocket fired with it. */
+    private var rocketAim: RotationTarget? = null
+    private var rocketing: Job? = null
 
     val isActive: Boolean
         get() = glide != null
@@ -86,7 +91,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
     fun halt() {
         search.cancel()
         glide = null
-        fireRocket = false
+        rocketAim = null
         sprint = false
     }
 
@@ -217,6 +222,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
+        rocketAim = null
         val glide = glide ?: return@handler
 
         var rocket = false
@@ -228,22 +234,20 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
             Rotation(glide.goal.subtract(player.position()).yaw, 0f)
         }
 
-        RotationManager.setRotationTarget(
-            RotationTarget(
-                rotation,
-                movementCorrection = MovementCorrection.STRICT,
-                whenReady = if (rocket) Readiness.reached { fireRocket = true } else null,
-            ),
-            Priority.IMPORTANT_FOR_USAGE_2,
-            owner,
-        )
+        val target = RotationTarget(rotation, movementCorrection = MovementCorrection.STRICT)
+        if (rocket) {
+            rocketAim = target
+            rocketing = launchSequence(rocketing) { fireRocket() }
+        } else {
+            RotationManager.setRotationTarget(target, Priority.IMPORTANT_FOR_USAGE_2, owner)
+        }
     }
 
     /** Fires on the tick the rotation the rocket is used with goes out. */
-    @Suppress("unused")
-    private val rocketHandler = handler<GameTickEvent> {
-        if (fireRocket) {
-            fireRocket = false
+    private suspend fun fireRocket() {
+        guarded {
+            val aim by tracked { rocketAim }
+            owner.lookAt(Priority.IMPORTANT_FOR_USAGE_2, { aim })
             Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
         }
     }

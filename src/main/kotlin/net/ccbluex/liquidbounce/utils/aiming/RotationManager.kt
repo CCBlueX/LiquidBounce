@@ -86,6 +86,11 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     private val rotationTargetHandler = RequestHandler<RotationTarget>()
 
+    /**
+     * The modules waiting in [lookAt] for the view.
+     */
+    internal val looks = Looks()
+
     /** The targets of this tick, most important first. */
     private val requests = ArrayList<RotationTarget>()
     private var lastAim: Aim? = null
@@ -207,11 +212,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: EventListener,
-        whenReady: Readiness<*>? = null,
         surface: Surface? = null,
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
-            rotation, considerInventory = considerInventory, surface = surface, whenReady = whenReady
+            rotation, considerInventory = considerInventory, surface = surface
         ), priority, provider)
     }
 
@@ -320,9 +324,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         }
 
         previousRotationTarget = target
-        for (request in requests) {
-            request.whenReady?.offer(next, request)
-        }
+        looks.offer(next, requests)
     }
 
     private fun aimGoal(
@@ -450,7 +452,17 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         priority = FIRST_PRIORITY
     ) { event ->
         EventManager.callEvent(RotationUpdateEvent)
+        looks.request(::setRotationTarget)
         update()
+    }
+
+    /**
+     * Resumes the modules whose look was met this tick: after every other first handler, such as the clicker planning
+     * this tick's clicks, and before modules tick and the movement packet goes out.
+     */
+    @Suppress("unused")
+    private val lookHandler = handler<GameTickEvent>(priority = (FIRST_PRIORITY - 1).toShort()) {
+        looks.settle()
     }
 
     /**

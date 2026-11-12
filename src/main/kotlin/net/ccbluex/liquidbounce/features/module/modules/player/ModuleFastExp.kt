@@ -31,10 +31,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -220,22 +218,12 @@ object ModuleFastExp : ClientModule(
     private suspend fun action(slot: Tracked<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
-        var pitch = 90f
-        if (Rotate.enabled) {
-            var ready: Rotation? = null
-            tickUntil {
-                RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(
-                        pitch = 90f,
-                        tolerance = PITCH_TOLERANCE,
-                        whenReady = Readiness.reached { ready = it },
-                    ),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleFastExp
-                )
-                ready != null
-            }
-            pitch = ready?.pitch ?: return
+        val pitch = if (Rotate.enabled) {
+            lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
+                Rotate.rotations.toRotationTarget(pitch = 90f, tolerance = PITCH_TOLERANCE)
+            }).pitch
+        } else {
+            90f
         }
 
         itemsToThrow += throwMode.activeMode.nextTickItems()

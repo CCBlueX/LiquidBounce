@@ -22,20 +22,18 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.getOrNull
 import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.onInterrupted
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_USE
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -162,28 +160,16 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
-                var ready: Rotation? = null
-                guarded({ inGame }, usable(slot)) {
-                    tickUntil {
-                        ready != null || run {
-                            // Only the pitch decides where a splash at the feet lands, so the yaw stays where the
-                            // player looks
-                            RotationManager.setRotationTarget(
-                                ModuleAutoBuff.Rotations.toRotationTarget(
-                                    pitch = rotation.pitch,
-                                    considerInventory = true,
-                                    tolerance = PITCH_TOLERANCE,
-                                    whenReady = Readiness.reached { ready = it },
-                                ),
-                                Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                                ModuleAutoBuff,
-                            )
-                            false
-                        }
-                    }
-                }.onInterrupted { return }
-
-                rotation = ready ?: return
+                // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
+                rotation = guarded({ inGame }, usable(slot)) {
+                    ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                        ModuleAutoBuff.Rotations.toRotationTarget(
+                            pitch = rotation.pitch,
+                            considerInventory = true,
+                            tolerance = PITCH_TOLERANCE,
+                        )
+                    })
+                }.getOrNull() ?: return
             }
 
             ON_TICK -> {

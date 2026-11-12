@@ -19,16 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
@@ -47,7 +46,6 @@ import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Items
-import net.minecraft.world.phys.BlockHitResult
 
 /**
  * Module Extinguish
@@ -68,7 +66,6 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     private var currentTarget: PlacementPlan? = null
-    private var ready: Pair<BlockHitResult, Rotation>? = null
 
     private val rotations = tree(RotationsValueGroup(this))
 
@@ -86,36 +83,19 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        ready = null
+        this.currentTarget = null
+
         // we can't place water in the nether
         if (world.waterEvaporates) {
             return@handler
         }
 
-        this.currentTarget = null
-
-        val target = findAction() ?: return@handler
-
-        this.currentTarget = target
-
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                target.placementTarget.rotation,
-                considerInventory = true,
-                surface = target.placementTarget.surface(),
-                whenReady = Readiness({ rotation ->
-                    target.placementTarget.verifyClick(rotation)?.let { hit -> hit to rotation }
-                }) { ready = it },
-            ),
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleExtinguish
-        )
+        this.currentTarget = findAction()
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         currentTarget = null
-        ready = null
     }
 
     private fun findAction(): PlacementPlan? {
@@ -144,29 +124,40 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val (rayTraceResult, rotation) = ready ?: return@handler
-        ready = null
-        val target = currentTarget ?: return@handler
+    private val tickHandler = tickHandler {
+        currentTarget ?: return@tickHandler
 
-        if (!SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
-            return@handler
+        guarded {
+            val target by tracked { currentTarget }
+            val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                rotations.toRotationTarget(
+                    target.placementTarget.rotation,
+                    considerInventory = true,
+                    surface = target.placementTarget.surface(),
+                )
+            }) { going ->
+                target.placementTarget.verifyClick(going)?.let { hit -> hit to going }
+            }
+
+            if (!SilentHotbar.selectSlotSilently(this@ModuleExtinguish, target.hotbarItemSlot, 1)) {
+                return@guarded
+            }
+
+            val successFunction = {
+                cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
+                pickupTracker.record(target.placementTarget.placedBlock)
+
+                true
+            }
+
+            doPlacement(
+                rayTraceResult,
+                rotation,
+                hand = target.hotbarItemSlot.useHand,
+                onItemUseSuccess = successFunction,
+                onPlacementSuccess = successFunction,
+            )
         }
-
-        val successFunction = {
-            cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
-            pickupTracker.record(target.placementTarget.placedBlock)
-
-            true
-        }
-
-        doPlacement(
-            rayTraceResult,
-            rotation,
-            hand = target.hotbarItemSlot.useHand,
-            onItemUseSuccess = successFunction,
-            onPlacementSuccess = successFunction,
-        )
     }
 
     private fun planExtinguishing(): PlacementPlan? {

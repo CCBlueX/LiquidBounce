@@ -19,16 +19,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import kotlinx.coroutines.Job
 import net.ccbluex.fastutil.complement
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.getOrNull
 import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.tickConditional
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -37,11 +39,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -144,13 +146,15 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     }
 
     /**
-     * Whether the rotation going out this tick points within [aimOffThreshold] of the target.
+     * The rotation to throw with at the target, planned once per tick.
      */
-    private var aimed = false
+    private var throwing: Pair<Rotation, Surface?>? = null
+    private var rodUse: Job? = null
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        aimed = false
+        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedIn }
+        throwing = null
 
         if (!requirementsMet) {
             targetTracker.reset()
@@ -165,34 +169,30 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
-        val (rotation, surface) = gravityType.apply(target) ?: return@handler
+        val (rotation, surface) = gravityType.apply(target)?.also { throwing = it } ?: return@handler
+
+        // Keeps aiming while the hook flies and during the cooldown
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                rotation,
-                considerInventory = false,
-                surface = surface,
-                whenReady = Readiness({ going -> going.takeIf { it.directionAngleTo(rotation) <= aimOffThreshold } }) {
-                    aimed = true
-                },
-            ),
+            rotations.toRotationTarget(rotation, considerInventory = false, surface = surface),
             Priority.IMPORTANT_FOR_USAGE_1,
             this
         )
+        rodUse = launchSequence(rodUse) { useRod() }
     }
 
-    @Suppress("unused")
-    private val handleAutoRod = tickHandler {
-        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedIn }
+    private suspend fun useRod() {
+        val aimed = guarded({ requirementsMet }) {
+            val target by tracked { targetTracker.target }
+            val slot by tracked { availableRodSlot }
+            val planned by tracked { throwing }
 
-        if (!requirementsMet) {
-            return@tickHandler
-        }
+            lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
+                rotations.toRotationTarget(planned.first, considerInventory = false, surface = planned.second)
+            }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
 
-        val slot = availableRodSlot ?: return@tickHandler
-
-        val target = targetTracker.target ?: return@tickHandler
-
-        if (!aimed) return@tickHandler
+            target to slot
+        }.getOrNull() ?: return
+        val (target, slot) = aimed
 
         // If the player used rod manually, skip use
         if (fishingBobberEntity == null) {
@@ -206,7 +206,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
                 ).consumesAction()
             ) {
                 // Action failed
-                return@tickHandler
+                return
             }
             currentScanExtraRange = scanExtraRange.random()
         }

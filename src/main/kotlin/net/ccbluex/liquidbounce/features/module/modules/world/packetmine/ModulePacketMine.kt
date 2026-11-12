@@ -19,12 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
@@ -35,11 +36,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Ne
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -127,8 +129,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
-    private var rotating = false
-    private var ready: BlockHitResult? = null
+
+    /** Aims at the current target this tick; null when the player has to look at it on their own. */
+    private var aim: RotationTarget? = null
     private var tickCounter = 0L
     private var nextAllowedStartTick = 0L
 
@@ -174,24 +177,35 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        ready = null
-        rotating = false
+        tickCounter++
+        aim = null
         val mineTarget = currentTarget ?: return@handler
         mineTarget.updateBlockState()
         rotate(mineTarget)
     }
 
     @Suppress("unused")
-    private val repeatable = handler<GameTickEvent> {
-        tickCounter++
-        val mineTarget = currentTarget ?: return@handler
+    private val repeatable = tickHandler {
+        val mineTarget = currentTarget ?: return@tickHandler
         if (mineTarget.isInvalidOrOutOfRange()) {
             currentTarget = null
-            return@handler
+            return@tickHandler
         }
 
         mineTarget.updateBlockState()
-        handleBreaking(mineTarget)
+        if (aim == null) {
+            // Without rotations of its own, the player has to look at the target itself
+            handleBreaking(mineTarget, hitOn(mineTarget, RotationManager.currentRotation ?: player.rotation))
+            return@tickHandler
+        }
+
+        // Goes on with the rotation going out on the next tick, whether it hits or not
+        guarded({ currentTarget === mineTarget && !mineTarget.isInvalidOrOutOfRange() }) {
+            val plan by tracked { aim }
+            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
+            mineTarget.updateBlockState()
+            handleBreaking(mineTarget, hitOn(mineTarget, going))
+        }
     }
 
     private fun rotate(mineTarget: MineTarget) {
@@ -210,19 +224,13 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         }
 
         if (rotate) {
-            RotationManager.setRotationTarget(
-                rotations.toRotationTarget(
-                    raytrace.rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    surface = Surface.of(mineTarget.targetPos, throughWalls = wallsRange > 0f),
-                    whenReady = Readiness({ rotation -> hitOn(mineTarget, rotation) }) { ready = it },
-                ),
-                Priority.IMPORTANT_FOR_USAGE_2,
-                ModulePacketMine
+            aim = rotations.toRotationTarget(
+                raytrace.rotation,
+                considerInventory = !ignoreOpenInventory,
+                surface = Surface.of(mineTarget.targetPos, throughWalls = wallsRange > 0f),
             )
         }
 
-        rotating = rotate
         rotation = raytrace.rotation
     }
 
@@ -232,11 +240,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == mineTarget.targetPos }
 
     @Suppress("ReturnCount")
-    private fun handleBreaking(mineTarget: MineTarget) {
-        // Without rotations of its own, the player has to look at the target itself
-        val hit = if (rotating) ready else hitOn(mineTarget, RotationManager.currentRotation ?: player.rotation)
-        ready = null
-
+    private fun handleBreaking(mineTarget: MineTarget, hit: BlockHitResult?) {
         if (hit == null && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
             return
         }

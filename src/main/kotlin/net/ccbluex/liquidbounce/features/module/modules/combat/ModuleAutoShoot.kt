@@ -19,20 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -148,9 +149,10 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     }
 
     /**
-     * Whether the rotation going out this tick points within [aimOffThreshold] of the target.
+     * The rotation to throw with at the target, planned once per tick.
      */
-    private var aimed = false
+    private var throwing: Pair<Rotation, Surface?>? = null
+    private var shooting: Job? = null
 
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
@@ -158,7 +160,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      */
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        aimed = false
+        throwing = null
 
         if (shouldPauseForKillAura()) return@handler
 
@@ -172,20 +174,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowableSlot() ?: return@handler
-        val (rotation, surface) = getRotation(target, slot) ?: return@handler
-
-        // Set the rotation with the usage priority of 2.
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                rotation,
-                considerInventory = considerInventory,
-                surface = surface,
-                whenReady = Readiness({ going -> going.takeIf { it.directionAngleTo(rotation) <= aimOffThreshold } }) {
-                    aimed = true
-                },
-            ),
-            Priority.IMPORTANT_FOR_USAGE_2, this
-        )
+        throwing = getRotation(target, slot) ?: return@handler
+        shooting = launchSequence(shooting) { shoot() }
     }
 
     override fun onDisabled() {
@@ -194,29 +184,34 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     }
 
     /**
-     * Handles the auto shoot logic.
+     * Shoots once the rotation going out points within [aimOffThreshold] of the target.
      */
-    @Suppress("unused")
-    private val handleAutoShoot = tickHandler {
-        if (shouldPauseForKillAura() || !aimed) return@tickHandler
+    private suspend fun shoot() {
+        guarded {
+            val planned by tracked { throwing }
 
-        if (notDuringCombat && CombatManager.isInCombat) {
-            return@tickHandler
-        }
+            // Set the rotation with the usage priority of 2.
+            lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
+                rotations.toRotationTarget(
+                    planned.first,
+                    considerInventory = considerInventory,
+                    surface = planned.second,
+                )
+            }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
 
-        // Check if we have a throwable, if not we can't shoot.
-        val slot = getThrowableSlot() ?: return@tickHandler
+            // Check if we have a throwable, if not we can't shoot.
+            val slot = getThrowableSlot() ?: return@guarded
 
-        // Check if we are still aiming at the target
-        clicker.click {
-            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
-                return@click false
+            clicker.click {
+                if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
+                    return@click false
+                }
+
+                useItem(
+                    slot.useHand,
+                    swingMode = swingMode,
+                ).consumesAction()
             }
-
-            useItem(
-                slot.useHand,
-                swingMode = swingMode,
-            ).consumesAction()
         }
     }
 

@@ -58,8 +58,7 @@ open class RotationsValueGroup(
         considerInventory: Boolean = false,
         surface: Surface? = null,
         tolerance: Float = 0f,
-        whenReady: Readiness<*>? = null,
-    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, surface, tolerance, whenReady)
+    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, surface, tolerance)
 
     /**
      * A target with these settings; leave out the axis the module does not care about.
@@ -74,7 +73,6 @@ open class RotationsValueGroup(
         considerInventory: Boolean = false,
         surface: Surface? = null,
         tolerance: Float = 0f,
-        whenReady: Readiness<*>? = null,
     ) = RotationTarget(
         yaw,
         pitch,
@@ -85,7 +83,6 @@ open class RotationsValueGroup(
         movementCorrection,
         surface,
         tolerance,
-        whenReady,
     )
 
     /**

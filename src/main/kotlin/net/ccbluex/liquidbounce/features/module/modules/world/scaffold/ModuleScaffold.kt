@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
@@ -27,7 +28,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -67,11 +70,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -280,6 +283,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
     private var cooldown = 0
 
+    /** The rotation asked for this tick under [NORMAL] timing; null on ticks scaffold asks for none. */
+    private var planned: Rotation? = null
+    private var placing: Job? = null
+
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private object SimulatePlacementAttempts : ToggleableValueGroup(this, "SimulatePlacementAttempts", false) {
@@ -378,6 +385,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         currentTarget = null
         aimed = false
         aim = null
+        planned = null
         cooldown = 0
         renderer.clearSilently()
     }
@@ -443,35 +451,41 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         aimed = false
+        planned = null
         if (rotationTiming == NORMAL) {
             val rotation = aimAt(target) ?: return@handler
             aimed = target != null
             aim = rotation
-
-            RotationManager.setRotationTarget(
-                ScaffoldRotationValueGroup.toRotationTarget(
-                    rotation,
-                    considerInventory = considerInventory,
-                    surface = target?.let(::surface),
-                    whenReady = target?.let(::placeWhenReady),
-                ),
-                Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                this@ModuleScaffold,
-            )
+            planned = rotation
+            placing = launchSequence(placing) { placeOnHit() }
         }
     }
 
     /**
-     * Places [target] on the tick the rotation going out clicks it.
+     * Asks for the planned rotation every tick and places the current target on the tick the rotation going out
+     * clicks it.
      */
-    private fun placeWhenReady(target: BlockPlacementTarget) =
-        Readiness({ rotation ->
-            if (target !== currentTarget || cooldown > 0) {
-                null
-            } else {
-                click(target, rotation)?.let { hit -> hit to rotation.normalize() }
+    private suspend fun placeOnHit() {
+        guarded {
+            val rotation by tracked { planned }
+            val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                ScaffoldRotationValueGroup.toRotationTarget(
+                    rotation,
+                    considerInventory = considerInventory,
+                    surface = currentTarget?.let(::surface),
+                )
+            }) { going ->
+                val target = currentTarget
+                if (target == null || cooldown > 0) {
+                    null
+                } else {
+                    click(target, going)?.let { hit -> Triple(target, hit, going.normalize()) }
+                }
             }
-        }) { (hit, rotation) -> place(target, hit, rotation) }
+
+            place(target, hit, going)
+        }
+    }
 
     private fun click(target: BlockPlacementTarget?, rotation: Rotation) =
         crosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
@@ -653,7 +667,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             )
         }
 
-        // An aimed target goes down once the rotation hits it, see placeWhenReady
+        // An aimed target goes down once the rotation hits it, see placeOnHit
         if (target == null || aimed || cooldown > 0) {
             return@handler
         }

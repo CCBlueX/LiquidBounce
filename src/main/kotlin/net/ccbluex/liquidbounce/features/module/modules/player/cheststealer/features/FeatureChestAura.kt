@@ -23,13 +23,16 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.getOrNull
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
@@ -39,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
@@ -48,7 +52,6 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import java.util.function.BooleanSupplier
 
@@ -109,8 +112,8 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     // Rotation configuration settings
     private val rotations = tree(RotationsValueGroup(this))
 
-    // The block position currently being interacted with
-    private var currentTargetBlock: BlockPos? = null
+    // The block position currently being interacted with and the target that aims at it
+    private var currentTarget: Pair<BlockPos, RotationTarget>? = null
     val interactedBlocksSet: Set<BlockPos>
         field = hashSetOf<BlockPos>()
 
@@ -120,21 +123,16 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     override val running: Boolean
         get() = super.running && pauseOn.none { it.asBoolean }
 
-    private var ready: BlockHitResult? = null
-
     override fun onDisabled() {
-        ready = null
         interactedBlocksSet.clear()
         interactionAttempts = 0
-        currentTargetBlock = null
+        currentTarget = null
         super.onDisabled()
     }
 
     // Event handler responsible for updating the target block
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        ready = null
-
         fun isUnblockedChestOrNotChest(state: BlockState, pos: BlockPos): Boolean {
             if (state.block !is ChestBlock) return true
             if (ChestBlock.isChestBlockedAt(world, pos)) return false
@@ -143,7 +141,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
 
         if (notDuringCombat && CombatManager.isInCombat) {
-            currentTargetBlock = null
+            currentTarget = null
             return@handler
         }
 
@@ -152,29 +150,21 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
         }
 
-        var nextTargetBlock = selectBlockTarget(
+        val nextTarget = selectBlockTarget(
             player.eyePosition,
             interactionRange,
             wallInteractionRange,
             nearbyStorageBlocks,
             rotations,
-            ModuleChestStealer,
-            whenReady = { pos ->
-                Readiness({ rotation ->
-                    val state = pos.state ?: return@Readiness null
-                    raytraceBlock(interactionRange.toDouble(), rotation, pos, state)
-                        ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
-                }) { ready = it }
-            },
         )
 
         // If the current target has changed, reset the retries counter
-        if (currentTargetBlock != nextTargetBlock) {
+        if (currentTarget?.first != nextTarget?.first) {
             interactionAttempts = 0
         }
 
         // Update the current target block
-        currentTargetBlock = nextTargetBlock
+        currentTarget = nextTarget
     }
 
     @Suppress("unused")
@@ -194,9 +184,17 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             return@tickHandler
         }
 
-        val targetBlockPos = currentTargetBlock ?: return@tickHandler
-        val rayTraceResult = ready?.takeIf { it.blockPos == targetBlockPos } ?: return@tickHandler
-        ready = null
+        currentTarget ?: return@tickHandler
+        val rayTraceResult = guarded({ mc.gui.screen() !is AbstractContainerScreen<*> }) {
+            val target by tracked { currentTarget }
+            lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
+                val (pos, _) = target
+                val state = pos.state ?: return@lookAt null
+                raytraceBlock(interactionRange.toDouble(), going, pos, state)
+                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+            }
+        }.getOrNull() ?: return@tickHandler
+        val targetBlockPos = rayTraceResult.blockPos
 
         // Attempt to interact with the block
         val useItemOnResult = interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult)
@@ -220,7 +218,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
                 }
             } else {
                 track(targetBlockPos)
-                currentTargetBlock = null
+                currentTarget = null
                 wasInteractionSuccessful = true
 
                 // Delay until next interaction
@@ -230,7 +228,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             // Update interacted block set and reset target if successful or exceeded retries
             if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
                 track(targetBlockPos)
-                currentTargetBlock = null
+                currentTarget = null
             } else {
                 interactionAttempts++
             }

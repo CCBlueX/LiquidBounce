@@ -80,7 +80,6 @@ import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
-import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
@@ -301,7 +300,6 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         ConfigSystem.root(ConfigTracker)
-        PostRotationExecutor
         ServerObserver
         KillDeathTracker
         PlayerStatisticsTracker

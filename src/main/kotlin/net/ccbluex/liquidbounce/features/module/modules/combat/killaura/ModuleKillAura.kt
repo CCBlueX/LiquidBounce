@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -50,10 +53,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -115,14 +119,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     internal var waitTicks = 0
 
     /**
-     * Whether this tick's rotation request tells [readyHit], so nothing else has to check the aim.
+     * What the rotation update of this tick aims at. A tick with an aim fights once that rotation goes out.
      */
-    private var awaitsReadiness = false
-
-    /**
-     * What the rotation going out this tick attacks, once the rotation system finds it ready.
-     */
-    private var readyHit: EntityHitResult? = null
+    private var aim: RotationTarget? = null
+    private var aiming: Job? = null
 
     init {
         tree(KillAuraAutoBlock)
@@ -154,8 +154,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             waitTicks--
         }
 
-        awaitsReadiness = false
-        readyHit = null
+        aim = null
 
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.gui.screen() is ContainerScreen
@@ -174,10 +173,31 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
+    /** Fights on ticks without an aim; the others fight in [fightWithAim] once the aim goes out. */
     @Suppress("unused")
     private val gameHandler = tickHandler {
+        if (aim == null) {
+            fight(aimed = false, aimedHit = null)
+        }
+    }
+
+    private suspend fun fightWithAim() {
+        guarded {
+            val planned by tracked { aim }
+            // Resumes on the next rotation going out, whatever it hits
+            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { planned }) { it }
+
+            fight(aimed = true, aimedHit = planned.entity?.let { attackHit(it, going) })
+        }
+    }
+
+    /**
+     * [aimed] tells whether this tick's rotation was asked for, and [aimedHit] is what the rotation going out attacks.
+     */
+    @Suppress("CognitiveComplexMethod")
+    private fun fight(aimed: Boolean, aimedHit: EntityHitResult?) {
         if (player.isDeadOrDying || player.isSpectator) {
-            return@tickHandler
+            return
         }
 
         // Check if there is target to attack
@@ -185,7 +205,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         if (CombatManager.shouldPauseCombat) {
             KillAuraAutoBlock.stopBlocking()
-            return@tickHandler
+            return
         }
 
         if (target == null) {
@@ -199,12 +219,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                     dealWithFakeSwing(null)
                 }
             }
-            return@tickHandler
+            return
         }
 
         // Check if the module should (not) continue after the blocking state is updated
         if (!requirementsMet) {
-            return@tickHandler
+            return
         }
 
         val onTickRotation = if (rotations.rotationTiming == ON_TICK) {
@@ -216,7 +236,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         val hit = when {
             onTickRotation != null -> attackHit(target, onTickRotation)
-            awaitsReadiness -> readyHit
+            aimed -> aimedHit
             // No request this tick, e.g. Snap waiting for the clicker
             else -> attackHit(target, rotation)
         }
@@ -372,18 +392,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             }
         }
 
-        awaitsReadiness = true
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                rotation,
-                entity,
-                considerInventory = !ignoreOpenInventory,
-                surface = surface,
-                whenReady = Readiness({ going -> attackHit(entity, going) }) { hit -> readyHit = hit },
-            ),
-            priority = Priority.IMPORTANT_FOR_USAGE_2,
-            provider = this@ModuleKillAura
+        aim = rotations.toRotationTarget(
+            rotation,
+            entity,
+            considerInventory = !ignoreOpenInventory,
+            surface = surface,
         )
+        aiming = launchSequence(aiming) { fightWithAim() }
         return true
     }
 

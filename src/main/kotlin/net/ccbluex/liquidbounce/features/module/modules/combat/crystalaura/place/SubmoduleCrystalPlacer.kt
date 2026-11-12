@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
 import it.unimi.dsi.fastutil.ints.IntCollection
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -86,7 +89,17 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     )
 
     private val chronometer = Chronometer()
-    private var blockHitResult: BlockHitResult? = null
+
+    /**
+     * A crystal to place on [pos], with the rotation that places it.
+     */
+    private class Placement(val rotation: Rotation, val pos: BlockPos, val side: Direction)
+
+    /** The latest placement [tick] found, which may be computed off-thread. */
+    @Volatile
+    private var placement: Placement? = null
+    private var placing: Job? = null
+    private var placingAt: Placement? = null
 
     // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
@@ -94,15 +107,23 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
 
     fun tick(excludeIds: IntCollection? = null) {
+        val next = findPlacement(excludeIds)
+        placement = next
+        if (next != null) {
+            mc.execute { follow(next) }
+        }
+    }
+
+    private fun findPlacement(excludeIds: IntCollection?): Placement? {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
-            return
+            return null
         }
 
         // if we don't have crystals, we don't need to run the method
-        getSlot() ?: return
+        getSlot() ?: return null
 
         val crosshair = if (ModuleCrystalAura.crosshairOnly) {
-            (mc.hitResult as? BlockHitResult)?.takeIf { it.type == HitResult.Type.BLOCK } ?: return
+            (mc.hitResult as? BlockHitResult)?.takeIf { it.type == HitResult.Type.BLOCK } ?: return null
         } else {
             null
         }
@@ -111,26 +132,26 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
         removeFromRenderer()
 
-        val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return
+        val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return null
 
         val (rotation, side) = if (crosshair != null) {
             RotationWithVector(RotationManager.serverRotation, crosshair.location) to crosshair.direction
         } else {
-            findRotation(targetPos) ?: return
+            findRotation(targetPos) ?: return null
         }
 
         if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
-            blockHitResult = raytraceBlock(
+            raytraceBlock(
                 getMaxRange().toDouble(),
                 rotation.rotation,
                 targetPos,
                 targetPos.stateOrEmpty
-            ) ?: return
+            ) ?: return null
         }
 
         addToRenderer()
         updatePrevious(rotation)
-        queuePlacing(rotation, targetPos, side)
+        return Placement(rotation.rotation, targetPos, side)
     }
 
     private fun findRotation(targetPos: BlockPos): Pair<RotationWithVector, Direction>? {
@@ -163,34 +184,44 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         )
     }
 
-    private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        val surface = Surface.of(targetPos, side, throughWalls = wallsRange > 0f)
-        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, surface, isFinished = { view ->
-            blockHitResult = raytraceBlock(
-                getMaxRange().toDouble(),
-                view,
-                targetPos,
-                targetPos.stateOrEmpty
-            ) ?: return@rotate false
+    /**
+     * Keeps one sequence placing the current [placement], started over when it moves to another block face.
+     */
+    private fun follow(next: Placement) {
+        val running = placingAt
+        if (running == null || running.pos != next.pos || running.side != next.side) {
+            placing?.cancel()
+            placingAt = next
+        }
 
-            return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
-        }, onFinished = {
+        placing = launchSequence(placing) { place(next.pos, next.side) }
+    }
+
+    private suspend fun place(pos: BlockPos, side: Direction) {
+        val surface = Surface.of(pos, side, throughWalls = wallsRange > 0f)
+        guarded {
+            val current by tracked { placement?.takeIf { it.pos == pos && it.side == side } }
+            val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
+                raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
+                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+            } ?: return@guarded
+
             if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                return@rotate
+                return@guarded
             }
 
             player.clickBlockWithSlot(
-                blockHitResult?.withDirection(side) ?: return@rotate,
-                getSlot() ?: return@rotate,
+                hit.withDirection(side),
+                getSlot() ?: return@guarded,
                 swingMode,
                 switchMode,
                 sequenced
             )
 
-            SubmoduleIdPredict.run(targetPos)
+            SubmoduleIdPredict.run(pos)
 
             chronometer.reset()
-        })
+        }
     }
 
     private fun updatePrevious(rotation: RotationWithVector) {

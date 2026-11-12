@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -39,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.ShulkerBullet
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
@@ -60,35 +63,50 @@ object ModuleProjectilePuncher : ClientModule(
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    /** The projectile the rotation going out this tick hits. */
-    private var punchable: Entity? = null
+    /** The projectile to punch, picked once per tick. */
+    private var projectile: Entity? = null
+
+    /** The rotation that hits [projectile]. */
+    private var spot: Rotation? = null
+    private var punching: Job? = null
 
     // Rotation
     private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
-        punchable = null
+        projectile = null
+        spot = null
     }
 
-    val tickHandler = handler<RotationUpdateEvent> {
-        punchable = null
+    val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        projectile = null
+        spot = null
 
         if (player.isSpectator) {
             return@handler
         }
 
         updateTarget()
+        if (projectile != null) {
+            punching = launchSequence(punching) { punch() }
+        }
     }
 
     /**
      * Punches the projectile once the rotation faces it.
      */
-    val repeatable = handler<GameTickEvent> {
-        val target = punchable ?: return@handler
+    private suspend fun punch() {
+        guarded {
+            val target by tracked { projectile }
+            val rotation by tracked { spot }
+            lookAt(Priority.IMPORTANT_FOR_USER_SAFETY, {
+                rotations.toRotationTarget(rotation, target, considerInventory = !ignoreOpenInventory)
+            }) { going -> isLookingAtEntity(player, target, going, range.toDouble(), 0.0) }
 
-        clicker.click {
-            attackEntity(target, swingMode)
-            true
+            clicker.click {
+                attackEntity(target, swingMode)
+                true
+            }
         }
     }
 
@@ -115,16 +133,8 @@ object ModuleProjectilePuncher : ClientModule(
             ) ?: continue
 
             // aim at target
-            RotationManager.setRotationTarget(
-                rotations.toRotationTarget(
-                    spot.rotation,
-                    entity,
-                    considerInventory = !ignoreOpenInventory,
-                    whenReady = Readiness.entity(entity, range.toDouble()) { punchable = entity },
-                ),
-                Priority.IMPORTANT_FOR_USER_SAFETY,
-                this@ModuleProjectilePuncher,
-            )
+            projectile = entity
+            this.spot = spot.rotation
             break
         }
     }
