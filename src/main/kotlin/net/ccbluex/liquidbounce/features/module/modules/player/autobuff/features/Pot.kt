@@ -145,6 +145,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         super.findBuffSlot()
     }
 
+    override fun isUsable(slot: HotbarItemSlot) =
+        if (trigger == Trigger.HELD) isValidPotion(slot.itemStack) else super.isUsable(slot)
+
     @Suppress("unused")
     private val buffedHandler = handler<GameTickEvent> {
         if (disableWhenBuffed && hasAllWantedEffects) {
