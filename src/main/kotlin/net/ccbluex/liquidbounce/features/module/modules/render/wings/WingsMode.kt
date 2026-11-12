@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings.WingsPosition
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
@@ -55,17 +55,17 @@ abstract class WingsMode(name: String) : Mode(name) {
     private val friends = tree(FriendsOptions())
 
     /**
-     * The layer the wings are drawn into as a silhouette. Textured wings have none and are drawn onto the scene.
+     * How the wings reach the screen, null for wings that are always drawn plain.
      */
-    protected open val shader: ShaderLayer? get() = null
+    protected open val render: ModeValueGroup<Rendering>? get() = null
 
     protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val shader = shader
-        if (shader != null) {
-            event.renderEnvironment(shader) { drawAllWings(event) }
+        val render = render
+        if (render != null) {
+            event.renderEnvironment(render) { drawAllWings(event) }
         } else {
             event.renderEnvironment { drawAllWings(event) }
         }

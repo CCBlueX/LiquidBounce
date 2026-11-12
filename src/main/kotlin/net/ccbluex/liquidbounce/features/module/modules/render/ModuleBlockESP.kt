@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.translate
@@ -215,6 +216,11 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     object GlowMode : Mode("Glow") {
+
+        init {
+            OutlineGlow.styles(this)
+        }
+
         private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {

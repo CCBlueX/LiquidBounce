@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.minecraft.util.Mth
 import kotlin.math.abs
@@ -51,8 +49,6 @@ internal object HatsFlower : HatsMode("Flower") {
         tree(HatFlowerSettings)
         tree(colors)
     }
-
-    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         val rotAngle = getRotationAngle(HatFlowerSettings.spinSpeed)
@@ -81,12 +77,7 @@ internal object HatsFlower : HatsMode("Flower") {
                         HatFlowerSettings.sharpness
                     )
 
-                    val color = if (!isHurt) {
-                        colors
-                            .getCurrentStepColor(outerCurAngleFlower)
-                    } else {
-                        Color4b(255, 0, 0, colors.firstColor.a)
-                    }
+                    val color = shapeColor(colors.getColor(outerCurAngleFlower, isHurt))
 
                     // Inner
                     for (innerI in 0 until innerSegments) {

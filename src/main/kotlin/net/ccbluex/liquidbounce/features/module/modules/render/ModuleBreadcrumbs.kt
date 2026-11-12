@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -55,7 +55,7 @@ import java.util.IdentityHashMap
 object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, aliases = listOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
-    private val color by color("Color", Color4b.LIQUID_BOUNCE)
+    private val color by color("Color", Color4b.LIQUID_BOUNCE.alpha(120))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
@@ -68,8 +68,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         tree(TemporaryValueGroup)
     }
 
-    private val shader = tree(ShaderLayer())
-    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
+    private val render = rendering()
 
     private val trails = IdentityHashMap<Entity, Trail>()
     private val lastPositions = IdentityHashMap<Entity, Vec3>()
@@ -86,10 +85,10 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val color = if (colorRainbow) rainbow() else color
 
         val time = System.currentTimeMillis()
-        val colorF = color.toVector4f()
         val lines = height == 0f
 
-        event.renderEnvironment(if (lines) lineShader else shader) {
+        event.renderEnvironment(render) {
+            val colorF = shapeColor(color).toVector4f()
             drawCustomMesh(if (lines) {
                 ClientRenderPipelines.lines(noDepthTest = true)
             } else {

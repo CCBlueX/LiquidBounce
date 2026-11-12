@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
@@ -99,7 +99,7 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     private val lineColor by color("Line", Color4b.LIQUID_BOUNCE)
 
-    private val shader = tree(ShaderLayer(solid = true))
+    private val render = rendering(solid = true)
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
@@ -208,9 +208,9 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (lineColor.a > 0) {
-            event.renderEnvironment(shader) {
+            event.renderEnvironment(render) {
                 drawLineStrip(
-                    argb = lineColor.argb,
+                    argb = shapeColor(lineColor).argb,
                     positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),
                 )
             }

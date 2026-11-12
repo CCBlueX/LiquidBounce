@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.drawLinesWithWidth
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -61,7 +61,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
-    private val shader = tree(ShaderLayer(solid = true))
+    private val render = rendering(solid = true)
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -76,7 +76,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             return@handler
         }
 
-        event.renderEnvironment(shader) {
+        event.renderEnvironment(render) {
             val eyeVector = Vec3f.eyeVector(camera)
 
             val maxDistanceSq = maximumDistance.sq()
@@ -86,11 +86,13 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     continue
                 }
 
-                val color = if (FriendManager.isFriend(entity)) {
-                    Color4b.BLUE
-                } else {
-                    EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
-                }
+                val color = shapeColor(
+                    if (FriendManager.isFriend(entity)) {
+                        Color4b.BLUE
+                    } else {
+                        EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
+                    }
+                )
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
                 val topPos = pos.add(0f, entity.bbHeight, 0f)

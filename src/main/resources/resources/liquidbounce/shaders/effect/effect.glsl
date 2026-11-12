@@ -29,7 +29,9 @@ ivec2 pixelAt(vec2 uv, ivec2 size) {
 vec3 packSilhouette(vec4 silhouette) {
     // Translucent geometry is blended into the target, which leaves its color premultiplied
     ivec3 color = ivec3(clamp(silhouette.rgb / silhouette.a, 0.0, 1.0) * vec3(31.0, 63.0, 31.0) + 0.5);
-    return vec3(vec2((color.r << 3) | (color.g >> 3), ((color.g & 7) << 5) | color.b) / 255.0, silhouette.a);
+    // Antialiased edges of thin shapes only half cover their pixels and would weaken the effect drawn from them
+    float strength = min(silhouette.a * 2.0, 1.0);
+    return vec3(vec2((color.r << 3) | (color.g >> 3), ((color.g & 7) << 5) | color.b) / 255.0, strength);
 }
 
 vec3 fieldColor(vec4 texel) {

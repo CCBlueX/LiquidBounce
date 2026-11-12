@@ -19,27 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.liquidbounce.render.effect.ShaderStyle
-import net.ccbluex.liquidbounce.render.effect.StyleChain
-import net.ccbluex.liquidbounce.render.effect.VanillaStyle
-import net.ccbluex.liquidbounce.render.effect.postStyles
-import net.minecraft.client.renderer.LevelTargetBundle
-import net.minecraft.client.renderer.PostChain
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 
 object EspGlowMode : EspMode("Glow", requiresTrueSight = true) {
 
-    val styles = modes<ShaderStyle>("Style", SMOOTH) {
-        arrayOf(VanillaStyle(it), *postStyles(it).toTypedArray())
-    }
-
-    private val chain = StyleChain(styles, LevelTargetBundle.ENTITY_OUTLINE_TARGET_ID)
-
-    /**
-     * The chain of the chosen style in place of the game's entity outline post chain.
-     */
-    @JvmStatic
-    fun replace(original: PostChain?): PostChain? = if (running) chain.get() ?: original else original
-
-    private const val SMOOTH = 1
+    val styles = OutlineGlow.styles(this)
 
 }

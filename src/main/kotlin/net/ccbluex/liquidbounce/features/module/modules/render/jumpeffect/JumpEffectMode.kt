@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.circles
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
@@ -48,17 +48,17 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
     protected val canBeCovered by boolean("CanBeCovered", false)
 
     /**
-     * The layer the effect is drawn into as a silhouette. Textured effects have none and are drawn onto the scene.
+     * How the effect reaches the screen, null for effects that are always drawn plain.
      */
-    protected open val shader: ShaderLayer? get() = null
+    protected open val render: ModeValueGroup<Rendering>? get() = null
 
     protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val shader = shader
-        if (shader != null) {
-            event.renderEnvironment(shader) { drawJumpEffects(event) }
+        val render = render
+        if (render != null) {
+            event.renderEnvironment(render) { drawJumpEffects(event) }
         } else {
             event.renderEnvironment { drawJumpEffects(event) }
         }

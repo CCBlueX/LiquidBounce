@@ -26,10 +26,11 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -85,10 +86,13 @@ inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() ->
 }
 
 /**
- * Draws silhouettes for [layer], which its shader style turns into the picture on screen.
+ * Draws the way the chosen [Rendering] says.
  */
-inline fun WorldRenderEvent.renderEnvironment(layer: ShaderLayer, draw: WorldRenderEnvironment.() -> Unit) {
-    layer.environment(this).draw()
+inline fun WorldRenderEvent.renderEnvironment(
+    rendering: ModeValueGroup<Rendering>,
+    draw: WorldRenderEnvironment.() -> Unit,
+) {
+    rendering.activeMode.environment(this).draw()
 }
 
 @AddonApi

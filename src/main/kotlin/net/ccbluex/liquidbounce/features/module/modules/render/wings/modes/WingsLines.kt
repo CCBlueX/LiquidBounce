@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.wings.WingsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.withPush
@@ -39,10 +39,10 @@ object WingsLines : WingsMode("Lines") {
     val angles by intRange("Angles", 10..37, 1..90)
     val color by color("Color", Color4b.LIQUID_BOUNCE)
 
-    override val shader = tree(ShaderLayer(solid = true))
+    override val render = rendering(solid = true)
 
     override fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float) {
-        val currentColor = if (isHurt) Color4b.RED.alpha(color.a) else color
+        val currentColor = shapeColor(if (isHurt) Color4b.RED.alpha(color.a) else color)
 
         fun drawQuadSegment(
             m: Matrix4f,
