@@ -66,7 +66,7 @@ object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
      *
      * https://github.com/GrimAnticheat/Grim/issues/1296
      */
-    object AbortAnother : Mode("AbortAnother") {
+    object AbortAnother : Mode("Grim-2.3.48", aliases = listOf("AbortAnother")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modeChoice

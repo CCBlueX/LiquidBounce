@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -63,14 +63,14 @@ class InterpolationAngleSmooth(
         targetRotation: Rotation
     ): Vec2 {
         val (yawDiff, pitchDiff) = currentRotation.rotationDeltaTo(targetRotation)
-        ModuleDebug.debugParameter(this, "Yaw Diff", yawDiff)
-        ModuleDebug.debugParameter(this, "Pitch Diff", pitchDiff)
+        debugParameter("Yaw Diff") { yawDiff }
+        debugParameter("Pitch Diff") { pitchDiff }
 
         val directionChange = RotationManager.previousRotationTarget.takeIf { rotationTarget != null }?.run {
             normalizeDirectionChange(rotation.rotationDeltaLengthTo(targetRotation)) *
                 (directionChangeFactor.random().toFloat() / 100.0f)
         } ?: 0f
-        ModuleDebug.debugParameter(this, "Direction Change", directionChange)
+        debugParameter("Direction Change") { directionChange }
 
         val horizontalSpeed = if (rotationTarget != null) {
             horizontalSpeed.random()
@@ -84,8 +84,8 @@ class InterpolationAngleSmooth(
             verticalSpeed.first
         }.toFloat() / 100.0f
 
-        ModuleDebug.debugParameter(this, "Horizontal Speed", horizontalSpeed)
-        ModuleDebug.debugParameter(this, "Vertical Speed", verticalSpeed)
+        debugParameter("Horizontal Speed") { horizontalSpeed }
+        debugParameter("Vertical Speed") { verticalSpeed }
 
         val horizontalFactor = calculateFactor("Yaw", abs(yawDiff), horizontalSpeed.coerceIn(0f, 1f),
             directionChange)
@@ -100,19 +100,19 @@ class InterpolationAngleSmooth(
     private fun calculateFactor(name: String, rotationDifference: Float, turnSpeed: Float,
                                 directionChange: Float): Float {
         val t = normalizeDirectionChange(rotationDifference)
-        ModuleDebug.debugParameter(this, "$name T", t)
+        debugParameter("$name T") { t }
 
         val bezierSpeed = bezier(0.05f, 1f, 1f - t)
         val sigmoidSpeed = sigmoid(t)
 
-        ModuleDebug.debugParameter(this, "$name Bezier", bezierSpeed)
-        ModuleDebug.debugParameter(this, "$name Sigmoid", sigmoidSpeed)
+        debugParameter("$name Bezier") { bezierSpeed }
+        debugParameter("$name Sigmoid") { sigmoidSpeed }
 
         return if (t > midpoint) {
-            ModuleDebug.debugParameter(this, "$name R", "Bezier")
+            debugParameter("$name R") { "Bezier" }
             bezierSpeed * turnSpeed
         } else {
-            ModuleDebug.debugParameter(this, "$name R", "Sigmoid")
+            debugParameter("$name R") { "Sigmoid" }
             sigmoidSpeed * (turnSpeed + directionChange).coerceIn(0f, 1f)
         }
     }

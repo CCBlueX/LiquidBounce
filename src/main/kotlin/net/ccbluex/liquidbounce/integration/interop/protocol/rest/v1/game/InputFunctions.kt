@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -68,7 +69,7 @@ private fun Route.isTyping() = post("/typing") {
     val typingRequest = call.receive<TypingState>()
     isTyping = typingRequest.typing
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/typing

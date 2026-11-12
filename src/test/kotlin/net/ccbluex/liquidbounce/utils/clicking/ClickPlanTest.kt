@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import java.util.Random
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -177,6 +178,48 @@ class ClickPlanTest {
         }
 
         assertTrue(plan.comboMs < 250, "combo is ${plan.comboMs} ms")
+    }
+
+    @Test
+    fun `player presses take the place of planned ones`() {
+        val ticks = 20 * 60 * 10
+        val alone = humanPlan(11..14).run(ticks).sum()
+
+        val plan = humanPlan(11..14)
+        val player = Random(99L)
+        var nextPress = 75L
+        var playerPresses = 0
+        val planPresses = plan.run(ticks) { tick ->
+            // Arrive before the next tick, like input between two ticks
+            while (nextPress <= (tick + 1) * ClickPlan.TICK_MS) {
+                plan.pressedByPlayer()
+                playerPresses++
+                nextPress += 120 + player.nextInt(61)
+            }
+        }.sum()
+
+        val presses = planPresses + playerPresses
+        assertTrue(playerPresses > ticks / 4, "$playerPresses player presses")
+        assertTrue(abs(presses - alone) <= 2, "$presses presses, $alone alone")
+    }
+
+    @Test
+    fun `a plan following another adds no presses`() {
+        val ticks = 20 * 60 * 10
+        val alone = humanPlan(11..14, seed = 1L).run(ticks).sum()
+
+        val leader = humanPlan(11..14, seed = 1L)
+        val follower = humanPlan(11..14, seed = 2L)
+        var presses = 0
+        repeat(ticks) { tick ->
+            val now = tick * ClickPlan.TICK_MS
+            leader.tick(now)
+            follower.tick(now)
+            presses += leader.consume({ true }) { follower.pressedBy(leader, now); true }
+            presses += follower.consume({ true }) { leader.pressedBy(follower, now); true }
+        }
+
+        assertTrue(abs(presses - alone) <= 2, "$presses presses, $alone alone")
     }
 
 }

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.math.multiply
  * Velocity for AAC4.4.2, pretty sure, it works on other versions
  */
 
-internal object VelocityAAC442 : VelocityMode("AAC4.4.2") {
+internal object VelocityAAC442 : VelocityMode("AAC-4.4.2", aliases = listOf("AAC4.4.2")) {
 
     private val reduce by float("Reduce", 0.62f, 0f..1f)
 

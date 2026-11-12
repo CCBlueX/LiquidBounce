@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.player.AbstractClientPlayer
 
 /**
@@ -124,7 +123,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
                 // Remove if entity is out of range
                 val entity = world.getEntity(entityId) as? AbstractClientPlayer ?: return@removeIf true
 
-                if (entity.isRemoved || entity.distanceToSqr(player) > outOfRange.sq()) {
+                if (entity.isRemoved || !entity.closerThan(player, outOfRange.toDouble())) {
                     notification(
                         "TargetLock",
                         message("outOfRange", entity.gameProfile.name),

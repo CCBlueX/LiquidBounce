@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce-gametest-harness",
+  "version": "${version}",
+  "name": "LiquidBounce Game Test Harness",
+  "description": "Game tests of LiquidBounce and its add-ons on the game test server.",
+  "authors": [
+    "CCBlueX"
+  ],
+  "contact": {
+    "homepage": "https://liquidbounce.net/",
+    "sources": "https://github.com/CCBlueX/LiquidBounce/"
+  },
+  "license": "GNU General Public License v3.0",
+  "environment": "client",
+  "depends": {
+    "liquidbounce": "*",
+    "gametest-harness": "*"
+  }
+}

@@ -130,12 +130,12 @@ data class Rotation @JvmOverloads constructor(
     /**
      * Calculates what angles would need to be added to arrive at [other].
      *
-     * Wrapped 360°
+     * Yaw takes the shorter way round. Pitch does not wrap: a turn from -90° to 90° is 180° down, not 180° up.
      */
     fun rotationDeltaTo(other: Rotation): RotationDelta {
         return RotationDelta(
             angleDifference(other.yaw, this.yaw),
-            angleDifference(other.pitch, this.pitch)
+            other.pitch - this.pitch
         )
     }
 

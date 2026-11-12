@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.io.createFont
@@ -87,16 +88,19 @@ object FontManager {
     }
 
     /**
-     * The active font renderer that all text rendering will be based on.
-     *
-     * TODO: Replaces this with Module-based Font Selection
+     * The active font renderer that all text rendering will be based on, in the font the theme names.
      */
     @JvmStatic
     val FONT_RENDERER
-        get() = defaultFontFace.renderer
+        get() = glyphManager.primaryFace.renderer
 
-    private val defaultFontFace
-        get() = fontFace("Inter Regular") ?: COMMON_FONT
+    /**
+     * The active theme's `nativeFont`, else the included theme's, else a system font.
+     */
+    private val themeFontFace: FontFace
+        get() = listOfNotNull(ThemeManager.theme, ThemeManager.includedTheme)
+            .firstNotNullOfOrNull { theme -> theme.metadata.nativeFont?.let(::fontFace) }
+            ?: COMMON_FONT
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -105,6 +109,10 @@ object FontManager {
     const val DEFAULT_FONT_SIZE: Float = 43f
 
     private var _glyphManager: FontGlyphPageManager? = null
+
+    /** False until the client's start has created the glyph manager, and for good when that failed. */
+    internal val isLoaded get() = _glyphManager != null
+
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */
@@ -120,9 +128,19 @@ object FontManager {
         _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
             registeredFonts = ObjectOpenHashSet(fontFaces.values),
-            primaryFace = defaultFontFace,
+            primaryFace = themeFontFace,
             fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
+    }
+
+    /**
+     * Rebuilds the glyph pages when the active theme draws with another font.
+     */
+    internal fun updateThemeFont() {
+        val glyphManager = _glyphManager ?: return
+        if (glyphManager.primaryFace !== themeFontFace) {
+            createGlyphManager()
+        }
     }
 
     internal fun closeGlyphManager() {

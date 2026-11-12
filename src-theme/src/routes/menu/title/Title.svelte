@@ -6,7 +6,7 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
     import {
-        browse,
+        openLink,
         exitClient,
         getClientUpdate,
         openScreen,
@@ -17,6 +17,7 @@
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
     import {isAnniversary} from "../../../util/utils";
+    import {escapeLayer} from "../../../integration/escape";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -49,6 +50,9 @@
             }, 750);
         }
     }
+
+    const layer = escapeLayer(toggleButtons);
+    $: layer.setOpen(clientButtonsShown);
 </script>
 
 <div class="title-screen">
@@ -88,13 +92,13 @@
 
         <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
-                <IconButton title="Forum" icon="nodebb" on:click={() => browse("MAINTAINER_FORUM")}/>
-                <IconButton title="GitHub" icon="github" on:click={() => browse("MAINTAINER_GITHUB")}/>
-                <IconButton title="Discord" icon="discord" on:click={() => browse("MAINTAINER_DISCORD")}/>
-                <IconButton title="Twitter" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
-                <IconButton title="YouTube" icon="youtube" on:click={() => browse("MAINTAINER_YOUTUBE")}/>
+                <IconButton title="Forum" icon="nodebb" on:click={() => openLink("MAINTAINER_FORUM")}/>
+                <IconButton title="GitHub" icon="github" on:click={() => openLink("MAINTAINER_GITHUB")}/>
+                <IconButton title="Discord" icon="discord" on:click={() => openLink("MAINTAINER_DISCORD")}/>
+                <IconButton title="Twitter" icon="twitter" on:click={() => openLink("MAINTAINER_TWITTER")}/>
+                <IconButton title="YouTube" icon="youtube" on:click={() => openLink("MAINTAINER_YOUTUBE")}/>
                 <IconTextButton title="liquidbounce.net" icon="icon-liquidbounce.net.svg"
-                                on:click={() => browse("CLIENT_WEBSITE")}/>
+                                on:click={() => openLink("CLIENT_WEBSITE")}/>
             </ButtonContainer>
         </div>
     </div>

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
@@ -104,6 +105,10 @@ object ModuleAutoBuff : ClientModule(
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", false)
+
+    internal val isInventoryBlocking: Boolean
+        get() = !ignoreOpenInventory && InventoryManager.isInventoryOpen
 
     internal val activeFeatures
         get() = features.filter { it.enabled }
