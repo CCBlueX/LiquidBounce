@@ -27,6 +27,7 @@ import com.viaversion.viaversion.protocols.v1_16_1to1_16_2.packet.ServerboundPac
 import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.packet.ServerboundPackets1_21_4;
 import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
+import net.minecraft.world.inventory.ContainerInput;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -44,6 +45,9 @@ public abstract class MixinPacketWrapper {
 
     @Shadow
     public abstract <T> T get(Type<T> type, int index) throws InformativeException;
+
+    @Shadow
+    public abstract <T> void set(Type<T> type, int index, @Nullable T value) throws InformativeException;
 
     @SuppressWarnings("rawtypes")
     @Inject(method = "scheduleSendToServer", at = @At("HEAD"), cancellable = true)
@@ -71,6 +75,19 @@ public abstract class MixinPacketWrapper {
             // Note: this doesn't cover all handlers of PacketEvent
             InventoryManager.onClickOccurs();
             InventoryManager.INSTANCE.setInventoryOpenServerSide(true);
+        }
+
+        /*
+          Up to 1.16.4 the server compares the clicked item with the result of its own click and resyncs the whole
+          container on a mismatch, ignoring further clicks until the client confirms. Its click returns nothing for
+          SWAP, CLONE and PICKUP_ALL, but ViaFabricPlus sends the slot item for them.
+         */
+        if (packetType == ServerboundPackets1_16_2.CONTAINER_CLICK) {
+            int mode = this.get(Types.VAR_INT, 0);
+            if (mode == ContainerInput.SWAP.ordinal() || mode == ContainerInput.CLONE.ordinal()
+                || mode == ContainerInput.PICKUP_ALL.ordinal()) {
+                this.set(Types.ITEM1_13_2, 0, null);
+            }
         }
     }
 
