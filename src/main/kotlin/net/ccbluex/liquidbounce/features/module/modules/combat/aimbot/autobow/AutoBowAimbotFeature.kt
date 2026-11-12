@@ -84,11 +84,13 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             rotation != null
         } ?: return@handler
 
+        val aim = rotation!!
         RotationManager.setRotationTarget(
-            rotation!!,
+            aim,
             priority = Priority.IMPORTANT_FOR_USAGE_1,
             provider = ModuleAutoBow,
-            valueGroup = rotations
+            valueGroup = rotations,
+            whenReady = AutoBowAutoShootFeature.whenAimedAt(aim),
         )
     }
 

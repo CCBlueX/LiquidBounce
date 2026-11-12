@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -97,6 +98,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private var ticks = 0
     private var restUntil = 0
 
+    /** Whether the rotation going out this tick hits the target from where the server has the player. */
+    private var facing = false
+
     /** Targets without a route, by entity id, until the tick they may be tried again. */
     private val unreachable = Int2IntOpenHashMap()
 
@@ -143,6 +147,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        facing = false
         val engagement = engagement ?: return@handler
         val feet = when (phase) {
             Phase.READY, Phase.APPROACH -> engagement.route?.destination
@@ -156,7 +161,13 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             ?: Rotation.lookingAt(box.center, eyes)
 
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation, engagement.target),
+            rotations.toRotationTarget(
+                rotation,
+                engagement.target,
+                whenReady = Readiness({ going -> going.takeIf { isFacing(eyes, engagement.target, it) } }) {
+                    facing = true
+                },
+            ),
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleTpAura
         )
@@ -266,7 +277,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.engaged = true
-        if (clicker.isClickTick && isFacing(player.getEyePositionAt(feet), target) &&
+        if (clicker.isClickTick && facing &&
             !player.cannotAttackWithItem(player.mainHandItem, 0)
         ) {
             clicker.click {
@@ -330,14 +341,14 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private fun isInReach(feet: Vec3, target: LivingEntity) =
         target.boundingBox.distanceToSqr(player.getEyePositionAt(feet)) <= Mth.square(reach)
 
-    /** Whether the rotation the server has hits [target] from [eyes]. */
-    private fun isFacing(eyes: Vec3, target: LivingEntity): Boolean {
+    /** Whether [rotation] hits [target] from [eyes]. */
+    private fun isFacing(eyes: Vec3, target: LivingEntity, rotation: Rotation): Boolean {
         val box = target.boundingBox.inflate(target.pickRadius.toDouble())
         if (box.contains(eyes)) {
             return true
         }
 
-        val end = eyes.fma(reach + REACH_MARGIN, RotationManager.serverRotation.directionVector)
+        val end = eyes.fma(reach + REACH_MARGIN, rotation.directionVector)
         val hit = box.clip(eyes, end).orElse(null) ?: return false
         return hasLineOfSight(eyes, hit)
     }

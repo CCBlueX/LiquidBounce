@@ -22,9 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
@@ -59,6 +62,30 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private val usePrechargedCrossbow by boolean("UsePrechargedCrossbow", false)
 
     private var currentChargeRandom: Int? = null
+
+    /**
+     * Whether the rotation going out this tick is on target. A crossbow shoots with it.
+     */
+    private var aimed = false
+
+    /**
+     * Whether the rotation that went out last tick was on target. A bow or trident shoots with it, since the release
+     * reaches the server before this tick's rotation.
+     */
+    private var aimedLastTick = false
+
+    @Suppress("unused")
+    private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        aimedLastTick = aimed
+        aimed = false
+    }
+
+    /**
+     * Tells this feature once the rotation going out is within [aimThreshold] of [rotation].
+     */
+    fun whenAimedAt(rotation: Rotation) = Readiness({ going ->
+        going.takeIf { it.directionAngleTo(rotation) <= aimThreshold }
+    }) { aimed = true }
 
     private fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
@@ -131,13 +158,8 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 return@handler
             }
 
-            val targetRotation = RotationManager.activeRotationTarget ?: return@handler
-
-            val aimDifference = RotationManager.serverRotation.directionAngleTo(
-                targetRotation.rotation(otherwise = RotationManager.serverRotation)
-            )
-
-            if (aimDifference > aimThreshold) {
+            val onTarget = if (usingItemStack.item is CrossbowItem) aimed else aimedLastTick
+            if (!onTarget) {
                 return@handler
             }
         }

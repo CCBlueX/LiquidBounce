@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -140,8 +141,15 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         } ?: Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD)
     }
 
+    /**
+     * Whether the rotation going out this tick points within [aimOffThreshold] of the target.
+     */
+    private var aimed = false
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        aimed = false
+
         if (!requirementsMet) {
             targetTracker.reset()
             return@handler
@@ -157,7 +165,13 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         val rotation = gravityType.apply(target) ?: return@handler
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation, considerInventory = false),
+            rotations.toRotationTarget(
+                rotation,
+                considerInventory = false,
+                whenReady = Readiness({ going -> going.takeIf { it.directionAngleTo(rotation) <= aimOffThreshold } }) {
+                    aimed = true
+                },
+            ),
             Priority.IMPORTANT_FOR_USAGE_1,
             this
         )
@@ -175,9 +189,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         val target = targetTracker.target ?: return@tickHandler
 
-        val rotation = gravityType.apply(target) ?: return@tickHandler
-        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation)
-        if (rotationDifference > aimOffThreshold) return@tickHandler
+        if (!aimed) return@tickHandler
 
         // If the player used rod manually, skip use
         if (fishingBobberEntity == null) {

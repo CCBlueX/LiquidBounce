@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.SNAP
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
@@ -51,6 +50,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -74,6 +74,7 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.EntityHitResult
 
 /**
  * KillAura module
@@ -113,6 +114,16 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      */
     internal var waitTicks = 0
 
+    /**
+     * Whether this tick's rotation request tells [readyHit], so nothing else has to check the aim.
+     */
+    private var awaitsReadiness = false
+
+    /**
+     * What the rotation going out this tick attacks, once the rotation system finds it ready.
+     */
+    private var readyHit: EntityHitResult? = null
+
     init {
         tree(KillAuraAutoBlock)
         tree(TargetRenderer(this) {
@@ -142,6 +153,9 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         if (waitTicks > 0) {
             waitTicks--
         }
+
+        awaitsReadiness = false
+        readyHit = null
 
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.gui.screen() is ContainerScreen
@@ -193,30 +207,26 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return@tickHandler
         }
 
-        val rotation = (if (rotations.rotationTiming == ON_TICK) {
-            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation
+        val onTickRotation = if (rotations.rotationTiming == ON_TICK) {
+            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation?.normalize()
         } else {
             null
-        } ?: RotationManager.currentRotation ?: player.rotation).normalize()
+        }
+        val rotation = onTickRotation ?: (RotationManager.currentRotation ?: player.rotation).normalize()
 
-        val crosshairTarget = when {
-            raycast != TRACE_NONE -> {
-                findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
-                    when (raycast) {
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                        else -> false
-                    }
-                })?.entity ?: target
-            }
-            else -> target
+        val hit = when {
+            onTickRotation != null -> attackHit(target, onTickRotation)
+            awaitsReadiness -> readyHit
+            // No request this tick, e.g. Snap waiting for the clicker
+            else -> attackHit(target, rotation)
         }
 
-        if (crosshairTarget is LivingEntity && crosshairTarget.shouldBeAttacked() && crosshairTarget != target) {
-            targetTracker.target = crosshairTarget
+        val attacked = hit?.entity ?: target
+        if (attacked is LivingEntity && attacked.shouldBeAttacked() && attacked != target) {
+            targetTracker.target = attacked
         }
 
-        attackTarget(crosshairTarget, rotation)
+        attackTarget(attacked, hit, rotation)
     }
 
     val shouldBlockSprinting
@@ -232,20 +242,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private fun attackTarget(target: Entity, rotation: Rotation) {
+    private fun attackTarget(target: Entity, attackHitResult: EntityHitResult?, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
         debugParameter("Rotation") { rotation }
         debugParameter("Target") { target }
-
-        val attackHitResult = isLookingAtEntity(
-            toEntity = target,
-            rotation = rotation,
-            range = range.interactionRange.toDouble(),
-            throughWallsRange = range.interactionThroughWallsRange.toDouble()
-        )
-
         debugParameter("Target Hit Result") { attackHitResult?.location }
 
         val isInRange = ModuleElytraTarget.canIgnoreKillAuraRotations ||
@@ -370,16 +372,37 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             }
         }
 
+        awaitsReadiness = true
         RotationManager.setRotationTarget(
             rotations.toRotationTarget(
                 rotation,
                 entity,
-                considerInventory = !ignoreOpenInventory
+                considerInventory = !ignoreOpenInventory,
+                whenReady = Readiness({ going -> attackHit(entity, going) }) { hit -> readyHit = hit },
             ),
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleKillAura
         )
         return true
+    }
+
+    /**
+     * What an attack with [rotation] hits: the entity in the crosshair as [raycast] picks it, else [target].
+     */
+    private fun attackHit(target: Entity, rotation: Rotation): EntityHitResult? {
+        val entity = when (raycast) {
+            TRACE_NONE -> null
+            else -> findEntityInCrosshair(range.interactionRange.toDouble(), rotation) {
+                raycast == TRACE_ALL || it.shouldBeAttacked()
+            }?.entity
+        } ?: target
+
+        return isLookingAtEntity(
+            toEntity = entity,
+            rotation = rotation,
+            range = range.interactionRange.toDouble(),
+            throughWallsRange = range.interactionThroughWallsRange.toDouble()
+        )
     }
 
     /**
