@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.atomicfu.atomic
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -230,19 +229,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         @Suppress("unused")
-        private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            val dirty = event.renderTarget.drawGenericBlockESP(
-                renderState,
-                ClientRenderPipelines.outlineQuads(useColor),
-                distanceFade,
-            ) {
-                getDynamicTransformsUniform(
-                    colorModulatorAlpha = 255,
-                )
-            }
-
-            if (dirty) {
-                event.markDirty()
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            OutlineGlow.drawMeshes(GlowMode, event.renderTarget) { target ->
+                target.drawGenericBlockESP(renderState, ClientRenderPipelines.outlineQuads(useColor), distanceFade) {
+                    getDynamicTransformsUniform(
+                        modelView = event.poseStack.last().pose(),
+                        colorModulatorAlpha = 255,
+                    )
+                }
             }
         }
 

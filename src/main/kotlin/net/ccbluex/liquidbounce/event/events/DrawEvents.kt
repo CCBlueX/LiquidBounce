@@ -86,29 +86,6 @@ class WorldFeatureSubmitEvent(
     val submitNodeStorage: SubmitNodeStorage,
 ) : Event()
 
-/**
- * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
- * in order to do so.
- *
- * Note: After writing to the outline framebuffer [markDirty] must be called.
- */
-@Tag("drawOutlines")
-class DrawOutlinesEvent(
-    val renderTarget: RenderTarget,
-    val pose: PoseStack,
-    val partialTicks: Float,
-) : Event() {
-    var dirtyFlag: Boolean = false
-        private set
-
-    /**
-     * Called when the framebuffer was edited.
-     */
-    fun markDirty() {
-        this.dirtyFlag = true
-    }
-}
-
 @AddonApi
 @Tag("overlayRender")
 class OverlayRenderEvent(
