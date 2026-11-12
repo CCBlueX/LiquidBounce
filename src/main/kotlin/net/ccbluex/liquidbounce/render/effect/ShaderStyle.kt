@@ -41,18 +41,20 @@ class VanillaStyle(parent: ModeValueGroup<*>) : ShaderStyle("Vanilla", parent)
  * A style drawn by a [StyleChain] from the distance of every pixel to the silhouettes in a target.
  *
  * @param fill opacity inside the silhouettes
+ * @param usesView the shader reads the `EffectView` block to keep a pattern in place in the world
  */
 sealed class PostStyle(
     name: String,
     parent: ModeValueGroup<*>,
     shader: Identifier,
     fill: Float,
+    val usesView: Boolean = false,
 ) : ShaderStyle(name, parent) {
 
     private val opacity by float("Opacity", 1f, 0f..1f)
     protected val fill by float("Fill", fill, 0f..1f)
 
-    val pipeline = StyleChain.pipeline(shader)
+    val pipeline = StyleChain.pipeline(shader, usesView)
 
     /**
      * How far from the silhouettes the style draws, in pixels.
@@ -218,7 +220,7 @@ class ChromaticStyle(parent: ModeValueGroup<*>, fill: Float?) :
 }
 
 class AuraStyle(parent: ModeValueGroup<*>, fill: Float?) :
-    PostStyle("Aura", parent, ClientShaders.Fragment.EffectAura, fill ?: 0.1f) {
+    PostStyle("Aura", parent, ClientShaders.Fragment.EffectAura, fill ?: 0.1f, usesView = true) {
 
     private val radius by float("Radius", 6f, 2f..32f, "px")
     private val height by float("Height", 16f, 0f..48f, "px")

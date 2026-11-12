@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.effect
 
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
@@ -27,14 +28,19 @@ import com.mojang.renderpearl.api.pipeline.UniformType
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.render.ClientShaders
+import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.PostChain
 import net.minecraft.client.renderer.PostChainConfig
 import net.minecraft.client.renderer.PostPass
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.UniformValue
 import net.minecraft.resources.Identifier
+import org.joml.Vector4f
 import java.util.Optional
+import kotlin.math.tan
 
 /**
  * Post chain drawing the active [PostStyle] of [styles] over the silhouettes in the target [target].
@@ -49,6 +55,7 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
 
     private var chain: PostChain? = null
     private var chainStyle: PostStyle? = null
+    private var view: GpuBufferSlice? = null
     private var dirty = true
 
     init {
@@ -75,6 +82,7 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
             chainStyle = style
             dirty = false
         }
+        view?.let(::writeView)
         return chain
     }
 
@@ -82,16 +90,42 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
         chain?.close()
         chain = null
         chainStyle = null
+        view = null
+    }
+
+    /**
+     * Camera axes and the tangents of half the field of view, see `EffectView` in `effect.glsl`.
+     */
+    private fun writeView(view: GpuBufferSlice) {
+        val camera = mc.gameRenderer.mainCamera()
+        val tangent = tan(camera.fov.toRadians() / 2f)
+        val left = camera.leftVector()
+        view.writeStd140 {
+            putVec4(-left.x(), -left.y(), -left.z(), 0f)
+            putVec4(Vector4f(camera.upVector(), 0f))
+            putVec4(Vector4f(camera.forwardVector(), 0f))
+            putVec4(tangent * mc.window.width / mc.window.height, tangent, 0f, 0f)
+        }
     }
 
     private fun build(style: PostStyle): PostChain {
         val uniforms = mapOf(UNIFORMS to style.uniforms())
+        val stylePass = pass(style.pipeline, field, target, uniforms)
+        view = if (style.usesView) {
+            // The pass closes the buffer with its own
+            ClientUniformDefine.EFFECT_VIEW.createSingleBuffer().also {
+                stylePass.customUniforms[ClientUniformDefine.EFFECT_VIEW.uboName] = it.buffer
+            }
+        } else {
+            null
+        }
+
         return PostChain(
             id,
             listOf(
                 pass(FieldRows, target, rows, uniforms),
                 pass(FieldColumns, rows, field, uniforms),
-                pass(style.pipeline, field, target, uniforms),
+                stylePass,
             ),
             mapOf(rows to screenTarget, field to screenTarget),
             setOf(target),
@@ -126,9 +160,10 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
         }
 
         /**
-         * A pass reading `InSampler` and the `EffectData` block, like [PostChain.load] builds them.
+         * A pass reading `InSampler` and the `EffectData` block, like [PostChain.load] builds them, with
+         * [usesView] the `EffectView` block as well.
          */
-        fun pipeline(shader: Identifier): RenderPipeline = pipelines.getOrPut(shader) {
+        fun pipeline(shader: Identifier, usesView: Boolean = false): RenderPipeline = pipelines.getOrPut(shader) {
             RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(shader)
                 .withVertexShader(ClientShaders.Vertex.ScreenQuad)
@@ -138,6 +173,7 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
                         .withUniform("InSampler", UniformType.COMBINED_IMAGE_SAMPLER)
                         .withUniform("SamplerInfo", UniformType.UNIFORM_BUFFER)
                         .withUniform(UNIFORMS, UniformType.UNIFORM_BUFFER)
+                        .apply { if (usesView) ClientUniformDefine.EFFECT_VIEW.appendTo(this) }
                         .build()
                 )
                 .withColorTargetState(ColorTargetState.DEFAULT)
