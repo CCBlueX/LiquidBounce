@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.test
 
+import okio.Buffer
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import java.io.InputStream
@@ -35,7 +36,7 @@ fun <E> assertNotIn(collection: Collection<E>, element: E) {
 
 /** Builds a zip in memory; a `null` content marks a directory entry (name must end with `/`). */
 fun zip(vararg entries: Pair<String, String?>): InputStream {
-    val buffer = okio.Buffer()
+    val buffer = Buffer()
     ZipArchiveOutputStream(buffer.outputStream()).use { aos ->
         for ((name, content) in entries) {
             aos.putArchiveEntry(ZipArchiveEntry(name))

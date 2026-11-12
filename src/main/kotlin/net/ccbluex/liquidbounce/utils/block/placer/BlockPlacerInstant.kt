@@ -49,7 +49,8 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
 }
 
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
-    val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
+    val posAsLong = pos.asLong()
+    val irrelevantPacket = !state.canBeReplaced() || posAsLong !in blocks
 
     val rotationMode = rotationMode.activeMode
     if (irrelevantPacket || rotationMode !is NoRotationMode || !pos.isUnobstructed()) {
@@ -82,5 +83,6 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         )
     }
 
-    doPlacement(false, pos.immutable, placementTarget)
+    // A support position must be replaced with a support block again, not with the module's own item.
+    doPlacement(blocks[posAsLong], pos.immutable, placementTarget)
 }

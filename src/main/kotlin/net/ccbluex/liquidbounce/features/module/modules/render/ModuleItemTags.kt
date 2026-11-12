@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -68,7 +68,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
 
-    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
+    private val background = modes(this, "Background", 0, ::backgroundChoices)
     private val scale = curve(
         "Scale",
         mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
@@ -205,7 +205,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             ItemStackListRenderState(result.stacks)
                 .centerX(renderPos.x)
                 .centerY(renderPos.y)
-                .rectBackground(backgroundColor)
+                .background(background.activeMode)
                 .scale(result.scale)
                 .rowLength(rowLength)
                 .draw(event.context, preventOverlap)
@@ -222,7 +222,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
                         .title(stack.hoverName.takeIf { Shulker.showTitle })
                         .centerX(renderPos.x)
                         .centerY(renderPos.y)
-                        .rectBackground(backgroundColor)
+                        .background(background.activeMode)
                         .scale(result.scale)
                         .rowLength(rowLength)
                         .draw(event.context, preventOverlap)

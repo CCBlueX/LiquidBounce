@@ -174,7 +174,7 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
         simulatedInput.ignoreClippingAtLedge = true
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
-        simulatedPlayer.pos = player.position()
+        simulatedPlayer.setPos(player.position())
 
         simulatedPlayer.tick()
         val isOnMagmaBlockAfterOneTick = simulatedPlayer.boundingBox.isOnMagmaBlock()

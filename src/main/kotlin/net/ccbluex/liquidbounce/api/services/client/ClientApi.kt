@@ -20,16 +20,30 @@ package net.ccbluex.liquidbounce.api.services.client
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.client.Build
 import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-object ClientApi : BaseApi(config.apiEndpointV1) {
+object ClientApi {
+
+    private val service = config.retrofitApiV1.create<Service>()
 
     suspend fun requestNewestBuildEndpoint(branch: String = API_BRANCH, release: Boolean = false) =
-        get<Build>("/version/newest/$branch${if (release) "/release" else ""}")
+        if (release) service.newestReleaseBuild(branch) else service.newestBuild(branch)
 
-    suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) =
-        get<MessageOfTheDay>("/client/$branch/motd")
+    suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) = service.messageOfTheDay(branch)
+
+    internal interface Service {
+        @GET("version/newest/{branch}")
+        suspend fun newestBuild(@Path("branch") branch: String): Build
+
+        @GET("version/newest/{branch}/release")
+        suspend fun newestReleaseBuild(@Path("branch") branch: String): Build
+
+        @GET("client/{branch}/motd")
+        suspend fun messageOfTheDay(@Path("branch") branch: String): MessageOfTheDay
+    }
 
 }

@@ -35,6 +35,8 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.splash.Splash
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -54,9 +56,20 @@ object ThemeManager : Config("theme") {
         field = mutableListOf()
     val themeIds get() = themes.map { theme -> theme.metadata.id }
 
+    /**
+     * The loaded theme of each subscribed marketplace theme, by item id.
+     */
+    internal val marketplaceThemes: Map<Int, Theme>
+        field = HashMap()
+
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
+        // Loading the config sets it before the themes are there
+        if (themes.isNotEmpty()) {
+            Splash.useTheme(theme)
+        }
         // Update integration browser
         mc.execute {
+            FontManager.updateThemeFont()
             ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.invalidate()
@@ -86,6 +99,11 @@ object ThemeManager : Config("theme") {
                 temporaryTheme = null
                 currentTheme = value.metadata.id
             }
+
+            // Switching to a remote theme can leave currentTheme unchanged
+            mc.execute(FontManager::updateThemeFont)
+            mc.execute(ThemeSounds::sync)
+            Splash.useTheme(theme)
         }
 
     val isThemeExternal: Boolean
@@ -138,15 +156,18 @@ object ThemeManager : Config("theme") {
     }
 
     suspend fun load() {
-        fun Theme.addIfUnloaded() {
-            if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
+        fun Theme.addIfUnloaded(): Boolean {
+            val unloaded = themes.none { it.metadata.id.equals(this.metadata.id, true) }
+            if (unloaded) {
                 themes.add(this)
             } else {
                 logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
             }
+            return unloaded
         }
 
         themes.clear()
+        marketplaceThemes.clear()
 
         // 1st priority
         themesFolder.listFiles { it.isDirectory }
@@ -168,17 +189,22 @@ object ThemeManager : Config("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
-                    .addIfUnloaded()
+                val theme = Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
+                if (theme.addIfUnloaded()) {
+                    marketplaceThemes[item.id] = theme
+                }
             }.onFailure { err ->
                 logger.error("Failed to load theme '${item.name}'.", err)
             }
         }
 
         includedTheme?.let { theme -> themes += theme }
+        mc.execute(ThemeSounds::sync)
+        Splash.useTheme(theme)
 
         ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
+            FontManager.updateThemeFont()
             ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.invalidate()

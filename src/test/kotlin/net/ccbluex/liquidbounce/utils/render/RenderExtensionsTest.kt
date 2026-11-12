@@ -49,7 +49,7 @@ class RenderExtensionsTest {
         val image = BufferedImage(2, 3, BufferedImage.TYPE_INT_RGB)
         return FastByteArrayOutputStream().use { output ->
             check(ImageIO.write(image, format, output))
-            output.array.copyOf(output.length)
+            output.toByteArray()
         }
     }
 

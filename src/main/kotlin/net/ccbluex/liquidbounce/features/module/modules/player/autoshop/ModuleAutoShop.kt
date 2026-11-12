@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes

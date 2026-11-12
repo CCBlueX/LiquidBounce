@@ -16,12 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.PreferWalkableBlocks
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
@@ -29,8 +35,15 @@ class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<BlockItemFacet>(
-                ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY.asHolderComparator(),
+                PreferFavourableBlocks.asHolderComparator(),
+                PreferFullCubeBlocks.asHolderComparator(),
+                // Sorted descending, so a big stack of glass beats a few blocks of stone
+                PreferStackSize.PREFER_FEWER.asHolderComparator(),
+                PreferSolidBlocks.asHolderComparator(),
+                PreferWalkableBlocks.asHolderComparator(),
+                PreferAverageHardBlocks(neutralRange = true).asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
+                PreferAverageHardBlocks(neutralRange = false).asHolderComparator(),
                 STABILIZE_COMPARISON,
             )
     }

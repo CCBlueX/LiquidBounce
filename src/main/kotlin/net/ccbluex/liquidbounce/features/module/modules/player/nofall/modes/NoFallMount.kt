@@ -43,7 +43,7 @@ internal object NoFallMount : NoFallMode("Mount") {
     private val minFallDistance by float("MinFallDistance", 5f, 2f..50f)
     private val searchRange by float("SearchRange", 4.5f, 1f..8f)
     private val retryDelay by int("RetryDelay", 2, 0..20, "ticks")
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     /**
      * Automatically dismounts after a configurable delay.

@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.highjump
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -58,21 +60,21 @@ object ModuleHighJump : ClientModule("HighJump", ModuleCategories.MOVEMENT) {
      * @testedOn eu.loyisa.cn; eu.anticheat-test.com
      * @note this still flags a bit
      */
-    private object Vulcan : Mode("Vulcan") {
+    private object Vulcan : Mode("Vulcan-2.7.5", aliases = listOf("Vulcan")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        var glide by boolean("Glide", false)
+        private val glide by boolean("Glide", false)
 
-        var shouldGlide = false
+        private var shouldGlide = false
 
         @Suppress("unused")
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (glide && shouldGlide) { // if the variable is true, then glide
                 if (player.onGround()) {
                     shouldGlide = false
-                    return@tickHandler
+                    return@handler
                 }
                 if (player.fallDistance > 0) {
                     if (player.tickCount % 2 == 0) {

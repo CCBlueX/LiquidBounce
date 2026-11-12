@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
@@ -117,14 +118,14 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                 val chunkX = chunk.minBlockX
                 val chunkZ = chunk.minBlockZ
 
-                if (player.distanceToSqr(chunkX + 8.0, player.y, chunkZ + 8.0) > renderDistSq) {
+                if (player.position().horizontalDistanceToSqr(chunkX + 8.0, chunkZ + 8.0) > renderDistSq) {
                     continue
                 }
 
                 var color = if (isNew) newColor else oldColor
 
                 if (smooth && !isNew) {
-                    var totalWeight = 0.0
+                    var totalWeight = 0.0f
 
                     for (dx in -2..2) {
                         for (dz in -2..2) {
@@ -133,13 +134,13 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                             if (chunks[ChunkPos(chunk.x + dx, chunk.z + dz)] == true) {
                                 val dist = max(abs(dx), abs(dz))
 
-                                totalWeight += (3.0 - dist) / 2.0
+                                totalWeight += (3.0f - dist) / 2.0f
                             }
                         }
                     }
 
-                    if (totalWeight > 0.0) {
-                        val ratio = (totalWeight / 12.0).coerceAtMost(1.0)
+                    if (totalWeight > 0.0f) {
+                        val ratio = (totalWeight / 12.0f).coerceAtMost(1.0f)
 
                         color = oldColor.interpolateTo(newColor, ratio)
                     }

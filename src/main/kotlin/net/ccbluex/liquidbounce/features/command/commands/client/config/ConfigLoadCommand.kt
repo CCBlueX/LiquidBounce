@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
-import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.MultiSelectArgumentType
@@ -36,9 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Loads a marketplace config and moves between it, local edits and the backup
- */
 object ConfigLoadCommand {
 
     fun CmdLiteralScope.load() {
@@ -97,21 +93,25 @@ object ConfigLoadCommand {
 
     private suspend fun CmdI18n.load(input: String, modules: Set<ClientModule>) {
         if (input.startsWith("http://") || input.startsWith("https://")) {
-            request {
-                val source = withContext(Dispatchers.IO) {
-                    HttpClient.request(input, HttpMethod.GET).parse<String>()
-                }
-                ConfigTracker.loadExternal(source, modules)
-            }
-            chat(regular(t("load.loaded", variable(input))))
+            loadFromUrl(input, modules)
             return
         }
 
-        val item = resolveConfig(input)
+        val item = findConfig(input)
         val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
         val result = request { ConfigTracker.load(item, revisionId, modules) }
         chat(regular(t("load.loaded", variable(item.name))))
         reportInstalled(result)
+    }
+
+    private suspend fun CmdI18n.loadFromUrl(url: String, modules: Set<ClientModule>) {
+        request {
+            val source = withContext(Dispatchers.IO) {
+                HttpClient.request(url, HttpMethod.GET).body.string()
+            }
+            ConfigTracker.loadExternal(source, modules)
+        }
+        chat(regular(t("load.loaded", variable(url))))
     }
 
 }

@@ -110,6 +110,18 @@ object ClientRenderPipelines {
         withPrimitiveTopology(mode)
     }
 
+    /**
+     * Chromium on Windows blends text through Skia's mask gamma, sRGB with contrast 1 (`skia/BUILD.gn`).
+     * On Linux Skia skips it for grayscale text, and macOS text comes out of CoreText's own smoothing.
+     */
+    private fun RenderPipeline.Builder.fontMaskSnippet() {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
+        if (Util.getPlatform() == Util.OS.WINDOWS) {
+            withShaderDefine("TEXT_CONTRAST", 1f)
+        }
+    }
+
     // Browsers paint with premultiplied alpha
     object BROWSER {
         @JvmField
@@ -182,8 +194,7 @@ object ClientRenderPipelines {
 
         @JvmField
         val FontMask = newPipeline("gui/font_mask") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withFragmentShader(ClientShaders.Fragment.FontMask)
+            fontMaskSnippet()
         }
 
         @JvmStatic
@@ -352,8 +363,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {
-        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        withFragmentShader(ClientShaders.Fragment.FontMask)
+        fontMaskSnippet()
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
@@ -423,25 +433,6 @@ object ClientRenderPipelines {
 
     // Special
 
-    /**
-     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-     * @see RenderPipelines.OUTLINE_SNIPPET
-     */
-    @JvmField
-    val Outline = newPipeline("outline") {
-        screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-        withColorTargetState(
-            ColorTargetState(
-                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
-                GpuFormat.RGBA8_UNORM,
-                ColorTargetState.WRITE_COLOR,
-            )
-        )
-        withDepthStencilState(optional())
-    }
-
     @JvmField
     val ChamsImage = newPipeline("chams/image_blit") {
         screenQuadSnippet()
@@ -465,6 +456,56 @@ object ClientRenderPipelines {
             withSampler("texture0")
             withSampler("image")
             withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
+        }
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Additive effect layer (flow, trail, glow, chromatic, scanlines) drawn over the held item.
+     */
+    @JvmField
+    val ItemChamsEffects = newPipeline("item_chams/effects") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsEffects)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("trail")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.ADDITIVE))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Recovers the held item from the capture with an animated hue/brightness shift.
+     */
+    @JvmField
+    val ItemChamsRecolor = newPipeline("item_chams/recolor") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsRecolor)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Accumulates the captured held item into the trail history buffer with decay.
+     */
+    @JvmField
+    val ItemChamsTrail = newPipeline("item_chams/trail") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsTrail)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("history")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
         }
         withColorTargetState(ColorTargetState.DEFAULT)
         withDepthStencilState(optional())

@@ -171,7 +171,7 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     if (actionResult.shouldSwingHand()) {
-        swingMode.swing(hand)
+        swingMode.interactSwing(hand)
     }
 
     if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {

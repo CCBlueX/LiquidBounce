@@ -42,8 +42,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import kotlin.math.max
@@ -74,7 +72,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         tree(physicalSettings)
     }
 
-    private val color by color("Color", Color4b.RED)
+    private val color by color("Color", Color4b.LIQUID_BOUNCE)
     private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
@@ -96,10 +94,10 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val tickHandler = handler<GameTickEvent> {
         val cameraPos = mc.gameRenderer.mainCamera().position()
         particles.removeIf { particle ->
-            if (particle.alpha <= 0 || cameraPos.distanceToSqr(particle.pos) > 30 * 30) {
+            if (particle.alpha <= 0 || !cameraPos.closerThan(particle.pos, 30.0)) {
                 true
             } else {
-                particle.update(cameraPos)
+                particle.update()
                 false
             }
         }
@@ -125,8 +123,6 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val displayHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             for (particle in particles) {
-                if (!particle.visible) continue
-
                 particle.render(event.partialTicks)
             }
         }
@@ -140,12 +136,11 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
             (-0.01..0.01).random()
         )
         @JvmField var alpha = 1f
-        @JvmField var visible = true
         private val rotation = (0f..360f).random()
         private val spawnTime = System.currentTimeMillis()
         private var collisionTime = -1L
 
-        fun update(cameraPos: Vec3) {
+        fun update() {
             prevPos = pos
 
             if (collisionTime != -1L) {
@@ -182,7 +177,6 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
             }
 
             pos = nextPos
-            visible = hasLineOfSight(cameraPos, pos)
         }
 
         context(env: WorldRenderEnvironment)
@@ -205,10 +199,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                 }
 
                 val renderColor = color.alpha(
-                    Mth.clamp(
-                        (alpha * color.a.toFloat()).toInt(),
-                        0, color.a
-                    )
+                    (alpha * color.a.toFloat()).toInt().coerceIn(0, color.a)
                 )
 
                 drawSquareTexture(builtinParticle.texture, size, renderColor.argb)

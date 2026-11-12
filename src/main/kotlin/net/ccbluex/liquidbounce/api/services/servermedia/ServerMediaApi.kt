@@ -18,21 +18,30 @@
  */
 package net.ccbluex.liquidbounce.api.services.servermedia
 
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
+import retrofit2.create
+import retrofit2.http.GET
 
 /**
  * CCBlueX's mirror of LabyMod's server-media, which collects icons of Minecraft servers.
  */
-object ServerMediaApi : BaseApi(BASE_URL) {
+object ServerMediaApi {
+
+    private val service = apiRetrofit(BASE_URL).create<Service>()
 
     /**
      * @param domains the folder of the server each domain belongs to
      */
     class Index(val domains: Map<String, String>)
 
-    suspend fun getIndex() = get<Index>("/index.json")
+    suspend fun getIndex() = service.index()
 
     fun iconUrl(folder: String) = "$BASE_URL/minecraft_servers/$folder/icon.png"
+
+    internal interface Service {
+        @GET("index.json")
+        suspend fun index(): Index
+    }
 
 }
 

@@ -47,14 +47,11 @@ class ExternalSystemBrowserBackend : BrowserBackend, EventListener {
         whenAvailable()
     }
 
-    @Suppress("EmptyFunctionBlock")
-    override fun start() { }
+    override fun start() = Unit
 
-    @Suppress("EmptyFunctionBlock")
-    override fun stop() { }
+    override fun stop() = Unit
 
-    @Suppress("EmptyFunctionBlock")
-    override fun update() { }
+    override fun update() = Unit
 
     override val supportsIncognito = false
 

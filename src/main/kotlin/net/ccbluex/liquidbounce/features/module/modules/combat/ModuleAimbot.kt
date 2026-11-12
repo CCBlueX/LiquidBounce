@@ -26,8 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -191,8 +192,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
             val eyes = player.eyePosition
             val point = pointTracker.findPoint(eyes, entity)
 
-            debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
-            debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
+            debugGeometry("Box") { DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
+            debugGeometry("Point") { DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
 
             val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
             val rotation = raytraceBox(

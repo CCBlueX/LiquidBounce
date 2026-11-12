@@ -53,8 +53,8 @@ import net.minecraft.world.phys.shapes.CollisionContext
 object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER, aliases = listOf("BlockOverlay")) {
 
     private val sideOnly by boolean("SideOnly", true)
-    private val color by color("Color", Color4b(68, 117, 255, 70))
-    private val outlineColor by color("Outline", Color4b(68, 117, 255, 150))
+    private val color by color("Color", Color4b.LIQUID_BOUNCE.alpha(70))
+    private val outlineColor by color("Outline", Color4b.LIQUID_BOUNCE.alpha(150))
 
     private object Slide : ToggleableValueGroup(this, "Slide", true) {
         val time by int("Time", 150, 1..1000, "ms")

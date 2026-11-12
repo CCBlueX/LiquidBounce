@@ -144,6 +144,9 @@ abstract class Mode @JvmOverloads constructor(
     final override val tagAliases: List<String>
         get() = this.aliases
 
+    override val debugName: String
+        get() = name
+
     abstract val parent: ModeValueGroup<*>
 
     open fun enable() { }
@@ -161,7 +164,7 @@ abstract class Mode @JvmOverloads constructor(
      * we handle the events.
      */
     override val running: Boolean
-        get() = super.running && isSelected
+        get() = isSelected && super.running
 
     override fun parent() = this.parent.eventListener
 

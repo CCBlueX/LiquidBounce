@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
 import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.deeplearn.model.ModelStatus
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedLineSegment
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget

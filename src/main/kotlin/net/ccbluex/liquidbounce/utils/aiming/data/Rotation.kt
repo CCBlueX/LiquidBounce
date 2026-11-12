@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -33,10 +34,10 @@ import org.joml.Quaternionf
 import java.lang.Math.fma
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 @AddonApi
+@ValueClassCandidate
 @JvmRecord
 data class Rotation @JvmOverloads constructor(
     val yaw: Float,
@@ -61,7 +62,7 @@ data class Rotation @JvmOverloads constructor(
         fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
                 yaw = Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
-                pitch = Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat()),
+                pitch = Mth.wrapDegrees(-atan2(diffY, Mth.length(diffX, diffZ)).toDegrees().toFloat()),
             )
         }
     }
@@ -129,12 +130,12 @@ data class Rotation @JvmOverloads constructor(
     /**
      * Calculates what angles would need to be added to arrive at [other].
      *
-     * Wrapped 360°
+     * Yaw takes the shorter way round. Pitch does not wrap: a turn from -90° to 90° is 180° down, not 180° up.
      */
     fun rotationDeltaTo(other: Rotation): RotationDelta {
         return RotationDelta(
             angleDifference(other.yaw, this.yaw),
-            angleDifference(other.pitch, this.pitch)
+            other.pitch - this.pitch
         )
     }
 
@@ -145,6 +146,13 @@ data class Rotation @JvmOverloads constructor(
      * matches Minecraft's independent mouse, packet and movement rotation axes.
      */
     fun rotationDeltaLengthTo(other: Rotation): Float = rotationDeltaTo(other).length()
+
+    /**
+     * Same metric as [rotationDeltaLengthTo] without the square root.
+     *
+     * Use this when only the ordering of two deltas matters.
+     */
+    fun rotationDeltaLengthSqrTo(other: Rotation): Float = rotationDeltaTo(other).lengthSqr()
 
     /**
      * Calculates a new rotation that is closer to the [other] rotation by a limiting factor of
@@ -176,7 +184,7 @@ data class Rotation @JvmOverloads constructor(
 
     @JvmOverloads
     fun isRotationDeltaCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
-        rotationDeltaLengthTo(other) <= tolerance
+        rotationDeltaLengthSqrTo(other) <= tolerance * tolerance
 
     fun add(x: Float, y: Float): Rotation {
         return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)

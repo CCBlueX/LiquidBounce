@@ -131,10 +131,12 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
         val options = mc.options
         val prefix = CommandManager.GlobalSettings.prefix[0]
-        when (it.keyCode) {
-            options.keyChat.key.value -> mc.openChat("")
-            options.keyCommand.key.value -> mc.openChat("/")
-            prefix.code -> mc.openChat(prefix.toString())
+        val key = it.key
+        // Key bindings live in the scan code space, while the prefix is matched against the typed character
+        when {
+            key == options.keyChat.key -> mc.openChat("")
+            key == options.keyCommand.key -> mc.openChat("/")
+            it.keyCode == prefix.code -> mc.openChat(prefix.toString())
         }
     }
 

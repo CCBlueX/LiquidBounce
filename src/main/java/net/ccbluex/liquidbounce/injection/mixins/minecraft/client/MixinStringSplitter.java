@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.utils.text.TextExtensionsKt;
 import net.minecraft.client.StringSplitter;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
-import org.apache.commons.lang3.mutable.MutableFloat;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,8 +37,7 @@ public abstract class MixinStringSplitter {
     //  the width these methods were measured for.
 
     @Shadow
-    @Final
-    public StringSplitter.WidthProvider widthProvider;
+    public abstract float stringWidth(FormattedCharSequence text);
 
     @Inject(method = "stringWidth(Lnet/minecraft/network/chat/FormattedText;)F", at = @At("HEAD"), cancellable = true)
     private void injectNameProtectWidthB(FormattedText text, CallbackInfoReturnable<Float> cir) {
@@ -51,14 +48,7 @@ public abstract class MixinStringSplitter {
         // Measure through the same path rendering uses, so bypassed names and names spanning
         // multiple style parts are measured exactly like they are drawn.
         FormattedCharSequence replaced = ModuleNameProtect.INSTANCE.wrap(TextExtensionsKt.asFormattedCharSequence(text));
-
-        MutableFloat mutableFloat = new MutableFloat();
-        replaced.accept((_, style, codePoint) -> {
-            mutableFloat.add(widthProvider.getWidth(codePoint, style));
-            return true;
-        });
-
-        cir.setReturnValue(mutableFloat.floatValue());
+        cir.setReturnValue(stringWidth(replaced));
     }
 
 }

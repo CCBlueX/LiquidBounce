@@ -16,64 +16,41 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.integration.backend
 
 import kotlinx.coroutines.CompletableDeferred
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.render.splash.SplashPhaseScreen
+import net.ccbluex.liquidbounce.render.splash.SplashTimeline
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.Button
-import net.minecraft.client.gui.screens.Screen
-import net.minecraft.network.chat.Component
-
-private const val BUTTON_WIDTH = 220
-private const val BUTTON_HEIGHT = 20
-private const val ENTRY_HEIGHT = 44
 
 /**
- * Asks which browser backend to use, before any is loaded.
+ * Splash phase that asks which browser backend to use, before any is loaded.
  */
 class BrowserSelectionScreen(
     private val backends: List<BrowserBackendProvider>,
     private val selection: CompletableDeferred<BrowserBackendProvider>,
-) : Screen(Component.literal("Choose a browser")) {
+) : SplashPhaseScreen(translation("liquidbounce.splash.chooseBrowser"), SplashTimeline.Phase.CHOICE) {
 
-    private val subtitle = Component.literal("LiquidBounce shows its interface in a browser. Pick the one to use.")
-    private val hint = Component.literal("Hold Shift while the client starts to choose again.")
-        .withStyle(ChatFormatting.GRAY)
+    private val names = backends.map(BrowserBackendProvider::name)
 
-    private val top
-        get() = height / 2 - backends.size * ENTRY_HEIGHT / 2
+    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        extractSplash(graphics, null)
 
-    override fun init() {
-        val x = width / 2 - BUTTON_WIDTH / 2
-        for ((index, backend) in backends.withIndex()) {
-            addRenderableWidget(
-                Button.builder(Component.literal(backend.name)) {
-                    selection.complete(backend)
-                    mc.gui.setScreen(null)
-                }
-                    .bounds(x, top + index * ENTRY_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .build()
-            )
-        }
+        val alpha = ((age - 200f) / 400f).coerceIn(0f, 1f)
+        extractCenteredText(graphics, title.string, contentTop, alpha * 0.6f)
+        extractOptions(graphics, names, contentTop + LIST_OFFSET, alpha, mouseX, mouseY)
     }
 
-    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        super.extractRenderState(context, mouseX, mouseY, partialTick)
-
-        val cx = width / 2
-        context.centeredText(font, title.copy().withStyle(ChatFormatting.GOLD), cx, top - 44, -1)
-        context.centeredText(font, subtitle, cx, top - 28, -1)
-
-        for ((index, backend) in backends.withIndex()) {
-            val y = top + index * ENTRY_HEIGHT + BUTTON_HEIGHT + 4
-            context.centeredText(font, Component.literal(backend.description).withStyle(ChatFormatting.GRAY), cx, y, -1)
-        }
-
-        context.centeredText(font, hint, cx, top + backends.size * ENTRY_HEIGHT + 8, -1)
+    override fun pickOption(index: Int) {
+        selection.complete(backends[index])
+        mc.gui.setScreen(null)
     }
 
-    override fun shouldCloseOnEsc() = false
+    private companion object {
+        const val LIST_OFFSET = 18f
+    }
 
 }

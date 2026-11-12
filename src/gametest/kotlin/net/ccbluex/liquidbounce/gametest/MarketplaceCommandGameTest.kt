@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
@@ -32,15 +32,14 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
  * Scripts stand in for real items: nothing handles them without the ScriptAPI add-on and none is installed,
  * so unsubscribing touches neither the network nor more than the marketplace config on disk.
  */
-class MarketplaceCommandGameTest : FabricClientGameTest {
+class MarketplaceCommandGameTest : LocalGameTest() {
 
     private val glass = subscription("Game Test Glass", 4200, "CCBlueX")
     private val ours = subscription("GameTestTwin", 4201, "CCBlueX")
     private val theirs = subscription("GameTestTwin", 4202, "Someone")
     private val items = listOf(glass, ours, theirs)
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         context.onClient { MarketplaceManager.subscribedItems += items }
 
         try {

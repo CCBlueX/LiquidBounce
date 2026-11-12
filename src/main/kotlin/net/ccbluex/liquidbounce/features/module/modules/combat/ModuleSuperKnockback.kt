@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.network.sendStartSprinting
 import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
@@ -66,7 +66,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         private val testCondition: Predicate<Entity>,
     ) : Tagged, Predicate<Entity> by testCondition {
         ONLY_FACING("OnlyFacing", { target ->
-            target.lookAngle.dot(player.position() - target.position()) < 0
+            target.lookAngle.dot(player.position() - target.position()) >= 0.0
         }),
         ONLY_ON_GROUND("OnlyOnGround", { _ ->
             player.onGround()

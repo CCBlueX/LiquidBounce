@@ -29,17 +29,18 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -124,7 +125,14 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     /**
      * Navigation configuration for the FreeCam module
      */
-    private object Navigation : NavigationBaseValueGroup<Unit>(ModuleFreeCam, "Navigation", false) {
+    private object Navigation : NavigationBaseValueGroup<Unit>(
+        ModuleFreeCam,
+        "Navigation",
+        false,
+        rotations = rotations,
+        allowBreak = true,
+        allowPlace = true,
+    ) {
 
         private val controlKey by key("Key", InputConstants.KEY_LCONTROL)
 
@@ -150,6 +158,10 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
                 null
             }
         }
+
+        override fun goalRadius(context: Unit) = GOAL_RADIUS
+
+        private const val GOAL_RADIUS = 1.5
 
     }
 
@@ -245,7 +257,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         val speed = this.speed.toDouble()
 
-        ModuleDebug.debugParameter(this, "DirectionalInput", directionalInput)
+        debugParameter("DirectionalInput") { directionalInput }
         val velocity = Vec3.ZERO
             .withStrafe(
                 speed = speed,
@@ -253,11 +265,18 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
                 yaw = getMovementDirectionOfInput(PositionState.rot.yaw, directionalInput)
             )
             .with(Direction.Axis.Y, yAxisMovement * speed)
-        ModuleDebug.debugParameter(this, "Velocity", velocity)
+        debugParameter("Velocity") { velocity }
         PositionState.update(velocity)
+        if (!mc.mouseHandler.isMouseGrabbed) PositionState.rotation(0.0, 0.0)
 
-        ModuleDebug.debugParameter(this, "Position", PositionState.pos)
-        ModuleDebug.debugParameter(this, "Rotation", PositionState.rot)
+        debugParameter("Position") { PositionState.pos }
+        debugParameter("Rotation") { PositionState.rot }
+    }
+
+    @Suppress("unused")
+    private val mouseRotationHandler = handler<MouseRotationEvent> { event ->
+        PositionState.rotation(event.cursorDeltaX * 0.15f, event.cursorDeltaY * 0.15f)
+        event.cancelEvent()
     }
 
     @Suppress("unused")
@@ -287,12 +306,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         RotationManager.setRotationTarget(rotations.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
-    }
-
-    @Suppress("unused")
-    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
-        // If not, will get stuck when world change
-        enabled = false
     }
 
     fun applyCameraPosition(entity: Entity?, partialTicks: Float) {

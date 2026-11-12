@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.player.RemotePlayer
@@ -50,11 +50,10 @@ import kotlin.math.sin
  * Fights a scripted opponent that circles the player with KillAura's AI aiming and Butterfly clicking on, using the
  * bundled models, so the whole path from packets to decisions to rotations and attacks runs in a real client.
  */
-class AiCombatGameTest : FabricClientGameTest {
+class AiCombatGameTest : LocalGameTest() {
     private val logger = LogManager.getLogger("AiCombatGameTest")
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         check(context.fromClient { DeepLearningEngine.isInitialized }) { "The deep learning engine did not load" }
         context.worldBuilder().setUseConsistentSettings(true).create().use { world ->
             world.connection.waitForChunksRender()

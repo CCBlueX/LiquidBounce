@@ -20,20 +20,25 @@ package net.ccbluex.liquidbounce.utils.clicking
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.platform.InputConstants
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingStyle
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.Screen
 import net.minecraft.util.Util
 
 /**
@@ -47,7 +52,8 @@ import net.minecraft.util.Util
  * @see [Minecraft.handleKeybinds]
  *
  * Presses are planned in milliseconds by a [ClickTiming] and batched into ticks by a [ClickPlan],
- * so we can predict future clicks and behave accordingly.
+ * so we can predict future clicks and behave accordingly. Presses on the same key by the player or other
+ * clickers count as ours, so they don't add up.
  */
 open class Clicker<T>(
     val parent: T,
@@ -60,6 +66,12 @@ open class Clicker<T>(
 
     companion object {
         private const val TICKS_AHEAD = 20
+
+        private val clickers = Reference2ObjectOpenHashMap<KeyMapping, MutableList<Clicker<*>>>()
+    }
+
+    init {
+        clickers.getOrPut(keyBinding) { ArrayList() }.add(this)
     }
 
     private val technique = modes(this, "Technique") {
@@ -153,6 +165,7 @@ open class Clicker<T>(
                 if (success) {
                     itemCooldown?.newCooldown()
                     ticksSinceLastClick = 0
+                    pressedForOthers()
                 }
             }
         }
@@ -174,6 +187,32 @@ open class Clicker<T>(
         }
 
         return itemCooldown?.isCooldownPassed() != false
+    }
+
+    private fun pressedForOthers() {
+        val now = Util.getMillis()
+        for (other in clickers.getValue(keyBinding)) {
+            if (other !== this && other.running) {
+                other.plan.pressedBy(plan, now)
+            }
+        }
+    }
+
+    private fun onPlayerPress(key: InputConstants.Key, pressed: Boolean, screen: Screen?) {
+        // Minecraft only clicks keys while no screen is open
+        if (pressed && screen == null && key == keyBinding.key) {
+            plan.pressedByPlayer()
+        }
+    }
+
+    @Suppress("unused")
+    private val mouseHandler = handler<MouseButtonEvent> { event ->
+        onPlayerPress(event.key, event.isPressed, event.screen)
+    }
+
+    @Suppress("unused")
+    private val keyboardHandler = handler<KeyboardKeyEvent> { event ->
+        onPlayerPress(event.key, event.isPressed, event.screen)
     }
 
     @Suppress("unused")

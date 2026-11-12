@@ -111,6 +111,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         val blockPos = player.blockPosition()
         val selfInHole = holes.any { it.contains(blockPos) }
         if (Features.ONLY_WHEN_SELF_IN_HOLE in features && !selfInHole) {
+            // The placer keeps working from its queue, so the queue has to be emptied for this to stop.
+            placer.clear()
             return@handler
         }
 
@@ -128,8 +130,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
 
             // the range in which entities are considered as a target
-            val range = this.range.sq() + 10.0
-            collectHolesSmart(range, holeContext, availableItems)
+            val rangeSqr = this.range.sq() + 10.0
+            collectHolesSmart(rangeSqr, holeContext, availableItems)
         }
 
         placer.update(blocks)
@@ -161,12 +163,12 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         }
     }
 
-    private fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
+    fun collectHolesSmart(rangeSqr: Double, holeContext: HoleContext, availableItems: Int) {
         val checkedHoles = hashSetOf<Hole>()
         var remainingItems = availableItems
 
         world.entitiesForRendering().forEach { entity ->
-            if (entity.distanceToSqr(player) > range || entity === player || !entity.shouldBeAttacked()) {
+            if (entity.distanceToSqr(player) > rangeSqr || entity === player || !entity.shouldBeAttacked()) {
                 return@forEach
             }
 
@@ -181,7 +183,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
 
             found.sortedByDescending { it.leftDouble() }
                 .mapTo(holeContext.blocks) { BlockPos.of(it.rightLong()) }
-            if (remainingItems <= 0) {
+            if (remainingItems <= 0 && !player.abilities.instabuild) {
                 return
             }
         }
@@ -194,7 +196,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         remainingItems: Int,
         found: MutableSet<DoubleLongPair>
     ): Int {
-        var remainingItems1 = remainingItems
+        var itemsAfterHoles = remainingItems
         val region = entity.blockPosition().expandToBoundingBox(fillArea, fillArea, fillArea)
 
         holeContext.holes.forEach { hole ->
@@ -208,9 +210,9 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
 
             val holeSize = hole.size
-            remainingItems1 -= holeSize
-            if (remainingItems1 < 0 && !player.abilities.instabuild) {
-                remainingItems1 += holeSize
+            itemsAfterHoles -= holeSize
+            if (itemsAfterHoles < 0 && !player.abilities.instabuild) {
+                itemsAfterHoles += holeSize
                 return@forEach
             }
 
@@ -219,12 +221,12 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
                 DoubleLongPair.of(valid.rightDouble(), it.asLong())
             }
 
-            if (remainingItems1 == 0 && !player.abilities.instabuild) {
+            if (itemsAfterHoles == 0 && !player.abilities.instabuild) {
                 return 0
             }
         }
 
-        return remainingItems
+        return itemsAfterHoles
     }
 
     private fun isValidHole(
@@ -265,7 +267,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     }
 
     @JvmRecord
-    private data class HoleContext(
+    data class HoleContext(
         val holes: List<Hole>,
         val selfInHole: Boolean,
         val selfRegion: BoundingBox,

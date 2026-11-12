@@ -19,21 +19,21 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import kotlin.jvm.optionals.getOrNull
 
 class EnchantmentValueEstimator(
     private vararg val weightedEnchantments: WeightedEnchantment,
-) : Comparator<ItemStack> {
+) : Comparator<DataComponentGetter> {
 
     /**
      * @see net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel
      */
-    fun estimateValue(itemStack: ItemStack): Float {
+    fun estimateValue(itemStack: DataComponentGetter): Float {
         val enchantments = itemStack[DataComponents.ENCHANTMENTS]
         if (enchantments == null || enchantments.isEmpty) return 0f
 
@@ -48,7 +48,7 @@ class EnchantmentValueEstimator(
         return sum
     }
 
-    override fun compare(o1: ItemStack, o2: ItemStack): Int =
+    override fun compare(o1: DataComponentGetter, o2: DataComponentGetter): Int =
         this.estimateValue(o1).compareTo(this.estimateValue(o2))
 
     @ValueClassCandidate

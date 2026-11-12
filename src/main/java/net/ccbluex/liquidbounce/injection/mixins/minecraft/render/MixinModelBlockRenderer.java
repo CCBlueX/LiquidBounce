@@ -36,6 +36,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.NullMarked;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -48,6 +49,7 @@ import java.util.List;
 @Mixin(ModelBlockRenderer.class)
 public abstract class MixinModelBlockRenderer {
 
+    @Final
     @Shadow
     private QuadInstance quadInstance;
 
@@ -55,8 +57,12 @@ public abstract class MixinModelBlockRenderer {
     private void wrapXRayTransparentBackground(BlockQuadOutput output, float x, float y, float z,
             BlockAndTintGetter level, BlockPos pos, BlockState state, BlockStateModel model, long seed,
             Operation<Void> original) {
-        XRayBlockRenderContext.renderIfActive(ModuleXRay.renderActive(), state,
-            () -> original.call(output, x, y, z, level, pos, state, model, seed));
+        if (ModuleXRay.renderActive()) {
+            XRayBlockRenderContext.renderIfActive(state,
+                () -> original.call(output, x, y, z, level, pos, state, model, seed));
+        } else {
+            original.call(output, x, y, z, level, pos, state, model, seed);
+        }
     }
 
     @Inject(method = {"tesselateFlat", "tesselateAmbientOcclusion"}, at = @At("HEAD"), cancellable = true)

@@ -23,7 +23,6 @@ import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.ProcessedChar
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -37,7 +36,7 @@ import java.awt.Font
 class MinecraftTextProcessorTest {
 
     private fun process(text: Component, defaultColor: Color4b) =
-        MinecraftTextProcessor.process(text.asFormattedCharSequence(), defaultColor)
+        MinecraftTextProcessor.process(text.visualOrderText, defaultColor)
 
     private fun RecyclingProcessedText.pack(): List<ProcessedChar> {
         val chars = ArrayList<ProcessedChar>(this.chars.size)

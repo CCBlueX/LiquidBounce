@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
@@ -39,7 +40,6 @@ import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondJsonWriter
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import org.apache.commons.io.input.CharSequenceReader
 import java.util.Locale
 
 // GET /api/v1/client/components/native
@@ -75,7 +75,7 @@ private fun Route.postComponent() = post("/{id}") {
             ?: call.badRequest("HUD component cannot be added again")
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/components/{id}/z-index
@@ -112,7 +112,7 @@ private fun Route.postComponentAlignment() = post("/{id}/alignment") {
         component.alignment.setFrom(alignment)
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/components/{id}/settings
@@ -159,13 +159,13 @@ private fun Route.putComponentSettings() = put("/{id}/settings") {
 
     withContext(Dispatchers.Main) {
         val wasEnabled = component.enabled
-        ConfigSystem.deserializeValueGroup(component, CharSequenceReader(call.receiveText()))
+        ConfigSystem.deserializeValueGroup(component, call.receiveText())
         if (wasEnabled && !component.enabled) {
             component.resetAlignment()
         }
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.componentRoutes() = route("/components") {

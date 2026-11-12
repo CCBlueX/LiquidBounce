@@ -33,10 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
-/**
- * Subscribe to marketplace item
- */
 object MarketplaceSubscribeCommand {
 
     fun CmdLiteralScope.subscribe() {
@@ -51,9 +50,7 @@ object MarketplaceSubscribeCommand {
 
     private suspend fun CmdI18n.subscribe(input: String) {
         val item = marketplaceItem(input)
-        val itemId = item.id
-
-        if (MarketplaceManager.isSubscribed(itemId)) {
+        if (MarketplaceManager.isSubscribed(item.id)) {
             chat(regular(t("subscribe.alreadySubscribed", variable(item.address))))
             return
         }
@@ -68,15 +65,12 @@ object MarketplaceSubscribeCommand {
         }.getOrElse { e -> throw CommandException(failureText(e, item.address)) }
 
         chat(regular(t("subscribe.success", variable(item.address))))
-        val needed = installed.filter { it.id != itemId }
+        val needed = installed.filter { it.id != item.id }
         if (needed.isNotEmpty()) {
-            chat(regular(t("subscribe.dependencies", variable(needed.joinToString(", ") { it.name }))))
+            chat(regular(t("subscribe.dependencies", needed.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
     }
 
-    /**
-     * What subscribing to [item] installed, after what it needs.
-     */
     private suspend fun installedWith(item: MarketplaceItem): List<MarketplaceItem> {
         val (installed, unavailable) = installWithDependencies(item)
         if (installed.none { it.id == item.id }) {
@@ -89,10 +83,7 @@ object MarketplaceSubscribeCommand {
         e.unavailable.text()
     } else {
         logger.error("Failed to subscribe to marketplace item", e)
-        t("error.installFailed",
-            variable(address),
-            e.message ?: "Unknown error"
-        )
+        t("error.installFailed", variable(address), e.message ?: "Unknown error")
     }
 
 }

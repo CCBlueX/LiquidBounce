@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -54,8 +54,8 @@ object AntiVoidUseItemMode : AntiVoidMode("UseItem") {
 
     override fun rescue(): Boolean {
         val motionY = player.deltaMovement.y
-        debugParameter("MotionY") { "%.3f".format(motionY) }
-        debugParameter("YThreshold") { "%.3f".format(yMotionThreshold.toDouble()) }
+        debugParameter("MotionY") { motionY }
+        debugParameter("YThreshold") { yMotionThreshold }
 
         if (motionY >= yMotionThreshold) {
             return false

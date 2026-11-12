@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -50,7 +50,7 @@ private fun Route.getProxyInfo() = get {
         call.respond(interopGson.toJsonTree(proxy).asJsonObject.apply {
             addProperty("id", ProxyManager.proxies.indexOf(proxy))
         })
-    } ?: call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    } ?: call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxy
@@ -64,25 +64,25 @@ private fun Route.postProxy() = post {
     }
 
     ProxyManager.proxy = ProxyManager.proxies[body.id]
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxy
 private fun Route.deleteProxy() = delete {
     ProxyManager.proxy = Proxy.NONE
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/proxies
 private fun Route.getProxies() = get {
-    call.respond(JsonArray().apply {
-        ProxyManager.proxies.forEachIndexed { index, proxy ->
-            add(interopGson.toJsonTree(proxy).asJsonObject.apply {
+    call.respond(
+        ProxyManager.proxies.mapIndexed { index, proxy ->
+            interopGson.toJsonTree(proxy).asJsonObject.apply {
                 addProperty("id", index)
                 addProperty("type", (proxy.type ?: Proxy.Type.SOCKS5).toString())
-            })
+            }
         }
-    })
+    )
 }
 
 // POST /api/v1/client/proxies/add
@@ -113,7 +113,7 @@ private fun Route.postAddProxy() = post {
         host, port, Proxy.credentials(username, password), type, forwardAuthentication,
         proxyResourcePacks, proxyDns
     ))
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/add/clipboard
@@ -141,7 +141,7 @@ private fun Route.postClipboardProxy() = post("/clipboard") {
         }
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/edit
@@ -174,7 +174,7 @@ private fun Route.postEditProxy() = post("/edit") {
         proxyResourcePacks, proxyDns
     )
     ProxyManager.validateProxy(proxy, index = id)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/check
@@ -188,7 +188,7 @@ private fun Route.postCheckProxy() = post("/check") {
     }
 
     ProxyManager.validateProxy(ProxyManager.proxies[body.id], checkOnly = true)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/remove
@@ -204,7 +204,7 @@ private fun Route.deleteRemoveProxy() = delete("/remove") {
     if (ProxyManager.proxies.removeAt(body.id) == ProxyManager.proxy) {
         ProxyManager.proxy = Proxy.NONE
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/proxies/favorite
@@ -219,7 +219,7 @@ private fun Route.putFavoriteProxy() = put {
 
     ProxyManager.proxies[body.id].favorite = true
     ConfigSystem.store(ProxyManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/favorite
@@ -234,7 +234,7 @@ private fun Route.deleteFavoriteProxy() = delete {
 
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.store(ProxyManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.proxyRoutes() {

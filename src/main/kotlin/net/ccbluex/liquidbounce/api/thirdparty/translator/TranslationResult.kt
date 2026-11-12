@@ -37,7 +37,7 @@ sealed class TranslationResult(
         val fromLanguage: TranslateLanguage,
         val toLanguage: TranslateLanguage
     ) : TranslationResult(
-        origin != translation && fromLanguage != toLanguage
+        origin != translation && !fromLanguage.literal.equals(toLanguage.literal, ignoreCase = true)
     ) {
         override fun toResultText() = textOf(
             regular("("),

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -32,7 +32,6 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.AABB
 import kotlin.math.max
@@ -108,7 +107,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
     private var highestId = 0
         set(value) {
             field = value
-            ModuleDebug.debugParameter(ModuleCrystalAura, "Highest ID", highestId)
+            ModuleCrystalAura.debugParameter("Highest ID") { highestId }
         }
 
     override fun onEnabled() {
@@ -132,7 +131,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
 
         val swingMode = SubmoduleCrystalDestroyer.swingMode
         if (!swingAlways) {
-            swingMode.swing(InteractionHand.MAIN_HAND)
+            swingMode.attackSwing()
         }
 
         offsetRange.forEach { idOffset ->
@@ -145,7 +144,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
             }
 
             if (swingAlways) {
-                swingMode.swing(InteractionHand.MAIN_HAND)
+                swingMode.attackSwing()
             }
 
             network.send(ServerboundAttackPacket(id))

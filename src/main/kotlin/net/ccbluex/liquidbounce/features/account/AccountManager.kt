@@ -80,7 +80,10 @@ object AccountManager : Config("Accounts"), EventListener {
         logger.info("Start logging in with username '${account.username}'")
         val (session, service) = account.login()
 
-        val profileKeys = runCatching {
+        // TheAltening tokens cannot be used with Mojang's profile-key API.
+        val profileKeys = if (account.service == AccountService.THEALTENING) {
+            ProfileKeyPairManager.EMPTY_KEY_MANAGER
+        } else runCatching {
             val userAuthenticationService = service.createUserApiService(session.accessToken)
             ProfileKeyPairManager.create(userAuthenticationService, session, mc.gameDirectory.toPath())
         }.onFailure {
@@ -89,7 +92,7 @@ object AccountManager : Config("Accounts"), EventListener {
 
         mc.user = session
         mc.services = mc.services.with(
-            sessionService = service.createMinecraftSessionService(),
+            sessionService = account.createMinecraftSessionService(service),
             servicesKeySet = service.servicesKeySet,
             profileRepository = service.createProfileRepository(),
         )

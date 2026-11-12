@@ -36,7 +36,7 @@ void main() {
     float d = sdHeart(p);
 
     float aa = max(fwidth(d), 1e-4) * 1.5;
-    float alpha = smoothstep(0.0, -aa, d);
+    float alpha = 1.0 - smoothstep(-aa, 0.0, d);
 
     color.a *= alpha;
 

@@ -21,19 +21,20 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
-import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
@@ -43,10 +44,13 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
+import net.ccbluex.liquidbounce.utils.kotlin.handleUnrecoverable
 import net.ccbluex.liquidbounce.utils.text.capitalize
-import okhttp3.Headers
+import okio.Buffer
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 import java.io.File
-import java.io.InputStream
 import java.util.Locale
 
 /**
@@ -55,18 +59,40 @@ import java.util.Locale
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
 @Suppress("TooManyFunctions")
-class Theme private constructor(val origin: Origin, url: String) :
-    BaseApi(
-        url.trimEnd('/'),
-        // DO NOT use headersOf(...) because LunarClient uses an outdated version of
-        // the OkHttp library.
-        defaultHeaders = Headers.Builder()
-            .add(
-                HttpHeaderNames.COOKIE.toString(),
-                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
-            )
-            .build()
-    ), AutoCloseable, SimpleReloadListener.Sequenced {
+class Theme private constructor(
+    val origin: Origin,
+    url: String,
+    /** Where the theme lies on disk; null for themes from the client or the internet. */
+    val folder: File? = null,
+) :
+    AutoCloseable, SimpleReloadListener.Sequenced {
+
+    private val baseUrl = url.trimEnd('/')
+
+    private val service = apiRetrofit(baseUrl).create<Service>()
+
+    internal interface Service {
+        @GET("metadata.json")
+        suspend fun metadata(): ThemeMetadata
+
+        @GET("components/{name}.json")
+        suspend fun component(@Path("name") name: String): JsonHudComponentFactory
+
+        @GET("fonts/{font}")
+        suspend fun font(@Path("font") font: String): Buffer
+
+        @GET("backgrounds/{background}.frag")
+        suspend fun shader(@Path("background") background: String): String
+
+        @GET("backgrounds/{background}.png")
+        suspend fun background(@Path("background") background: String): NativeImage
+
+        @GET("sounds/{name}.ogg")
+        suspend fun sound(@Path("name") name: String): Buffer
+
+        @GET("{path}")
+        suspend fun file(@Path("path", encoded = true) path: String): Buffer
+    }
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
@@ -81,10 +107,12 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private suspend fun loadMetadata() {
         try {
-            _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            _metadata = service.metadata().apply { checkNotNull() }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error("Failed to load theme metadata", e)
-            throw IllegalStateException("Failed to load theme metadata", e)
+            logger.error("Failed to load theme metadata from origin ${origin.tag}", e)
+            throw IllegalStateException("Failed to load theme metadata from origin ${origin.tag}", e)
         }
     }
 
@@ -105,8 +133,8 @@ class Theme private constructor(val origin: Origin, url: String) :
     private suspend fun loadComponents() {
         val componentFactoryList = metadata.components.mapNotNull { name ->
             runCatching {
-                get<JsonHudComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
-            }.onFailure {
+                service.component(name.lowercase(Locale.US))
+            }.handleUnrecoverable().onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull()
         }
@@ -115,7 +143,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             for (factory in componentFactoryList) {
                 // Check for duplicated component names
                 check(this.put(factory.name, factory) == null) {
-                    "Found duplicated component name '${factory.name}'"
+                    "Found duplicated component name '${factory.name}' in theme '${metadata.name}'"
                 }
             }
         }
@@ -231,22 +259,52 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private suspend fun loadFonts() {
         for (font in metadata.fonts) {
-            runCatching {
-                get<InputStream>("/fonts/$font").use { stream ->
-                    FontManager.queueFontFromStream(stream)
+            try {
+                val responseBody = service.font(font)
+                if (FontManager.queueFontFromBuffer(responseBody)) {
+                    logger.info("Loaded font $font for theme ${metadata.name}")
                 }
-
-                logger.info("Loaded font $font for theme ${metadata.name}")
-            }.onFailure {
-                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to load font $font for theme ${metadata.name}", e)
             }
         }
     }
+
+    /** The files of [ThemeMetadata.sounds] by name, registered by [ThemeSounds]. */
+    var sounds: Map<String, ByteArray> = emptyMap()
+        private set
+
+    private suspend fun loadSounds() {
+        sounds = buildMap {
+            for (name in metadata.sounds.orEmpty()) {
+                if (ThemeSounds.soundId(metadata.id, name) == null) {
+                    logger.warn("Sound $name of theme ${metadata.name} has no valid id")
+                    continue
+                }
+
+                try {
+                    put(name, service.sound(name).readByteArray())
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.warn("Failed to load sound $name for theme ${metadata.name}", e)
+                }
+            }
+        }
+    }
+
+    /**
+     * Reads a file of the theme by its path relative to the theme root.
+     */
+    suspend fun readFile(path: String): ByteArray = service.file(path).readByteArray()
 
     private suspend fun loadAll() = apply {
         loadMetadata()
         loadComponents()
         loadFonts()
+        loadSounds()
     }
 
     var backgroundShader: ThemeBackground? = null
@@ -269,8 +327,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         val fragmentShader = runCatching {
-            get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
-        }.getOrNull() ?: return false
+            service.shader(background.name.lowercase(Locale.US))
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundShader = ThemeBackground.Shader.build(
@@ -299,8 +357,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         val image = runCatching {
-            get<NativeImage>("/backgrounds/${background.name}.png")
-        }.getOrNull() ?: return false
+            service.background(background.name)
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
@@ -318,7 +376,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         val baseUrlWithFragment = "$baseUrl/?${AuthConfig.AUTH_CODE_PARAM}=" +
             "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
-            if (origin.external) add("port=${ClientInteropServer.PORT}")
+            if (origin.external) add("port=${ClientInteropServer.port}")
             if (markAsStatic) add("static")
         }.joinToString("&")
 
@@ -353,7 +411,12 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
-            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"
+            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/",
+            folder = when (origin) {
+                Origin.LOCAL -> ThemeManager.themesFolder.resolve(file)
+                Origin.MARKETPLACE -> MarketplaceManager.marketplaceRoot.resolve(file)
+                else -> null
+            },
         ).loadAll()
     }
 

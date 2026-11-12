@@ -20,19 +20,17 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.util.Util
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.reflect.KProperty
+import net.minecraft.util.Unit as MinecraftUnit
 
 inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KProperty<*>): T = get()
 
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
-
-suspend inline fun Array<out Job>.joinAll() = forEach { it.join() }
 
 /**
  * A [PreparableReloadListener] with a simplified async reload entry point.
@@ -63,7 +61,7 @@ interface SimpleReloadListener : PreparableReloadListener {
         // Unit.INSTANCE is a pure barrier signal: the returned future only completes once every
         // listener's preparation phase has finished AND all preceding listeners in the reload
         // chain have completed (SimpleReloadInstance chains listeners through the barrier).
-        return preparationBarrier.wait(net.minecraft.util.Unit.INSTANCE)
+        return preparationBarrier.wait(MinecraftUnit.INSTANCE)
             .thenCompose { this.reload(taskExecutor, reloadExecutor) }
     }
 

@@ -24,18 +24,17 @@ import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingStyle
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
 import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.deeplearn.model.ModelStatus
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import org.apache.logging.log4j.LogManager
 
 /**
  * Every model bundled with the client loads in the engine and predicts.
  */
-class BundledModelsGameTest : FabricClientGameTest {
+class BundledModelsGameTest : LocalGameTest() {
     private val logger = LogManager.getLogger("BundledModelsGameTest")
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         check(context.fromClient { DeepLearningEngine.isInitialized }) { "The deep learning engine did not load" }
         val slots = ClickingStyle.entries.map(ClickingModels::slot) + CombatModels.SLOT
         context.onClient {
