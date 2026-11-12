@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
@@ -44,12 +45,14 @@ import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 object LegitNukerMode : Mode("Legit") {
 
     private var currentTarget: BlockPos? = null
+    private var ready: BlockHitResult? = null
 
     override val parent: ModeValueGroup<Mode>
         get() = mode
@@ -78,6 +81,8 @@ object LegitNukerMode : Mode("Legit") {
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        ready = null
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             this.currentTarget = null
             return@handler
@@ -104,7 +109,6 @@ object LegitNukerMode : Mode("Legit") {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         val currentTarget = currentTarget ?: return@tickHandler
-        val state = currentTarget.state ?: return@tickHandler
 
         if (ModulePacketMine.running) {
             return@tickHandler
@@ -115,15 +119,8 @@ object LegitNukerMode : Mode("Legit") {
             waitTicks(switchDelay)
         }
 
-        val rayTraceResult = raytraceBlock(
-            max(range, wallRange).toDouble() + 1.0,
-            pos = currentTarget,
-            state = state
-        ) ?: return@tickHandler
-
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != currentTarget) {
-            return@tickHandler
-        }
+        val rayTraceResult = ready?.takeIf { it.blockPos == currentTarget } ?: return@tickHandler
+        ready = null
 
         doBreak(rayTraceResult, forceImmediateBreak)
         wasTarget = currentTarget
@@ -161,10 +158,12 @@ object LegitNukerMode : Mode("Legit") {
 
             if (!packetMine) {
                 RotationManager.setRotationTarget(
-                    raytraceResult.rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    valueGroup = rotations,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
+                    rotations.toRotationTarget(
+                        raytraceResult.rotation,
+                        considerInventory = !ignoreOpenInventory,
+                        whenReady = readiness(pos),
+                    ),
+                    Priority.IMPORTANT_FOR_USAGE_1,
                     ModuleNuker
                 )
             }
@@ -181,8 +180,17 @@ object LegitNukerMode : Mode("Legit") {
             rotations,
             ModuleNuker,
             considerInventory = !ignoreOpenInventory,
-            rotate = !packetMine
+            rotate = !packetMine,
+            whenReady = ::readiness,
         )
     }
+
+    /**
+     * Ready once the ray, which may pass through other blocks within the wall range, meets [pos].
+     */
+    private fun readiness(pos: BlockPos) = Readiness({ rotation ->
+        raytraceBlock(max(range, wallRange).toDouble() + 1.0, rotation, pos, pos.state ?: return@Readiness null)
+            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+    }) { ready = it }
 
 }

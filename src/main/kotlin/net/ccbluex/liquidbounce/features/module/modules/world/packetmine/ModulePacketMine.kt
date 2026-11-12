@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Ne
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -124,6 +126,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
+    private var rotating = false
+    private var ready: BlockHitResult? = null
     private var tickCounter = 0L
     private var nextAllowedStartTick = 0L
 
@@ -169,6 +173,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        ready = null
+        rotating = false
         val mineTarget = currentTarget ?: return@handler
         mineTarget.updateBlockState()
         rotate(mineTarget)
@@ -204,29 +210,32 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
         if (rotate) {
             RotationManager.setRotationTarget(
-                raytrace.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
+                rotations.toRotationTarget(
+                    raytrace.rotation,
+                    considerInventory = !ignoreOpenInventory,
+                    whenReady = Readiness({ rotation -> hitOn(mineTarget, rotation) }) { ready = it },
+                ),
                 Priority.IMPORTANT_FOR_USAGE_2,
                 ModulePacketMine
             )
         }
 
+        rotating = rotate
         rotation = raytrace.rotation
     }
 
+    /** What the ray of [rotation] hits of the target, which may lie behind other blocks within the wall range. */
+    private fun hitOn(mineTarget: MineTarget, rotation: Rotation) =
+        raytraceBlock(max(range, wallsRange).toDouble(), rotation, mineTarget.targetPos, mineTarget.blockState)
+            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == mineTarget.targetPos }
+
     @Suppress("ReturnCount")
     private fun handleBreaking(mineTarget: MineTarget) {
-        // are we looking at the target?
-        val hit = raytraceBlock(
-            max(range, wallsRange).toDouble(),
-            RotationManager.serverRotation,
-            mineTarget.targetPos,
-            mineTarget.blockState
-        )
+        // Without rotations of its own, the player has to look at the target itself
+        val hit = if (rotating) ready else hitOn(mineTarget, RotationManager.currentRotation ?: player.rotation)
+        ready = null
 
-        val invalidHit = hit == null || hit.type != HitResult.Type.BLOCK || hit.blockPos != mineTarget.targetPos
-        if (invalidHit && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
+        if (hit == null && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
             return
         }
 

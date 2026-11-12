@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
@@ -72,6 +73,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -164,6 +166,7 @@ object ModuleFucker : ClientModule(
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+    private var ready: BlockHitResult? = null
 
     internal val hasTarget: Boolean
         get() = currentTarget != null
@@ -192,6 +195,8 @@ object ModuleFucker : ClientModule(
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
+        ready = null
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
@@ -225,7 +230,6 @@ object ModuleFucker : ClientModule(
         }
 
         val destroyerTarget = currentTarget ?: return@tickHandler
-        val currentRotation = RotationManager.serverRotation
         targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
@@ -233,20 +237,9 @@ object ModuleFucker : ClientModule(
             return@tickHandler
         }
 
-        // Check if we are already looking at the block
-        val rayTraceResult = raytraceBlock(
-            max(range, wallRange).toDouble(),
-            currentRotation,
-            destroyerTarget.pos,
-            destroyerTarget.pos.state ?: return@tickHandler
-        ) ?: return@tickHandler
-
-        val raytracePos = rayTraceResult.blockPos
-
-        // Check if the raytrace result includes a block, if not we don't want to deal with it.
-        val raytraceState = raytracePos.state
-        if (rayTraceResult.type != HitResult.Type.BLOCK || raytracePos != destroyerTarget.pos ||
-            raytraceState == null || raytraceState.isNotBreakable(raytracePos)) {
+        val rayTraceResult = ready?.takeIf { it.blockPos == destroyerTarget.pos } ?: return@tickHandler
+        ready = null
+        if (rayTraceResult.blockPos.state?.isNotBreakable(rayTraceResult.blockPos) != false) {
             return@tickHandler
         }
 
@@ -376,16 +369,21 @@ object ModuleFucker : ClientModule(
         }
 
         if (!ModulePacketMine.running) {
+            val pos = target.pos
+            val reach = max(ModuleFucker.range, ModuleFucker.wallRange).toDouble()
             RotationManager.setRotationTarget(
-                rotation = raytrace.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                priority = if (prioritizeOverKillAura) {
-                    Priority.IMPORTANT_FOR_USAGE_3
-                } else {
-                    Priority.IMPORTANT_FOR_USAGE_1
-                },
-                provider = this@ModuleFucker
+                rotations.toRotationTarget(
+                    raytrace.rotation,
+                    considerInventory = !ignoreOpenInventory,
+                    whenReady = Readiness({ rotation ->
+                        // The ray may pass through other blocks within the wall range
+                        val blockState = pos.state ?: return@Readiness null
+                        raytraceBlock(reach, rotation, pos, blockState)
+                            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+                    }) { ready = it },
+                ),
+                if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleFucker
             )
         }
 

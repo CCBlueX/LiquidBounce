@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
@@ -104,10 +105,11 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
                 wallsRange = wallRange.toDouble(),
             ) ?: return@handler
 
+        // Asked on the tick the rotation goes out, when the view is that rotation
         rotationMode.activeMode.rotate(rotation, isFinished = {
             isLookingAtEntity(
                 toEntity = target,
-                rotation = RotationManager.serverRotation,
+                rotation = RotationManager.currentRotation ?: player.rotation,
                 range = range.toDouble(),
                 throughWallsRange = wallRange.toDouble()
             ) != null

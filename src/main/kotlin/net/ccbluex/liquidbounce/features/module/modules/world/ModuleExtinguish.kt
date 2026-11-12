@@ -25,8 +25,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
@@ -36,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.BlockHitResult
 
 /**
  * Module Extinguish
@@ -65,6 +67,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     private var currentTarget: PlacementPlan? = null
+    private var ready: Pair<BlockHitResult, Rotation>? = null
 
     private val rotations = tree(RotationsValueGroup(this))
 
@@ -82,6 +85,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        ready = null
         // we can't place water in the nether
         if (world.waterEvaporates) {
             return@handler
@@ -94,8 +98,13 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         this.currentTarget = target
 
         RotationManager.setRotationTarget(
-            target.placementTarget.rotation,
-            valueGroup = rotations,
+            rotations.toRotationTarget(
+                target.placementTarget.rotation,
+                considerInventory = true,
+                whenReady = Readiness({ rotation ->
+                    target.placementTarget.verifyClick(rotation)?.let { hit -> hit to rotation }
+                }) { ready = it },
+            ),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleExtinguish
         )
@@ -104,6 +113,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         currentTarget = null
+        ready = null
     }
 
     private fun findAction(): PlacementPlan? {
@@ -133,10 +143,9 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        val (rayTraceResult, rotation) = ready ?: return@handler
+        ready = null
         val target = currentTarget ?: return@handler
-
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return@handler
 
         if (!SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
             return@handler
