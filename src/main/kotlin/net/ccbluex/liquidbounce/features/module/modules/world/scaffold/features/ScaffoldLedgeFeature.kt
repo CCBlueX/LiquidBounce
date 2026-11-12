@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import kotlin.math.max
 
 @JvmRecord
 data class LedgeAction(
@@ -40,21 +39,20 @@ data class LedgeAction(
 
 }
 
+/**
+ * At the edge the player waits, sneaking, while it has no blocks or while [turning] towards the block it still owes.
+ */
 fun ledge(
     target: BlockPlacementTarget?,
     rotation: Rotation,
+    turning: Boolean,
     extension: ScaffoldLedgeExtension? = null
 ): LedgeAction {
     if (player.isCloseToEdge()) {
-        val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
+        ModuleScaffold.debugParameter("Turning") { turning }
 
-        ModuleScaffold.debugParameter("TicksUntilDestination") { ticks }
-
-        val isLowOnBlocks = ModuleScaffold.blockCount <= 0
-        val isNotReady = ticks >= 1
-
-        if (isLowOnBlocks || isNotReady) {
-            return LedgeAction(jump = false, sneakTime = max(1, ticks))
+        if (ModuleScaffold.blockCount <= 0 || turning) {
+            return LedgeAction(jump = false, sneakTime = 1)
         }
     }
 

@@ -271,8 +271,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /** Whether [currentTarget] waits for the rotation to hit it rather than going down with the view as it is. */
     private var aimed = false
 
+    /** Where scaffold aims this tick, while [aimed]. */
+    private var aim: Rotation? = null
+
     /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
     private var cooldown = 0
+
+    /** Degrees the view may still be off [aim] for the aim to count as arrived. */
+    private const val SETTLED_AIM = 3f
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
@@ -374,6 +380,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         forceSneak = 0
         currentTarget = null
         aimed = false
+        aim = null
         cooldown = 0
         renderer.clearSilently()
     }
@@ -441,9 +448,11 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         aimed = false
+        aim = null
         if (rotationTiming == NORMAL) {
             val rotation = technique.getRotations(target) ?: return@handler
             aimed = target != null
+            aim = rotation
 
             RotationManager.setRotationTarget(
                 ScaffoldRotationValueGroup.toRotationTarget(
@@ -556,10 +565,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         // Ledge feature - AutoJump and AutoSneak
         if (ledge) {
             val technique = activeTechnique
+            val view = RotationManager.currentRotation ?: player.rotation
+            // A block is still owed and the view has not come round to it yet
+            val turning = currentTarget != null && aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
 
             val ledgeAction = ledge(
                 this.currentTarget,
-                RotationManager.currentRotation ?: player.rotation,
+                view,
+                turning,
                 technique as? ScaffoldLedgeExtension
             )
 
