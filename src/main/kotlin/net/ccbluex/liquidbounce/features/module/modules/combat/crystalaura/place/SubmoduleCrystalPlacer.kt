@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -164,10 +163,10 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
+        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = { view ->
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
-                RotationManager.currentRotation ?: player.rotation,
+                view,
                 targetPos,
                 targetPos.stateOrEmpty
             ) ?: return@rotate false
