@@ -102,7 +102,8 @@ loom {
 // Client game tests: `src/gametest` is a separate source set/mod, never part of the main jar.
 // Run with `./gradlew runClientGameTest`. Headless, SDL needs EGL, since Xvfb has no sRGB GLX visual:
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
-// `-PgameTestNavigation=false` skips the slow navigation tests.
+// `-PgameTestNavigation=false` skips the slow navigation tests. The client starts without the browser, theme, deep
+// learning, LiquidChat, Discord and API requests, which none of its tests need; `-PgameTestFull` starts them too.
 //
 // `LiquidBounceGameTest`s play on the game test server (https://github.com/CCBlueX/gametest) with GAMETEST_API_TOKEN,
 // or on a server of one's own at GAMETEST_SERVER_ADDRESS. GAMETEST_SERVER_ANTICHEAT picks the anticheat;
@@ -158,7 +159,7 @@ tasks.named<ProcessResources>(gametestHarness.processResourcesTaskName) {
 val gameTestLibraries = gradle.gradleUserHomeDir.resolve("liquidbounce-gametest")
 
 loom.runs.named("clientGameTest") {
-    // Keeps the vanilla screens the test API waits for; the browser still starts. Drop it to test the theme UI.
+    // Keeps the vanilla screens the test API waits for while -PgameTestFull starts the theme
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
@@ -168,6 +169,12 @@ loom.runs.named("clientGameTest") {
     )
     providers.gradleProperty("gameTestServerOnly").orNull?.let {
         systemProperties.put("gametest.only", it)
+    }
+    // Add-on test runs set none of these and keep the browser and theme
+    if (!providers.gradleProperty("gameTestFull").map { it != "false" }.getOrElse(false)) {
+        for (part in listOf("browser", "interop", "deeplearning", "chat", "api", "discord")) {
+            systemProperties.put("net.ccbluex.liquidbounce.$part.skip", "true")
+        }
     }
 }
 

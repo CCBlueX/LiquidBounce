@@ -22,7 +22,9 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.onInterrupted
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -144,25 +146,28 @@ object ModuleAutoPearl : ClientModule(
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
         val rotation = queue.firstOrNull() ?: return@tickHandler
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
-        if (itemSlot == null) {
+        if (Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) == null) {
             queue.removeFirst()
             return@tickHandler
         }
 
-        if (!Rotate.enabled) {
-            queue.removeFirst()
-            val (yaw, pitch) = rotation.normalize()
+        guarded {
+            val itemSlot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
+
+            if (!Rotate.enabled) {
+                queue.removeFirst()
+                val (yaw, pitch) = rotation.normalize()
+                useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+                return@guarded
+            }
+
+            // The rotation update keeps aiming at the head of the queue until it is ready
+            tickConditional(20) { ready != null }
+            queue.removeFirstOrNull()
+            val (yaw, pitch) = ready ?: return@guarded
+            ready = null
             useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
-            return@tickHandler
-        }
-
-        // The rotation update keeps aiming at the head of the queue until it is ready
-        tickConditional(20) { ready != null }
-        queue.removeFirstOrNull()
-        val (yaw, pitch) = ready ?: return@tickHandler
-        ready = null
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+        }.onInterrupted { queue.removeFirstOrNull() }
     }
 
     private fun proceedPearl(
