@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
@@ -127,30 +128,33 @@ object ModuleAutoPearl : ClientModule(
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
         val rotation = queue.removeFirstOrNull() ?: return@tickHandler
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
 
-        if (Rotate.enabled) {
-            fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
+        guarded {
+            val itemSlot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
+
+            if (Rotate.enabled) {
+                fun isRotationSufficient(): Boolean {
+                    return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
+                }
+
+                tickConditional(20) {
+                    RotationManager.setRotationTarget(
+                        Rotate.rotations.toRotationTarget(rotation),
+                        Priority.IMPORTANT_FOR_USAGE_3,
+                        this@ModuleAutoPearl
+                    )
+
+                    isRotationSufficient()
+                }
+
+                if (!isRotationSufficient()) {
+                    return@guarded
+                }
             }
 
-            tickConditional(20) {
-                RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleAutoPearl
-                )
-
-                isRotationSufficient()
-            }
-
-            if (!isRotationSufficient()) {
-                return@tickHandler
-            }
+            val (yaw, pitch) = rotation.normalize()
+            useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
         }
-
-        val (yaw, pitch) = rotation.normalize()
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
     }
 
     private fun proceedPearl(

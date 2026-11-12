@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -199,16 +200,21 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
-        // 3. timeout / hit entity / no movement / out of range
-        tickConditional(hitTimeout) {
-            fishingBobberEntity?.hookedIn != null ||
-                fishingBobberEntity?.knownMovement == Vec3.ZERO ||
-                pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
-        }
+        guarded {
+            same { mc.level }
+            guard { slot.itemStack.`is`(Items.FISHING_ROD) }
 
-        // 4. pull
-        // 5. reset slot (this ticksUntilReset will override prev action)
-        useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+            // 3. timeout / hit entity / no movement / out of range
+            tickConditional(hitTimeout) {
+                fishingBobberEntity?.hookedIn != null ||
+                    fishingBobberEntity?.knownMovement == Vec3.ZERO ||
+                    pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
+            }
+
+            // 4. pull
+            // 5. reset slot (this ticksUntilReset will override prev action)
+            useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+        }
 
         waitTicks(cooldown.random())
     }
