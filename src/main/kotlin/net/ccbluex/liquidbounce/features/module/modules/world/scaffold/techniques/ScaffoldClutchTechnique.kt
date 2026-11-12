@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -33,14 +34,16 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
-import kotlin.math.min
 
 /**
  * Builds under the fall [ModuleClutch] predicts. Not selectable: scaffold switches to it for as long as the fall
@@ -48,12 +51,9 @@ import kotlin.math.min
  */
 internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
 
-    // How far down the fall a block is aimed at already
-    private const val TICKS_AHEAD = 10
-
     /**
-     * An anticheat only takes a click for certain if the server had its rotation the tick before, so the aim is at
-     * what the next tick clicks. The on tick timings send the rotation along with the click instead.
+     * An anticheat only takes a click for certain if the server had its rotation the tick before. The on tick
+     * timings send the rotation along with the click instead.
      */
     private val aimsAhead
         get() = rotationTiming == NORMAL
@@ -65,43 +65,79 @@ internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
         bestStack: ItemStack
     ): BlockPlacementTarget? {
         val fall = ModuleClutch.fall ?: return null
-        val ahead = if (aimsAhead) 1 else 0
-        val clickFrom = if (aimsAhead) fall.first() else player.position()
-        var feetY = clickFrom.y
+        val now = target(player.position(), fall, bestStack)
+        if (!aimsAhead) {
+            return now
+        }
 
-        for (position in fall.subList(ahead, min(fall.size, ahead + TICKS_AHEAD))) {
+        // What the rotation the server has points at already is clicked this tick. Anything else can only be aimed
+        // at, for the next tick to click from where the player is by then
+        return now?.takeIf { it.click(RotationManager.serverRotation) != null }
+            ?: target(fall.first(), fall.subList(1, fall.size), bestStack)
+    }
+
+    /**
+     * The block to place from [from] to get under [fall], the positions of the ticks after.
+     */
+    private fun target(from: Vec3, fall: List<Vec3>, stack: ItemStack): BlockPlacementTarget? {
+        val clickFrom = PlayerLocationOnPlacement(position = from)
+        val range = player.blockInteractionRange()
+        var feetY = from.y
+
+        for (position in fall) {
             // A block catches the player where its feet come down through the top of a block layer. At the click
             // the feet have to be above that layer already
             val top = floor(feetY)
             feetY = position.y
-            if (position.y >= top || top > clickFrom.y) {
+            if (position.y >= top || top > from.y) {
                 continue
             }
 
-            val landing = BlockPos.containing(position.x, top - 1, position.z)
-            // Next to a block it only waits for that block's face to turn towards the player. Anything else needs
-            // a row of blocks towards it first, or is left to a layer further down
-            val supported = landing.hasAnySolidPlacementNeighbor()
+            if (clickFrom.eyePos.y - top > range) {
+                break
+            }
+
+            // The block goes under the player, not under where it comes down: a knock carries it blocks away, and
+            // only a row that keeps up with it gets there. With a block under it the row has to wait for it
+            val below = BlockPos.containing(from.x, top - 1, from.z)
+            if (below.canStandOn()) {
+                return null
+            }
+
             val searchOptions = BlockPlacementTargetFindingOptions(
                 BlockOffsetOptions(
-                    (if (supported) BlockPosOffsets.NO_OFFSET else BlockPosOffsets.FULL).offsets,
-                    BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(position),
+                    // A block right on top of ground gains nothing over that ground
+                    BlockPosOffsets.FULL.offsets.filterNot { below.offset(it).below().canStandOn() },
+                    BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(from.copy(y = top - 0.5)),
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory),
-                stackToPlaceWith = bestStack,
-                PlayerLocationOnPlacement(position = clickFrom),
+                stackToPlaceWith = stack,
+                clickFrom,
+                range,
             )
 
-            val target = findBestBlockPlacementTarget(landing, searchOptions)
-            if (target != null || supported) {
-                return target
-            }
+            // Without a block in reach on this layer, one further down may still have one
+            return findBestBlockPlacementTarget(below, searchOptions) ?: continue
         }
 
         return null
     }
 
     override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        target?.verifyClick(if (aimsAhead) RotationManager.serverRotation else rotation)
+        if (aimsAhead) target?.click(RotationManager.serverRotation) else target?.verifyClick(rotation)
+
+    /**
+     * The click [rotation] allows. It only has to meet the clicked block, not the face to click: no anticheat can
+     * tell which face a rotation met a tick ago, and the one that placed the last block of a row still meets it.
+     */
+    private fun BlockPlacementTarget.click(rotation: Rotation): BlockHitResult? {
+        verifyClick(rotation)?.let { return it }
+
+        val facesPlayer = (player.eyePosition - interactionPoint).dot(direction.unitVec3) > 0.0
+        val state = interactedBlockPos.stateOrEmpty
+        val pointedAt = raytraceBlock(player.blockInteractionRange(), rotation, interactedBlockPos, state) != null
+
+        return blockHitResult.takeIf { facesPlayer && pointedAt }
+    }
 
 }

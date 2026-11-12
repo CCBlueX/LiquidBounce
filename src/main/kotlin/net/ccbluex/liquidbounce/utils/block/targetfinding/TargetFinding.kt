@@ -63,12 +63,15 @@ enum class AimMode(override val tag: String) : Tagged {
 
 /**
  * Parameters used when generating a targeting plan for a block placement.
+ *
+ * @param range how far from the eye of [playerLocationOnPlacement] a click may be
  */
 data class BlockPlacementTargetFindingOptions(
     val offsetOptions: BlockOffsetOptions,
     val faceHandlingOptions: FaceHandlingOptions,
     val stackToPlaceWith: ItemStack,
-    val playerLocationOnPlacement: PlayerLocationOnPlacement
+    val playerLocationOnPlacement: PlayerLocationOnPlacement,
+    val range: Double = Double.MAX_VALUE,
 ) {
     companion object {
         @JvmStatic
@@ -209,9 +212,10 @@ private fun findBestTargetPlan(
         val plan = findTargetPlan(clickedBlockPos, direction, posToInvestigate, outlineShape, options) ?: return
 
         val toEye = eyePos.subtract(plan.interactionPoint)
-        val facing = toEye.dot(plan.direction.unitVec3) / toEye.length()
+        val distance = toEye.length()
+        val facing = toEye.dot(plan.direction.unitVec3) / distance
 
-        if (!considerFacingAwayFaces && facing < 0.0) {
+        if (distance > options.range || !considerFacingAwayFaces && facing < 0.0) {
             return
         }
 
