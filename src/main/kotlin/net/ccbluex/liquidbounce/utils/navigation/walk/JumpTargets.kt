@@ -48,7 +48,9 @@ internal class JumpTargets(
     /**
      * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
      * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
-     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further.
+     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further. With
+     * [around], also the ones behind a post or wall right where the straight line leaves the block, for a jump around
+     * it.
      */
     @Suppress("LongParameterList", "CognitiveComplexMethod")
     fun forEach(
@@ -59,6 +61,7 @@ internal class JumpTargets(
         maxDrop: Int,
         bounceDrop: Int = maxDrop,
         upward: Double = 0.0,
+        around: Boolean = false,
         sink: Sink,
     ) {
         val lift = lift(upward)
@@ -85,7 +88,7 @@ internal class JumpTargets(
                 val rise = top - height
                 val inRange = !top.isNaN() && rise <= rises &&
                     (ty >= y - maxDrop || terrain.restitution(tx, top, tz) > 0.0)
-                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing)) {
+                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing, around)) {
                     continue
                 }
 
@@ -114,10 +117,11 @@ internal class JumpTargets(
         ty: Int,
         rise: Double,
         bouncing: Boolean,
+        around: Boolean,
     ) = when {
         walkReaches(x, y, z, offset, ty - y) -> false
         bouncing -> ty > y || crossesGap(x, y, z, height, offset)
-        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty)
+        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty, around)
     }
 
     private fun catchHeight(x: Int, y: Int, z: Int) =
@@ -142,10 +146,19 @@ internal class JumpTargets(
         isDip(x, y, z, height) && terrain.standHeight(x, y - 1, z).isNaN()
 
     /**
-     * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. A post
-     * or wall right where it leaves is jumped around when the line crosses a gap further on.
+     * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. With
+     * [around], a post or wall right where it leaves will do when the line crosses a gap further on.
      */
-    private fun leavesOverGap(x: Int, y: Int, z: Int, height: Double, offset: Offset, ty: Int): Boolean {
+    @Suppress("LongParameterList")
+    private fun leavesOverGap(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        offset: Offset,
+        ty: Int,
+        around: Boolean,
+    ): Boolean {
         val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
         for (step in 1..steps) {
             // Half a step off, so that a diagonal never samples the very corner between two columns.
@@ -155,7 +168,7 @@ internal class JumpTargets(
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
                     isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
-                    !terrain.isOpen(cx, y, cz) && crossesGap(x, y, z, height, offset)
+                    around && !terrain.isOpen(cx, y, cz) && crossesGap(x, y, z, height, offset)
             }
         }
         return false

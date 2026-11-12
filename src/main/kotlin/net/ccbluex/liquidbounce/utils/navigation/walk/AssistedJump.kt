@@ -310,7 +310,9 @@ internal class AssistedJump {
         val terrain = targets.terrain
         val position = state.position
         val found = Found()
-        targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP, MAX_BOUNCE_DROP, state.motionY) { x, y, z, top ->
+        targets.forEach(
+            feet.x, feet.y, feet.z, height, MAX_DROP, MAX_BOUNCE_DROP, state.motionY, around = true,
+        ) { x, y, z, top ->
             val angle = angle(position, Vec3(x + 0.5, top, z + 0.5), heading)
             if (angle > maxAngle) {
                 return@forEach true
