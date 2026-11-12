@@ -20,8 +20,10 @@ package net.ccbluex.liquidbounce.utils.aiming.aim
 
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import java.util.random.RandomGenerator
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.log2
@@ -93,7 +95,10 @@ class Hand(private val random: RandomGenerator) {
         step: Float,
     ): RotationDelta {
         val nearYaw = viewYaw + wrap(goalYaw - viewYaw)
-        if (seen > 0 && hypot(nearYaw - seenYaw[0], goalPitch - seenPitch[0]) > max(JUMP, max(width, height) * 2f)) {
+        // Near straight up or down a small move of the goal swings its yaw a long way, so a jump is judged by how
+        // far the goal moves in sight, not in yaw
+        val moved = hypot((nearYaw - seenYaw[0]) * cos(goalPitch * DEG_TO_RAD), goalPitch - seenPitch[0])
+        if (seen > 0 && moved > max(JUMP, max(width, height) * 2f)) {
             // A new goal: what was seen of the old one says nothing about how this one moves
             seen = 0
             reactIn = max(reactIn, nextReaction())
@@ -138,9 +143,9 @@ class Hand(private val random: RandomGenerator) {
 
         val delay = min(PERCEPTION_DELAY, seen - 1)
         val span = min(VELOCITY_SPAN, seen - 1 - delay)
-        var velocityYaw = if (span > 0) (seenYaw[delay] - seenYaw[delay + span]) / span else 0f
+        var velocityYaw = goalSpeed(seenYaw, delay, span)
         // People follow vertical movement, such as a jump, far less than sideways movement
-        var velocityPitch = if (span > 0) (seenPitch[delay] - seenPitch[delay + span]) / span * PITCH_GAIN else 0f
+        var velocityPitch = goalSpeed(seenPitch, delay, span) * PITCH_GAIN
         following = hypot(velocityYaw, velocityPitch) >= MOVING
         if (!following) {
             velocityYaw = 0f
@@ -203,6 +208,16 @@ class Hand(private val random: RandomGenerator) {
         pauseIn = whole + if (following) random.nextInt(PAUSE.first, PAUSE.last + 1) else 0
         // Each movement is a little turned, more or less like the one before
         tilt = tilt * TILT_KEEP + random.nextGaussian().toFloat() * TILT * sqrt(1f - TILT_KEEP * TILT_KEEP)
+    }
+
+    /**
+     * Degrees per tick the goal moved over [span] ticks, [delay] ticks ago. A goal swinging faster than a hand can
+     * follow, as one near straight up or down does, is not pursued at its speed but caught up with.
+     */
+    private fun goalSpeed(seen: FloatArray, delay: Int, span: Int) = if (span > 0) {
+        ((seen[delay] - seen[delay + span]) / span).coerceIn(-MAX_PURSUIT, MAX_PURSUIT)
+    } else {
+        0f
     }
 
     private fun remember(yaw: Float, pitch: Float) {
@@ -329,6 +344,7 @@ class Hand(private val random: RandomGenerator) {
 
     private companion object {
         const val TICK = 0.05f
+        const val DEG_TO_RAD = (PI / 180).toFloat()
 
         /** Fitts' law for a mouse: seconds, and seconds per bit. */
         const val FITTS_A = 0.06f
@@ -404,6 +420,9 @@ class Hand(private val random: RandomGenerator) {
 
         /** Degrees per tick from which a goal counts as moving. */
         const val MOVING = 0.3f
+
+        /** Degrees per tick, the fastest goal movement a hand keeps pace with. */
+        const val MAX_PURSUIT = 6f
 
         /** Share of a minimum-jerk movement done at [t] of its time. */
         fun minimumJerk(t: Float) = t * t * t * (10f + t * (6f * t - 15f))
