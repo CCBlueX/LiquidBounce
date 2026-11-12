@@ -140,7 +140,10 @@ internal class JumpTargets(
     private fun isGap(x: Int, y: Int, z: Int, height: Double) =
         isDip(x, y, z, height) && terrain.standHeight(x, y - 1, z).isNaN()
 
-    /** Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. */
+    /**
+     * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. A post
+     * or wall right where it leaves is jumped around when the line crosses a gap further on.
+     */
     private fun leavesOverGap(x: Int, y: Int, z: Int, height: Double, offset: Offset, ty: Int): Boolean {
         val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
         for (step in 1..steps) {
@@ -150,7 +153,8 @@ internal class JumpTargets(
             val cz = Mth.floor(z + 0.5 + offset.z * along)
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
-                    isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height)
+                    isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
+                    !terrain.isOpen(cx, y, cz) && crossesGap(x, y, z, height, offset)
             }
         }
         return false

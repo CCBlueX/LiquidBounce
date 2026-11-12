@@ -74,10 +74,10 @@ internal class Leap {
         }
 
         val jump = refined ?: planned
-        val ready = isReady(state, stop(jump, step))
+        val ready = isReady(state, stop(jump))
 
         // Away from the run-up, only a jump with room to spare beats walking back to it; a run once started goes on.
-        val now = jumps.fromHere(state, yaw, step.to, step.feet.y)
+        val now = jumps.fromHere(state, yaw, step.to, step.feet.y, jump.aim)
             ?.takeIf { ready || running || it.margin >= LIVE_MARGIN }
         running = now != null
         if (now != null) {
@@ -95,7 +95,7 @@ internal class Leap {
         if (ready && jump.hops == 0) {
             moveRunUp(step, jump, jumps)
         }
-        return approach(state, yaw, stop(refined ?: planned, step), step.feet)
+        return approach(state, yaw, stop(refined ?: planned), step.feet)
     }
 
     /** Standing still for [STILL_TICKS] counts where the approach cannot get closer, as at the edge of a block. */
@@ -120,11 +120,11 @@ internal class Leap {
     }
 
     /** Where to stand before the run: behind the run-up, as a stop short of it costs a jump less than one past it. */
-    private fun stop(jump: Jump, step: Step): Vec3 {
+    private fun stop(jump: Jump): Vec3 {
         val runUp = jump.runUp
         val distance = RUN_UP_BIAS + retreat
-        val dx = step.feet.x - runUp.x
-        val dz = step.feet.z - runUp.z
+        val dx = jump.aim.x - runUp.x
+        val dz = jump.aim.z - runUp.z
         val length = Mth.length(dx, dz)
         if (length < MIN_LENGTH) {
             return runUp

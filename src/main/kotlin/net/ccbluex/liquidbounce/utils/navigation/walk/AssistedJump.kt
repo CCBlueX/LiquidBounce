@@ -57,12 +57,12 @@ internal class AssistedJump {
             abs(position.z - pos.z - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH
 
         /**
-         * The yaw a player at [position], moving by [motion], turns to for the jump, or NaN to hold the one it has:
-         * close to the aim, where the way there turns around once it is passed, past it in the air, and down on the
-         * block until the next tick picks the jump after it.
+         * The yaw a player at [position], moving by [motion], turns to for the jump towards [look], or NaN to hold the
+         * one it has: close to it, where the way there turns around once it is passed, past it in the air, and down on
+         * the block until the next tick picks the jump after it.
          */
-        fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean): Float {
-            val delta = aim.subtract(position)
+        fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean, look: Vec3 = aim): Float {
+            val delta = look.subtract(position)
             val passed = !onGround && delta.x * motion.x + delta.z * motion.z < 0.0
             val near = delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE * MIN_AIM_DISTANCE
             return if (near || passed || isLanded(position, onGround)) Float.NaN else delta.yaw
@@ -128,13 +128,23 @@ internal class AssistedJump {
 
     private var leap = Leap()
 
+    /** The run-up targets planned while standing on [plannedFrom], by the block jumped to; null where none works. */
+    private val planned = HashMap<BlockPos, Target?>()
+    private var plannedFrom: BlockPos? = null
+
     /** Whether an assisted jump is in the air. */
     private var airborne = false
     private var ticksSinceLanding = BRAKE_TICKS
 
-    /** [Target.aimYaw] of [target], or NaN without one. */
-    fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean) =
-        target?.aimYaw(position, motion, onGround) ?: Float.NaN
+    /**
+     * [Target.aimYaw] of [target], or NaN without one: towards where [Leap] looks on the way to a run-up, which it
+     * simulated walking there with.
+     */
+    fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean): Float {
+        val target = target ?: return Float.NaN
+        val look = leap.target.takeIf { target.step != null } ?: target.aim
+        return target.aimYaw(position, motion, onGround, look)
+    }
 
     /**
      * The keys for [state], a player moving with [yaw] who holds [keys] towards [heading], that make the jump it
@@ -224,14 +234,26 @@ internal class AssistedJump {
         release()
         airborne = false
         ticksSinceLanding = BRAKE_TICKS
+        planned.clear()
+        plannedFrom = null
     }
 
     /** The target being run up to, while the player is still on the block it jumps from and heads for it. */
     private fun runUpKept(state: PlayerMotion, heading: Float, maxAngle: Float): Target? {
         val target = target ?: return null
         val step = target.step ?: return null
-        val stays = BlockPos.containing(state.x, state.y + FEET_PROBE, state.z) == step.from
-        return target.takeIf { stays && !leap.hopeless && angle(state.position, target.aim, heading) <= maxAngle }
+        if (leap.hopeless) {
+            planned[step.to] = null
+            return null
+        }
+        val stays = feet(state) == step.from
+        return target.takeIf { stays && angle(state.position, target.aim, heading) <= maxAngle }
+    }
+
+    /** The feet block of the player, or over the edge the one of the block it still stands on. */
+    private fun feet(state: PlayerMotion): BlockPos {
+        val feet = BlockPos.containing(state.x, state.y + FEET_PROBE, state.z)
+        return state.supportingBlock?.let { BlockPos(it.x, feet.y, it.z) } ?: feet
     }
 
     /**
@@ -249,10 +271,7 @@ internal class AssistedJump {
         maxAngle: Float,
     ): Target? {
         val position = state.position
-        // Over the edge, the player still stands on the block behind it.
-        val feet = BlockPos.containing(position.x, position.y + FEET_PROBE, position.z).let { feet ->
-            state.supportingBlock?.let { BlockPos(it.x, feet.y, it.z) } ?: feet
-        }
+        val feet = feet(state)
         val standing = targets.terrain.standHeight(feet.x, feet.y, feet.z)
         val height = if (standing.isNaN()) position.y else standing
         val found = find(targets, jumps, state, yaw, heading, maxAngle, feet, height)
@@ -273,7 +292,7 @@ internal class AssistedJump {
             // Bouncing off slime leaves no run-up.
             state.motionY > 0.0 -> best() ?: settle(state, yaw, jumps, feet.takeUnless { standing.isNaN() }, height)
             standing.isNaN() -> best()
-            else -> found.runUp(jumps, feet, height) ?: best()
+            else -> found.runUp { runUpTo(it, jumps, feet, height) } ?: best()
         }
     }
 
@@ -318,6 +337,31 @@ internal class AssistedJump {
     }
 
     /**
+     * The jump to [missed] from a run-up on [feet], standing at [height]: planned once while the player stays on the
+     * block, as a jump around something takes a while to find.
+     */
+    private fun runUpTo(missed: Missed, jumps: Jumps, feet: BlockPos, height: Double): Target? {
+        if (feet != plannedFrom) {
+            planned.clear()
+            plannedFrom = feet
+        }
+        if (missed.pos in planned) {
+            return planned[missed.pos]
+        }
+
+        val plan = jumps.plan(feet, height, missed.pos, missed.top, around = true)
+        val target = plan?.let {
+            val landing = Vec3(missed.pos.x + HALF_BLOCK, missed.top, missed.pos.z + HALF_BLOCK)
+            val step = Step(
+                feet, missed.pos, Move.PARKOUR, landing, emptyList(), emptyList(), emptyList(), cost = 0.0, jump = it,
+            )
+            Target(missed.pos, missed.top, it, step)
+        }
+        planned[missed.pos] = target
+        return target
+    }
+
+    /**
      * With nowhere to go off a bounce, coming down where it bounced off, or on [feet] at [height], without a jump that
      * would keep it bouncing.
      */
@@ -355,20 +399,14 @@ internal class AssistedJump {
         var bestIntent = Double.MAX_VALUE
         val missed = ArrayList<Missed>()
 
-        /** A block clearly headed for more than [best] and out of reach from here, jumped to from a run-up. */
-        fun runUp(jumps: Jumps, feet: BlockPos, height: Double): Target? {
+        /** A block clearly headed for more than [best] and out of reach from here, jumped to from its [runUp]. */
+        fun runUp(runUp: (Missed) -> Target?): Target? {
             missed.sortBy(Missed::intent)
             for (candidate in missed.take(MAX_RUN_UPS)) {
                 if (candidate.intent > bestIntent - INTENT_SLACK) {
                     break
                 }
-                val plan = jumps.plan(feet, height, candidate.pos, candidate.top) ?: continue
-                val landing = Vec3(candidate.pos.x + 0.5, candidate.top, candidate.pos.z + 0.5)
-                val step = Step(
-                    feet, candidate.pos, Move.PARKOUR, landing, emptyList(), emptyList(), emptyList(), cost = 0.0,
-                    jump = plan,
-                )
-                return Target(candidate.pos, candidate.top, plan, step)
+                runUp(candidate)?.let { return it }
             }
             return null
         }

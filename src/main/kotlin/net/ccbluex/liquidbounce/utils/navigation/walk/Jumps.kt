@@ -103,8 +103,14 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
     /** Where [takeOff] puts the position after every simulated tick, or null. */
     private var path: MutableList<Vec3>? = null
 
-    /** The best way to jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight], or null. */
-    fun plan(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): Jump? {
+    /** Whether a run or flight simulated since [setCourse] ran into something short of the target. */
+    private var obstructed = false
+
+    /**
+     * The best way to jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight], or null. With
+     * [around], a jump that runs into something on the straight way is tried from all over [from] and past its sides.
+     */
+    fun plan(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double, around: Boolean = false): Jump? {
         setCourse(from.x + 0.5, fromHeight, from.z + 0.5, to, toHeight)
         if (!abilities.riskyJumps && !isSafe()) {
             return null
@@ -131,6 +137,9 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
             aimBeside(offset)
             best = better(best, fromRest(center))
         }
+        if (around && obstructed && !best.has(minMargin)) {
+            best = better(best, around(from))
+        }
 
         return best?.takeIf { it.margin >= minMargin }
     }
@@ -148,13 +157,21 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         return best?.takeIf { it.margin >= minMargin }
     }
 
-    /** The jump onto [to] from where [state], a player on the ground, is now, moving this tick with [yaw]. */
-    fun fromHere(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): Jump? {
+    /**
+     * The jump onto [to] from where [state], a player on the ground, is now, moving this tick with [yaw]; also run
+     * towards [aim], the one a jump was planned with, when given.
+     */
+    fun fromHere(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double, aim: Vec3? = null): Jump? {
         setCourse(state.x, state.y, state.z, to, toHeight)
         val here = state.position
         var best = attempt(state, here, yaw, hops = 0, validations = Int.MAX_VALUE)
         for (offset in SIDE_AIMS) {
             aimBeside(offset)
+            best = better(best, attempt(state, here, yaw, hops = 0, validations = Int.MAX_VALUE))
+        }
+        if (aim != null) {
+            aimX = aim.x
+            aimZ = aim.z
             best = better(best, attempt(state, here, yaw, hops = 0, validations = Int.MAX_VALUE))
         }
         return best
@@ -262,6 +279,7 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         aimX = targetX
         aimZ = targetZ
         edge = Double.MAX_VALUE
+        obstructed = false
         dirX = targetX - fromX
         dirZ = targetZ - fromZ
         distance = Mth.length(dirX, dirZ)
@@ -279,6 +297,48 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
 
     /** The spot [distance] blocks behind where the jump starts, away from the target; ahead of it when negative. */
     private fun behind(distance: Double) = Vec3(fromX - dirX * distance, fromY, fromZ - dirZ * distance)
+
+    /**
+     * A jump past something in the way: from rest at spots all over [from], nearest to its middle first, run towards
+     * points beside the target and steered back onto it in the air. Only ways clear of the body are simulated.
+     */
+    private fun around(from: BlockPos): Jump? {
+        var best: Jump? = null
+        for (spot in AROUND_SPOTS) {
+            val runUp = Vec3(from.x + spot.x, fromY, from.z + spot.z)
+            if (!canStandAt(runUp)) {
+                continue
+            }
+            for (offset in AROUND_AIMS) {
+                aimBeside(offset)
+                if (isWayClear(runUp)) {
+                    best = better(best, fromRest(runUp))
+                    if (best.has(GOOD_MARGIN)) {
+                        return best
+                    }
+                }
+            }
+        }
+        return best
+    }
+
+    /**
+     * Whether the body fits all along the line from [runUp] to the aim, at least [JUMP_CLEARANCE] up from the line to
+     * the target height: what the jump has to clear on any arc.
+     */
+    private fun isWayClear(runUp: Vec3): Boolean {
+        val length = Mth.length(aimX - runUp.x, aimZ - runUp.z)
+        val samples = Mth.ceil(length / WAY_STEP)
+        for (sample in 1 until samples) {
+            val along = sample.toDouble() / samples
+            val y = Mth.lerp(along, fromY, targetHeight) + JUMP_CLEARANCE
+            val box = terrain.box(Mth.lerp(along, runUp.x, aimX), y, Mth.lerp(along, runUp.z, aimZ))
+            if (!terrain.isClear(box.setMaxY(box.maxY - JUMP_CLEARANCE))) {
+                return false
+            }
+        }
+        return true
+    }
 
     private fun runUpLength(max: Double): Double {
         var length = 0.0
@@ -412,7 +472,16 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
 
     private fun run(yaw: Float, jump: Boolean = false) {
         motion.tick(yaw, 1, 0, jump, abilities.canSprint)
+        noteObstruction()
         path?.add(motion.position)
+    }
+
+    /** Marks the course [obstructed] when [motion] hit something other than the side of the target. */
+    private fun noteObstruction() {
+        val reach = HALF_BLOCK + PlayerMotion.HALF_WIDTH + SIDE_SLACK
+        if (motion.horizontalCollision && (abs(motion.x - targetX) > reach || abs(motion.z - targetZ) > reach)) {
+            obstructed = true
+        }
     }
 
     private fun yawAt(tick: Int, firstYaw: Float?) =
@@ -496,6 +565,7 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
             }
             val back = !catches && overshoots()
             motion.tick(yawToTarget(), if (back) -1 else 1, 0, jump = false, sprint = abilities.canSprint && !back)
+            noteObstruction()
             airTicks++
         }
 
@@ -615,6 +685,21 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         const val VALIDATED_TAKEOFFS = 4
 
         val SIDE_AIMS = doubleArrayOf(0.3, -0.3)
+
+        /** Run-up spots tried on the block for a jump [around] something, up to the edges a player still stands on. */
+        val AROUND_SPOTS: List<Vec3> = doubleArrayOf(-0.25, 0.1, 0.5, 0.9, 1.25).let { along ->
+            along.flatMap { x -> along.map { z -> Vec3(x, 0.0, z) } }
+                .filter { it.x != HALF_BLOCK || it.z != HALF_BLOCK }
+                .sortedBy { Mth.lengthSquared(it.x - HALF_BLOCK, it.z - HALF_BLOCK) }
+        }
+        val AROUND_AIMS = doubleArrayOf(0.0, 0.3, -0.3, 0.7, -0.7, 1.2, -1.2)
+
+        /** How high above the straight line a jump gets for long enough to pass over what is lower. */
+        const val JUMP_CLEARANCE = 0.5
+        const val WAY_STEP = 0.25
+
+        /** How close to the side of the target a run into it counts as a landing short of it. */
+        const val SIDE_SLACK = 0.05
 
         /** How much better a margin must be for other keys than the ones tried first: forward, no strafe. */
         const val KEY_PREFERENCE = 0.02

@@ -218,6 +218,38 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a jump past a pot on the straight line takes off beside it`() {
+        // A server Jump 'n' Run: from a carpeted 1x1 pillar to the next one, lower and to the left, with a pot on a
+        // post at feet height on the straight line between them.
+        val world = TestWorld()
+        val course = listOf(pillar(world, 0, 10, 0), pillar(world, -4, 9, -1))
+        pot(world, -2, 11, 0)
+
+        assertEquals(course, run(world, Vec3(0.5, 11.0625, 0.5), course))
+    }
+
+    @Test
+    fun `a jump between two pots takes off from the edge in line with the gap`() {
+        // The same Jump 'n' Run: pots on posts front left and front right, the next pillar behind and between them.
+        val world = TestWorld()
+        val course = listOf(pillar(world, 0, 10, 0), pillar(world, 1, 9, -4))
+        pot(world, 0, 11, -2)
+        pot(world, 2, 11, -2)
+
+        assertEquals(course, run(world, Vec3(0.5, 11.0625, 0.5), course))
+    }
+
+    @Test
+    fun `a post right beside the block jumped from is jumped past`() {
+        // The straight line leaves the pillar through a post too high to hop onto, which hid the pillar behind it.
+        val world = TestWorld()
+        val course = listOf(pillar(world, 0, 10, 0), pillar(world, -4, 10, -1))
+        pot(world, -1, 12, 0)
+
+        assertEquals(course, run(world, Vec3(0.5, 11.0625, 0.5), course))
+    }
+
+    @Test
     fun `the traced way of a jump is the way the player takes`() {
         val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
         val terrain = world.terrain()
@@ -320,6 +352,19 @@ class AssistedJumpTest {
         for ((predicted, actual) in traced.zip(landed)) {
             assertEquals(0.0, predicted.distanceTo(actual), TRACE_TOLERANCE, "traced $predicted, landed $actual")
         }
+    }
+
+    /** A stone pillar up to [top] with red carpet on it; the block of the course stood on. */
+    private fun pillar(world: TestWorld, x: Int, top: Int, z: Int): BlockPos {
+        world.fill(x, top - 6, z, x, top, z).set(x, top + 1, z, Blocks.CARPET.red().defaultBlockState())
+        return BlockPos(x, top + 1, z)
+    }
+
+    /** A full block at [y] on a post of stripped logs, with a potted flower on it. */
+    private fun pot(world: TestWorld, x: Int, y: Int, z: Int) {
+        world.fill(x, y - 6, z, x, y - 1, z, Blocks.STRIPPED_OAK_LOG.defaultBlockState())
+            .set(x, y, z, Blocks.MUD_BRICKS.defaultBlockState())
+            .set(x, y + 1, z, Blocks.POTTED_POPPY.defaultBlockState())
     }
 
     /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */
