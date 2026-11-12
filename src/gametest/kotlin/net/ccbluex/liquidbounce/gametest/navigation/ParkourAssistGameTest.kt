@@ -57,7 +57,7 @@ private val SLIME = BlockPos(4, 0, 0)
 
 /**
  * Along +X: from the middle of a carpeted 1x1 pillar to the next one, one lower and one to the side, past a pot on a
- * post that stands on the straight line between them at feet height.
+ * post that stands on the straight line between them at feet height, looking at the next pillar.
  */
 private val AROUND_COURSE = listOf(BlockPos(0, 0, 0), BlockPos(4, -1, 1))
 private val POT = BlockPos(2, 1, 0)
@@ -136,7 +136,7 @@ class ParkourAssistGameTest : LiquidBounceGameTest({
         val slimeFailure = runCourse(slimeStart, SLIME_COURSE, assist = true)
         check(slimeFailure == null) { "With Parkour the run over slime failed: $slimeFailure" }
 
-        val aroundFailure = runCourse(aroundStart, AROUND_COURSE, assist = true, carpet = true)
+        val aroundFailure = runCourse(aroundStart, AROUND_COURSE, assist = true, carpet = true, facesGoal = true)
         check(aroundFailure == null) { "With Parkour the run past the pot failed: $aroundFailure" }
 
         val bedFailure = runCourse(bedStart, BED_COURSE, assist = true)
@@ -146,18 +146,23 @@ class ParkourAssistGameTest : LiquidBounceGameTest({
     }
 })
 
-/** Runs [course] from [origin] holding forward and sprint, on [carpet] on every block of it; why it failed, or null. */
+/**
+ * Runs [course] from [origin] holding forward and sprint, looking towards its last block or along +X, on [carpet] on
+ * every block of it; why it failed, or null.
+ */
 private fun GameTestScope.runCourse(
     origin: BlockPos,
     course: List<BlockPos>,
     assist: Boolean,
     carpet: Boolean = false,
+    facesGoal: Boolean = false,
 ): String? {
     val goal = origin.offset(course.last()).above()
     val lowest = origin.y + course.minOf { it.y }
 
     val first = Vec3.atBottomCenterOf(origin.offset(course.first()).above())
-    moveTo(if (carpet) first.add(0.0, CARPET_HEIGHT, 0.0) else first, yaw = -90f)
+    val yaw = if (facesGoal) Vec3.atBottomCenterOf(goal).subtract(first).yaw else -90f
+    moveTo(if (carpet) first.add(0.0, CARPET_HEIGHT, 0.0) else first, yaw = yaw)
     context.onClient { ModuleParkour.enabled = assist }
 
     input.holdKey { it.keyUp }
