@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -66,8 +65,6 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         }
     }
 
-    private val shader = tree(ShaderLayer())
-
     private val currentMode: MurderMysteryMode
         get() = this.modes.activeMode
 
@@ -99,7 +96,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
             playBow = false
         }
 
-        event.renderEnvironment(shader) {
+        event.renderEnvironment {
             world.entitiesForRendering().forEachIsInstance<ArmorStand> {
                 if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
@@ -178,7 +175,10 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
         val pos = armorStandEntity.interpolateCurrentPosition(partialTicks)
 
         withPositionRelativeToCamera(pos) {
-            drawBox(box, Color4b(127, 255, 212))
+            drawBox(
+                box,
+                Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
+            )
         }
     }
 

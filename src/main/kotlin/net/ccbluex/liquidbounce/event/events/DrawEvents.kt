@@ -71,7 +71,7 @@ class WorldRenderEvent(
             renderTarget.depthTextureView.takeIf { renderTarget.hasDepth() },
             getDynamicTransformsUniform(),
         )
-        layers.forEach { it.finish(renderTarget) }
+        ShaderLayer.finish(layers, renderTarget)
     }
 
 }

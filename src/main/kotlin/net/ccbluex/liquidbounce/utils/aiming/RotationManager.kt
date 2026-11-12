@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleB
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -440,9 +439,6 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     private val vectorDot by color("VectorDot", Color4b(0x00, 0x80, 0xFF, 0x00))
 
-    private val shader = tree(ShaderLayer())
-    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
-
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val drawVectorLine = vectorLine.a > 0
@@ -458,16 +454,13 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
             val eyeVector = Vec3f.eyeVector(event.camera)
 
-            val vector = eyeVector.fma(100f, interpolatedRotationVec)
-
-            if (drawVectorLine) {
-                event.renderEnvironment(lineShader) {
+            event.renderEnvironment {
+                val vector = eyeVector.fma(100f, interpolatedRotationVec)
+                if (drawVectorLine) {
                     drawLine(eyeVector, vector, vectorLine.argb)
                 }
-            }
 
-            if (drawVectorDot) {
-                event.renderEnvironment(shader) {
+                if (drawVectorDot) {
                     drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }

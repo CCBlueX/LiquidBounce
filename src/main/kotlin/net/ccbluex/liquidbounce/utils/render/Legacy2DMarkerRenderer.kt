@@ -31,16 +31,19 @@ fun WorldRenderEnvironment.drawLegacy2DMarker(
     entityHeight: Double,
     scale: Float,
     foregroundArgb: Int,
+    backgroundArgb: Int,
 ) {
     withPositionRelativeToCamera(pos) {
         poseStack.rotate(Axis.YP.rotationDegrees(-camera.yRot()))
         poseStack.scale(-scale, -scale, scale)
 
         drawLegacy2DRects(foregroundArgb, TOP_FOREGROUND_RECTS)
+        drawLegacy2DRects(backgroundArgb, TOP_BACKGROUND_RECTS)
 
         poseStack.translate(0.0, 21.0 - entityHeight * 12.0, 0.0)
 
         drawLegacy2DRects(foregroundArgb, BOTTOM_FOREGROUND_RECTS)
+        drawLegacy2DRects(backgroundArgb, BOTTOM_BACKGROUND_RECTS)
     }
 }
 
@@ -62,9 +65,23 @@ private val TOP_FOREGROUND_RECTS = arrayOf(
     Rect(6f, 0.5f, 7f, 3f),
 )
 
+private val TOP_BACKGROUND_RECTS = arrayOf(
+    Rect(-7f, 3f, -4f, 3.3f),
+    Rect(4f, 3f, 7f, 3.3f),
+    Rect(-7.3f, 0.5f, -7f, 3.3f),
+    Rect(7f, 0.5f, 7.3f, 3.3f),
+)
+
 private val BOTTOM_FOREGROUND_RECTS = arrayOf(
     Rect(4f, -20f, 7f, -19f),
     Rect(-7f, -20f, -4f, -19f),
     Rect(6f, -20f, 7f, -17.5f),
     Rect(-7f, -20f, -6f, -17.5f),
+)
+
+private val BOTTOM_BACKGROUND_RECTS = arrayOf(
+    Rect(7f, -20f, 7.3f, -17.5f),
+    Rect(-7.3f, -20f, -7f, -17.5f),
+    Rect(4f, -20.3f, 7.3f, -20f),
+    Rect(-7.3f, -20.3f, -4f, -20f),
 )

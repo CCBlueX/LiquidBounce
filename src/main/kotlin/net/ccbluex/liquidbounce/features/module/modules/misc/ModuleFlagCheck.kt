@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -73,9 +72,8 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
         private val fadeOut by easing("FadeOut", Easing.QUAD_OUT)
         private val outTime by int("OutTime", 500, 0..2000, "ms")
-        private var color by color("Color", Color4b.RED.darker())
-
-        private val shader = tree(ShaderLayer())
+        private var color by color("Color", Color4b.RED.with(a = 100).darker())
+        private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
         val wireframePlayer = WireframePlayer()
         var creationTime = 0L
@@ -95,7 +93,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
             val withinRenderDuration = time - creationTime < renderTime
 
             if (withinRenderDuration) {
-                wireframePlayer.render(it, shader, color)
+                wireframePlayer.render(it, color, outlineColor)
             } else {
                 val factor = 1f - fadeOut.getFactor(creationTime + renderTime, time, outTime.toFloat())
                 if (factor == 0f) {
@@ -103,7 +101,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
                     return@handler
                 }
 
-                wireframePlayer.render(it, shader, color.fade(factor))
+                wireframePlayer.render(it, color.fade(factor), outlineColor.fade(factor))
             }
         }
 

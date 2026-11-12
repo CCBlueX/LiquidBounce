@@ -50,7 +50,7 @@ object ModuleVoidESP : ClientModule("VoidESP", ModuleCategories.RENDER) {
 
     private val renderer = tree(
         PlacementRenderer("Render", true, this, keep = true,
-            defaultColor = Color4b.RED
+            defaultColor = Color4b(255, 0, 0, 90)
         )
     )
 

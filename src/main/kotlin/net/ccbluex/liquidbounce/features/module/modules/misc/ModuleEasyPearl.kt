@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -73,8 +72,6 @@ object ModuleEasyPearl :
     private val rotation = tree(RotationsValueGroup(this))
 
     private val showDistance by boolean("ShowDistance", true)
-
-    private val shader = tree(ShaderLayer())
 
     private var targetPosition: Vec3? = null
 
@@ -166,15 +163,28 @@ object ModuleEasyPearl :
         val blockPos = pos.toBlockPos()
         val state = blockPos.state ?: return@handler
 
-        event.renderEnvironment(shader) {
+        event.renderEnvironment {
             val color = targetColor(pos)
+
+            val baseColor = color.with(a = 50)
+            val transparentColor = baseColor.with(a = 0)
+            val outlineColor = color.with(a = 200)
 
             withPositionRelativeToCamera(blockPos) {
                 if (state.renderShape != RenderShape.MODEL && state.isAir) {
-                    drawBoxSide(FULL_BOX, Direction.DOWN, color)
-                    drawGradientSides(0.7, color, color.with(a = 0), FULL_BOX)
+                    drawBoxSide(
+                        FULL_BOX,
+                        Direction.DOWN,
+                        baseColor,
+                        outlineColor,
+                    )
+                    drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
                 } else {
-                    drawBox(FULL_BOX, color)
+                    drawBox(
+                        FULL_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
         }

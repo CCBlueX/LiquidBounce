@@ -22,12 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.mode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
+import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.TotemEffectMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -36,7 +36,7 @@ import net.minecraft.world.phys.Vec3
 
 internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
-    private val color by color("Color", Color4b(0x2CFF00))
+    private val colors = TotemEffectColorSettings()
     private val toggleHalo by boolean("Halo", false)
     private object YMotion : ToggleableValueGroup(this, "YMotion", true) {
         val soulYMotion by float("SoulYMotion", 0.75f, 0.1f..10f)
@@ -47,9 +47,8 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
     init {
         tree(YMotion)
+        tree(colors)
     }
-
-    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawTotemEffect(
         progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float
@@ -58,7 +57,8 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
 
         if (alpha <= 0) return
 
-        val fadedColor = color.alpha(alpha)
+        val inner = colors.innerColor.alpha(alpha)
+        val outer = if (colors.sync) inner else colors.outerColor.alpha(alpha)
 
         val anim = if (YMotion.enabled) {
             when (YMotion.animBy) {
@@ -72,9 +72,9 @@ internal object TotemEffectSoul : TotemEffectMode("Soul") {
         wireframePlayer.pos = targetPos
         wireframePlayer.xRot = entity.xRot
         wireframePlayer.yRot = entity.yRot
-        wireframePlayer.render(color = fadedColor, noDepthTest = !canBeCovered)
+        wireframePlayer.render(color = inner, outlineColor = outer, noDepthTest = !canBeCovered)
 
-        if (toggleHalo) drawHalo(targetPos, fadedColor)
+        if (toggleHalo) drawHalo(targetPos, inner)
     }
 
     private fun WorldRenderEnvironment.drawHalo(targetPos: Vec3, color: Color4b) {

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -51,9 +50,8 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
     private val maxAllowedSpeed by float("MaxSpeed", 7f, 2f..10f)
 
     private object Preview : ToggleableValueGroup(this, "Preview", true) {
-        val fillColor by color("FillColor", Color4b.RED)
-
-        val shader = tree(ShaderLayer())
+        val fillColor by color("FillColor", Color4b.RED.alpha(67))
+        val outlineColor by color("OutlineColor", Color4b.WHITE.alpha(167))
     }
 
     init {
@@ -151,14 +149,14 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (!Preview.enabled) return@handler
         previewTarget?.let { target ->
-            event.renderEnvironment(Preview.shader) {
+            event.renderEnvironment {
                 withPositionRelativeToCamera {
                     if (target is EnderDragon) {
                         target.subEntities.forEach {
-                            drawBox(it.boundingBox, Preview.fillColor)
+                            drawBox(it.boundingBox, Preview.fillColor, Preview.outlineColor)
                         }
                     } else {
-                        drawBox(target.boundingBox, Preview.fillColor)
+                        drawBox(target.boundingBox, Preview.fillColor, Preview.outlineColor)
                     }
                 }
             }

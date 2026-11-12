@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ScrollAdjustValueGroup
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -53,9 +52,9 @@ import net.minecraft.world.phys.BlockHitResult
 object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
     private object Preview : ToggleableValueGroup(this, "Preview", true) {
-        val fillColor by color("Color", Color4b(69, 119, 255))
-
-        val shader = tree(ShaderLayer())
+        val outlineOnly by boolean("OutlineOnly", false)
+        val fillColor by color("Color", Color4b(69, 119, 255, 104))
+        val outlineColor by color("OutlineColor", Color4b.WHITE)
     }
 
     private val liquidPlace by boolean("PlaceInLiquid", false)
@@ -137,9 +136,13 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
         if (!Preview.running) return@handler
         val hitResult = getValidHitResult() ?: return@handler
 
-        event.renderEnvironment(Preview.shader) {
+        event.renderEnvironment {
             withPositionRelativeToCamera(hitResult.blockPos) {
-                drawBox(FULL_BOX, Preview.fillColor)
+                drawBox(
+                    FULL_BOX,
+                    if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor,
+                    Preview.outlineColor
+                )
             }
         }
     }

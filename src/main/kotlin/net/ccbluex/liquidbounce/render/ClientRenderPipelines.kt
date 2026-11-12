@@ -232,6 +232,25 @@ object ClientRenderPipelines {
     @JvmStatic
     fun lines(noDepthTest: Boolean) = if (noDepthTest) Lines else LinesDepthTested
 
+    private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
+        forWorldRender()
+    }
+
+    private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        relativePosSnippet(PrimitiveTopology.DEBUG_LINES)
+        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
+        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
+        forWorldRender()
+    }
+
+    @JvmStatic
+    fun relativeLines(useColor: Boolean) = if (useColor) LinesRelativeToCamera else LinesRelativeToCameraNoColor
+
     @JvmField
     val LineStrip = newPipeline("line_strip") {
         posColorSnippet(PrimitiveTopology.DEBUG_LINE_STRIP)

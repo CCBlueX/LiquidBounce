@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawShape
 import net.ccbluex.liquidbounce.render.drawShapeSide
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -54,7 +53,8 @@ import net.minecraft.world.phys.shapes.CollisionContext
 object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER, aliases = listOf("BlockOverlay")) {
 
     private val sideOnly by boolean("SideOnly", true)
-    private val color by color("Color", Color4b.LIQUID_BOUNCE)
+    private val color by color("Color", Color4b.LIQUID_BOUNCE.alpha(70))
+    private val outlineColor by color("Outline", Color4b.LIQUID_BOUNCE.alpha(150))
 
     private object Slide : ToggleableValueGroup(this, "Slide", true) {
         val time by int("Time", 150, 1..1000, "ms")
@@ -64,8 +64,6 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
     init {
         tree(Slide)
     }
-
-    private val shader = tree(ShaderLayer())
 
     private var currentPosition: AABB? = null
     private var previousPosition: AABB? = null
@@ -99,12 +97,12 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
 
             val localHitPos = target.location - blockPos
 
-            event.renderEnvironment(shader) {
+            event.renderEnvironment {
                 withPositionRelativeToCamera(blockPos) {
                     if (sideOnly) {
-                        drawShapeSide(shape, side, localHitPos, color)
+                        drawShapeSide(shape, side, localHitPos, color, outlineColor)
                     } else {
-                        drawShape(shape, color)
+                        drawShape(shape, color, outlineColor)
                     }
                 }
             }
@@ -136,11 +134,20 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
 
         val translatedPosition = renderPosition - event.camera.position()
 
-        event.renderEnvironment(shader) {
+        event.renderEnvironment {
             if (sideOnly) {
-                drawBoxSide(translatedPosition, side, color)
+                drawBoxSide(
+                    translatedPosition,
+                    side,
+                    color,
+                    outlineColor,
+                )
             } else {
-                drawBox(translatedPosition, color)
+                drawBox(
+                    translatedPosition,
+                    color,
+                    outlineColor,
+                )
             }
         }
     }

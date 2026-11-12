@@ -46,7 +46,6 @@ class ShaderLayer(solid: Boolean = false, name: String = "Shader") : ValueGroup(
 
     private val chain = StyleChain(styles, PostChain.MAIN_TARGET_ID)
     private val collector = BatchCollector()
-    private val passes = ArrayList<(RenderTarget) -> Unit>()
 
     private var frame: WorldRenderEvent? = null
     private var environment: WorldRenderEnvironment? = null
@@ -63,41 +62,43 @@ class ShaderLayer(solid: Boolean = false, name: String = "Shader") : ValueGroup(
     }
 
     /**
-     * For geometry that comes with a render pass of its own: [pass] draws it into the silhouette target it is given
-     * once the frame is finished. Translucent blending is required, see `field_rows.frag`.
+     * What tells the pictures of two layers apart: null without a style, else its shader and settings.
      */
-    internal fun draw(event: WorldRenderEvent, pass: (RenderTarget) -> Unit) {
-        environment(event)
-        passes += pass
-    }
+    private fun look(): Any? = (styles.activeMode as? PostStyle)?.let { it.pipeline to it.uniforms() }
 
-    /**
-     * Draws what the frame collected onto [scene]. Geometry of depth tested pipelines is cut by the depth of [scene].
-     */
-    internal fun finish(scene: RenderTarget) {
-        frame = null
-        environment = null
-        if (collector.isEmpty && passes.isEmpty()) {
-            return
-        }
-
-        // Layers are finished one after another, so they share the target
-        val target = silhouettes.initAndGet()
-        collector.flush(target.colorTextureView!!, scene.depthTextureView, getDynamicTransformsUniform())
-        passes.forEach { it(target) }
-        passes.clear()
-
-        chain.get()?.process(target, mc.gameRenderer.resourcePool)
-        target.blitAndBlendToTexture(scene.colorTextureView!!, scene.depthTextureView!!)
-    }
-
-    private companion object {
+    internal companion object {
         // Outline
-        const val DEFAULT_STYLE = 1
+        private const val DEFAULT_STYLE = 1
 
-        const val SHAPE_FILL = 0.15f
+        private const val SHAPE_FILL = 0.15f
 
-        val silhouettes = LazyRenderTargetHolder("Shader layer silhouettes", useDepth = false)
+        private val silhouettes = LazyRenderTargetHolder("Shader layer silhouettes", useDepth = false)
+
+        /**
+         * Draws what [layers] collected this frame onto [scene]. Geometry of depth tested pipelines is cut by the
+         * depth of [scene]. Layers that look the same share one silhouette target and one run of the post chain.
+         */
+        fun finish(layers: List<ShaderLayer>, scene: RenderTarget) {
+            val drawn = layers.filter { layer ->
+                layer.frame = null
+                layer.environment = null
+                !layer.collector.isEmpty
+            }
+
+            for (group in drawn.groupBy { it.look() }.values) {
+                val target = silhouettes.initAndGet()
+                for (layer in group) {
+                    layer.collector.flush(
+                        target.colorTextureView!!,
+                        scene.depthTextureView,
+                        getDynamicTransformsUniform(),
+                    )
+                }
+
+                group.first().chain.get()?.process(target, mc.gameRenderer.resourcePool)
+                target.blitAndBlendToTexture(scene.colorTextureView!!, scene.depthTextureView!!)
+            }
+        }
     }
 
 }

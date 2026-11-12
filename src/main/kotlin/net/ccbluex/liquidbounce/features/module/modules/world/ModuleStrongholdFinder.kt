@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -113,9 +112,6 @@ object ModuleStrongholdFinder : ClientModule(
     private val renderTopChunks by boolean("RenderTopChunks", true)
     private val announcePrediction by boolean("AnnouncePrediction", true)
     private val resetOnWorldChange by boolean("ResetOnWorldChange", true)
-
-    private val shader = tree(ShaderLayer())
-    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
 
     private val pendingThrows = ArrayDeque<PendingThrow>()
     private val trackedEyes = Int2ObjectLinkedOpenHashMap<TrackedEye>()
@@ -250,12 +246,26 @@ object ModuleStrongholdFinder : ClientModule(
             return@handler
         }
 
-        val portalFound = detectedPortalBlocks.isNotEmpty()
-
-        event.renderEnvironment(shader) {
-            if (portalFound) {
-                renderDetectedPortalBlocks()
+        event.renderEnvironment {
+            if (detectedPortalBlocks.isNotEmpty()) {
+                renderDetectedPortalBlocks(event)
                 return@renderEnvironment
+            }
+
+            if (renderRays) {
+                val color = Color4b.WHITE.alpha(170).argb
+                withPositionRelativeToCamera {
+                    for ((start, angleDeg) in measurements) {
+                        val direction = Vec3.directionFromRotation(0f, angleDeg)
+                        val end = start.fma(RAY_RENDER_LENGTH, direction)
+
+                        drawLine(
+                            start,
+                            end,
+                            color,
+                        )
+                    }
+                }
             }
 
             val snapshot = posterior ?: return@renderEnvironment
@@ -275,27 +285,7 @@ object ModuleStrongholdFinder : ClientModule(
 
                 if ((index == 0 && renderBestChunk) || (index > 0 && renderTopChunks)) {
                     withPositionRelativeToCamera(minX.toDouble(), drawY, minZ.toDouble()) {
-                        drawPlane(16f, 16f, color)
-                    }
-                }
-            }
-        }
-
-        event.renderEnvironment(lineShader) {
-            if (portalFound) {
-                renderPortalDirection(event.partialTicks)
-            } else if (renderRays) {
-                val color = Color4b.WHITE.argb
-                withPositionRelativeToCamera {
-                    for ((start, angleDeg) in measurements) {
-                        val direction = Vec3.directionFromRotation(0f, angleDeg)
-                        val end = start.fma(RAY_RENDER_LENGTH, direction)
-
-                        drawLine(
-                            start,
-                            end,
-                            color,
-                        )
+                        drawPlane(16f, 16f, color, color.darker())
                     }
                 }
             }
@@ -435,16 +425,14 @@ object ModuleStrongholdFinder : ClientModule(
         detectedPortalBlocks.keys.removeIf(chunkPos::contains)
     }
 
-    private fun WorldRenderEnvironment.renderDetectedPortalBlocks() {
+    private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
         detectedPortalBlocks.forEach { (pos, type) ->
             withPositionRelativeToCamera(pos.toVec3d(yOffset = 0.01)) {
-                drawPlane(1f, 1f, type.color)
+                drawPlane(1f, 1f, type.color, type.color.darker())
             }
         }
-    }
 
-    private fun WorldRenderEnvironment.renderPortalDirection(partialTicks: Float) {
-        val playerPos = player.interpolateCurrentPosition(partialTicks)
+        val playerPos = player.interpolateCurrentPosition(event.partialTicks)
         val closestPortalPos = detectedPortalBlocks.keys.minByOrNull { pos ->
             pos.distToCenterSqr(playerPos)
         } ?: return
@@ -452,7 +440,7 @@ object ModuleStrongholdFinder : ClientModule(
         val start = playerPos.add(0.0, 0.05, 0.0)
         val target = closestPortalPos.center
 
-        val lineColor = Color4b(255, 80, 80).argb
+        val lineColor = Color4b(255, 80, 80, 220).argb
         withPositionRelativeToCamera {
             drawLine(start, target, lineColor)
 
@@ -496,7 +484,7 @@ object ModuleStrongholdFinder : ClientModule(
     )
 
     private enum class PortalBlockType(val color: Color4b) {
-        PORTAL(Color4b(0, 220, 255)),
-        FRAME(Color4b(255, 215, 0)),
+        PORTAL(Color4b(0, 220, 255, 170)),
+        FRAME(Color4b(255, 215, 0, 170)),
     }
 }

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -46,7 +45,7 @@ open class PlacementRenderer(
     val module: EventListener,
     val keep: Boolean = true,
     clump: Boolean = true,
-    defaultColor: Color4b = Color4b.GREEN,
+    defaultColor: Color4b = Color4b.GREEN.alpha(90),
 ) : ToggleableValueGroup(module, name, enabled) {
 
     val clump by boolean("Clump", clump)
@@ -64,8 +63,7 @@ open class PlacementRenderer(
     val outTime by int("OutTime", 500, 0..5000, "ms")
 
     val colorSetting by color("Color", defaultColor)
-
-    val shader = tree(ShaderLayer())
+    val outlineColorSetting by color("OutlineColor", defaultColor.with(a = 255))
 
     /**
      * The [PlacementRenderHandler]s managed by this renderer.
@@ -198,5 +196,12 @@ open class PlacementRenderer(
      * @param id The handler requesting the color.
      */
     open fun getColor(id: Int): Color4b = colorSetting
+
+    /**
+     * Returns the outline color.
+     *
+     * @param id The handler requesting the color.
+     */
+    open fun getOutlineColor(id: Int): Color4b = outlineColorSetting
 
 }

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -57,9 +56,8 @@ class BlinkEspBox(
     override val parent: ModeValueGroup<*>,
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Box", getEspData) {
-    private val color by color("Color", Color4b(36, 32, 147))
-
-    private val shader = tree(ShaderLayer())
+    private val color by color("Color", Color4b(36, 32, 147, 87))
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -70,9 +68,9 @@ class BlinkEspBox(
 
         val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(0.05)
 
-        event.renderEnvironment(shader) {
+        event.renderEnvironment {
             withPositionRelativeToCamera(pos) {
-                drawBox(box, color)
+                drawBox(box, color, outlineColor)
             }
         }
     }
@@ -134,9 +132,8 @@ class BlinkEspWireframe(
     override val parent: ModeValueGroup<*>,
     getEspData: Supplier<BlinkEspData?>,
 ) : BlinkEspMode("Wireframe", getEspData) {
-    private val color by color("Color", Color4b(36, 32, 147))
-
-    private val shader = tree(ShaderLayer())
+    private val color by color("Color", Color4b(36, 32, 147, 87))
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
     private val wireframePlayer = WireframePlayer()
 
@@ -148,7 +145,7 @@ class BlinkEspWireframe(
         wireframePlayer.pose = entity.pose
         wireframePlayer.swimAmount = (entity as? LivingEntity)?.getSwimAmount(it.partialTicks) ?: 0f
         wireframePlayer.setRotation(rotation)
-        wireframePlayer.render(it, shader, color)
+        wireframePlayer.render(it, color, outlineColor)
     }
 }
 

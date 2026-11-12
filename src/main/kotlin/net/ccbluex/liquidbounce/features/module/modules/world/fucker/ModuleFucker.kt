@@ -137,7 +137,7 @@ object ModuleFucker : ClientModule(
     internal val rotations = tree(RotationsValueGroup(this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
-            defaultColor = Color4b.RED
+            defaultColor = Color4b(255, 0, 0, 90)
         )
     )
     private val progressRenderer = targetRenderer.tree(

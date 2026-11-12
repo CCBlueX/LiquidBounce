@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -56,8 +55,6 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
 
     private val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
-    private val shader = tree(ShaderLayer())
-
     private val colorBedrock by color("1x1Bedrock", Color4b.fullAlpha(0x19c15c))
     private val color1by1 by color("1x1", Color4b.fullAlpha(0xf7381b))
     private val color1by2 by color("1x2", Color4b.fullAlpha(0x35bacc))
@@ -79,13 +76,15 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        private val outline by boolean("Outline", true)
+
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val pos = player.blockPosition()
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            event.renderEnvironment(shader) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
@@ -96,8 +95,14 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
                         return@forEach
                     }
 
+                    val fade = calculateFade(it.pos)
+                    val baseColor = it.color().with(a = 50).fade(fade)
                     withPositionRelativeToCamera(it.pos) {
-                        drawBox(positions.box, it.color().fade(calculateFade(it.pos)))
+                        drawBox(
+                            positions.box,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
                     }
                 }
             }
@@ -109,6 +114,8 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        private val outline by boolean("Outline", true)
+
         private val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
 
         @Suppress("unused")
@@ -118,7 +125,7 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            event.renderEnvironment(shader) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
@@ -129,11 +136,18 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
                         return@forEach
                     }
 
-                    val baseColor = it.color().fade(calculateFade(it.pos))
+                    val fade = calculateFade(it.pos)
+                    val baseColor = it.color().with(a = 50).fade(fade)
+                    val transparentColor = baseColor.with(a = 0)
                     val box = positions.box
                     withPositionRelativeToCamera(it.pos) {
-                        drawBoxSide(box, Direction.DOWN, baseColor)
-                        drawGradientSides(glowHeight, baseColor, baseColor.with(a = 0), box)
+                        drawBoxSide(
+                            box,
+                            Direction.DOWN,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
+                        drawGradientSides(glowHeight, baseColor, transparentColor, box)
                     }
                 }
             }

@@ -24,13 +24,11 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -55,8 +53,6 @@ internal object KillAuraNotifyWhenFail {
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)
-
-        val shader = tree(ShaderLayer())
     }
 
     object Sound : Mode("Sound") {
@@ -93,7 +89,8 @@ internal object KillAuraNotifyWhenFail {
         }
     }
 
-    internal fun renderFailedHits(event: WorldRenderEvent) {
+    context(env: WorldRenderEnvironment)
+    internal fun renderFailedHits() {
         if (failedHits.isEmpty || (!enabled || !Box.isSelected)) {
             failedHits.clear()
             return
@@ -109,15 +106,22 @@ internal object KillAuraNotifyWhenFail {
             }
         }
 
+        val markedBlocks = failedHits
+
         val base = if (Box.colorRainbow) rainbow() else Box.color
 
-        event.renderEnvironment(Box.shader) {
-            for ((pos, opacity) in failedHits) {
-                val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
+        for ((pos, opacity) in markedBlocks) {
+            val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
-                withPositionRelativeToCamera(pos) {
-                    drawBox(POINT_BOX, base.with(a = fade))
-                }
+            val baseColor = base.with(a = fade)
+            val outlineColor = base.with(a = fade)
+
+            env.withPositionRelativeToCamera(pos) {
+                drawBox(
+                    POINT_BOX,
+                    baseColor,
+                    outlineColor,
+                )
             }
         }
     }

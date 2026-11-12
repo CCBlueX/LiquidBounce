@@ -116,7 +116,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     val targetRenderer = tree(
         PlacementRenderer(
             "TargetRendering", true, this,
-            defaultColor = Color4b.YELLOW,
+            defaultColor = Color4b(255, 255, 0, 90),
             clump = false
         )
     )

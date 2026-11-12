@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLines
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
@@ -55,16 +54,13 @@ class RouteRenderer(
     private val canBeCovered by boolean("CanBeCovered", false)
     private val routeColor by color("Route", Color4b.LIQUID_BOUNCE)
     private val searchColor by color("Search", Color4b(0xFF, 0xC8, 0x3C))
-    private val destinationColor by color("Destination", Color4b.LIQUID_BOUNCE)
-    private val breakColor by color("Break", Color4b(0xFF, 0x55, 0x55))
-    private val placeColor by color("Place", Color4b(0x55, 0xFF, 0x7F))
+    private val destinationColor by color("Destination", Color4b.LIQUID_BOUNCE.alpha(60))
+    private val breakColor by color("Break", Color4b(0xFF, 0x55, 0x55, 0xC8))
+    private val placeColor by color("Place", Color4b(0x55, 0xFF, 0x7F, 0xC8))
     private val targetColor by color("Target", Color4b(0xFF, 0x8C, 0x1A))
     private val invalidColor by color("Invalid", Color4b(0xD7, 0x09, 0x09))
     private val ghost by boolean("Ghost", true)
     private val fadeOut by int("FadeOut", 800, 0..3000, "ms")
-
-    private val shader = tree(ShaderLayer())
-    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
 
     private val wireframe = WireframePlayer()
 
@@ -78,49 +74,38 @@ class RouteRenderer(
         val fade = fade()
         val noDepthTest = !canBeCovered
 
-        val routeVisible = view.state != RouteState.NONE && fade > 0f
-        val marker = if (routeVisible) view.destination else view.preview
-        val markerColor = when {
-            !routeVisible -> if (view.isPreviewValid) destinationColor else invalidColor
-            view.state == RouteState.INVALID -> invalidColor.fade(fade)
-            else -> destinationColor.fade(fade)
-        }
-
-        event.renderEnvironment(shader) {
-            if (routeVisible) {
-                when (view.state) {
-                    RouteState.PENDING -> drawSearchTip(noDepthTest)
-                    RouteState.ACTIVE -> {
-                        drawBlocks(view.breaks, breakColor, noDepthTest)
-                        drawBlocks(view.places, placeColor, noDepthTest)
-                    }
-                    else -> {}
-                }
-            }
-
-            marker?.let { drawMarker(it, PLATE, markerColor, null, noDepthTest) }
-            if (view.target != null) {
-                view.attackPosition?.let { drawMarker(it, PLATE, targetColor, null, noDepthTest) }
-            }
-
-            if (ghost && ghostPosition != null) {
-                wireframe.pos = ghostPosition
-                wireframe.setRotation(RotationManager.currentRotation ?: player.rotation)
-                wireframe.render(if (view.engaged) targetColor else routeColor, noDepthTest)
-            }
-        }
-
-        event.renderEnvironment(lineShader) {
-            if (routeVisible) {
+        event.renderEnvironment {
+            if (view.state != RouteState.NONE && fade > 0f) {
                 val color = if (view.state == RouteState.INVALID) invalidColor else routeColor
                 when (view.state) {
                     RouteState.PENDING -> drawPending(noDepthTest)
                     else -> drawRoute(event.partialTicks, color.fade(fade), noDepthTest)
                 }
+
+                view.destination?.let { destination ->
+                    val markerColor = if (view.state == RouteState.INVALID) invalidColor else destinationColor
+                    drawMarker(destination, markerColor.fade(fade), noDepthTest)
+                }
+
+                if (view.state == RouteState.ACTIVE) {
+                    drawBlocks(view.breaks, breakColor, noDepthTest)
+                    drawBlocks(view.places, placeColor, noDepthTest)
+                }
+            } else {
+                view.preview?.let { preview ->
+                    val color = if (view.isPreviewValid) destinationColor else invalidColor.alpha(PREVIEW_INVALID_ALPHA)
+                    drawMarker(preview, color, noDepthTest)
+                }
             }
 
-            marker?.let { drawMarker(it, BODY, null, markerColor, noDepthTest) }
             view.target?.let { target -> drawTarget(target, ghostPosition, event.partialTicks, noDepthTest) }
+
+            if (ghost && ghostPosition != null) {
+                wireframe.pos = ghostPosition
+                wireframe.setRotation(RotationManager.currentRotation ?: player.rotation)
+                val color = if (view.engaged) targetColor else routeColor
+                wireframe.render(color.alpha(GHOST_ALPHA), color, noDepthTest)
+            }
         }
     }
 
@@ -134,13 +119,13 @@ class RouteRenderer(
         return 1f - (System.currentTimeMillis() - view.since).toFloat() / fadeOut
     }
 
-    /** The route searched so far and a line on to the destination. */
+    /** The route searched so far, a line on to the destination and a pulsing marker where the search got. */
     private fun WorldRenderEnvironment.drawPending(noDepthTest: Boolean) {
         val start = view.start ?: return
         val destination = view.destination ?: return
         val origin = camera.position()
-        val reached = reached(start)
-        val searched = searchedPath()
+        val searched = view.path?.takeIf { it.size >= 2 }
+        val reached = searched?.last() ?: start
 
         val gap = MutableVertexList(2)
         gap.addRelative(reached.add(0.0, LIFT, 0.0), origin)
@@ -153,23 +138,13 @@ class RouteRenderer(
             addChevrons(lines, searched, origin)
             drawLines(searchColor.argb, lines, noDepthTest)
         }
-    }
-
-    /** A pulsing marker where the search got. */
-    private fun WorldRenderEnvironment.drawSearchTip(noDepthTest: Boolean) {
-        val start = view.start ?: return
-        view.destination ?: return
 
         val phase = (System.currentTimeMillis() % PULSE_MILLIS).toDouble() / PULSE_MILLIS
         val pulse = (Mth.sin(phase * Mth.TWO_PI) + 1.0F) / 2.0F
-        withPositionRelativeToCamera(reached(start)) {
-            drawBox(TIP, searchColor.fade(pulse), noDepthTest = noDepthTest)
+        withPositionRelativeToCamera(reached) {
+            drawBox(TIP, searchColor.alpha((TIP_ALPHA * pulse).toInt()), searchColor, noDepthTest = noDepthTest)
         }
     }
-
-    private fun searchedPath() = view.path?.takeIf { it.size >= 2 }
-
-    private fun reached(start: Vec3) = searchedPath()?.last() ?: start
 
     private fun WorldRenderEnvironment.drawRoute(partialTicks: Float, color: Color4b, noDepthTest: Boolean) {
         val path = view.path ?: return
@@ -195,20 +170,15 @@ class RouteRenderer(
     private fun WorldRenderEnvironment.drawBlocks(blocks: Collection<BlockPos>, color: Color4b, noDepthTest: Boolean) {
         for (pos in blocks) {
             withPositionRelativeToCamera(pos) {
-                drawBox(FULL_BOX, color, noDepthTest = noDepthTest)
+                drawBox(FULL_BOX, color.alpha(color.a / 4), color, noDepthTest = noDepthTest)
             }
         }
     }
 
-    private fun WorldRenderEnvironment.drawMarker(
-        feet: Vec3,
-        box: AABB,
-        faceColor: Color4b?,
-        outlineColor: Color4b?,
-        noDepthTest: Boolean,
-    ) {
+    private fun WorldRenderEnvironment.drawMarker(feet: Vec3, color: Color4b, noDepthTest: Boolean) {
         withPositionRelativeToCamera(feet) {
-            drawBox(box, faceColor, outlineColor, noDepthTest = noDepthTest)
+            drawBox(PLATE, color, color.alpha(255), noDepthTest = noDepthTest)
+            drawBox(BODY, null, color.alpha(OUTLINE_ALPHA), noDepthTest = noDepthTest)
         }
     }
 
@@ -224,7 +194,7 @@ class RouteRenderer(
             drawBox(box, null, targetColor, noDepthTest = noDepthTest)
         }
 
-        view.attackPosition?.let { drawMarker(it, BODY, null, targetColor, noDepthTest) }
+        view.attackPosition?.let { drawMarker(it, targetColor.alpha(destinationColor.a), noDepthTest) }
 
         if (view.engaged && server != null) {
             val lines = MutableVertexList(2)
@@ -276,7 +246,11 @@ class RouteRenderer(
         const val LIFT = 0.05
         const val CHEVRON_SPACING = 1.5
         const val CHEVRON_SIZE = 0.2
+        const val GHOST_ALPHA = 50
         const val PENDING_ALPHA = 90
+        const val OUTLINE_ALPHA = 160
+        const val PREVIEW_INVALID_ALPHA = 60
+        const val TIP_ALPHA = 160
         const val PULSE_MILLIS = 800L
 
         val TIP = AABB(-0.15, 0.0, -0.15, 0.15, 0.3, 0.15)
