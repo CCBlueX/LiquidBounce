@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -640,11 +641,7 @@ fun findClosestPointOnBlockInLineWithCrystal(
     )
 
     mc.execute {
-        ModuleDebug.debugGeometry(
-            ModuleCrystalAura,
-            "predictedCrystal",
-            ModuleDebug.DebuggedBox(predictedCrystal, Color4b.RED.fade(0.4f))
-        )
+        ModuleCrystalAura.debugGeometry("predictedCrystal") { DebuggedBox(predictedCrystal, Color4b.RED.fade(0.4f)) }
     }
 
     checkCurrentRotation(range, wallsRange, expectedTarget, predictedCrystal, eyes)?.let { return it }

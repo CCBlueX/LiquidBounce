@@ -53,6 +53,9 @@ abstract class ToggleableValueGroup @JvmOverloads constructor(
     @AddonApi
     override var enabled by enabledValue
 
+    override val debugName: String
+        get() = name
+
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
         return value
     }

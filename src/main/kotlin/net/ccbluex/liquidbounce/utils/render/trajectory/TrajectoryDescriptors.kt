@@ -43,43 +43,43 @@ data class TrajectoryDescriptor(
 
     companion object {
         @JvmField
-        val BOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.BOW_FULL_PULL, TrajectoryType.Arrow)
+        val BOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.BOW_FULL_PULL, TrajectoryType.ARROW)
 
         @JvmField
-        val CROSSBOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.CROSSBOW_ARROW, TrajectoryType.Arrow)
+        val CROSSBOW_ARROW = TrajectoryDescriptor(TrajectoryInfo.CROSSBOW_ARROW, TrajectoryType.ARROW)
 
         @JvmField
-        val ENTITY_ARROW = TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.Arrow)
+        val ENTITY_ARROW = TrajectoryDescriptor(TrajectoryInfo(0.05, 0.3), TrajectoryType.ARROW)
 
         @JvmField
-        val POTION = TrajectoryDescriptor(TrajectoryInfo.POTION, TrajectoryType.Potion)
+        val POTION = TrajectoryDescriptor(TrajectoryInfo.POTION, TrajectoryType.POTION)
 
         @JvmField
-        val ENDER_PEARL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.EnderPearl)
+        val ENDER_PEARL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.ENDER_PEARL)
 
         @JvmField
-        val FISHING_BOBBER = TrajectoryDescriptor(TrajectoryInfo.FISHING_ROD, TrajectoryType.FishingBobber)
+        val FISHING_BOBBER = TrajectoryDescriptor(TrajectoryInfo.FISHING_ROD, TrajectoryType.FISHING_BOBBER)
 
         @JvmField
-        val TRIDENT = TrajectoryDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.Trident)
+        val TRIDENT = TrajectoryDescriptor(TrajectoryInfo.TRIDENT, TrajectoryType.TRIDENT)
 
         @JvmField
-        val SNOWBALL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Snowball)
+        val SNOWBALL = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.SNOWBALL)
 
         @JvmField
-        val EGG = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.Egg)
+        val EGG = TrajectoryDescriptor(TrajectoryInfo.GENERIC, TrajectoryType.EGG)
 
         @JvmField
-        val EXP_BOTTLE = TrajectoryDescriptor(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.ExpBottle)
+        val EXP_BOTTLE = TrajectoryDescriptor(TrajectoryInfo.EXP_BOTTLE, TrajectoryType.EXP_BOTTLE)
 
         @JvmField
-        val FIREWORK_ROCKET = TrajectoryDescriptor(TrajectoryInfo.FIREWORK_ROCKET, TrajectoryType.FireworkRocket)
+        val FIREWORK_ROCKET = TrajectoryDescriptor(TrajectoryInfo.FIREWORK_ROCKET, TrajectoryType.FIREWORK_ROCKET)
 
         @JvmField
-        val FIREBALL = TrajectoryDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.Fireball)
+        val FIREBALL = TrajectoryDescriptor(TrajectoryInfo.FIREBALL, TrajectoryType.FIREBALL)
 
         @JvmField
-        val WIND_CHARGE = TrajectoryDescriptor(TrajectoryInfo.WIND_CHARGE, TrajectoryType.WindCharge)
+        val WIND_CHARGE = TrajectoryDescriptor(TrajectoryInfo.WIND_CHARGE, TrajectoryType.WIND_CHARGE)
     }
 }
 

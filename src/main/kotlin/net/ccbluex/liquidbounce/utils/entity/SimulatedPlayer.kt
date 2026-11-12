@@ -16,898 +16,312 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("All")
-
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionAccessor
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.state
-import net.ccbluex.liquidbounce.utils.math.fastCos
-import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.event.events.PlayerSneakMultiplier
+import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.math.toRadians
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.player.ClientInput
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Holder
-import net.minecraft.tags.BlockTags
-import net.minecraft.tags.FluidTags
-import net.minecraft.tags.TagKey
+import net.minecraft.client.player.KeyboardInput
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
-import net.minecraft.world.attribute.EnvironmentAttributes
-import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
-import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityFluidInteraction
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.MoverType
-import net.minecraft.world.entity.ai.attributes.Attribute
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.LadderBlock
-import net.minecraft.world.level.block.PowderSnowBlock
-import net.minecraft.world.level.block.TrapDoorBlock
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.material.Fluid
-import net.minecraft.world.phys.AABB
+import net.minecraft.world.item.component.UseEffects
+import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.VoxelShape
-import kotlin.math.abs
-import kotlin.math.max
+import kotlin.math.acos
 import kotlin.math.sqrt
 
-private const val STEP_HEIGHT = 0.5
-
-class SimulatedPlayer(
-    private val player: Player,
+/**
+ * A vanilla player entity that is never added to a level and moves through the real one with a fixed [input].
+ *
+ * Movement is [net.minecraft.world.entity.LivingEntity.aiStep] itself. Only what
+ * [LocalPlayer] adds on top of it is ported here, since a [LocalPlayer] cannot tick without sending packets.
+ * Entities are not pushed and do not push back, and the level stays untouched while a simulation ticks.
+ */
+@Suppress("TooManyFunctions")
+class SimulatedPlayer private constructor(
+    source: Player,
     var input: SimulatedPlayerInput,
-    override var pos: Vec3,
-    var deltaMovement: Vec3,
-    var boundingBox: AABB,
-    var yRot: Float,
-    var xRot: Float,
-    var isSprinting: Boolean,
+    deltaMovement: Vec3,
+    /**
+     * The source already ran the part of its tick before [aiStep], so the first tick continues from there.
+     */
+    private var continuesTick: Boolean,
+) : AbstractClientPlayer(source.level() as ClientLevel, source.gameProfile), PlayerSimulation {
 
-    var fallDistance: Double,
-    private var jumpTriggerTime: Int,
-    private var jumping: Boolean,
-    private var fallFlying: Boolean,
-    var onGround: Boolean,
-    var horizontalCollision: Boolean,
-    private var verticalCollision: Boolean,
+    private val local = source is LocalPlayer
 
-    private var wasTouchingWater: Boolean,
-    private var isSwimming: Boolean,
-    private var wasUnderwater: Boolean,
-    private val fluidInteraction: EntityFluidInteraction,
-) : PlayerSimulation {
-    private val level: Level get() = player.level()
+    private var crouching = source.isCrouching
 
-    companion object {
-        /**
-         * In 26.3 [EntityFluidInteraction.update] fully resets all trackers and re-derives
-         * the fluid state from the level every tick, so the only persistent state worth
-         * carrying over is the set of fluids with a current accumulator.
-         */
-        private fun EntityFluidInteraction.deepCopy(): EntityFluidInteraction {
-            val fluids = (this as MixinEntityFluidInteractionAccessor).currentAccumulators().keys
-            return EntityFluidInteraction(fluids)
-        }
+    /**
+     * Crouching follows the sneak key of the tick before.
+     */
+    private var wasShiftKeyDown = source.isShiftKeyDown
+    private var probesLedge = false
 
-        @JvmStatic
-        fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
-            return SimulatedPlayer(
-                player,
-                input,
-                player.position(),
-                player.deltaMovement,
-                player.boundingBox,
-                player.yRot,
-                player.xRot,
+    private val itemUseEffects = source.takeIf { it.isUsingItem && !it.isPassenger }
+        ?.useItem?.getOrDefault(DataComponents.USE_EFFECTS, UseEffects.DEFAULT)
 
-                player.isSprinting,
-
-                player.fallDistance,
-                player.noJumpDelay,
-                player.jumping,
-                player.isFallFlying,
-                player.onGround(),
-                player.horizontalCollision,
-                player.verticalCollision,
-
-                player.isInWater,
-                player.isSwimming,
-                player.isUnderWater,
-                player.fluidInteraction.deepCopy(),
-            )
-        }
-
-        @JvmStatic
-        fun fromOtherPlayer(player: Player, input: SimulatedPlayerInput): SimulatedPlayer {
-            return SimulatedPlayer(
-                player,
-                input,
-                player.position(),
-                deltaMovement = player.position().subtract(player.lastPos),
-                player.boundingBox,
-                player.yRot,
-                player.xRot,
-
-                player.isSprinting,
-
-                player.fallDistance,
-                player.noJumpDelay,
-                player.jumping,
-                player.isFallFlying,
-                player.onGround(),
-                player.horizontalCollision,
-                player.verticalCollision,
-
-                player.isInWater,
-                player.isSwimming,
-                player.isUnderWater,
-                player.fluidInteraction.deepCopy(),
-            )
+    /**
+     * Sideways and forward speed while using an item.
+     */
+    private val itemUseMultiplier = itemUseEffects?.speedMultiplier()?.let { multiplier ->
+        if (local) {
+            val event = callEvent(PlayerUseMultiplier(multiplier, multiplier))
+            Vec2(event.sideways, event.forward)
+        } else {
+            Vec2(multiplier, multiplier)
         }
     }
 
-    private var simulatedTicks: Int = 0
+    private val isSlowDueToUsingItem = itemUseEffects?.canSprint() == false && !(local && ModuleNoSlow.running)
+
+    private val sneakingSpeed by lazy {
+        val speed = getAttributeValue(Attributes.SNEAKING_SPEED)
+        (if (local) callEvent(PlayerSneakMultiplier(speed)).multiplier else speed).toFloat()
+    }
+
+    /**
+     * Sneaking or safe walk would have held the player back at a ledge in the last tick.
+     */
     var clipLedged = false
         private set
+
+    override val pos: Vec3
+        get() = position()
+
+    init {
+        attributes.assignAllValues(source.attributes)
+        for (effect in source.activeEffects) {
+            addEffect(MobEffectInstance(effect))
+        }
+        for (slot in EquipmentSlot.VALUES) {
+            equipment.set(slot, source.getItemBySlot(slot))
+        }
+        abilities.flying = source.abilities.flying
+        abilities.mayfly = source.abilities.mayfly
+        abilities.flyingSpeed = source.abilities.flyingSpeed
+        foodData.foodLevel = source.getFoodData().foodLevel
+
+        pose = source.pose
+        setPos(source.position())
+        setOldPosAndRot(source.oldPosition(), source.yRotO, source.xRotO)
+        yRot = source.yRot
+        xRot = source.xRot
+        this.deltaMovement = deltaMovement
+
+        setOnGround(source.onGround())
+        mainSupportingBlockPos = source.mainSupportingBlockPos
+        horizontalCollision = source.horizontalCollision
+        verticalCollision = source.verticalCollision
+        verticalCollisionBelow = source.verticalCollisionBelow
+        minorHorizontalCollision = source.minorHorizontalCollision
+        fallDistance = source.fallDistance
+        stuckSpeedMultiplier = source.stuckSpeedMultiplier
+        isInPowderSnow = source.isInPowderSnow
+        wasInPowderSnow = source.wasInPowderSnow
+        noJumpDelay = source.noJumpDelay
+
+        firstTick = false
+        fluidInteraction.update(this, true)
+        wasTouchingWater = source.isInWater
+        wasUnderwater = source.isUnderWater
+
+        isSwimming = source.isSwimming
+        isSprinting = source.isSprinting
+        setSharedFlag(FLAG_FALL_FLYING, source.isFallFlying)
+    }
 
     override fun tick() {
         clipLedged = false
 
-        if (pos.y <= -70) {
-            return
-        }
-
-        this.input.update()
-
-        updateFluidInteraction()
-        updateIsUnderwater()
-        updateSwimming()
-
-        if (this.jumpTriggerTime > 0) {
-            this.jumpTriggerTime--
-        }
-
-        this.jumping = this.input.keyPresses.jump
-
-        val movement = this.deltaMovement
-
-        var motionX = movement.x
-        var motionY = movement.y
-        var motionZ = movement.z
-
-        if (abs(movement.x) < 0.003) {
-            motionX = 0.0
-        }
-        if (abs(movement.y) < 0.003) {
-            motionY = 0.0
-        }
-        if (abs(movement.z) < 0.003) {
-            motionZ = 0.0
-        }
-        if (onGround) {
-            this.fallFlying = false
-        }
-
-        this.deltaMovement = Vec3(motionX, motionY, motionZ)
-
-        if (this.jumping) {
-            val fluidHeight =
-                if (this.isInLava()) this.getFluidHeight(FluidTags.LAVA) else this.getFluidHeight(FluidTags.WATER)
-            val inWater = this.isInWater() && fluidHeight > 0.0
-
-            val swimHeight = this.getFluidJumpThreshold()
-
-            if (inWater && (!this.onGround || fluidHeight > swimHeight)) {
-                this.swimUpward(FluidTags.WATER)
-            } else if (this.isInLava() && (!this.onGround || fluidHeight > swimHeight)) {
-                this.swimUpward(FluidTags.LAVA)
-            } else if ((this.onGround || inWater && fluidHeight <= swimHeight) && jumpTriggerTime == 0) {
-                this.jumpFromGround()
-                jumpTriggerTime = 10
-            }
-        }
-
-        val sidewaysSpeed = input.movementSideways * 0.98
-        val forwardSpeed = input.movementForward * 0.98
-        val upwardsSpeed = 0.0
-
-        if (this.hasStatusEffect(MobEffects.SLOW_FALLING) || this.hasStatusEffect(MobEffects.LEVITATION)) {
-            this.onLanding()
-        }
-
-        this.travel(Vec3(sidewaysSpeed, upwardsSpeed, forwardSpeed))
-        simulatedTicks++
-    }
-
-    private fun travel(movementInput: Vec3) {
-        if (this.isSwimming && !this.player.isPassenger) {
-            val viewY = this.getViewVector().y
-            val swimLift = if (viewY < -0.2) 0.085 else 0.06
-            if (viewY <= 0.0 || this.input.keyPresses.jump || !this.player.level()
-                    .getBlockState(BlockPos.containing(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
-                    .fluidState.isEmpty
-            ) {
-                deltaMovement = deltaMovement.add(0.0, (viewY - deltaMovement.y) * swimLift, 0.0)
-            }
-        }
-
-        val beforeTravelVelocityY = this.deltaMovement.y
-
-        var gravity = 0.08
-        val isFalling = deltaMovement.y <= 0.0
-        if (deltaMovement.y <= 0.0 && hasStatusEffect(MobEffects.SLOW_FALLING)) {
-            gravity = 0.01
-            this.onLanding()
-        }
-
-        if (isInWater() && this.player.isAffectedByFluids) {
-            val playerY: Double = this.pos.y
-            var movementSpeed = if (isSprinting) 0.9f else 0.8f
-            var movementEfficiency = 0.02f
-            var waterMovementEfficiency = this.getAttributeValue(Attributes.WATER_MOVEMENT_EFFICIENCY).toFloat()
-
-            if (!onGround) {
-                waterMovementEfficiency *= 0.5f
-            }
-            if (waterMovementEfficiency > 0.0f) {
-                movementSpeed += (0.54600006f - movementSpeed) * waterMovementEfficiency / 3.0f
-                movementEfficiency += (this.getSpeed() - movementEfficiency) * waterMovementEfficiency / 3.0f
-            }
-            if (hasStatusEffect(MobEffects.DOLPHINS_GRACE)) {
-                movementSpeed = 0.96f
-            }
-            this.updateVelocity(movementEfficiency, movementInput)
-            this.move(deltaMovement)
-            var movement = deltaMovement
-            if (this.horizontalCollision && this.isClimbing()) {
-                movement = Vec3(movement.x, 0.2, movement.z)
-            }
-            deltaMovement = movement.multiply(movementSpeed.toDouble(), 0.8, movementSpeed.toDouble())
-            val adjustedMovement = this.player.getFluidFallingAdjustedMovement(gravity, isFalling, deltaMovement)
-            deltaMovement = adjustedMovement
-            if (this.horizontalCollision && this.doesNotCollide(
-                    adjustedMovement.x,
-                    adjustedMovement.y + 0.6 - this.pos.y + playerY,
-                    adjustedMovement.z
-                )
-            ) {
-                this.deltaMovement = Vec3(adjustedMovement.x, 0.3, adjustedMovement.z)
-            }
-        } else if (isInLava() && this.player.isAffectedByFluids) {
-            val playerY: Double = this.pos.y
-            this.updateVelocity(0.02f, movementInput)
-            this.move(deltaMovement)
-            if (getFluidHeight(FluidTags.LAVA) <= getFluidJumpThreshold()) {
-                deltaMovement = deltaMovement.multiply(0.5, 0.8, 0.5)
-                deltaMovement = this.player.getFluidFallingAdjustedMovement(gravity, isFalling, deltaMovement)
+        ticking.set(true)
+        try {
+            if (continuesTick) {
+                aiStep()
+                updatePlayerPose()
             } else {
-                deltaMovement = deltaMovement.scale(0.5)
+                commonTick()
+                super<AbstractClientPlayer>.tick()
             }
-            if (!this.player.isNoGravity) {
-                deltaMovement = this.deltaMovement.add(0.0, -gravity / 4.0, 0.0)
-            }
-            if (this.horizontalCollision && this.doesNotCollide(
-                    deltaMovement.x,
-                    deltaMovement.y + 0.6 - this.pos.y + playerY,
-                    deltaMovement.z
-                )
-            ) {
-                deltaMovement = Vec3(deltaMovement.x, 0.3, deltaMovement.z)
-            }
-        } else if (this.fallFlying) {
-            var lift: Double
-            var velocity: Vec3 = this.deltaMovement
-            if (velocity.y > -0.5) {
-                fallDistance = 1.0
-            }
-            val vec3d3 = this.getViewVector()
-            val pitchRadians: Float = this.xRot * (Math.PI.toFloat() / 180)
-            val horizontalViewMagnitude = sqrt(vec3d3.x * vec3d3.x + vec3d3.z * vec3d3.z)
-            val horizontalVelocity = velocity.horizontalDistance()
-            val viewVectorLength = vec3d3.length()
-            var liftFactor = pitchRadians.fastCos()
-            liftFactor =
-                (liftFactor.toDouble() * (liftFactor.toDouble() * 1.0.coerceAtMost(viewVectorLength / 0.4))).toFloat()
-            velocity = this.deltaMovement.add(0.0, gravity * (-1.0 + liftFactor.toDouble() * 0.75), 0.0)
-            if (velocity.y < 0.0 && horizontalViewMagnitude > 0.0) {
-                lift = velocity.y * -0.1 * liftFactor.toDouble()
-                velocity = velocity.add(
-                    vec3d3.x * lift / horizontalViewMagnitude,
-                    lift,
-                    vec3d3.z * lift / horizontalViewMagnitude
-                )
-            }
-            if (pitchRadians < 0.0f && horizontalViewMagnitude > 0.0) {
-                lift = horizontalVelocity * (-pitchRadians.fastSin()).toDouble() * 0.04
-                velocity = velocity.add(
-                    -vec3d3.x * lift / horizontalViewMagnitude,
-                    lift * 3.2,
-                    -vec3d3.z * lift / horizontalViewMagnitude
-                )
-            }
-            if (horizontalViewMagnitude > 0.0) {
-                velocity = velocity.add(
-                    (vec3d3.x / horizontalViewMagnitude * horizontalVelocity - velocity.x) * 0.1,
-                    0.0,
-                    (vec3d3.z / horizontalViewMagnitude * horizontalVelocity - velocity.z) * 0.1
-                )
-            }
-            this.deltaMovement = velocity.multiply(0.99, 0.98, 0.99)
-
-            move(this.deltaMovement)
-        } else {
-            val blockPos = this.getBlockPosBelowThatAffectsMyMovement()
-            val p: Float = this.player.level().getBlockState(blockPos).block.friction
-            val friction = if (onGround) p * 0.91f else 0.91f
-            val movement = this.applyMovementInput(movementInput, p)
-            var verticalMovement = movement.y
-            if (hasStatusEffect(MobEffects.LEVITATION)) {
-                verticalMovement += (0.05 * (getStatusEffect(MobEffects.LEVITATION)!!.amplifier + 1).toDouble() - movement.y) * 0.2
-            } else if (this.player.level().isClientSide && !this.player.level().hasChunkAt(blockPos.x, blockPos.z)) {
-                verticalMovement = if (this.pos.y > this.player.level().minY.toDouble()) {
-                    -0.1
-                } else {
-                    0.0
-                }
-            } else if (!this.player.isNoGravity) {
-                verticalMovement -= gravity
-            }
-
-            deltaMovement = if (this.player.shouldDiscardFriction()) {
-                Vec3(movement.x, verticalMovement, movement.z)
-            } else {
-                Vec3(
-                    movement.x * friction.toDouble(),
-                    verticalMovement * 0.9800000190734863,
-                    movement.z * friction.toDouble()
-                )
-            }
+        } finally {
+            ticking.set(false)
         }
 
-        if (player.abilities.flying && !this.player.isPassenger) {
-            deltaMovement = Vec3(deltaMovement.x, beforeTravelVelocityY * 0.6, deltaMovement.z)
-            this.onLanding()
+        removeExpiredEffects()
+    }
+
+    /**
+     * The server removes an expired effect, which a simulation never hears of.
+     */
+    private fun removeExpiredEffects() {
+        activeEffects
+            .filter { effect -> !effect.isInfiniteDuration && effect.duration <= 0 }
+            .forEach { effect -> removeEffect(effect.effect) }
+    }
+
+    private val isMovingSlowly
+        get() = isCrouching || isVisuallyCrawling
+
+    /**
+     * @see LocalPlayer.aiStep
+     */
+    override fun aiStep() {
+        if (continuesTick) {
+            continuesTick = false
+        } else {
+            updateCrouching()
+        }
+
+        val keys = input.keyPresses
+        wasShiftKeyDown = keys.shift
+        updateSprinting(keys.sprint)
+
+        if (isInWater && keys.shift && isAffectedByFluids) {
+            goDownInWater()
+        }
+
+        val flyingUp = (if (keys.jump) 1 else 0) - (if (keys.shift) 1 else 0)
+        if (abilities.flying && flyingUp != 0) {
+            addDeltaMovement(Vec3(0.0, (flyingUp * abilities.flyingSpeed * 3.0f).toDouble(), 0.0))
+        }
+
+        super.aiStep()
+
+        if (onGround() && abilities.flying && !isSpectator) {
+            abilities.flying = false
+        }
+    }
+
+    private fun updateCrouching() {
+        val fitsStanding = isSleeping || canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING)
+        val mayCrouch = !abilities.flying && !isSwimming && !isPassenger
+        crouching = mayCrouch && canPlayerFitWithinBlocksAndEntitiesWhen(Pose.CROUCHING) &&
+            (wasShiftKeyDown || !fitsStanding)
+    }
+
+    private fun updateSprinting(sprintKey: Boolean) {
+        if (sprintKey && canStartSprinting()) {
+            isSprinting = true
+        }
+        if (isSprinting && if (isSwimming) shouldStopSwimSprinting() else shouldStopRunSprinting()) {
+            isSprinting = false
         }
     }
 
     /**
-     * @see net.minecraft.world.entity.LivingEntity.handleRelativeFrictionAndCalculateMovement(Vec3, float)
+     * @see LocalPlayer.applyInput
      */
-    private fun applyMovementInput(movementInput: Vec3, slipperiness: Float): Vec3 {
-        this.updateVelocity(this.getFrictionInfluencedSpeed(slipperiness), movementInput)
-        this.deltaMovement = handleOnClimbable(this.deltaMovement)
-        this.deltaMovement = applyWebSpeed(this.deltaMovement)
-        this.move(this.deltaMovement)
-
-
-        var vec3d = this.deltaMovement
-        if ((horizontalCollision || this.jumping) && (
-                this.isClimbing() || pos.toBlockPos().state
-                    ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
-                )
-        ) {
-            vec3d = Vec3(vec3d.x, 0.2, vec3d.z)
-        }
-
-        return vec3d
-    }
-
-    private fun updateVelocity(speed: Float, movementInput: Vec3) {
-        val vec3d = Entity.getInputVector(movementInput, speed, this.yRot)
-
-        this.deltaMovement += vec3d
-    }
-
-    /**
-     * @see net.minecraft.world.entity.LivingEntity.getFrictionInfluencedSpeed(float)
-     */
-    private fun getFrictionInfluencedSpeed(slipperiness: Float): Float {
-        return if (this.onGround) {
-            getSpeed() * (0.21600002f / (slipperiness * slipperiness * slipperiness))
-        } else {
-            this.getAirStrafingSpeed()
-        }
-    }
-
-    private fun getAirStrafingSpeed(): Float {
-        val speed = 0.02f
-
-        if (this.input.sprinting) {
-            return (speed + 0.005999999865889549).toFloat()
-        }
-
-        return speed
-    }
-
-    private fun getSpeed(): Float = 0.10000000149011612.toFloat()
-
-    private fun move(input: Vec3) {
-        val event = callEvent(PlayerMoveEvent(MoverType.SELF, input))
-        val movement = event.movement
-
-        val backedOffMovement = this.maybeBackOffFromEdge(movement)
-        val adjustedMovement = this.adjustMovementForCollisions(backedOffMovement)
-
-        if (adjustedMovement.lengthSqr() > 1.0E-7) {
-            this.pos += adjustedMovement
-            this.boundingBox = player.dimensions.makeBoundingBox(this.pos)
-        }
-
-        val xCollision = !Mth.equal(backedOffMovement.x, adjustedMovement.x)
-        val zCollision = !Mth.equal(backedOffMovement.z, adjustedMovement.z)
-
-        this.horizontalCollision = xCollision || zCollision
-        this.verticalCollision = backedOffMovement.y != adjustedMovement.y
-
-        onGround = verticalCollision && backedOffMovement.y < 0.0
-
-        if (!isInWater()) {
-            updateFluidInteraction()
-        }
-
-        if (onGround) {
-            onLanding()
-        } else if (backedOffMovement.y < 0) {
-            fallDistance -= backedOffMovement.y.toFloat()
-        }
-
-        val vec3d2: Vec3 = this.deltaMovement
-        if (horizontalCollision || verticalCollision) {
-            this.deltaMovement = Vec3(
-                if (xCollision) 0.0 else vec3d2.x,
-                if (onGround) 0.0 else vec3d2.y,
-                if (zCollision) 0.0 else vec3d2.z
-            )
-        }
-    }
-
-    private fun adjustMovementForCollisions(movement: Vec3): Vec3 {
-        val onGroundOrFalling: Boolean
-        val collisionBox: AABB = AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).move(this.pos)
-
-        val entityCollisionList = emptyList<VoxelShape>()
-
-        val adjustedMovement = if (movement.lengthSqr() == 0.0) {
-            movement
-        } else {
-            Entity.collideBoundingBox(
-                this.player,
-                movement,
-                collisionBox,
-                this.player.level(),
-                entityCollisionList
-            )
-        }
-        val collidedX = movement.x != adjustedMovement.x
-        val collidedY = movement.y != adjustedMovement.y
-        val collidedZ = movement.z != adjustedMovement.z
-
-        onGroundOrFalling = onGround || collidedY && movement.y < 0.0
-
-        if (this.player.maxUpStep() > 0.0f && onGroundOrFalling && (collidedX || collidedZ)) {
-            var steppedMovement = Entity.collideBoundingBox(
-                this.player,
-                Vec3(movement.x, this.player.maxUpStep().toDouble(), movement.z),
-                collisionBox,
-                this.player.level(),
-                entityCollisionList
-            )
-            val stepUpMovement = Entity.collideBoundingBox(
-                this.player,
-                Vec3(0.0, this.player.maxUpStep().toDouble(), 0.0),
-                collisionBox.expandTowards(movement.x, 0.0, movement.z),
-                this.player.level(),
-                entityCollisionList
-            )
-            val stepDownMovement = Entity.collideBoundingBox(
-                this.player,
-                Vec3(movement.x, 0.0, movement.z),
-                collisionBox.move(stepUpMovement),
-                this.player.level(),
-                entityCollisionList
-            ).add(stepUpMovement)
-
-            if (stepUpMovement.y < this.player.maxUpStep()
-                    .toDouble() && stepDownMovement.horizontalDistanceSqr() > steppedMovement.horizontalDistanceSqr()
-            ) {
-                steppedMovement = stepDownMovement
+    override fun applyInput() {
+        var move = input.moveVector
+        if (move.lengthSquared() != 0.0f) {
+            move = move.scale(0.98f)
+            itemUseMultiplier?.let { move = Vec2(move.x * it.x, move.y * it.y) }
+            if (isMovingSlowly) {
+                move = move.scale(sneakingSpeed)
             }
-
-            if (steppedMovement.horizontalDistanceSqr() > adjustedMovement.horizontalDistanceSqr()) {
-                return steppedMovement.add(
-                    Entity.collideBoundingBox(
-                        this.player,
-                        Vec3(0.0, -steppedMovement.y + movement.y, 0.0),
-                        collisionBox.move(steppedMovement),
-                        this.player.level(),
-                        entityCollisionList
-                    )
-                )
-            }
+            move = LocalPlayer.modifyInputSpeedForSquareMovement(move)
         }
-        return adjustedMovement
+
+        xxa = move.x
+        zza = move.y
+        jumping = input.keyPresses.jump
     }
 
-    private fun onLanding() {
-        this.fallDistance = 0.0
+    private fun isSprintingPossible(allowedInShallowWater: Boolean) =
+        !isMobilityRestricted && hasEnoughFoodToDoExhaustiveManoeuvres() &&
+            (allowedInShallowWater || !isInShallowWater)
+
+    private fun canStartSprinting(): Boolean {
+        val canSprint = isSprintingPossible(abilities.flying) && !isSlowDueToUsingItem
+        val free = isUnderWater || !isFallFlying && !isMovingSlowly
+        return !isSprinting && input.hasForwardImpulse() && canSprint && free
     }
+
+    private fun shouldStopRunSprinting() =
+        !isSprintingPossible(abilities.flying) || !input.hasForwardImpulse() ||
+            horizontalCollision && !minorHorizontalCollision
+
+    private fun shouldStopSwimSprinting() =
+        !isSprintingPossible(true) || !isInWater ||
+            !input.hasForwardImpulse() && !onGround() && !input.keyPresses.shift
 
     /**
-     * @see net.minecraft.world.entity.LivingEntity.jumpFromGround()
+     * @see LocalPlayer.isHorizontalCollisionMinor
      */
-    fun jumpFromGround() {
-        val jumpPower = this.getJumpPower().toDouble()
-        this.deltaMovement = Vec3(this.deltaMovement.x, max(jumpPower, this.deltaMovement.y), this.deltaMovement.z)
-
-        if (isSprinting) {
-            val yawRadians: Float = this.yRot.toRadians()
-
-            this.deltaMovement += Vec3(
-                (-yawRadians.fastSin() * 0.2f).toDouble(),
-                0.0,
-                (yawRadians.fastCos() * 0.2f).toDouble()
-            )
-        }
-
-    }
-
-    fun jump() = jumpFromGround()
-
-    /**
-     * @see net.minecraft.world.entity.LivingEntity.handleOnClimbable(Vec3)
-     */
-    private fun handleOnClimbable(motion: Vec3): Vec3 {
-        if (!isClimbing()) {
-            return motion
-        }
-
-        onLanding()
-        val clampedX = Math.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
-        val clampedZ = Math.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
-        var clampedY = max(motion.y, -0.15000000596046448)
-        if (clampedY < 0.0 && !pos.toBlockPos().state!!
-                .`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder
-        ) {
-            clampedY = 0.0
-        }
-
-        return Vec3(clampedX, clampedY, clampedZ)
-    }
-
-    private fun applyWebSpeed(motion: Vec3): Vec3 {
-        val blockState = level.getBlockState(pos.toBlockPos())
-        if (blockState.block != Blocks.COBWEB) {
-            return motion
-        }
-        val multiplier = if (hasStatusEffect(MobEffects.WEAVING)) {
-            Vec3(0.5, 0.25, 0.5)
-        } else {
-            Vec3(0.25, 0.05, 0.25)
-        }
-        return motion.multiply(multiplier.x, multiplier.y, multiplier.z)
-    }
-
-    private fun isClimbing(): Boolean {
-        val blockPos = pos.toBlockPos()
-        val blockState = blockPos.state!!
-        return if (blockState.`is`(BlockTags.CLIMBABLE)) {
-            true
-        } else if (blockState.block is TrapDoorBlock && this.trapdoorUsableAsLadder(blockPos, blockState)) {
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * @see net.minecraft.world.entity.LivingEntity.trapdoorUsableAsLadder(BlockPos, BlockState)
-     */
-    private fun trapdoorUsableAsLadder(pos: BlockPos, state: BlockState): Boolean {
-        if (!state.getValue(TrapDoorBlock.OPEN)) {
+    override fun isHorizontalCollisionMinor(movement: Vec3): Boolean {
+        val yaw = (yRot * Mth.DEG_TO_RAD).toDouble()
+        val sin = Mth.sin(yaw).toDouble()
+        val cos = Mth.cos(yaw).toDouble()
+        val wantedX = xxa * cos - zza * sin
+        val wantedZ = zza * cos + xxa * sin
+        val wantedLengthSqr = wantedX * wantedX + wantedZ * wantedZ
+        val movedLengthSqr = movement.x * movement.x + movement.z * movement.z
+        if (wantedLengthSqr < MINOR_COLLISION_MIN_LENGTH_SQR || movedLengthSqr < MINOR_COLLISION_MIN_LENGTH_SQR) {
             return false
         }
-        val blockState = this.player.level().getBlockState(pos.below())
-        return blockState.`is`(Blocks.LADDER) && blockState.getValue(LadderBlock.FACING) == state.getValue(TrapDoorBlock.FACING)
+
+        val dot = wantedX * movement.x + wantedZ * movement.z
+        return acos(dot / sqrt(wantedLengthSqr * movedLengthSqr)) < MINOR_COLLISION_ANGLE
     }
 
-    /**
-     * @see net.minecraft.world.entity.player.Player.maybeBackOffFromEdge(Vec3, MoverType)
-     */
-    private fun maybeBackOffFromEdge(movement: Vec3): Vec3 {
-        var adjustedMovement = movement
-
-        if (adjustedMovement.y <= 0.0 && this.isAboveGround()) {
-            var xMovement = adjustedMovement.x
-            var zMovement = adjustedMovement.z
-            val step = 0.05
-            while (xMovement != 0.0 && level.noCollision(
-                    player,
-                    boundingBox.move(xMovement, -STEP_HEIGHT, 0.0)
-                )
-            ) {
-                if (xMovement < step && xMovement >= -step) {
-                    xMovement = 0.0
-                    continue
-                }
-                if (xMovement > 0.0) {
-                    xMovement -= step
-                    continue
-                }
-                xMovement += step
-            }
-            while (zMovement != 0.0 && level.noCollision(
-                    player,
-                    boundingBox.move(0.0, -STEP_HEIGHT, zMovement)
-                )
-            ) {
-                if (zMovement < step && zMovement >= -step) {
-                    zMovement = 0.0
-                    continue
-                }
-                if (zMovement > 0.0) {
-                    zMovement -= step
-                    continue
-                }
-                zMovement += step
-            }
-            while (xMovement != 0.0 && zMovement != 0.0 && level.noCollision(
-                    player,
-                    boundingBox.move(xMovement, -STEP_HEIGHT, zMovement)
-                )
-            ) {
-                xMovement =
-                    if (xMovement < step && xMovement >= -step) 0.0 else if (xMovement > 0.0) {
-                        xMovement - step
-                    } else {
-                        xMovement + step
-                    }
-                if (zMovement < step && zMovement >= -step) {
-                    zMovement = 0.0
-                    continue
-                }
-                if (zMovement > 0.0) {
-                    zMovement -= step
-                    continue
-                }
-                zMovement += step
-            }
-
-            if (adjustedMovement.x != xMovement || adjustedMovement.z != zMovement) {
-                clipLedged = true
-            }
-
-            if (this.shouldClipAtLedge()) {
-                adjustedMovement = Vec3(xMovement, adjustedMovement.y, zMovement)
-            }
-        }
-        return adjustedMovement
+    override fun move(moverType: MoverType, delta: Vec3) {
+        super.move(moverType, if (local) callEvent(PlayerMoveEvent(moverType, delta)).movement else delta)
     }
 
-    private fun shouldClipAtLedge(): Boolean {
-        return !this.input.ignoreClippingAtLedge && (this.input.keyPresses.shift || this.input.forceSafeWalk)
-    }
-
-    private fun isAboveGround(): Boolean {
-        return onGround || this.fallDistance < STEP_HEIGHT && !level.noCollision(
-            player,
-            boundingBox.move(0.0, this.fallDistance - STEP_HEIGHT, 0.0)
-        )
-    }
-
-    /**
-     * Mirrors 26.1 `LivingEntity#getJumpPower()`.
-     * @see net.minecraft.world.entity.LivingEntity.getJumpPower
-     */
-    private fun getJumpPower(): Float =
-        this.getAttributeValue(Attributes.JUMP_STRENGTH)
-            .toFloat() * this.getJumpVelocityMultiplier() + this.getJumpBoostPower()
-
-    /**
-     * Mirrors 26.1 `LivingEntity#getJumpBoostPower()`.
-     * @see net.minecraft.world.entity.LivingEntity.getJumpBoostPower
-     */
-    private fun getJumpBoostPower() =
-        if (hasStatusEffect(MobEffects.JUMP_BOOST)) {
-            0.1f * (getStatusEffect(MobEffects.JUMP_BOOST)!!.amplifier.toFloat() + 1f)
-        } else {
-            0f
+    override fun maybeBackOffFromEdge(delta: Vec3, moverType: MoverType): Vec3 {
+        probesLedge = true
+        val backedOff = try {
+            super.maybeBackOffFromEdge(delta, moverType)
+        } finally {
+            probesLedge = false
         }
 
-    /**
-     * Mirrors the 26.1 block jump factor lookup used by `LivingEntity#getJumpPower()`.
-     * @see net.minecraft.world.entity.Entity.getBlockJumpFactor
-     */
-    private fun getJumpVelocityMultiplier(): Float {
-        val f = pos.toBlockPos().getBlock()?.jumpFactor ?: 0f
-        val g = getBlockPosBelowThatAffectsMyMovement().getBlock()?.jumpFactor ?: 0f
-
-        return if (f.toDouble() == 1.0) g else f
+        clipLedged = backedOff != delta
+        return if (staysOnGroundSurface()) backedOff else delta
     }
 
-    private fun doesNotCollide(offsetX: Double, offsetY: Double, offsetZ: Double): Boolean {
-        return this.doesNotCollide(this.boundingBox.move(offsetX, offsetY, offsetZ))
-    }
+    private fun staysOnGroundSurface() =
+        !input.ignoreClippingAtLedge && (input.keyPresses.shift || input.forceSafeWalk)
 
-    private fun doesNotCollide(box: AABB): Boolean {
-        return this.player.level().noCollision(this.player, box) && !this.player.level().containsAnyLiquid(box)
-    }
+    override fun isStayingOnGroundSurface() = probesLedge || staysOnGroundSurface()
 
-    private fun swimUpward(fluid: TagKey<Fluid>) {
-        deltaMovement += Vec3(
-            0.0,
-            if (fluid === FluidTags.WATER) 0.03999999910593033 else 0.005999999865889549,
-            0.0
-        )
-    }
+    override fun isShiftKeyDown() = input.keyPresses.shift
 
-    /**
-     * Mirrors 26.1 `Entity#getBlockPosBelowThatAffectsMyMovement()`.
-     * @see net.minecraft.world.entity.Entity.getBlockPosBelowThatAffectsMyMovement
-     */
-    private fun getBlockPosBelowThatAffectsMyMovement() =
-        BlockPos.containing(this.pos.x, this.boundingBox.minY - 0.5000001, this.pos.z)
+    override fun isCrouching() = crouching
 
-    /**
-     * Mirrors 26.1 `Entity#getFluidJumpThreshold()`.
-     * @see net.minecraft.world.entity.Entity.getFluidJumpThreshold
-     */
-    private fun getFluidJumpThreshold(): Double {
-        return if (player.eyeHeight.toDouble() < 0.4) 0.0 else 0.4
-    }
+    override fun isUnderWater() = wasUnderwater
 
-    /**
-     * Mirrors 26.1 `Entity#isEyeInFluid(TagKey)`, restricted to water for the underwater state.
-     * @see net.minecraft.world.entity.Entity.isEyeInFluid
-     */
-    private fun isEyeInWater(): Boolean {
-        return this.fluidInteraction.isEyeInFluid(FluidTags.WATER)
-    }
+    override fun isSuppressingSlidingDownLadder() = !abilities.flying && super.isSuppressingSlidingDownLadder()
 
-    private fun isInWater(): Boolean = wasTouchingWater
+    override fun isLocalClientAuthoritative() = true
 
-    /**
-     * @see Entity.isInLava
-     */
-    private fun isInLava(): Boolean {
-        return this.fluidInteraction.isInFluid(FluidTags.LAVA)
-    }
+    override fun isEffectiveAi() = true
 
-    /**
-     * Mirrors 26.1 `Player#updateSwimming()`.
-     * @see net.minecraft.world.entity.player.Player.updateSwimming
-     */
-    private fun updateSwimming() {
-        isSwimming = if (this.isSwimming) {
-            isSprinting && isInWater() && !this.player.isPassenger
-        } else {
-            isSprinting && this.isSubmergedInWater() &&
-                !this.player.isPassenger &&
-                this.player.level()
-                    .getFluidState(this.pos.toBlockPos())
-                    .`is`(FluidTags.WATER)
-        }
-    }
-
-    /**
-     * Mirrors 26.1 `Entity#updateFluidInteraction()`.
-     * @see net.minecraft.world.entity.Entity.updateFluidInteraction
-     */
-    private fun updateFluidInteraction(): Boolean {
-        this.fluidInteraction.update(this.player, !this.player.isAffectedByFluids)
-
-        val inWater = this.fluidInteraction.isInFluid(FluidTags.WATER)
-        val inLava = this.fluidInteraction.isInFluid(FluidTags.LAVA)
-
-        if (inWater) {
-            onLanding()
-        }
-
-        this.wasTouchingWater = inWater
-        if (this.player.isAffectedByFluids) {
-            if (inWater) {
-                this.fluidInteraction.applyCurrentTo(FluidTags.WATER, this.player, 0.014)
-            }
-
-            if (inLava) {
-                val lavaFlowScale = if (this.level.environmentAttributes()
-                        .getDimensionValue(EnvironmentAttributes.FAST_LAVA)
-                ) {
-                    0.007
-                } else {
-                    0.0023333333333333335
-                }
-                this.fluidInteraction.applyCurrentTo(FluidTags.LAVA, this.player, lavaFlowScale)
-            }
-        }
-
-        return inWater || inLava
-    }
-
-    /**
-     * Mirrors 26.1 `Player#updateIsUnderwater()`.
-     * @see net.minecraft.world.entity.player.Player.updateIsUnderwater
-     */
-    private fun updateIsUnderwater(): Boolean {
-        this.wasUnderwater = this.isEyeInWater()
-        return this.wasUnderwater
-    }
-
-    private fun isSubmergedInWater(): Boolean {
-        return this.wasUnderwater && isInWater()
-    }
-
-    private fun getFluidHeight(tags: TagKey<Fluid>): Double =
-        this.fluidInteraction.getFluidHeight(tags)
-
-    /**
-     * Mirrors 26.1 `Entity#getViewVector()`.
-     * @see net.minecraft.world.entity.Entity.getViewVector
-     */
-    private fun getViewVector(): Vec3 = Entity.calculateViewVector(xRot, yRot)
-
-    private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
-        val instance = player.getEffect(effect) ?: return false
-
-        return instance.duration >= this.simulatedTicks
-    }
-
-    private fun getStatusEffect(effect: Holder<MobEffect>): MobEffectInstance? {
-        val instance = player.getEffect(effect) ?: return null
-
-        if (instance.duration < this.simulatedTicks) {
-            return null
-        }
-
-        return instance
-    }
-
-    fun getAttributeValue(attribute: Holder<Attribute>): Double {
-        return player.attributes.getValue(attribute)
-    }
-
-    fun clone(): SimulatedPlayer {
-        return SimulatedPlayer(
-            player,
-            input,
-            pos,
-            deltaMovement,
-            boundingBox,
-            yRot,
-            xRot,
-            isSprinting,
-            fallDistance,
-            jumpTriggerTime,
-            jumping,
-            fallFlying,
-            onGround,
-            horizontalCollision,
-            verticalCollision,
-            wasTouchingWater,
-            isSwimming,
-            wasUnderwater,
-            fluidInteraction.deepCopy(),
-        )
+    override fun pushEntities() {
+        // Would push the real entities around
     }
 
     class SimulatedPlayerInput(
         val directionalInput: DirectionalInput,
         jumping: Boolean,
-        var sprinting: Boolean,
+        sprinting: Boolean,
         sneaking: Boolean,
         var ignoreClippingAtLedge: Boolean = false
     ) : ClientInput() {
@@ -920,34 +334,16 @@ class SimulatedPlayer(
                 left = directionalInput.left,
                 right = directionalInput.right,
                 jump = jumping,
-                sneak = sneaking
+                sneak = sneaking,
+                sprint = sprinting
             )
+            moveVector = Vec2(
+                KeyboardInput.calculateImpulse(directionalInput.left, directionalInput.right),
+                KeyboardInput.calculateImpulse(directionalInput.forwards, directionalInput.backwards)
+            ).normalized()
         }
 
-        fun update() {
-            if (this.keyPresses.forward != this.keyPresses.backward) {
-                this.movementForward = if (this.keyPresses.forward) 1.0f else -1.0f
-            } else {
-                this.movementForward = 0.0f
-            }
-
-            movementSideways = if (keyPresses.left == keyPresses.right) {
-                0.0f
-            } else if (keyPresses.left) {
-                1.0f
-            } else {
-                -1.0f
-            }
-
-            if (keyPresses.shift) {
-                movementSideways = (movementSideways.toDouble() * 0.3).toFloat()
-                movementForward = (movementForward.toDouble() * 0.3).toFloat()
-            }
-        }
-
-        override fun toString(): String {
-            return "SimulatedPlayerInput(forwards={${this.keyPresses.forward}}, backwards={${this.keyPresses.backward}}, left={${this.keyPresses.left}}, right={${this.keyPresses.right}}, jumping={${this.keyPresses.jump}}, sprinting=$sprinting, slowDown=${keyPresses.shift})"
-        }
+        override fun toString() = "SimulatedPlayerInput($keyPresses)"
 
         companion object {
             private const val MAX_WALKING_SPEED = 0.121
@@ -956,7 +352,7 @@ class SimulatedPlayer(
             fun fromClientPlayer(
                 directionalInput: DirectionalInput,
                 jump: Boolean = player.input.keyPresses.jump,
-                sprinting: Boolean = player.isSprinting,
+                sprinting: Boolean = player.isSprinting || player.input.keyPresses.sprint,
                 sneaking: Boolean = player.isShiftKeyDown
             ): SimulatedPlayerInput {
                 val input = SimulatedPlayerInput(
@@ -1009,5 +405,36 @@ class SimulatedPlayer(
             }
         }
 
+    }
+
+    companion object {
+        private const val FLAG_FALL_FLYING = 7
+        private const val MINOR_COLLISION_MIN_LENGTH_SQR = 1.0E-5f
+        private const val MINOR_COLLISION_ANGLE = 0.13962634f
+
+        private val ticking = ThreadLocal.withInitial { false }
+
+        /**
+         * A simulation ticks on this thread. Blocks reacting to it must not change the level or show particles.
+         */
+        @JvmStatic
+        val isTicking: Boolean
+            get() = ticking.get()
+
+        @JvmStatic
+        fun fromClientPlayer(input: SimulatedPlayerInput) = SimulatedPlayer(
+            player,
+            input,
+            player.deltaMovement,
+            continuesTick = PlayerSimulationCache.isLocalPlayerMoving,
+        )
+
+        @JvmStatic
+        fun fromOtherPlayer(player: Player, input: SimulatedPlayerInput) = SimulatedPlayer(
+            player,
+            input,
+            deltaMovement = player.position().subtract(player.lastPos),
+            continuesTick = false,
+        )
     }
 }

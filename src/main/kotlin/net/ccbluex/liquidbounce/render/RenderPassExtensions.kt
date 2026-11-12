@@ -154,16 +154,18 @@ fun RenderTarget.createRenderPass(
 )
 
 /**
- * Color-only RenderPass.
+ * RenderPass drawing into this view, color-only without [depthAttachment].
  */
 @JvmOverloads
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: Optional<Vector4fc> = Optional.empty(),
+    depthAttachment: GpuTextureView? = null,
 ): RenderPass = newRenderPass(
     labelGetter,
     colorAttachment = this,
     clearColor,
+    depthAttachment,
 )
 
 @Suppress("NOTHING_TO_INLINE")

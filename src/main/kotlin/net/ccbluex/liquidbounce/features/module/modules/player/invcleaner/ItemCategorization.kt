@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.KnockbackItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
@@ -105,6 +106,12 @@ enum class ItemType(
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
+
+    /**
+     * Not [ItemFunction.WEAPON_LIKE] and below the weapon types, so the main weapon is picked first and a separate
+     * knockback item (e.g. a knockback stick) still gets its own slot.
+     */
+    KNOCKBACK(true, allocationPriority = Priority.NORMAL),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -142,6 +149,11 @@ enum class ItemSortChoice(
     WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
     SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
     MACE("Mace", ItemType.MACE.defaultCategory, { it.item is MaceItem }),
+    BEST_KNOCKBACK(
+        "BestKnockback",
+        ItemType.KNOCKBACK.defaultCategory,
+        { it.getEnchantment(Enchantments.KNOCKBACK) > 0 },
+    ),
     BOW("Bow", ItemType.BOW.defaultCategory),
     CROSSBOW("Crossbow", ItemType.CROSSBOW.defaultCategory),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
@@ -202,6 +214,21 @@ class ItemCategorization(
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
+    /**
+     * Knockback of the best real weapon, which is the one kept as main weapon. A dedicated knockback item has to
+     * knock back harder than it.
+     */
+    private val mainWeaponKnockback: Int =
+        availableItems.asSequence()
+            .filter { slot ->
+                val stack = slot.itemStack
+                stack.isSword || stack.isSpear || stack.item is MaceItem || stack.isAxe
+            }
+            .map(::WeaponItemFacet)
+            .maxOrNull()
+            ?.itemStack?.getEnchantment(Enchantments.KNOCKBACK)
+            ?: 0
+
     init {
         val findBestArmorPieces = ArmorEvaluation.findBestArmorPieces(slots = availableItems)
 
@@ -232,6 +259,10 @@ class ItemCategorization(
         return buildList {
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
+
+            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > mainWeaponKnockback) {
+                add(KnockbackItemFacet(slot))
+            }
 
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))

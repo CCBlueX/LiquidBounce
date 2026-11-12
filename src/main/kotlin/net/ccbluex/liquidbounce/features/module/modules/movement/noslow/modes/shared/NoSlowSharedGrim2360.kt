@@ -32,7 +32,10 @@ import net.minecraft.world.InteractionHand
  * @anticheat Grim
  * @anticheatVersion 2.3.60
  */
-internal class NoSlowSharedGrim2360(override val parent: ModeValueGroup<*>) : Mode("Grim2360") {
+internal class NoSlowSharedGrim2360(override val parent: ModeValueGroup<*>) : Mode(
+    "Grim-2.3.60",
+    aliases = listOf("Grim2360"),
+) {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
