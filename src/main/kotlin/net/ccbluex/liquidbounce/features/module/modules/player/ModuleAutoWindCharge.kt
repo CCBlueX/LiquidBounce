@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.input.isPressed
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -73,14 +75,10 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     private var aimTicks = 0
     private var horizontalPitch: Float? = null
 
-    /** The yaw, if any, and pitch the next rotation update turns to. */
-    private var aim: Pair<Float?, Float>? = null
-
     override fun onDisabled() {
         holdJump = false
         aimTicks = 0
         horizontalPitch = null
-        aim = null
     }
 
     @Suppress("unused")
@@ -97,54 +95,72 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      */
     @Suppress("unused")
     private val autoWindChargeHandler = tickHandler {
-        // Runs once a tick: after the rotation update when this asked it to turn, else at the start of the tick
-        val angles = aim
-        aim = null
-        val readyRotation = if (angles == null) {
-            waitTicks(1)
-            null
-        } else {
-            val (yaw, pitch) = angles
-            val target = rotations.toRotationTarget(yaw = yaw, pitch = pitch, tolerance = AIM_TOLERANCE)
-            // Resumes on the next rotation going out, met or not
-            lookAt(Priority.IMPORTANT_FOR_USAGE_3, { target }) { it }.takeIf { target.isMetBy(it) }
-        }
-
         holdJump = false
 
-        if (player.isFallFlying || player.isSwimming || player.isInLiquid || !mc.options.keyJump.isDown) {
+        if (!isBoosting) {
             aimTicks = 0
             return@tickHandler
         }
 
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@tickHandler
-        if (player.cooldowns.isOnCooldown(itemSlot.itemStack)) {
-            return@tickHandler
-        }
-
+        val slot = chargeSlot() ?: return@tickHandler
         val (yaw, pitch) = throwAngles()
 
         if (!player.onGround()) {
             // Face down before landing, so the throw does not wait for the turn
             val turn = Rotation(yaw ?: RotationManager.serverRotation.yaw, pitch)
             if (Rotate.enabled && isLandingWithin(rotations.calculateTicks(turn) + 1)) {
-                aim(yaw, pitch)
+                CombatManager.pauseCombatForAtLeast(combatPauseTime)
+                RotationManager.setRotationTarget(
+                    target(yaw, pitch),
+                    Priority.IMPORTANT_FOR_USAGE_3,
+                    this@ModuleAutoWindCharge,
+                )
             }
             return@tickHandler
         }
 
-        if (Rotate.enabled && readyRotation == null) {
-            aim(yaw, pitch)
-            holdJump = aimTicks++ < MAX_AIM_TICKS
+        if (!Rotate.enabled) {
+            throwCharge(slot, Rotation(yaw ?: player.yRot, pitch).normalize())
             return@tickHandler
         }
 
-        aimTicks = 0
-        holdJump = true
-        horizontalPitch = null
+        // Turned down before landing, the rotation going out this tick may already be the one to throw with
+        val going = RotationManager.currentRotation?.takeIf { target(yaw, pitch).isMetBy(it) }
+        if (going != null) {
+            throwCharge(slot, going)
+            return@tickHandler
+        }
 
-        val (throwYaw, throwPitch) = readyRotation ?: Rotation(yaw ?: player.yRot, pitch).normalize()
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), throwYaw, throwPitch)
+        guarded({ isBoosting && player.onGround() }) {
+            val charge by tracked(::chargeSlot)
+            // Stays on the ground while turning down, until it gives up and jumps without a charge
+            holdJump = aimTicks++ < MAX_AIM_TICKS
+            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_3) {
+                holdJump = aimTicks++ < MAX_AIM_TICKS
+                CombatManager.pauseCombatForAtLeast(combatPauseTime)
+                val (nextYaw, nextPitch) = throwAngles()
+                target(nextYaw, nextPitch)
+            }
+            throwCharge(charge, going)
+        }
+    }
+
+    private val isBoosting
+        get() = !player.isFallFlying && !player.isSwimming && !player.isInLiquid && mc.options.keyJump.isDown
+
+    private fun chargeSlot() =
+        Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE)?.takeUnless { player.cooldowns.isOnCooldown(it.itemStack) }
+
+    private fun target(yaw: Float?, pitch: Float) =
+        rotations.toRotationTarget(yaw = yaw, pitch = pitch, tolerance = AIM_TOLERANCE)
+
+    private suspend fun throwCharge(slot: HotbarItemSlot, rotation: Rotation) {
+        aimTicks = 0
+        horizontalPitch = null
+        holdJump = true
+        useHotbarSlotOrOffhand(slot, slotResetDelay.random(), rotation.yaw, rotation.pitch)
+        // The jump goes on the tick after the throw
+        waitTicks(1)
     }
 
     /** Straight down needs no particular yaw; a horizontal boost throws against the direction of the input. */
@@ -159,10 +175,5 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
 
     private fun isLandingWithin(ticks: Int) =
         FallingPlayer.fromPlayer(player, RotationManager.movementYaw).findCollision(ticks) != null
-
-    private fun aim(yaw: Float?, pitch: Float) {
-        CombatManager.pauseCombatForAtLeast(combatPauseTime)
-        aim = yaw to pitch
-    }
 
 }
