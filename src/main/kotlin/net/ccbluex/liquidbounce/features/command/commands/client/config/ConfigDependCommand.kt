@@ -30,9 +30,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Adds and removes what the tracked config depends on: add-ons, scripts and other configs
- */
 object ConfigDependCommand {
 
     fun CmdLiteralScope.depend() {
@@ -41,7 +38,7 @@ object ConfigDependCommand {
                 argument("item", ClientStringArgumentType.string(), suggests = configSuggestions) { input ->
                     execSuspend { ctx ->
                         requireOwnTracked()
-                        val dependency = resolveDependency(ctx.get(input))
+                        val dependency = dependencyItem(ctx.get(input))
                         request { MarketplaceApi.addItemDependency(session(), ConfigTracker.itemId, dependency.id) }
                         chat(regular(t("depend.added", variable(ConfigTracker.itemName), variable(dependency.name))))
                     }
@@ -51,7 +48,7 @@ object ConfigDependCommand {
                 argument("item", ClientStringArgumentType.string(), suggests = configSuggestions) { input ->
                     execSuspend { ctx ->
                         requireOwnTracked()
-                        val dependency = resolveDependency(ctx.get(input))
+                        val dependency = dependencyItem(ctx.get(input))
                         request { MarketplaceApi.removeItemDependency(session(), ConfigTracker.itemId, dependency.id) }
                         chat(regular(t("depend.removed", variable(ConfigTracker.itemName), variable(dependency.name))))
                     }
@@ -60,7 +57,7 @@ object ConfigDependCommand {
         }
     }
 
-    private suspend fun CmdI18n.resolveDependency(input: String): MarketplaceItem =
+    private suspend fun CmdI18n.dependencyItem(input: String): MarketplaceItem =
         single(input, MarketplaceConfigs.findDependency(input))
 
 }

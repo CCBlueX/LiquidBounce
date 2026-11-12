@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.entity.player.Player
 
@@ -30,19 +30,20 @@ open class ItemCooldown : ValueGroup("ItemCooldown", aliases = listOf("Cooldown"
         1.0f..1.0f, 0.0f..2.0f
     )
 
-    private var nextCooldown = minimumCooldown.random()
+    var nextCooldown = minimumCooldown.random()
+        private set
 
     open fun isCooldownPassed(ticks: Int = 0) = cooldownProgress(ticks) >= nextCooldown
 
     /**
-     * Calculates the current cooldown progress.
+     * Calculates the cooldown progress as the server counts it, [baseTime] ticks of real time from now.
      *
      * This can be out of percentage range [0, 1] to allow for higher minimum cooldowns.
      *
      * @see Player.getAttackStrengthScale
+     * @see CombatManager.attackCooldownProgress
      */
-    fun cooldownProgress(baseTime: Int = 0) =
-        (player.attackStrengthTicker + baseTime + 0.5F) / player.currentItemAttackStrengthDelay
+    fun cooldownProgress(baseTime: Int = 0) = CombatManager.attackCooldownProgress(baseTime)
 
     /**
      * Generates a new cooldown based on the range that was set by the user.

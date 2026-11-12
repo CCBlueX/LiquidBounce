@@ -94,7 +94,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
             val prefersHealthPot = player.health <= preferHealthPotHealth
 
             return when {
-                prefersGapples && item == Items.POTION -> {
+                prefersHealthPot && item == Items.POTION -> {
                     val hasHealthEffect =
                         itemStack.getPotionEffects().any {
                             it.effect == MobEffects.INSTANT_HEALTH
@@ -106,9 +106,9 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                         null
                     }
                 }
-                prefersHealthPot && item == Items.GOLDEN_APPLE -> {
+                prefersGapples && item == Items.GOLDEN_APPLE -> {
                     FoodEstimationData(
-                        healthThreshold = preferHealthPotHealth.toInt(),
+                        healthThreshold = preferGappleHealth.toInt(),
                         restoredHunger = itemStack.foodComponent!!.nutrition
                     )
                 }

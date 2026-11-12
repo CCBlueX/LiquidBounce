@@ -31,23 +31,23 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEx
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2373Jan15
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2859V
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixelFlat
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraftDamage
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel10thMar
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel20thApr
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel26thDec
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2373
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2359
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121Flat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraft20240515
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240310
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240420
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20251226
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240127
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartanPhase524
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyBlocksMC20240309
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Flat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC113
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286TeleportMC18
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
@@ -74,27 +74,27 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
 
             // Anti-cheat specific fly modes
             FlyVulcan277,
-            FlyVulcan286,
+            FlyVulcan286MC113,
             FlyVulcan286MC18,
-            FlyVulcan286Teleport,
-            FlyGrim2859V,
-            FlyGrim2373Jan15,
-            FlySpartan524,
+            FlyVulcan286TeleportMC18,
+            FlyGrim2359,
+            FlyGrim2373,
+            FlySpartanPhase524,
 
             // Server specific fly modes
-            FlySentinel20thApr,
-            FlySentinel27thJan,
-            FlySentinel10thMar,
-            FlySentinel26thDec,
+            FlyCubeCraft20240420,
+            FlyCubeCraft20240127,
+            FlyCubeCraft20240310,
+            FlyCubeCraft20251226,
 
             FlyVerusB3896Damage,
-            FlyVerusB3869Flat,
-            FlyNcpClip,
+            FlyVerusB3896Flat,
+            FlyBlocksMC20240309,
 
-            FlyHypixel,
-            FlyHypixelFlat,
+            FlyHypixel20250121,
+            FlyHypixel20250121Flat,
 
-            FlyHycraftDamage
+            FlyHycraft20240515
         )
     ).apply { tagBy(this) }
 

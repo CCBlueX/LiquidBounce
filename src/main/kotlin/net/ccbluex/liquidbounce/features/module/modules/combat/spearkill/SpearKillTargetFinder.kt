@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.spearkill
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
-import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -88,7 +87,7 @@ internal object SpearKillTargetFinder {
         if (distSq >= bestDistSq) return null
 
         val hit = traceFromPlayer(range = distanceToDamage, block = ClipContext.Block.COLLIDER)
-        if (hit.type != HitResult.Type.MISS && hit.location.distanceTo(eye) < distanceToDamage) return null
+        if (hit.type != HitResult.Type.MISS && hit.location.closerThan(eye, distanceToDamage)) return null
 
         return Candidate(entity, distanceToDamage, distSq)
     }

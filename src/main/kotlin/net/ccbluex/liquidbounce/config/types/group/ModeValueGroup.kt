@@ -144,6 +144,9 @@ abstract class Mode @JvmOverloads constructor(
     final override val tagAliases: List<String>
         get() = this.aliases
 
+    override val debugName: String
+        get() = name
+
     abstract val parent: ModeValueGroup<*>
 
     open fun enable() { }

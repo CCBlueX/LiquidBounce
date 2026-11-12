@@ -62,7 +62,7 @@ object NormalMineMode : MineMode("Normal") {
 
         mineTarget.finished = true
         if (!waitForConfirm) {
-            ModulePacketMine._resetTarget()
+            ModulePacketMine.resetTarget()
         }
     }
 

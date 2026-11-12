@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHa
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsImage
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOrbs
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
+import net.ccbluex.liquidbounce.render.effect.rendering
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import org.joml.Vector2f
 
@@ -57,5 +58,7 @@ object ModuleHats : ClientModule("Hats", ModuleCategories.RENDER) {
             HatsImage,
         )
     }.apply { tagBy(this) }
+
+    val render = rendering()
 
 }

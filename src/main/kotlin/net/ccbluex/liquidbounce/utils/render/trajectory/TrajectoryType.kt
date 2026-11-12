@@ -32,17 +32,17 @@ enum class TrajectoryType(
     override val tag: String,
     val initialTickBehavior: InitialTickBehavior,
 ) : Tagged {
-    Arrow("Arrow", InitialTickBehavior.NONE),
-    Potion("Potion", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    EnderPearl("EnderPearl", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    FishingBobber("FishingBobber", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    Trident("Trident", InitialTickBehavior.NONE),
-    Snowball("Snowball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    Egg("Egg", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    ExpBottle("ExpBottle", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    FireworkRocket("FireworkRocket", InitialTickBehavior.NONE),
-    Fireball("Fireball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
-    WindCharge("WindCharge", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    ARROW("Arrow", InitialTickBehavior.NONE),
+    POTION("Potion", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    ENDER_PEARL("EnderPearl", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    FISHING_BOBBER("FishingBobber", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    TRIDENT("Trident", InitialTickBehavior.NONE),
+    SNOWBALL("Snowball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    EGG("Egg", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    EXP_BOTTLE("ExpBottle", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    FIREWORK_ROCKET("FireworkRocket", InitialTickBehavior.NONE),
+    FIREBALL("Fireball", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
+    WIND_CHARGE("WindCharge", InitialTickBehavior.APPLY_VELOCITY_ONLY_BEFORE_FIRST_MOVE),
     ;
 
     enum class InitialTickBehavior {

@@ -9,7 +9,7 @@
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onDestroy, onMount} from "svelte";
     import {
-        browse,
+        openLink,
         connectToServer,
         getClientInfo,
         getLanServers,
@@ -202,7 +202,7 @@
                       on:change={changeProtocolVersion}/>
         <ButtonSetting title="ViaFabricPlus" on:click={() => openScreen("viafabricplus_protocol_selection")}/>
     {:else}
-        <ButtonSetting title="Install ViaFabricPlus" on:click={() => browse("VIAFABRICPLUS")}/>
+        <ButtonSetting title="Install ViaFabricPlus" on:click={() => openLink("VIAFABRICPLUS")}/>
     {/if}
 </OptionBar>
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ConnectionDetails
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.CameraType
@@ -126,11 +127,15 @@ class SessionEvent(
     val session: User,
 ) : Event(), WebSocketEvent
 
+/**
+ * Called before [screen] opens, `null` for none. Theme pages get it too; the cached in-game ClickGUI page learns
+ * from it when it is shown or hidden. A cancelled one never opens, or the client swaps it for a theme screen.
+ */
 @AddonApi
 @Tag("screen")
 class ScreenEvent(
     val screen: Screen?,
-) : CancellableEvent()
+) : CancellableEvent(), WebSocketEvent
 
 @AddonApi
 @Tag("chatSend")
@@ -162,6 +167,9 @@ class ServerConnectEvent(
     val serverInfo: ServerData,
     val cookieStorage: TransferState?,
 ) : CancellableEvent()
+
+@Tag("connectionDetails")
+class ConnectionDetailsEvent(val details: ConnectionDetails) : Event(), WebSocketEvent
 
 @AddonApi
 @Tag("disconnect")

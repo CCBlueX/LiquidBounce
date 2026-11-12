@@ -51,6 +51,12 @@ data class Proxy(
     val address
         get() = InetSocketAddress(host, port)
 
+    /**
+     * True when [other] connects to the same proxy as the same user; passwords and settings may differ.
+     */
+    fun isSameAs(other: Proxy) = host.equals(other.host, ignoreCase = true) && port == other.port &&
+        (type ?: Type.SOCKS5) == (other.type ?: Type.SOCKS5) && credentials?.username == other.credentials?.username
+
     fun handler() = when (type ?: Type.SOCKS5) {
         Type.HTTP -> if (credentials == null) {
             HttpProxyHandler(address)

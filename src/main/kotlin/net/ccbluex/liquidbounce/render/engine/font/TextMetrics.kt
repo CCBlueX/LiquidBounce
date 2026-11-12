@@ -33,4 +33,10 @@ data class TextMetrics(
     val underlineThickness: Float,
     val strikethroughOffset: Float,
     val strikethroughThickness: Float,
+    /** Top of a flat lowercase letter above the baseline, 0 when the font has no `x`. */
+    val xHeight: Float,
+    /** Top of a round lowercase letter, the x-height with its overshoot. 0 when the font has no `o`. */
+    val roundXHeight: Float,
+    /** Top of a flat capital, 0 when the font has no `H`. */
+    val capHeight: Float,
 )
