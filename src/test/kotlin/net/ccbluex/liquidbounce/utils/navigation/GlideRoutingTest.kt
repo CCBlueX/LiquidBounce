@@ -20,14 +20,14 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlideControl
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePhysics
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRockets
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRouteSearch
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.glide.Abilities
+import net.ccbluex.liquidbounce.utils.navigation.glide.Landing
+import net.ccbluex.liquidbounce.utils.navigation.glide.PathSearch
+import net.ccbluex.liquidbounce.utils.navigation.glide.Rockets
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
@@ -44,20 +44,20 @@ class GlideRoutingTest {
         }
 
         private const val MAX_SLICES = 1000
-        private val GLIDER = GlideAbilities(rockets = 0, rocketTicks = 0, glideTicks = Int.MAX_VALUE)
-        private val ROCKETEER = GlideAbilities(rockets = 8, rocketTicks = 20, glideTicks = Int.MAX_VALUE)
+        private val GLIDER = Abilities(rockets = 0, rocketTicks = 0, glideTicks = Int.MAX_VALUE)
+        private val ROCKETEER = Abilities(rockets = 8, rocketTicks = 20, glideTicks = Int.MAX_VALUE)
     }
 
     /**
      * Ground at y = 0 from x -10 to 100, so feet stand at y = 1, and a stone tower on x -1..1, z -1..1 with its top
      * at [towerTop].
      */
-    private fun towerWorld(towerTop: Int) = TestNavigationWorld()
+    private fun towerWorld(towerTop: Int) = TestWorld()
         .fill(-10, 0, -40, 100, 0, 40)
         .fill(-1, 1, -1, 1, towerTop, 1)
 
-    private fun glide(world: TestNavigationWorld, start: Vec3, goal: Vec3, abilities: GlideAbilities) =
-        GlideRouteSearch(world.terrain(), start, goal, 1.0, abilities).advanceToEnd(MAX_SLICES)
+    private fun glide(world: TestWorld, start: Vec3, goal: Vec3, abilities: Abilities) =
+        PathSearch(world.terrain(), start, goal, 1.0, abilities).advanceToEnd(MAX_SLICES)
 
     @Test
     fun `goals close below a high take-off are glided to by circling down`() {
@@ -112,14 +112,14 @@ class GlideRoutingTest {
     @Test
     fun `far too high above the goal it sinks without firing rockets`() {
         val goal = Vec3(0.5, 90.0, 0.5)
-        val control = GlideControl(goal, GlideRockets(left = 8, burnTicks = 20))
+        val control = Landing(goal, Rockets(left = 8, burnTicks = 20))
         var position = Vec3(20.5, 250.0, 0.5)
         var velocity = Vec3(-1.5, 0.0, 0.0)
 
         repeat(200) {
             val input = control.steer(position, velocity)
             assertFalse(input.fireRocket, "fired a rocket at $position, ${position.y - goal.y} above the goal")
-            velocity = GlidePhysics.step(velocity, input.yaw, input.pitch, input.boosted)
+            velocity = ElytraMotion.step(velocity, input.yaw, input.pitch, input.boosted)
             position = position.add(velocity)
         }
         assertEquals(8, control.rockets.left)

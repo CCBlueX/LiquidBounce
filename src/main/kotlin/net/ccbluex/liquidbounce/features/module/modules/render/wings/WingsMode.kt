@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings.WingsPosition
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.math.fma
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
 abstract class WingsMode(name: String) : Mode(name) {
@@ -52,63 +54,69 @@ abstract class WingsMode(name: String) : Mode(name) {
 
     private val friends = tree(FriendsOptions())
 
+    /**
+     * How the wings reach the screen, null for wings that are always drawn plain.
+     */
+    protected open val render: ModeValueGroup<Rendering>? get() = null
+
     protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val player = mc.player ?: return@handler
+        val render = render
+        if (render != null) {
+            event.renderEnvironment(render) { drawAllWings(event) }
+        } else {
+            event.renderEnvironment { drawAllWings(event) }
+        }
+    }
 
-        event.renderEnvironment {
-            for (entity in world.players()) {
+    private fun WorldRenderEnvironment.drawAllWings(event: WorldRenderEvent) {
+        val player = mc.player ?: return
 
-                val isMe = entity == player
-                val isFriend =
-                    friends.friendView
-                        && FriendManager.isFriend(entity)
-                        && player.closerThan(entity, friends.distance.toDouble())
+        for (entity in world.players()) {
+            val isMe = entity == player
+            if (!hasWings(entity, player)) continue
 
-                val shouldRender = when {
-                    isMe -> !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
-                    isFriend -> true
-                    else -> false
-                }
+            val vanillaBodyRot = rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
+            val bodyRot = if (isMe) {
+                RotationManager.modelYaw(RotationManager.BodyPart.BODY, event.partialTicks, vanillaBodyRot)
+            } else {
+                vanillaBodyRot
+            }
 
-                if (!shouldRender) continue
+            val look = Vec3.directionFromRotation(0f, bodyRot)
+            val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
+                true -> WingsPosition.equipmentOffset.toDouble()
+                else -> 0.0
+            }
 
-                val partAllowed = RotationManager.isPartAllowed(RotationManager.BodyPart.BODY)
-                val bodyRot = if (isMe && RotationManager.running && partAllowed) {
-                    val modelRot = RotationManager.currentRotation?.yaw
-                    val prevModelRot = RotationManager.lastRotation?.yaw
-                    rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
-                } else { rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot) }
+            val hurtMarked = entity.hurtTime != 0 && showDamage
+            val shifting = when (player.isShiftKeyDown) {
+                true -> 0.1f
+                false -> 0f
+            }
 
-                val look = Vec3.directionFromRotation(0f, bodyRot)
-                val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
-                    true -> WingsPosition.equipmentOffset.toDouble()
-                    else -> 0.0
-                }
+            val entityScale = entity.attributes.getValue(Attributes.SCALE).toFloat()
+            val behind = (WingsPosition.behindScale.toDouble() + equipmentOffset) * entityScale
+            val pos = entity.getPosition(event.partialTicks).fma(-behind, look)
 
-                val hurtMarked = entity.hurtTime != 0 && showDamage
-                val shifting = when (player.isShiftKeyDown) {
-                    true -> 0.1f
-                    false -> 0f
-                }
-
-                val entityScale = entity.attributes.getValue(Attributes.SCALE).toFloat()
-                val behind = (WingsPosition.behindScale.toDouble() + equipmentOffset) * entityScale
-                val pos = entity.getPosition(event.partialTicks).fma(-behind, look)
-
-                withPositionRelativeToCamera(pos.add(
-                    0.0,
-                    (entity.bbHeight / 2.0) + WingsPosition.wingsHeight - shifting,
-                    0.0
-                )) {
-                    poseStack.withPush {
-                        scale(entityScale, entityScale, entityScale)
-                        drawWings(hurtMarked, bodyRot, shifting)
-                    }
+            withPositionRelativeToCamera(pos.add(
+                0.0,
+                (entity.bbHeight / 2.0) + WingsPosition.wingsHeight - shifting,
+                0.0
+            )) {
+                poseStack.withPush {
+                    scale(entityScale, entityScale, entityScale)
+                    drawWings(hurtMarked, bodyRot, shifting)
                 }
             }
         }
+    }
+
+    private fun hasWings(entity: Player, player: Player) = if (entity == player) {
+        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+    } else {
+        friends.friendView && FriendManager.isFriend(entity) && player.closerThan(entity, friends.distance.toDouble())
     }
 }

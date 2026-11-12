@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
-import net.ccbluex.liquidbounce.utils.navigation.flight.ColumnHeights
-import net.ccbluex.liquidbounce.utils.navigation.flight.ElytraCruise
-import net.ccbluex.liquidbounce.utils.navigation.flight.RoofBounce
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.glide.ColumnHeights
+import net.ccbluex.liquidbounce.utils.navigation.glide.Cruise
+import net.ccbluex.liquidbounce.utils.navigation.glide.RoofBounce
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,13 +44,13 @@ class ElytraTravelTest {
 
     @Test
     fun `a far cruise needs more rockets than a near one`() {
-        val near = ElytraCruise.rocketsNeeded(300.0, 10.0, ROCKET_TICKS)
-        val far = ElytraCruise.rocketsNeeded(1200.0, 10.0, ROCKET_TICKS)
-        val high = ElytraCruise.rocketsNeeded(300.0, 80.0, ROCKET_TICKS)
+        val near = Cruise.rocketsNeeded(300.0, 10.0, ROCKET_TICKS)
+        val far = Cruise.rocketsNeeded(1200.0, 10.0, ROCKET_TICKS)
+        val high = Cruise.rocketsNeeded(300.0, 80.0, ROCKET_TICKS)
 
         assertTrue(far > near * 3, "1200 blocks took $far rockets, 300 took $near")
         assertTrue(high > near, "climbing 80 blocks took no extra rockets")
-        assertEquals(Int.MAX_VALUE, ElytraCruise.rocketsNeeded(300.0, 0.0, 0))
+        assertEquals(Int.MAX_VALUE, Cruise.rocketsNeeded(300.0, 0.0, 0))
     }
 
     @Test
@@ -60,23 +60,23 @@ class ElytraTravelTest {
         val pillar = ColumnHeights { x, _ -> if (x in 150..152) 160 else 0 }
         val unloaded = ColumnHeights { x, _ -> if (x > 50) null else 0 }
 
-        assertEquals(160.0 + ElytraCruise.CLEARANCE, ElytraCruise.cruiseAltitude(start, goal, pillar))
+        assertEquals(160.0 + Cruise.CLEARANCE, Cruise.cruiseAltitude(start, goal, pillar))
         assertEquals(
-            110.0 + ElytraCruise.CLEARANCE + ElytraCruise.UNKNOWN_CLEARANCE,
-            ElytraCruise.cruiseAltitude(start, goal, unloaded),
+            110.0 + Cruise.CLEARANCE + Cruise.UNKNOWN_CLEARANCE,
+            Cruise.cruiseAltitude(start, goal, unloaded),
         )
     }
 
     @Test
     fun `a flat open roof is a bounce line, a wall, a step or a hole ahead ends it`() {
-        val line = RoofBounce.bounceLine(TestNavigationWorld.flat().terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
+        val line = RoofBounce.bounceLine(TestWorld.flat().terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
         assertNotNull(line)
         assertEquals(24.0, line.x - 0.5, 1.0E-6)
 
-        val wall = TestNavigationWorld.flat().fill(10, 1, -2, 10, 3, 2)
-        val step = TestNavigationWorld.flat().fill(10, 1, -2, 12, 1, 2)
-        val hole = TestNavigationWorld.flat().set(12, 0, 0, AIR)
-        val low = TestNavigationWorld.flat().fill(10, 3, -2, 12, 3, 2)
+        val wall = TestWorld.flat().fill(10, 1, -2, 10, 3, 2)
+        val step = TestWorld.flat().fill(10, 1, -2, 12, 1, 2)
+        val hole = TestWorld.flat().set(12, 0, 0, AIR)
+        val low = TestWorld.flat().fill(10, 3, -2, 12, 3, 2)
         for (world in listOf(wall, step, hole, low)) {
             assertNull(RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0))
         }
@@ -84,11 +84,11 @@ class ElytraTravelTest {
 
     @Test
     fun `unloaded ground ahead still bounces once enough is known`() {
-        val world = TestNavigationWorld.flat { x, _ -> x < 16 }
+        val world = TestWorld.flat { x, _ -> x < 16 }
         val line = assertNotNull(RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(200, 1, 0), 24.0))
         assertTrue(line.x in 8.0..16.0, "the line ended at ${line.x}")
 
-        val close = TestNavigationWorld.flat { x, _ -> x < 4 }
+        val close = TestWorld.flat { x, _ -> x < 4 }
         assertNull(RoofBounce.bounceLine(close.terrain(), feet(0, 1, 0), feet(200, 1, 0), 24.0))
     }
 

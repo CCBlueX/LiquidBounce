@@ -29,58 +29,52 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.yaw
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
-import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumpTargets
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.ifNaN
-import net.ccbluex.liquidbounce.utils.navigation.walk.keys
-import net.minecraft.core.BlockPos
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
+import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
+import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
+import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
+import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
+import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
 
 /**
  * Parkour module
  *
  * Jumps at the very edge of a block. With [Assist], it picks the block across the gap you are heading for, jumps at
- * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings.
+ * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings, and shows
+ * the jump it goes for.
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
+
+    private val assisted = AssistedJump()
 
     private object Assist : ToggleableValueGroup(this, "Assist", true) {
         val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")
         val rotations = tree(RotationsValueGroup(this))
+        val render = tree(JumpRenderer(this, assisted))
     }
 
     init {
         tree(Assist)
     }
 
-    private class JumpTarget(val pos: BlockPos, val aim: Vec3, val jumpNow: Boolean)
-
-    private var target: JumpTarget? = null
     private var aimYaw = Float.NaN
     private var sprint = false
 
-    /** Whether an assisted jump is in the air. */
-    private var airborne = false
-    private var ticksSinceLanding = BRAKE_TICKS
-
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
-        val target = target ?: return@handler
-        val delta = target.aim.subtract(player.position())
-        // Close to the aim, the way there turns around once the player passes it, so the yaw is held.
-        if (delta.horizontalDistanceSqr() >= MIN_AIM_DISTANCE * MIN_AIM_DISTANCE) {
-            aimYaw = delta.yaw
+        assisted.target ?: return@handler
+        val yaw = assisted.aimYaw(player.position(), player.deltaMovement, player.onGround())
+        if (!yaw.isNaN()) {
+            aimYaw = yaw
         }
         if (aimYaw.isNaN()) {
             return@handler
@@ -94,9 +88,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
     }
 
+    /** Holds the sprint key; the game still decides whether the player sprints, and tells the server. */
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (sprint && event.directionalInput.isMoving) {
+        if (sprint && event.source == SprintEvent.Source.INPUT && event.directionalInput.isMoving) {
             event.sprint = true
         }
     }
@@ -114,125 +109,67 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        if (!assist(event)) {
-            jumpAtEdge(event)
+        val keys = assist(event)
+        if (assisted.target == null) {
+            aimYaw = Float.NaN
         }
+        if (keys == null) {
+            jumpAtEdge(event)
+            return@handler
+        }
+
+        event.directionalInput = getDirectionalInputForMovementYaw(keys.forward, keys.strafe, player.yRot)
+        event.jump = keys.jump
+        event.sneak = keys.sneak
+        sprint = keys.sprint
     }
 
-    /** False when there is nothing to assist this tick. */
-    private fun assist(event: MovementInputEvent): Boolean {
-        val terrain = NavigationTerrain.live()
+    /** The keys the assist presses this tick, or null when there is nothing to assist. */
+    private fun assist(event: MovementInputEvent): LeapInput? {
+        val terrain = Terrain.live()
         val abilities = abilities()
         val state = PlayerMotion(terrain, abilities.motion)
         state.reset(player)
-        val jumps = WalkJumps(terrain, abilities)
-        val yaw = RotationManager.movementYaw
 
-        if (!player.onGround()) {
-            steerInAir(event, jumps, state, yaw)
-            return true
-        }
-
-        if (airborne) {
-            airborne = false
-            ticksSinceLanding = 0
-        } else if (ticksSinceLanding < BRAKE_TICKS) {
-            ticksSinceLanding++
-        }
-
-        val heading = getMovementDirectionOfInput(player.yRot, event.directionalInput)
-        val target = pickTarget(WalkJumpTargets(terrain, abilities.motion), jumps, state, yaw, heading)
-        if (target == null) {
-            release()
-            return ticksSinceLanding < BRAKE_TICKS && stopsOnLanding(event, state, yaw)
-        }
-
-        this.target = target
-        event.directionalInput = keys(1, 0, player.yRot)
-        event.jump = target.jumpNow
-        airborne = target.jumpNow
-        sprint = true
-        return true
-    }
-
-    /** Presses the keys that land the furthest inside the block jumped to. */
-    private fun steerInAir(event: MovementInputEvent, jumps: WalkJumps, state: PlayerMotion, yaw: Float) {
-        val target = target ?: return
-        val air = jumps.airKeys(state, yaw, target.pos, target.aim.y) ?: return
-        event.directionalInput = keys(air.forward, air.strafe, player.yRot)
-        event.jump = false
-        sprint = air.forward > 0
-    }
-
-    /** The block across a gap within MaxAngle of [heading] that a jump from here lands on best. */
-    private fun pickTarget(
-        targets: WalkJumpTargets,
-        jumps: WalkJumps,
-        state: PlayerMotion,
-        yaw: Float,
-        heading: Float,
-    ): JumpTarget? {
-        val position = player.position()
-        val feet = BlockPos.containing(position)
-        val height = targets.terrain.standHeight(feet.x, feet.y, feet.z).ifNaN { position.y }
-        val maxAngle = Assist.maxAngle
-        var best: JumpTarget? = null
-        var bestScore = Double.MAX_VALUE
-        targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP) { x, y, z, top ->
-            val aim = Vec3(x + 0.5, top, z + 0.5)
-            val angle = abs(Mth.wrapDegrees(aim.subtract(position).yaw - heading))
-            if (angle > maxAngle) {
-                return@forEach true
-            }
-
-            val pos = BlockPos(x, y, z)
-            val jump = jumps.fromHere(state, yaw, pos, top) ?: return@forEach true
-            val score = angle / maxAngle - jump.margin
-            if (score < bestScore) {
-                best = JumpTarget(pos, aim, jumpNow = jump.jumps && jump.takeoff == 0)
-                bestScore = score
-            }
-            true
-        }
-        return best
-    }
-
-    /** After a landing, holds back when the keys pressed would run off a block too small to stop on later. */
-    private fun stopsOnLanding(event: MovementInputEvent, state: PlayerMotion, yaw: Float): Boolean {
         val input = event.directionalInput
-        val forward = (if (input.forwards) 1 else 0) - (if (input.backwards) 1 else 0)
-        val strafe = (if (input.left) 1 else 0) - (if (input.right) 1 else 0)
-        val probe = state.copy()
-        val runsOff = (0 until BRAKE_LOOKAHEAD).any {
-            probe.tick(yaw, forward, strafe, jump = false, sprint = player.isSprinting)
-            !probe.onGround
+        val keys = LeapInput(
+            forward = (if (input.forwards) 1 else 0) - (if (input.backwards) 1 else 0),
+            strafe = (if (input.left) 1 else 0) - (if (input.right) 1 else 0),
+            jump = event.jump,
+            sprint = player.isSprinting,
+        )
+        val heading = getMovementDirectionOfInput(player.yRot, input)
+        val yaw = RotationManager.movementYaw
+        val jumps = Jumps(terrain, abilities, holdsYaw = true)
+        val targets = JumpTargets(terrain, abilities.motion)
+        val assist = assisted.tick(state, yaw, heading, keys, Assist.maxAngle, jumps, targets)
+        if (Assist.render.enabled) {
+            assisted.trace(state, yaw, heading, Assist.maxAngle, jumps, targets)
         }
-        if (!runsOff || player.deltaMovement.horizontalDistance() <= BRAKE_SPEED) {
-            return false
-        }
-
-        event.directionalInput = keys(-1, 0, player.yRot)
-        return true
+        return assist
     }
 
-    /** Jumps on the last tick before running off a block. */
+    /** Jumps on the last tick before running off a block, but not off a slime bounce, which leaves it anyway. */
     private fun jumpAtEdge(event: MovementInputEvent) {
-        if (!player.onGround() || mc.options.keyJump.isDown) {
+        if (!player.onGround() || mc.options.keyJump.isDown || player.deltaMovement.y > 0.0) {
             return
         }
 
-        val simulation = PlayerSimulationCache.getSimulationForLocalPlayer()
-        if (!simulation.getSnapshotAt(1).onGround) {
+        // The shared simulation of the player is renewed at this priority too, so it may still be the last tick's.
+        val input = SimulatedPlayerInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
+        val simulation = SimulatedPlayer.fromClientPlayer(input)
+        simulation.tick()
+        if (!simulation.onGround()) {
             event.jump = true
         }
     }
 
     private fun release() {
-        target = null
+        assisted.release()
         aimYaw = Float.NaN
     }
 
-    private fun abilities() = WalkAbilities(
+    private fun abilities() = Abilities(
         canBreak = false,
         canPlace = false,
         placeableBlocks = 0,
@@ -247,18 +184,12 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     )
 
     override fun onDisabled() {
-        release()
+        assisted.reset()
+        aimYaw = Float.NaN
         sprint = false
-        airborne = false
-        ticksSinceLanding = BRAKE_TICKS
     }
 
-    private const val MAX_DROP = 4
     private const val SAFE_FALL = 3
     private const val WATER_FALL = 23
     private const val MIN_SPRINT_FOOD = 6
-    private const val BRAKE_TICKS = 10
-    private const val BRAKE_LOOKAHEAD = 3
-    private const val BRAKE_SPEED = 0.1
-    private const val MIN_AIM_DISTANCE = 0.75
 }

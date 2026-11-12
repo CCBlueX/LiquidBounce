@@ -104,9 +104,6 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val ItemChamsTrail = "item_chams_trail"("shaders/item_chams/trail.frag")
 
         @JvmField
-        val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
-
-        @JvmField
         val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
 
         @JvmField
@@ -122,37 +119,43 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
 
         @JvmField
-        val EspGlowRows = "esp_glow/rows"("shaders/esp_glow/field_rows.frag")
+        val EffectRows = "effect/rows"("shaders/effect/field_rows.frag")
 
         @JvmField
-        val EspGlowColumns = "esp_glow/columns"("shaders/esp_glow/field_columns.frag")
+        val EffectColumns = "effect/columns"("shaders/effect/field_columns.frag")
 
         @JvmField
-        val EspGlowSmooth = "esp_glow/smooth"("shaders/esp_glow/styles/smooth.frag")
+        val EffectMask = "effect/mask"("shaders/effect/mask.frag")
 
         @JvmField
-        val EspGlowOutline = "esp_glow/outline"("shaders/esp_glow/styles/outline.frag")
+        val EffectCombine = "effect/combine"("shaders/effect/combine.frag")
 
         @JvmField
-        val EspGlowNeon = "esp_glow/neon"("shaders/esp_glow/styles/neon.frag")
+        val EffectSmooth = "effect/smooth"("shaders/effect/styles/smooth.frag")
 
         @JvmField
-        val EspGlowRainbow = "esp_glow/rainbow"("shaders/esp_glow/styles/rainbow.frag")
+        val EffectOutline = "effect/outline"("shaders/effect/styles/outline.frag")
 
         @JvmField
-        val EspGlowRipple = "esp_glow/ripple"("shaders/esp_glow/styles/ripple.frag")
+        val EffectNeon = "effect/neon"("shaders/effect/styles/neon.frag")
 
         @JvmField
-        val EspGlowHologram = "esp_glow/hologram"("shaders/esp_glow/styles/hologram.frag")
+        val EffectRainbow = "effect/rainbow"("shaders/effect/styles/rainbow.frag")
 
         @JvmField
-        val EspGlowHalftone = "esp_glow/halftone"("shaders/esp_glow/styles/halftone.frag")
+        val EffectRipple = "effect/ripple"("shaders/effect/styles/ripple.frag")
 
         @JvmField
-        val EspGlowChromatic = "esp_glow/chromatic"("shaders/esp_glow/styles/chromatic.frag")
+        val EffectHologram = "effect/hologram"("shaders/effect/styles/hologram.frag")
 
         @JvmField
-        val EspGlowAura = "esp_glow/aura"("shaders/esp_glow/styles/aura.frag")
+        val EffectHalftone = "effect/halftone"("shaders/effect/styles/halftone.frag")
+
+        @JvmField
+        val EffectChromatic = "effect/chromatic"("shaders/effect/styles/chromatic.frag")
+
+        @JvmField
+        val EffectAura = "effect/aura"("shaders/effect/styles/aura.frag")
 
     }
 
@@ -175,7 +178,7 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
     override fun close() = Unit
 
     companion object Source : ShaderSource {
-        private val includes = mapOf(include("esp_glow/glow.glsl"))
+        private val includes = mapOf(include("effect/effect.glsl"))
 
         override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
             ShaderType.VERTEX -> Vertex.getShader(identifier, shaderType)
