@@ -76,7 +76,7 @@ class NoRotateSetGameTest : LiquidBounceGameTest({
             }
             rotate(rotations)
             awaitClient("ResetRotation to hand the server rotation to the rotation engine", timeout = 5) {
-                val target = RotationManager.activeRotationTarget?.rotation?.yRot
+                val target = RotationManager.activeRotationTarget?.yaw
                 target != null && abs(target - SERVER_ROTATION) < EPSILON
             }
         }
