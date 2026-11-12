@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.minecraft.client.Camera
@@ -59,8 +60,18 @@ class WorldRenderEvent(
         batchCollector = batchCollector,
     )
 
+    /**
+     * The shader layers drawn into during this frame.
+     */
+    internal val layers = ArrayList<ShaderLayer>()
+
     override fun close() {
-        batchCollector.flush(renderTarget, getDynamicTransformsUniform())
+        batchCollector.flush(
+            renderTarget.colorTextureView!!,
+            renderTarget.depthTextureView.takeIf { renderTarget.hasDepth() },
+            getDynamicTransformsUniform(),
+        )
+        ShaderLayer.finish(layers, renderTarget)
     }
 
 }

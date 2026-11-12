@@ -17,11 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.esp.glow
+package net.ccbluex.liquidbounce.render.effect
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
 import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -31,24 +30,31 @@ import org.joml.Vector4f
 import kotlin.math.cos
 import kotlin.math.sin
 
-sealed class GlowStyle(name: String) : Mode(name) {
-    final override val parent: ModeValueGroup<*>
-        get() = EspGlowMode.styles
-}
+sealed class ShaderStyle(name: String, final override val parent: ModeValueGroup<*>) : Mode(name)
 
 /**
  * The game's own entity outline.
  */
-object VanillaGlow : GlowStyle("Vanilla")
+class VanillaStyle(parent: ModeValueGroup<*>) : ShaderStyle("Vanilla", parent)
 
 /**
- * A style drawn by [GlowPostEffect] from the distance of every pixel to the glowing silhouettes.
+ * A style drawn by a [StyleChain] from the distance of every pixel to the silhouettes in a target.
+ *
+ * @param fill opacity inside the silhouettes
+ * @param usesView the shader reads the `EffectView` block to keep a pattern in place in the world
  */
-sealed class ShaderGlow(name: String, shader: Identifier) : GlowStyle(name) {
+sealed class PostStyle(
+    name: String,
+    parent: ModeValueGroup<*>,
+    shader: Identifier,
+    fill: Float,
+    val usesView: Boolean = false,
+) : ShaderStyle(name, parent) {
 
     private val opacity by float("Opacity", 1f, 0f..1f)
+    protected val fill by float("Fill", fill, 0f..1f)
 
-    val pipeline = GlowPostEffect.pipeline(shader)
+    val pipeline = StyleChain.pipeline(shader, usesView)
 
     /**
      * How far from the silhouettes the style draws, in pixels.
@@ -59,7 +65,7 @@ sealed class ShaderGlow(name: String, shader: Identifier) : GlowStyle(name) {
         get() = Color4b.WHITE
 
     /**
-     * `Params0` and `Params1` of the `EspGlowData` block, missing ones are 0.
+     * `Params0` and `Params1` of the `EffectData` block, missing ones are 0.
      */
     protected abstract fun params(): FloatArray
 
@@ -77,42 +83,45 @@ sealed class ShaderGlow(name: String, shader: Identifier) : GlowStyle(name) {
     private companion object {
         const val PARAMS = 8
 
-        // Diagonal distances have to stay below FIELD_LIMIT of glow.glsl
+        // Diagonal distances have to stay below FIELD_LIMIT of effect.glsl
         const val MAX_RANGE = 64f
     }
 
 }
 
-object SmoothGlow : ShaderGlow("Smooth", ClientShaders.Fragment.EspGlowSmooth) {
+class SmoothStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Smooth", parent, ClientShaders.Fragment.EffectSmooth, fill ?: 0.12f) {
+
     private val radius by float("Radius", 6f, 1f..32f, "px")
     private val falloff by float("Falloff", 1.6f, 0.5f..4f)
     private val intensity by float("Intensity", 1f, 0f..2f)
-    private val fill by float("Fill", 0.12f, 0f..1f)
 
     override val range get() = radius
 
     override fun params() = floatArrayOf(radius, falloff, intensity, fill)
 }
 
-object OutlineGlow : ShaderGlow("Outline", ClientShaders.Fragment.EspGlowOutline) {
+class OutlineStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Outline", parent, ClientShaders.Fragment.EffectOutline, fill ?: 0f) {
+
     private val width by float("Width", 2f, 0.5f..8f, "px")
     private val softness by float("Softness", 1f, 0.1f..4f, "px")
     private val glowRadius by float("GlowRadius", 6f, 0f..24f, "px")
     private val glowIntensity by float("GlowIntensity", 0.35f, 0f..1f)
-    private val fill by float("Fill", 0f, 0f..1f)
 
     override val range get() = width + glowRadius + softness
 
     override fun params() = floatArrayOf(width, softness, glowRadius, glowIntensity, fill)
 }
 
-object NeonGlow : ShaderGlow("Neon", ClientShaders.Fragment.EspGlowNeon) {
+class NeonStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Neon", parent, ClientShaders.Fragment.EffectNeon, fill ?: 0.08f) {
+
     private val coreColor by color("CoreColor", Color4b.WHITE)
     private val coreMix by float("CoreMix", 0.7f, 0f..1f)
     private val coreWidth by float("CoreWidth", 1.5f, 0.5f..6f, "px")
     private val bloomRadius by float("BloomRadius", 12f, 1f..32f, "px")
     private val bloomIntensity by float("BloomIntensity", 1.2f, 0f..3f)
-    private val fill by float("Fill", 0.08f, 0f..1f)
     private val pulseSpeed by float("PulseSpeed", 0.5f, 0f..4f, "Hz")
     private val pulseAmount by float("PulseAmount", 0.25f, 0f..1f)
 
@@ -126,11 +135,12 @@ object NeonGlow : ShaderGlow("Neon", ClientShaders.Fragment.EspGlowNeon) {
     )
 }
 
-object RainbowGlow : ShaderGlow("Rainbow", ClientShaders.Fragment.EspGlowRainbow) {
+class RainbowStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Rainbow", parent, ClientShaders.Fragment.EffectRainbow, fill ?: 0.1f) {
+
     private val width by float("Width", 2f, 0.5f..8f, "px")
     private val glowRadius by float("GlowRadius", 6f, 0f..24f, "px")
     private val glowIntensity by float("GlowIntensity", 0.5f, 0f..1f)
-    private val fill by float("Fill", 0.1f, 0f..1f)
     private val speed by float("Speed", 0.35f, -2f..2f)
     private val spread by float("Spread", 400f, 50f..2000f, "px")
     private val saturation by float("Saturation", 0.85f, 0f..1f)
@@ -144,26 +154,28 @@ object RainbowGlow : ShaderGlow("Rainbow", ClientShaders.Fragment.EspGlowRainbow
     )
 }
 
-object RippleGlow : ShaderGlow("Ripple", ClientShaders.Fragment.EspGlowRipple) {
+class RippleStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Ripple", parent, ClientShaders.Fragment.EffectRipple, fill ?: 0.08f) {
+
     private val reach by float("Reach", 28f, 4f..64f, "px")
     private val spacing by float("Spacing", 10f, 3f..32f, "px")
     private val ringWidth by float("RingWidth", 2f, 0.5f..8f, "px")
     private val speed by float("Speed", 16f, -64f..64f, "px/s")
     private val edgeWidth by float("EdgeWidth", 1.5f, 0f..6f, "px")
-    private val fill by float("Fill", 0.08f, 0f..1f)
 
     override val range get() = reach
 
     override fun params() = floatArrayOf(spacing, ringWidth, speed, edgeWidth, fill)
 }
 
-object HologramGlow : ShaderGlow("Hologram", ClientShaders.Fragment.EspGlowHologram) {
+class HologramStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Hologram", parent, ClientShaders.Fragment.EffectHologram, fill ?: 0.18f) {
+
     private val stripeColor by color("StripeColor", Color4b.WHITE)
     private val stripes by float("Stripes", 0.55f, 0f..1f)
     private val spacing by float("Spacing", 6f, 2f..32f, "px")
     private val angle by float("Angle", 90f, 0f..180f, "°")
     private val speed by float("Speed", 1f, -8f..8f)
-    private val fill by float("Fill", 0.18f, 0f..1f)
     private val edgeWidth by float("EdgeWidth", 1.5f, 0.5f..6f, "px")
     private val flicker by float("Flicker", 0.15f, 0f..1f)
 
@@ -180,11 +192,12 @@ object HologramGlow : ShaderGlow("Hologram", ClientShaders.Fragment.EspGlowHolog
     }
 }
 
-object HalftoneGlow : ShaderGlow("Halftone", ClientShaders.Fragment.EspGlowHalftone) {
+class HalftoneStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Halftone", parent, ClientShaders.Fragment.EffectHalftone, fill ?: 0f) {
+
     private val reach by float("Reach", 12f, 2f..48f, "px")
     private val cellSize by float("CellSize", 5f, 3f..24f, "px")
     private val dotScale by float("DotScale", 0.9f, 0.2f..1.5f)
-    private val fill by float("Fill", 0f, 0f..1f)
     private val edgeWidth by float("EdgeWidth", 1f, 0f..4f, "px")
 
     override val range get() = reach + cellSize
@@ -192,20 +205,23 @@ object HalftoneGlow : ShaderGlow("Halftone", ClientShaders.Fragment.EspGlowHalft
     override fun params() = floatArrayOf(cellSize, dotScale, fill, edgeWidth)
 }
 
-object ChromaticGlow : ShaderGlow("Chromatic", ClientShaders.Fragment.EspGlowChromatic) {
+class ChromaticStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Chromatic", parent, ClientShaders.Fragment.EffectChromatic, fill ?: 0.08f) {
+
     private val width by float("Width", 2f, 0.5f..8f, "px")
     private val split by float("Split", 3f, 0f..12f, "px")
     private val speed by float("Speed", 1.5f, -8f..8f, "rad/s")
     private val tint by float("Tint", 0.3f, 0f..1f)
     private val glowRadius by float("GlowRadius", 3f, 0f..16f, "px")
-    private val fill by float("Fill", 0.08f, 0f..1f)
 
     override val range get() = width + glowRadius + split
 
     override fun params() = floatArrayOf(width, split, speed, tint, glowRadius, fill)
 }
 
-object AuraGlow : ShaderGlow("Aura", ClientShaders.Fragment.EspGlowAura) {
+class AuraStyle(parent: ModeValueGroup<*>, fill: Float?) :
+    PostStyle("Aura", parent, ClientShaders.Fragment.EffectAura, fill ?: 0.1f, usesView = true) {
+
     private val radius by float("Radius", 6f, 2f..32f, "px")
     private val height by float("Height", 16f, 0f..48f, "px")
     private val sway by float("Sway", 3f, 0f..16f, "px")
@@ -213,7 +229,6 @@ object AuraGlow : ShaderGlow("Aura", ClientShaders.Fragment.EspGlowAura) {
     private val speed by float("Speed", 1.5f, 0f..6f)
     private val intensity by float("Intensity", 1.2f, 0f..3f)
     private val heat by float("Heat", 0.3f, 0f..1f)
-    private val fill by float("Fill", 0.1f, 0f..1f)
 
     override val range get() = radius + height + sway
 
@@ -222,3 +237,20 @@ object AuraGlow : ShaderGlow("Aura", ClientShaders.Fragment.EspGlowAura) {
         speed, intensity, heat, fill,
     )
 }
+
+/**
+ * Every [PostStyle] for the style choice [parent].
+ *
+ * @param fill opacity inside the silhouettes every style starts with, null leaves each style its own
+ */
+fun postStyles(parent: ModeValueGroup<*>, fill: Float? = null): List<PostStyle> = listOf(
+    SmoothStyle(parent, fill),
+    OutlineStyle(parent, fill),
+    NeonStyle(parent, fill),
+    RainbowStyle(parent, fill),
+    RippleStyle(parent, fill),
+    HologramStyle(parent, fill),
+    HalftoneStyle(parent, fill),
+    ChromaticStyle(parent, fill),
+    AuraStyle(parent, fill),
+)

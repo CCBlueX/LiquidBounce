@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 #define RADIUS Params0.x
 #define FALLOFF Params0.y
@@ -25,5 +25,5 @@ void main() {
         alpha = INTENSITY * pow(k, FALLOFF);
     }
 
-    fragColor = glow(field.rgb, alpha);
+    fragColor = glow(fieldColor(field), alpha * fieldStrength(field));
 }

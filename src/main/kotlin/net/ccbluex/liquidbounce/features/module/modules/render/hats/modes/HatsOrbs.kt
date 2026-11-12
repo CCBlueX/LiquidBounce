@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
@@ -38,7 +39,7 @@ import kotlin.math.sin
  */
 internal object HatsOrbs : HatsMode("Orbs") {
 
-    val color by color("color", Color4b.LIQUID_BOUNCE.alpha(125))
+    val color by color("color", Color4b.LIQUID_BOUNCE)
 
     private object HatOrbsSettings : ValueGroup("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)
@@ -58,6 +59,8 @@ internal object HatsOrbs : HatsMode("Orbs") {
         tree(HatOrbsSettings)
         tree(HatOrbsSettings.WaveSettings)
     }
+
+    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->

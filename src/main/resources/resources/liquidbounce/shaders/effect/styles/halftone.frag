@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 // Range: how far the dots reach
 #define CELL Params0.x
@@ -42,5 +42,6 @@ void main() {
     float line = outside && EDGE_WIDTH > 0.0 ? band(edgeOf(ownDistance), EDGE_WIDTH, 1.0) : 0.0;
 
     float alpha = max(dotCoverage * step(0.001, strength), line);
-    fragColor = glow(cellDistance < NONE ? cell.rgb : own.rgb, alpha);
+    vec4 nearest = cellDistance < NONE ? cell : own;
+    fragColor = glow(fieldColor(nearest), alpha * fieldStrength(nearest));
 }

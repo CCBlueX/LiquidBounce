@@ -29,6 +29,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -81,6 +82,13 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
 @AddonApi
 inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
     environment.draw()
+}
+
+/**
+ * Draws silhouettes for [layer], which its shader style turns into the picture on screen.
+ */
+inline fun WorldRenderEvent.renderEnvironment(layer: ShaderLayer, draw: WorldRenderEnvironment.() -> Unit) {
+    layer.environment(this).draw()
 }
 
 @AddonApi
