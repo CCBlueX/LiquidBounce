@@ -84,7 +84,7 @@ internal class JumpTargets(
                 val top = terrain.standHeight(tx, ty, tz).ifNaN { catchHeight(tx, ty, tz) }
                 val rise = top - height
                 val inRange = !top.isNaN() && rise <= rises && (ty >= y - maxDrop || terrain.isBouncy(tx, ty - 1, tz))
-                if (!inRange || !bouncing && !isJumpedTo(x, y, z, height, offset, ty, rise)) {
+                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing)) {
                     continue
                 }
 
@@ -98,11 +98,26 @@ internal class JumpTargets(
     /** How much higher than a jump from the ground a take-off moving up at [upward] already gets. */
     fun lift(upward: Double) = MotionTraits.rise(maxOf(upward, traits.jumpPower)) - traits.jumpHeight
 
-    /** Whether [offset] at [ty], [rise] up, takes a jump from [x] [y] [z], standing at [height], and one gets there. */
+    /**
+     * Whether [offset] at [ty], [rise] up, is a jump from [x] [y] [z], standing at [height], across a gap and not a
+     * walk, and within reach. [bouncing] reaches further and leaves the ground anywhere, so a gap anywhere on the way
+     * will do, or none for a block higher up; the rest of the floor it bounces off is no jump.
+     */
     @Suppress("LongParameterList")
-    private fun isJumpedTo(x: Int, y: Int, z: Int, height: Double, offset: Offset, ty: Int, rise: Double) =
-        offset.distance <= maxReach(rise) && !walkReaches(x, y, z, offset, ty - y) &&
-            leavesOverGap(x, y, z, height, offset, ty)
+    private fun isJumpedTo(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        offset: Offset,
+        ty: Int,
+        rise: Double,
+        bouncing: Boolean,
+    ) = when {
+        walkReaches(x, y, z, offset, ty - y) -> false
+        bouncing -> ty > y || crossesGap(x, y, z, height, offset)
+        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty)
+    }
 
     private fun catchHeight(x: Int, y: Int, z: Int) =
         if (terrain.isClimbable(x, y, z) && terrain.hasRoom(x, y, z)) y.toDouble() else Double.NaN
@@ -136,6 +151,21 @@ internal class JumpTargets(
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
                     isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height)
+            }
+        }
+        return false
+    }
+
+    /** Whether the line to [offset] passes over a gap anywhere between the block and the target. */
+    private fun crossesGap(x: Int, y: Int, z: Int, height: Double, offset: Offset): Boolean {
+        val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
+        for (step in 1..steps) {
+            val along = (step - 0.5) / steps
+            val cx = Mth.floor(x + 0.5 + offset.x * along)
+            val cz = Mth.floor(z + 0.5 + offset.z * along)
+            val between = (cx != x || cz != z) && (cx != x + offset.x || cz != z + offset.z)
+            if (between && isGap(cx, y, cz, height)) {
+                return true
             }
         }
         return false

@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
 import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
 import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -173,6 +175,19 @@ class AssistedJumpTest {
         val state = assertNotNull(last)
         assertEquals(course.take(2), stood.take(2))
         assertTrue(state.onGround && state.motionY <= 0.0 && state.y > 12.0, "settled, at ${state.position}")
+    }
+
+    @Test
+    fun `a bounce goes on to the next block rather than back onto the slime it came off`() {
+        // Gamerichie's Academy of Parkour, stage 16: a drop onto a 3x3 slime pad bounces up to a ladder on a block four
+        // higher. The next slime block of the pad was the closer landing.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val ladder = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.EAST)
+        val world = TestWorld().fill(12, 106, 28, 15, 106, 28).fill(5, 101, 27, 7, 101, 29, slime)
+            .set(2, 105, 28, TestWorld.STONE).set(3, 105, 28, ladder)
+        val course = listOf(BlockPos(12, 106, 28), BlockPos(6, 101, 28), BlockPos(2, 105, 28))
+
+        assertEquals(course, run(world, TestWorld.feet(14, 107, 28), course, platform = 1))
     }
 
     @Test
