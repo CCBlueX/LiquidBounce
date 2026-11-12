@@ -31,6 +31,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /** Spots worth a jump from a feet block: within reach across a gap or dip, where walking does not get as fast. */
+@Suppress("TooManyFunctions")
 internal class JumpTargets(
     val terrain: Terrain,
     private val traits: MotionTraits = MotionTraits.DEFAULT,
@@ -48,7 +49,9 @@ internal class JumpTargets(
     /**
      * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
      * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
-     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further.
+     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further. With
+     * [around], also the ones behind a post or the end of a wall right where the straight line leaves the block, for a
+     * jump around it.
      */
     @Suppress("LongParameterList", "CognitiveComplexMethod")
     fun forEach(
@@ -59,6 +62,7 @@ internal class JumpTargets(
         maxDrop: Int,
         bounceDrop: Int = maxDrop,
         upward: Double = 0.0,
+        around: Boolean = false,
         sink: Sink,
     ) {
         val lift = lift(upward)
@@ -83,8 +87,9 @@ internal class JumpTargets(
                 }
                 val top = terrain.standHeight(tx, ty, tz).ifNaN { catchHeight(tx, ty, tz) }
                 val rise = top - height
-                val inRange = !top.isNaN() && rise <= rises && (ty >= y - maxDrop || terrain.isBouncy(tx, ty - 1, tz))
-                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing)) {
+                val inRange = !top.isNaN() && rise <= rises &&
+                    (ty >= y - maxDrop || terrain.restitution(tx, top, tz) > 0.0)
+                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing, around)) {
                     continue
                 }
 
@@ -113,10 +118,11 @@ internal class JumpTargets(
         ty: Int,
         rise: Double,
         bouncing: Boolean,
+        around: Boolean,
     ) = when {
         walkReaches(x, y, z, offset, ty - y) -> false
         bouncing -> ty > y || crossesGap(x, y, z, height, offset)
-        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty)
+        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty, around)
     }
 
     private fun catchHeight(x: Int, y: Int, z: Int) =
@@ -140,8 +146,21 @@ internal class JumpTargets(
     private fun isGap(x: Int, y: Int, z: Int, height: Double) =
         isDip(x, y, z, height) && terrain.standHeight(x, y - 1, z).isNaN()
 
-    /** Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. */
-    private fun leavesOverGap(x: Int, y: Int, z: Int, height: Double, offset: Offset, ty: Int): Boolean {
+    /**
+     * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. With
+     * [around], something right where it leaves that a jump gets around will do, when the line or the way beside it
+     * crosses a gap.
+     */
+    @Suppress("LongParameterList")
+    private fun leavesOverGap(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        offset: Offset,
+        ty: Int,
+        around: Boolean,
+    ): Boolean {
         val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
         for (step in 1..steps) {
             // Half a step off, so that a diagonal never samples the very corner between two columns.
@@ -150,7 +169,53 @@ internal class JumpTargets(
             val cz = Mth.floor(z + 0.5 + offset.z * along)
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
-                    isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height)
+                    isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
+                    around && isJumpedAround(cx, y, cz, x, z) && !isStep(cx, y, cz, height) &&
+                    (crossesGap(x, y, z, height, offset) || hasGapBeside(cx, y, cz, height))
+            }
+        }
+        return false
+    }
+
+    /**
+     * Whether [x] [y] [z] is in the way of the body as something a jump from the block [fromX] [fromZ] gets around: a
+     * post or a pot with nothing else beside it, or the end of a wall that runs across the way from the block next
+     * to it. Not a wall seen end on, which the way runs along.
+     */
+    private fun isJumpedAround(x: Int, y: Int, z: Int, fromX: Int, fromZ: Int): Boolean {
+        if (terrain.isOpen(x, y, z)) {
+            return false
+        }
+        var wall = -1
+        for (i in 0 until SIDES) {
+            val sideX = x + DX[i]
+            val sideZ = z + DZ[i]
+            if ((sideX != fromX || sideZ != fromZ) && !terrain.isOpen(sideX, y, sideZ)) {
+                if (wall >= 0) {
+                    return false
+                }
+                wall = i
+            }
+        }
+        return wall < 0 || abs(x - fromX) + abs(z - fromZ) == 1 &&
+            (x - fromX) * DX[wall] + (z - fromZ) * DZ[wall] == 0
+    }
+
+    /** Whether a jump from [height] gets onto [x] [y] [z] or the block above it. */
+    private fun isStep(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (feet in y..y + 1) {
+            val top = terrain.standHeight(x, feet, z)
+            if (!top.isNaN() && top - height <= maxRise) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasGapBeside(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in 0 until SIDES) {
+            if (isGap(x + DX[i], y, z + DZ[i], height)) {
+                return true
             }
         }
         return false
@@ -201,8 +266,10 @@ internal class JumpTargets(
 
         const val DIP_DEPTH = 0.25
 
+        /** Offsets to the neighbouring columns, the [SIDES] straight ones first. */
         val DX = intArrayOf(1, -1, 0, 0, 1, 1, -1, -1)
         val DZ = intArrayOf(0, 0, 1, -1, 1, -1, 1, -1)
+        const val SIDES = 4
 
         val OFFSETS: Array<Offset> = buildList {
             for (x in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {

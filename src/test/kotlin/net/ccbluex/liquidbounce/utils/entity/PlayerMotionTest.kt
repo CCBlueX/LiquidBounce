@@ -28,8 +28,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * [PlayerMotion] on slime, held against Entity.move, Entity.restituteMovementAfterCollisions and SlimeBlock worked
- * through by hand.
+ * [PlayerMotion] on slime and beds, held against Entity.move, Entity.restituteMovementAfterCollisions, Block.fallOn and
+ * SlimeBlock worked through by hand.
  */
 class PlayerMotionTest {
 
@@ -39,12 +39,16 @@ class PlayerMotionTest {
         }
 
         private val SLIME = Blocks.SLIME_BLOCK.defaultBlockState()
+        private val BED = Blocks.BED.red().defaultBlockState()
         private const val BOUNCE_TICKS = 60
         private const val WALK_TICKS = 40
     }
 
     /** A slime floor at y 0, so the feet rest at y 1. */
     private fun slime() = TestWorld().fill(-20, 0, -20, 20, 0, 20, SLIME)
+
+    /** A stone floor at y 0 with a bed on it, so the feet rest at y 1.5625 on the bed. */
+    private fun bed() = TestWorld.flat().set(0, 1, 0, BED)
 
     /** Drops the player from rest at [height] and returns the highest the feet get after the first landing. */
     private fun bounceHeight(world: TestWorld, height: Double, sneak: Boolean = false): Double {
@@ -72,6 +76,35 @@ class PlayerMotionTest {
     @Test
     fun `sneaking onto slime does not bounce`() {
         assertEquals(1.0, bounceHeight(slime(), 11.0, sneak = true), 1.0E-9)
+    }
+
+    @Test
+    fun `a fall onto a bed bounces back three quarters of the speed`() {
+        // Entity.getOnPosLegacy, 0.2 below the feet at 1.5625, is the bed itself and not the floor under it.
+        assertEquals(5.1062, bounceHeight(bed(), 11.0), 1.0E-3)
+        assertEquals(3.7540, bounceHeight(bed(), 7.0), 1.0E-3)
+    }
+
+    @Test
+    fun `sneaking onto a bed does not bounce`() {
+        assertEquals(1.5625, bounceHeight(bed(), 11.0, sneak = true), 1.0E-9)
+    }
+
+    @Test
+    fun `a fall onto carpet on slime bounces as onto the slime`() {
+        val world = slime().fill(-20, 1, -20, 20, 1, 20, Blocks.CARPET.red().defaultBlockState())
+        assertEquals(7.5364, bounceHeight(world, 11.0), 1.0E-3)
+    }
+
+    @Test
+    fun `a fall onto a bed hurts half`() {
+        val motion = PlayerMotion(bed().terrain())
+        motion.reset(Vec3(0.5, 11.0, 0.5), Vec3.ZERO, onGround = false)
+        while (!motion.onGround) {
+            motion.tick(0f, 0, 0, jump = false, sprint = false)
+        }
+
+        assertEquals((11.0 - 1.5625) / 2, motion.landingFall, 1.0E-9)
     }
 
     @Test

@@ -108,6 +108,17 @@ class PlayerMotionGameTest : LocalGameTest() {
         fun slimeBelowTower(y: Int) =
             listOf("fill 0 $y -1 5 ${y + 5} 1 stone", "fill 6 ${y - 1} -4 40 ${y - 1} 4 slime_block")
 
+        fun carpetOnSlimeBelowTower(y: Int) = slimeBelowTower(y) + "fill 6 $y -4 40 $y 4 red_carpet"
+
+        /** A tower like [slimeBelowTower] with rows of beds east of it, head to the east. */
+        fun bedsBelowTower(y: Int) = listOf("fill 0 $y -1 5 ${y + 5} 1 stone") +
+            (6..38 step 2).flatMap { x ->
+                listOf(
+                    "fill $x $y -4 $x $y 4 red_bed[part=foot,facing=east]",
+                    "fill ${x + 1} $y -4 ${x + 1} $y 4 red_bed[part=head,facing=east]",
+                )
+            }
+
         val courses = listOf(
             Course("walking"),
             Course("sprinting", sprint = true),
@@ -129,6 +140,18 @@ class PlayerMotionGameTest : LocalGameTest() {
             Course(
                 "sprint jumping off a tower onto slime", jump = true, sprint = true, ticks = 80, height = 6,
                 build = ::slimeBelowTower,
+            ),
+            Course(
+                "walking off a tower onto carpet on slime", ticks = 100, height = 6, build = ::carpetOnSlimeBelowTower,
+            ),
+            Course("walking off a tower onto beds", ticks = 100, height = 6, build = ::bedsBelowTower),
+            Course(
+                "sprint jumping off a tower onto beds", jump = true, sprint = true, ticks = 80, height = 6,
+                build = ::bedsBelowTower,
+            ),
+            Course(
+                "sneak jumping off a tower onto beds", jump = true, sneak = true, ticks = 60, height = 6,
+                build = ::bedsBelowTower,
             ),
             Course("sprinting on honey", sprint = true, build = floor("honey_block")),
             Course("sprinting up slabs and into a wall", sprint = true, ticks = 80) { y ->
