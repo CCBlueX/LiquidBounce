@@ -247,6 +247,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBedDefender
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBlockIn
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBlockTrap
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleExtinguish
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
@@ -266,7 +267,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucke
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
