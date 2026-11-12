@@ -251,14 +251,8 @@ internal class AssistedJump {
             planned[step.to] = null
             return null
         }
-        val stays = feet(state) == step.from
+        val stays = state.feetBlock == step.from
         return target.takeIf { stays && angle(state.position, target.aim, heading) <= maxAngle }
-    }
-
-    /** The feet block of the player, or over the edge the one of the block it still stands on. */
-    private fun feet(state: PlayerMotion): BlockPos {
-        val feet = BlockPos.containing(state.x, state.y + FEET_PROBE, state.z)
-        return state.supportingBlock?.let { BlockPos(it.x, feet.y, it.z) } ?: feet
     }
 
     /**
@@ -276,7 +270,7 @@ internal class AssistedJump {
         maxAngle: Float,
     ): Target? {
         val position = state.position
-        val feet = feet(state)
+        val feet = state.feetBlock
         val standing = targets.terrain.standHeight(feet.x, feet.y, feet.z)
         val height = if (standing.isNaN()) position.y else standing
         val found = find(targets, jumps, state, yaw, heading, maxAngle, feet, height)

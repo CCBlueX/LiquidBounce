@@ -95,6 +95,13 @@ internal class PlayerMotion(
     val supportingBlock: BlockPos?
         get() = if (hasSupport) BlockPos(supportX, supportY, supportZ) else null
 
+    /** The block the feet are in, or over an edge the one above the block the player still stands on. */
+    val feetBlock: BlockPos
+        get() {
+            val feet = BlockPos.containing(x, y + FEET_PROBE, z)
+            return if (hasSupport) BlockPos(supportX, feet.y, supportZ) else feet
+        }
+
     /** Entity.onGroundNoBlocks */
     private var groundWithoutBlocks = false
 
@@ -520,6 +527,7 @@ internal class PlayerMotion(
         private const val SLIME_STEP_FACTOR = 0.2
         private const val STEP_PROBE = 1.0E-5
         private const val EDGE_STEP = 0.05
+        private const val FEET_PROBE = 1.0E-3
         private const val EDGE_INSET = 1.0E-7
     }
 
