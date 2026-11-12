@@ -24,9 +24,6 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 
-/**
- * Finds the marketplace items one subscribes to, themes, add-ons and scripts, by name or share code.
- */
 object MarketplaceItems {
 
     private val logger = clientLogger("MarketplaceItems")
@@ -36,8 +33,7 @@ object MarketplaceItems {
     private val subscribable = MarketplaceItemType.entries.filter(MarketplaceItemType::isSubscribable)
 
     /**
-     * Top items of every subscribable type by score. Only feeds suggestions; every subscribe looks the item up
-     * in the API.
+     * Top items of every subscribable type by score, for suggestions only.
      */
     @Volatile
     var index: List<MarketplaceItem> = emptyList()
@@ -55,9 +51,9 @@ object MarketplaceItems {
     }.onFailure { logger.error("Failed to load the marketplace item index", it) }.isSuccess
 
     /**
-     * Items [input] names: a share code, an item id, `author/name` or a bare name. More than one result means
-     * the bare name is ambiguous.
+     * [input] is a share code, an item id, `author/name` or a bare name. More than one result means the
+     * bare name is ambiguous.
      */
-    suspend fun find(input: String): List<MarketplaceItem> = MarketplaceConfigs.lookup(input, subscribable)
+    suspend fun find(input: String): List<MarketplaceItem> = MarketplaceConfigs.findItems(input, subscribable)
 
 }

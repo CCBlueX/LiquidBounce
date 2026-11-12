@@ -53,7 +53,7 @@ object UserApi {
         @GET("oauth/user")
         suspend fun userInformation(@Header("Authorization") authorization: String): UserInformation
 
-        @GET("cosmetics/self")
+        @GET("cosmetics/self?all=true")
         suspend fun cosmetics(@Header("Authorization") authorization: String): Set<Cosmetic>
 
         @PUT("cosmetics/self")

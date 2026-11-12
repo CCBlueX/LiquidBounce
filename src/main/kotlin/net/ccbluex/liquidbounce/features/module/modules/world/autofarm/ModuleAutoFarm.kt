@@ -29,8 +29,9 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -80,6 +81,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     // The ticks to wait after interacting with something
     private val interactDelay by intRange("InteractDelay", 2..3, 1..15, "ticks")
 
+    private val fortune by boolean("UseFortune", true)
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
     private object AutoPlaceCrops : ToggleableValueGroup(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
@@ -100,16 +102,17 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
     }
 
-    private val fortune by boolean("UseFortune", true)
-
     init {
-        tree(AutoFarmAutoWalk)
         tree(AutoPlaceCrops)
         tree(AutoUseBoneMeal)
-        tree(AutoFarmVisualizer)
     }
 
     internal val rotations = tree(RotationsValueGroup(this))
+
+    init {
+        tree(AutoFarmAutoWalk)
+        tree(AutoFarmBlockESP)
+    }
 
     private fun swapToSlotWithFortune() {
         if (!fortune) {
@@ -207,10 +210,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             val blockState = world.getBlockState(blockPos)
 
             debugGeometry("RayTraceResult") {
-                ModuleDebug.DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
+                DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
             }
             debugGeometry("PlantablePos") {
-                ModuleDebug.DebuggedBox(AABB(blockPos), Color4b.GREEN.alpha(100))
+                DebuggedBox(AABB(blockPos), Color4b.GREEN.alpha(100))
             }
 
             val sides = AutoFarmTrackedState.Plantable.entries.findPlantableSides(blockPos, blockState)
