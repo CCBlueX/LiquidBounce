@@ -200,6 +200,21 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a chain of single slime blocks is jumped along on every bounce`() {
+        // Ultimate Slime Challenge 1-2, "DO press SPACE": single slime blocks five and four apart. The bounce off one
+        // is lower than a jump, so only a jump on the bounce with the speed of the jump before reaches the next one.
+        val slime = Blocks.SLIME_BLOCK.defaultBlockState()
+        val world = TestWorld().fill(16, 9, -44, 22, 9, -40).fill(16, 9, -66, 22, 9, -62)
+            .set(19, 9, -48, slime).set(19, 9, -53, slime).set(19, 9, -57, slime)
+        val course = listOf(
+            BlockPos(19, 9, -42), BlockPos(19, 9, -48), BlockPos(19, 9, -53), BlockPos(19, 9, -57),
+            BlockPos(19, 9, -63),
+        )
+
+        assertEquals(course, run(world, TestWorld.feet(19, 10, -41), course, platform = 1))
+    }
+
+    @Test
     fun `the traced way of a jump is the way the player takes`() {
         val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
         val terrain = world.terrain()

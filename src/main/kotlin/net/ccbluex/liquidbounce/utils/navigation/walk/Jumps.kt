@@ -161,6 +161,56 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
     }
 
     /**
+     * Like [fromHere], but the jump that takes off last of those that land on [to], which gets the furthest onto it:
+     * for a landing that is the next take-off.
+     */
+    fun lastFromHere(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): Jump? {
+        setCourse(state.x, state.y, state.z, to, toHeight)
+        pool += ground
+        ground.clear()
+        motion.copyFrom(state)
+        runToEdge(yaw)
+        for (takeoff in ground.indices.reversed()) {
+            motion.copyFrom(ground[takeoff])
+            run(yawAt(takeoff, yaw), jump = true)
+            val jump = if (motion.onGround) null else fly(state.position, takeoff, jumps = true, hops = 0)
+            if (jump != null && jump.margin >= minMargin) {
+                return jump
+            }
+        }
+        return null
+    }
+
+    /**
+     * The player on the tick [jump] onto [to], with the feet at [toHeight], from [state], moving this tick with
+     * [yaw], comes down on it with the speed kept in the air as [airKeys] keeps it; null when it comes down elsewhere.
+     */
+    fun landing(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double, jump: Jump): PlayerMotion? {
+        setCourse(state.x, state.y, state.z, to, toHeight)
+        aimX = jump.aim.x
+        aimZ = jump.aim.z
+        motion.copyFrom(state)
+        if (motion.onGround) {
+            val groundTicks = runUpTo(jump, yaw)
+            if (groundTicks < 0) {
+                return null
+            }
+            run(yawAt(groundTicks, yaw), jump = jump.jumps)
+        }
+
+        val air = motion.copy()
+        val turn = yawTo(aimX, aimZ)
+        var ticks = 0
+        while (!air.onGround && ticks++ < MAX_AIR_TICKS) {
+            val keys = airKeys(air, turn, to, toHeight, keepSpeed = true) ?: return null
+            air.tick(turn, keys.forward, keys.strafe, jump = false, sprint = abilities.canSprint && keys.forward > 0)
+        }
+        val lands = abs(air.y - toHeight) <= HEIGHT_TOLERANCE &&
+            (air.standsOn(to.x, to.y, to.z) || air.standsOn(to.x, to.y - 1, to.z))
+        return air.takeIf { lands }
+    }
+
+    /**
      * The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. With
      * [keepSpeed], the first keys in the order tried, forward first, that land well enough, as the landing is a
      * take-off.
@@ -214,14 +264,9 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         try {
             var takeoff = -1
             if (motion.onGround) {
-                val hopTicks = hop(jump.hops)
-                if (hopTicks < 0) {
+                val groundTicks = runUpTo(jump, yaw)
+                if (groundTicks < 0) {
                     return -1
-                }
-                // Running off the edge, the last tick on the ground is the one that leaves it.
-                val groundTicks = jump.takeoff - hopTicks - if (jump.jumps) 0 else 1
-                for (tick in 0 until groundTicks) {
-                    run(yawAt(tick, yaw))
                 }
                 takeoff = path.lastIndex
                 run(yawAt(groundTicks, yaw), jump = jump.jumps)
@@ -234,6 +279,20 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
     }
 
     class AirKeys(val forward: Int, val strafe: Int, val margin: Double)
+
+    /** Runs [motion] on the ground up to the tick [jump] leaves it on: the ticks run since the hops, or -1. */
+    private fun runUpTo(jump: Jump, yaw: Float?): Int {
+        val hopTicks = hop(jump.hops)
+        if (hopTicks < 0) {
+            return -1
+        }
+        // Running off the edge, the last tick on the ground is the one that leaves it.
+        val groundTicks = jump.takeoff - hopTicks - if (jump.jumps) 0 else 1
+        for (tick in 0 until groundTicks) {
+            run(yawAt(tick, yaw))
+        }
+        return groundTicks
+    }
 
     private fun setCourse(fromX: Double, fromY: Double, fromZ: Double, to: BlockPos, toHeight: Double) {
         this.fromX = fromX

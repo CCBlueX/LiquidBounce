@@ -34,16 +34,17 @@ internal class AssistedJump {
 
     /**
      * The block jumped to, with the feet at [feet], and the jump onto it. A jump that does not work from where the
-     * player is has a [step], which [Leap] makes from its run-up. A landing that [boosts] bounces the player back up
-     * higher than a jump, so it is the next take-off and the speed is kept onto it. One it [settles] on is landed on
-     * sneaking, which stops a bounce.
+     * player is has a [step], which [Leap] makes from its run-up. A landing that [bounces] off slime [takesOff] again
+     * when the bounce gets higher than a jump or a jump on it reaches a block further on, so the speed is kept onto
+     * it. One it [settles] on is landed on sneaking, which stops a bounce.
      */
     class Target(
         val pos: BlockPos,
         val feet: Double,
         val jump: Jump,
         val step: Step? = null,
-        val boosts: Boolean = false,
+        val bounces: Boolean = false,
+        val takesOff: Boolean = false,
         val settles: Boolean = false,
     ) {
         /** Where to turn to: the jump was simulated running there, which can be beside the middle of the block. */
@@ -160,12 +161,12 @@ internal class AssistedJump {
     }
 
     /**
-     * The keys that land the furthest inside the block jumped to, or with the most speed when it boosts; sneaking on
-     * the tick it lands when it settles.
+     * The keys that land the furthest inside the block jumped to, or with the most speed when the landing takes off
+     * again; sneaking on the tick it lands when it settles.
      */
     private fun steerInAir(state: PlayerMotion, yaw: Float, jumps: Jumps): LeapInput? {
         val target = target ?: return null
-        val air = jumps.airKeys(state, yaw, target.pos, target.feet, keepSpeed = target.boosts) ?: return null
+        val air = jumps.airKeys(state, yaw, target.pos, target.feet, keepSpeed = target.takesOff) ?: return null
         val sprint = air.forward > 0
         val lands = target.settles && state.copy().apply { tick(yaw, air.forward, air.strafe, false, sprint) }.onGround
         return LeapInput(air.forward, air.strafe, jump = false, sprint = sprint && !lands, sneak = lands)
@@ -181,7 +182,8 @@ internal class AssistedJump {
 
     /**
      * The block across a gap within [maxAngle] of [heading] that a jump from here lands on best. A block the player
-     * clearly heads for more than that one is jumped to from a run-up when no jump from here works.
+     * clearly heads for more than that one is jumped to from a run-up when no jump from here works. Slime that a jump
+     * on its bounce goes on from is jumped to as late as it still lands, to come down as far on it as it can.
      */
     @Suppress("LongParameterList")
     private fun pick(
@@ -197,11 +199,22 @@ internal class AssistedJump {
         val standing = targets.terrain.standHeight(feet.x, feet.y, feet.z)
         val height = if (standing.isNaN()) position.y else standing
         val found = find(targets, jumps, state, yaw, heading, maxAngle, feet, height)
+        fun best(): Target? {
+            val best = found.best ?: return null
+            if (!best.bounces || best.takesOff) {
+                return best
+            }
+            val jump = jumps.lastFromHere(state, yaw, best.pos, best.feet) ?: return best
+            val landing = jumps.landing(state, yaw, best.pos, best.feet, jump)
+            val leadsOn = landing != null && landing.motionY > 0.0 &&
+                find(targets, jumps, landing, yaw, heading, maxAngle, best.pos, best.feet).best != null
+            return if (leadsOn) Target(best.pos, best.feet, jump, bounces = true, takesOff = true) else best
+        }
         return when {
             // Bouncing off slime leaves no run-up.
-            state.motionY > 0.0 -> found.best ?: settle(state, yaw, jumps, feet.takeUnless { standing.isNaN() }, height)
-            standing.isNaN() -> found.best
-            else -> found.runUp(jumps, feet, height) ?: found.best
+            state.motionY > 0.0 -> best() ?: settle(state, yaw, jumps, feet.takeUnless { standing.isNaN() }, height)
+            standing.isNaN() -> best()
+            else -> found.runUp(jumps, feet, height) ?: best()
         }
     }
 
@@ -236,7 +249,7 @@ internal class AssistedJump {
             if (jump == null) {
                 found.missed += Missed(pos, top, intent)
             } else if (intent - jump.margin < found.bestScore) {
-                found.best = Target(pos, top, jump, boosts = bounces && drop >= BOOST_DROP)
+                found.best = Target(pos, top, jump, bounces = bounces, takesOff = bounces && drop >= BOOST_DROP)
                 found.bestScore = intent - jump.margin
                 found.bestIntent = intent
             }
