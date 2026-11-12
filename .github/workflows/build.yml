@@ -248,8 +248,7 @@ jobs:
     needs: extract-versions
     # A run with the navigation tests takes about 15 minutes; the Gradle task gives up after 30
     timeout-minutes: 40
-    # nextgen fills the library cache that pull requests read
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/nextgen'
+    if: github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -281,7 +280,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+          cache-read-only: true
       - name: Install EGL
         # The CEF add-on loads it to pick the browser's rendering, and the game renders through it below
         run: sudo apt-get update && sudo apt-get install -y libegl1 libegl-mesa0
@@ -295,7 +294,6 @@ jobs:
           key: gametest-libraries-${{ runner.os }}-${{ steps.libraries.outputs.key }}
       - name: Look for navigation changes
         id: navigation
-        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
@@ -316,7 +314,7 @@ jobs:
           # Minecraft asks for an sRGB framebuffer, which Xvfb's GLX does not offer
           SDL_VIDEO_FORCE_EGL: 1
           # Pull requests that leave navigation alone skip its game tests, which take minutes
-          NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
+          NAVIGATION: ${{ steps.navigation.outputs.run }}
           # Bots join with a LiquidBounce account token; forks get none and skip the server tests
           GAMETEST_API_TOKEN: ${{ matrix.run != 'local' && secrets.API_TOKEN || '' }}
           GAMETEST_SERVER_ANTICHEAT: ${{ matrix.run != 'local' && matrix.run || '' }}

@@ -38,12 +38,12 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawCircle
+import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -105,8 +105,6 @@ class TargetRenderer(
         )
     }
 
-    private val shader = tree(ShaderLayer())
-
     @Suppress("unused")
     private val worldRenderHandler = handler<WorldRenderEvent> { event ->
         val mode = appearance.activeMode as? TargetRenderAppearance.World ?: return@handler
@@ -114,14 +112,8 @@ class TargetRenderer(
         val target = target() ?: return@handler
 
         with(mode) {
-            if (shaded) {
-                event.renderEnvironment(shader) {
-                    render(target, event.partialTicks)
-                }
-            } else {
-                event.renderEnvironment {
-                    render(target, event.partialTicks)
-                }
+            event.renderEnvironment {
+                render(target, event.partialTicks)
             }
         }
     }
@@ -142,12 +134,9 @@ class TargetRenderer(
 private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name) {
     abstract fun Ctx.render(entity: Entity, partialTicks: Float)
 
-    /**
-     * @param shaded untextured geometry, drawn into the shader layer of the [TargetRenderer]
-     */
-    sealed class World(name: String, val shaded: Boolean) : TargetRenderAppearance<WorldRenderEnvironment>(name) {
+    sealed class World(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name) {
 
-        class Ghost(override val parent: ModeValueGroup<*>) : World("Ghost", shaded = false) {
+        class Ghost(override val parent: ModeValueGroup<*>) : World("Ghost") {
 
             private val color by color("Color", Color4b.BLUE)
             private val size by float("Size", 0.5f, 0.4f..0.7f)
@@ -218,7 +207,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
         }
 
-        class Legacy(override val parent: ModeValueGroup<*>) : World("Legacy", shaded = true) {
+        class Legacy(override val parent: ModeValueGroup<*>) : World("Legacy") {
 
             private val size by float("Size", 0.5f, 0.1f..2f)
 
@@ -243,8 +232,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
         }
 
-        class Image(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) :
-            World("Image", shaded = false) {
+        class Image(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : World("Image") {
 
             private val textureMode = modes("Source", 0) {
                 arrayOf(
@@ -300,8 +288,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             }
         }
 
-        class Circle(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) :
-            World("Circle", shaded = true) {
+        class Circle(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) : World("Circle") {
 
             private val radius by float("Radius", 0.85f, 0.1f..2f)
             private val innerRadius by float("InnerRadius", 0f, 0f..2f)
@@ -320,19 +307,22 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val outerColor by color("OuterColor", defaultColor)
             private val innerColor by color("InnerColor", defaultColor)
 
+            private val outlineColor by color("Color", Color4b.fullAlpha(0x007CFF))
+
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
                 val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
                 withPositionRelativeToCamera(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                    drawCircleOutline(radius, outlineColor)
                 }
             }
 
         }
 
         class GlowingCircle(owner: ToggleableValueGroup, override val parent: ModeValueGroup<*>) :
-            World("GlowingCircle", shaded = true) {
+            World("GlowingCircle") {
             private val radius by float("Radius", 0.85f, 0.1f..2f)
 
             private val heightMode = modes(owner, "HeightMode") {
@@ -349,6 +339,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             private val glowColor by color("GlowColor", Color4b.LIQUID_BOUNCE.alpha(0))
 
             private val glowHeightSetting by float("GlowHeight", 0.3f, -1f..1f)
+
+            private val outlineColor by color("Color", Color4b.fullAlpha(0x007CFF))
 
             override fun WorldRenderEnvironment.render(entity: Entity, partialTicks: Float) {
                 val height = heightMode.activeMode.getHeight(entity, partialTicks)
@@ -372,12 +364,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                     )
 
                     drawCircle(radius, color)
+                    drawCircleOutline(radius, outlineColor)
                 }
             }
 
         }
 
-        class Hearts(override val parent: ModeValueGroup<*>) : World("Hearts", shaded = false) {
+        class Hearts(override val parent: ModeValueGroup<*>) : World("Hearts") {
 
             private val color by color("Color", Color4b.WHITE.alpha(180))
             private val dynamicCount by boolean("DynamicCount", true)
@@ -667,7 +660,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
     }
 }
 
-private val defaultColor = Color4b.LIQUID_BOUNCE
+private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .readNativeImage().asTexture { "TargetRenderer Ghost" }
