@@ -86,8 +86,8 @@ object OutlineGlow {
     fun styles(mode: Mode): ModeValueGroup<ShaderStyle> {
         check(owners.size < TAG_BITS) { "No tag left for ${mode.name}" }
 
-        val styles = mode.modes<ShaderStyle>(mode, "Style", { DEFAULT_STYLE }) {
-            arrayOf(VanillaStyle(it), *postStyles(it).toTypedArray())
+        val styles = mode.modes(mode, "Style", { DEFAULT_STYLE }) {
+            arrayOf<ShaderStyle>(VanillaStyle(it)) + postStyles(it)
         }
         styles.onChanged { stylesChanged = true }
         for (style in styles.modes) {
@@ -118,7 +118,7 @@ object OutlineGlow {
     @JvmStatic
     fun replace(original: PostChain?): PostChain? {
         val drawing = owners.filter { it.mode.running && it.mode in drawn }
-            .ifEmpty { owners.filter { it.mode.running }.take(1) }
+            .ifEmpty { listOfNotNull(owners.firstOrNull { it.mode.running }) }
             .take(MAX_COMBINED)
         drawn.clear()
 
@@ -192,7 +192,7 @@ object OutlineGlow {
             drawing.indices.map { PostPass.TargetInput("In$it", styled[it], false, false) },
         )
 
-        val scratch = StyleChain.scratchTargets.asList() + mask + styled.take(drawing.size)
+        val scratch = StyleChain.scratchTargets + mask + styled.take(drawing.size)
         return StyleChain.postChain(passes, scratch.associateWith { StyleChain.scratch }, setOf(OUTLINE))
     }
 

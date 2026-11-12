@@ -40,7 +40,7 @@ import net.minecraft.client.renderer.PostChain
 class ShaderLayer(parent: ModeValueGroup<*>, solid: Boolean) : Rendering("Shader", parent) {
 
     val styles = modes(null, "Style", { DEFAULT_STYLE }) {
-        postStyles(it, fill = if (solid) 1f else SHAPE_FILL).toTypedArray()
+        postStyles(it, fill = if (solid) 1f else SHAPE_FILL)
     }
 
     private val chain = StyleChain(styles, PostChain.MAIN_TARGET_ID)

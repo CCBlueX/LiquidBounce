@@ -112,7 +112,7 @@ class StyleChain(private val styles: ModeValueGroup<out ShaderStyle>, private va
          */
         internal val scratch = PostChainConfig.InternalTarget(Optional.empty(), Optional.empty(), false, 0)
 
-        internal val scratchTargets = arrayOf(rows, field)
+        internal val scratchTargets = listOf(rows, field)
 
         private val pipelines = HashMap<Identifier, RenderPipeline>()
 
