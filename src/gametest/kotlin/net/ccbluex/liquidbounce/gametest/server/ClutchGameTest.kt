@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.gametest.carried
 import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 
@@ -36,22 +37,33 @@ import net.minecraft.world.phys.Vec3
 private const val BLOCK = "minecraft:oak_planks"
 private const val STONE = "minecraft:stone"
 private const val ICE = "minecraft:packed_ice"
-private const val BLOCKS = 16
+private const val BLOCKS = 32
 private const val EMPTY_SLOT = 8
+
+// No command hits like a Knockback sword does. An arrow out of this bow throws as far as a sprinting hit with one
+private const val PUNCH_BOW =
+    """{id:"minecraft:bow",count:1,components:{"minecraft:enchantments":{"minecraft:punch":3}}}"""
+private const val ARROW_SPEED = 1.5
+private const val COMBO = 3
 
 // A block the server refused is gone again well within this
 private const val SETTLE_TICKS = 20
 
-// The platform of the void world is 9 by 9 blocks with its top at y 64. Its edges are at 5, and a player further out
-// than 5.3 has none of it below
+// The platform of the void world is 9 by 9 blocks with its top at y 64. It reaches from -4 to 5, and a player more
+// than 0.3 further out has none of it below
 private const val PLATFORM_Y = 64.0
 private const val EDGE = 5.0
 private const val OFF_PLATFORM = 5.3
+private const val OPPOSITE_EDGE = -4.0
+
+// A plain hit throws the player not even two blocks past the edge
+private const val FAR = 4.0
 
 /**
  * [ModuleClutch] has to keep a player on a platform over the void from falling, with blocks the server accepts and
- * without a move the anticheat objects to. The player leaves the platform in three ways: a hit throws it over the
- * edge, it slides over the edge on the ground, and it steps off where only a wall below is left to build against.
+ * without a move the anticheat objects to. The player leaves the platform in five ways: a hit throws it over the
+ * edge, an arrow throws it blocks further than that, a hit follows every time it comes down, it slides over the edge
+ * on the ground, and it steps off where only a wall below is left to build against.
  */
 class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
     give(BLOCK, BLOCKS)
@@ -64,16 +76,35 @@ class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
     fun placed() = carried(BLOCK).let { left -> (left < blocks).also { blocks = left } }
 
     travel(BlockPos(4, 64, 0))
-    hitFromWest()
+    hit(Direction.EAST)
     val thrown = awaitStop()
     check(thrown.x >= OFF_PLATFORM && thrown.y == PLATFORM_Y) { "thrown off the platform, the player is at $thrown" }
     check(placed()) { "the server placed no block under the player that was thrown off" }
+
+    // Only a row of blocks that keeps up with the player gets under where this comes down
+    travel(BlockPos(0, 64, -4))
+    shoot(Direction.NORTH)
+    val shot = awaitStop()
+    check(shot.z <= OPPOSITE_EDGE - FAR && shot.y == PLATFORM_Y) { "shot off the platform, the player is at $shot" }
+    check(placed()) { "the server placed no block under the player that was shot off" }
+
+    // From the second hit on the player is thrown from the blocks it was caught with
+    travel(BlockPos(-4, 64, 0))
+    repeat(COMBO) {
+        hit(Direction.WEST)
+        awaitClient("the player to come down") { checkNotNull(it.player).onGround() }
+    }
+    val comboed = awaitStop()
+    check(comboed.x <= OPPOSITE_EDGE - FAR && comboed.y == PLATFORM_Y) {
+        "hit $COMBO times in a row, the player is at $comboed"
+    }
+    check(placed()) { "the server placed no block under the player that was hit $COMBO times" }
 
     // Here the same hit only throws the player up to the edge, but on ice it slides on and over it
     fill(BlockPos(0, 63, -3), BlockPos(4, 63, -3), ICE)
     awaitServer("block 4 63 -3 $ICE")
     travel(BlockPos(1, 64, -3))
-    hitFromWest()
+    hit(Direction.EAST)
     val slid = awaitStop()
     check(slid.x > EDGE && slid.y == PLATFORM_Y) { "sliding off the platform, the player is at $slid" }
     check(placed()) { "the server placed no block under the player that slid off" }
@@ -92,11 +123,20 @@ class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
     check(placed()) { "the server placed no block under the player that stepped off" }
 })
 
-/** A hit like a player's, from a block to the west. */
-private fun GameTestScope.hitFromWest() {
-    val at = client { checkNotNull(it.player).position() }
-    run("damage $playerName 1 minecraft:player_attack at ${at.x - 1} ${at.y} ${at.z}")
+/** A hit like a player's that throws the player [towards]. */
+private fun GameTestScope.hit(towards: Direction) {
+    val from = client { checkNotNull(it.player).position() }.relative(towards.opposite, 1.0)
+    run("damage $playerName 1 minecraft:player_attack at ${from.x} ${from.y} ${from.z}")
     awaitClient("the hit") { !checkNotNull(it.player).onGround() }
+}
+
+/** An arrow out of the [PUNCH_BOW] that throws the player [towards]. */
+private fun GameTestScope.shoot(towards: Direction) {
+    val at = client { checkNotNull(it.player).position() }
+    val from = at.relative(towards.opposite, ARROW_SPEED).add(0.0, 1.0, 0.0)
+    val motion = "[${towards.stepX * ARROW_SPEED}d,0.0d,${towards.stepZ * ARROW_SPEED}d]"
+    run("summon minecraft:arrow ${from.x} ${from.y} ${from.z} {Motion:$motion,pickup:0b,weapon:$PUNCH_BOW}")
+    awaitClient("the arrow") { !checkNotNull(it.player).onGround() }
 }
 
 /** Waits for the player to stand still, and returns where once the server has it standing there as well. */
