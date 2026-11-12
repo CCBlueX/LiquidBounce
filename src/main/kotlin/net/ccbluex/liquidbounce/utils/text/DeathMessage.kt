@@ -31,14 +31,18 @@ internal data class DeathMessage(val victim: String, val killer: String?, val ex
  * Reads this message as a death message about one of [names].
  *
  * Vanilla: a `death.*` translation with victim and killer as arguments.
- * Custom, like Hypixel's "Enemy was killed by Player.": the victim starts the sentence.
+ * Custom, like Hypixel's "Enemy was killed by Player.": the victim starts the sentence, at most behind
+ * a prefix of the server. A prefix naming a player ([isPlayer]) is someone talking.
  */
-internal fun Component.toDeathMessage(names: Collection<String>): DeathMessage? {
+internal fun Component.toDeathMessage(
+    names: Collection<String>,
+    isPlayer: (String) -> Boolean = { false },
+): DeathMessage? {
     val contents = contents
     return if (contents is TranslatableContents) {
         contents.takeIf { it.key.startsWith("death.") }?.let { vanillaDeathMessage(it, names) }
     } else {
-        customDeathMessage(ChatFormatting.stripFormatting(string).orEmpty(), names)
+        customDeathMessage(ChatFormatting.stripFormatting(string).orEmpty(), names, isPlayer)
     }
 }
 
@@ -52,17 +56,39 @@ private fun vanillaDeathMessage(contents: TranslatableContents, names: Collectio
 }
 
 // "Enemy was ..." is a sentence, "Enemy: gg" and "<Enemy> gg" are chat
-private fun customDeathMessage(message: String, names: Collection<String>): DeathMessage? {
+private fun customDeathMessage(
+    message: String,
+    names: Collection<String>,
+    isPlayer: (String) -> Boolean,
+): DeathMessage? {
     val text = message.trimStart { !it.isLetterOrDigit() && it != '_' }
-    val named = text.namesIn(names)
-    val victim = named.firstOrNull() ?: return null
-    val isSentence = text.startsWith("$victim ") && text.getOrNull(victim.length + 1)?.isLetter() == true
-    return if (isSentence) DeathMessage(victim, named.getOrNull(1), exact = false) else null
+    val named = text.positionsOf(names)
+    val (start, victim) = named.firstOrNull() ?: return null
+    val end = start + victim.length
+    val isSentence = text.getOrNull(end) == ' ' && text.getOrNull(end + 1)?.isLetter() == true
+    return if (isSentence && text.substring(0, start).isServerPrefix(isPlayer)) {
+        DeathMessage(victim, named.getOrNull(1)?.second, exact = false)
+    } else {
+        null
+    }
 }
 
-private fun String.namesIn(names: Collection<String>) = names
+private val NAME = Regex("[A-Za-z0-9_]+")
+
+// "SkyWars ▸ " and "Duels ▸ Player " lead into a sentence, "[VIP] Other: " and "Other was killed by " do not
+private fun String.isServerPrefix(isPlayer: (String) -> Boolean): Boolean {
+    if (isEmpty()) {
+        return true
+    }
+    val tag = trimEnd().dropLastWhile { it.isLetter() }.trimEnd()
+    val separator = tag.lastOrNull() ?: return !isPlayer(trim())
+    return !separator.isLetterOrDigit() && separator !in ":>_" && NAME.findAll(this).none { isPlayer(it.value) }
+}
+
+private fun String.positionsOf(names: Collection<String>) = names
     .mapNotNull { name ->
         Regex("(?<![A-Za-z0-9_])${Regex.escape(name)}(?![A-Za-z0-9_])").find(this)?.let { it.range.first to name }
     }
     .sortedBy { it.first }
-    .map { it.second }
+
+private fun String.namesIn(names: Collection<String>) = positionsOf(names).map { it.second }

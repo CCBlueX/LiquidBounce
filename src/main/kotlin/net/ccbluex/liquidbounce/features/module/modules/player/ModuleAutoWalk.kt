@@ -31,9 +31,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
+import net.ccbluex.liquidbounce.utils.navigation.Navigator
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
@@ -43,28 +42,21 @@ import kotlin.math.abs
 /**
  * AutoWalk module
  *
- * Automatically makes you walk: straight ahead, pathfinding the way you are facing, to a destination or after a
- * player.
+ * Walks straight ahead, the way you are facing, to a destination or after a player.
  */
 object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
     private val modes = choices("Mode", Forward, arrayOf(Forward, Direction, Goto, Follow)).apply(::tagBy)
-    private val navigator = WalkNavigator(this, this)
+    private val navigator = Navigator(this, this)
 
-    /**
-     * Walks to [position] and turns off on arrival.
-     */
     fun goTo(position: Vec3) {
         val block = BlockPos.containing(position)
-        // A BlockPos would no longer load from configs, which read the setting as a Vec3i
+        // Configs read the setting as a Vec3i and would no longer load a BlockPos
         Goto.destination = Vec3i(block.x, block.y, block.z)
         modes.setByString(Goto.tag)
         enabled = true
     }
 
-    /**
-     * Walks after the player named [name].
-     */
     fun follow(name: String) {
         Follow.target = name
         modes.setByString(Follow.tag)
@@ -81,9 +73,6 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         }
     }
 
-    /**
-     * Pathfinds to [goal] every tick.
-     */
     private abstract class NavigationMode(name: String) : Mode(name) {
         override val parent: ModeValueGroup<*>
             get() = modes
@@ -95,12 +84,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
         @Suppress("unused")
         private val moveInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
-            val goal = goal()
-            if (goal == null) {
-                navigator.halt()
-            } else {
-                navigator.navigate(event, goal, radius)
-            }
+            val goal = goal() ?: return@handler navigator.halt()
+            navigator.navigate(event, goal, radius)
         }
 
         override fun disable() {
@@ -109,9 +94,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
     }
 
     /**
-     * Keeps a goal [DISTANCE] blocks the way the camera faces, so the walk follows where you look and, in stages,
-     * goes around whatever is in the way: hills, lakes and cliffs alike. The goal is set again once the view turned
-     * or half the way to it is walked.
+     * Keeps a goal [DISTANCE] blocks the way the camera faces, set again once the view turned or half the way is
+     * walked.
      */
     private object Direction : NavigationMode("Direction") {
         private var goal: Vec3? = null
@@ -145,9 +129,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         private const val MAX_TURN = 20f
     }
 
-    /**
-     * Walks to [destination], set here, with the locate button or with `.goto`, and turns off on arrival.
-     */
+    /** Turns the module off on arrival. */
     private object Goto : NavigationMode("Goto") {
         var destination by vec3i("Destination")
 
@@ -163,7 +145,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }
             }
 
-            if (player.rootVehicle.position().distanceTo(goal) > radius) {
+            if (!player.rootVehicle.position().closerThan(goal, radius)) {
                 return goal
             }
 
@@ -176,11 +158,9 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
             return null
         }
 
-        /**
-         * [pos], or the block above it when [pos] is the ground to stand on, as the locate button picks it.
-         */
+        // The locate button picks the ground to stand on.
         private fun feetAt(pos: BlockPos): BlockPos {
-            val terrain = NavigationTerrain(LiveWorld(world))
+            val terrain = Terrain.live()
             val above = pos.above()
             return if (!terrain.isStandable(pos) && terrain.isStandable(above)) above else pos
         }
@@ -190,9 +170,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         var target by text("Player", "")
         private val distance by float("Distance", 3f, 1f..10f)
 
-        /**
-         * Where [target] was last seen, to walk on to once it goes out of sight.
-         */
+        /** Walked on to once [target] goes out of sight. */
         private var lastSeen: Vec3? = null
 
         override val radius: Double
@@ -204,11 +182,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         }
 
         override fun goal(): Vec3? {
-            val entity = world.players().find { it !== player && it.gameProfile.name.equals(target, true) }
-            if (entity != null) {
-                lastSeen = entity.position()
-            }
-
+            world.players().find { it !== player && it.gameProfile.name.equals(target, true) }
+                ?.let { lastSeen = it.position() }
             return lastSeen
         }
     }

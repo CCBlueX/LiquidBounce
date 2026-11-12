@@ -86,6 +86,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.KillDeathTracker
 import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -99,10 +100,10 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
-import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
+import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -288,7 +289,7 @@ object LiquidBounce : EventListener {
         Timer
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
-        TeleportDispatcher
+        TeleportManager
         SectionCache
         InteractionTracker
         CombatManager
@@ -303,6 +304,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
+        KillDeathTracker
         PlayerStatisticsTracker
         ItemImageAtlas
         ItemStackListRenderer
@@ -346,9 +348,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Load cosmetics
-                CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
-                }
+                CosmeticService.refreshCarriers(force = true)
             }
             launch {
                 MarketplaceConfigs.refresh()

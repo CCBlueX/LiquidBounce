@@ -29,6 +29,9 @@ class HatsColorSettings : ValueGroup("Colors") {
     val secondColor by color("SecondColor", Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.5F).alpha(125))
     val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
 
+    fun getColor(angle: Float, isHurt: Boolean): Color4b =
+        if (isHurt) Color4b(255, 0, 0, firstColor.a) else getCurrentStepColor(angle)
+
     fun getCurrentStepColor(angle: Float): Color4b {
         val first = firstColor
         val second = if (!syncColors) secondColor else firstColor

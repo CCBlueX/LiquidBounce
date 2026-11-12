@@ -35,20 +35,19 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import kotlin.math.abs
 
-/**
- * VClip Command
- *
- * Allows you to clip through blocks.
- *
- * Settings: [GlobalSettingsTeleport]
- */
+/** Clips the player, or its vehicle, up or down: `by` a distance, or `smart` onto the next block to stand on. */
 object CommandVClip : CommandRegistrar {
+
+    private val entity: Entity
+        get() = player.vehicle ?: player
+
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("vclip") {
             requires { it.isIngame }
@@ -56,27 +55,19 @@ object CommandVClip : CommandRegistrar {
             literal("by") {
                 argument("distance", FloatArgumentType.floatArg()) { distance ->
                     exec { ctx ->
-                        val dy = ctx.get(distance)
-
-                        GlobalSettingsTeleport.teleport(getX(), getY() + dy, getZ())
+                        clip(ctx.get(distance).toDouble())
                         1
                     }
                 }
             }
             literal("smart") {
-                literal("up") {
-                    optional("max", IntegerArgumentType.integer(), default = 10) { max ->
-                        exec { ctx ->
-                            performAutomaticClip(abs(ctx.get(max)), Direction.UP)
-                            1
-                        }
-                    }
-                }
-                literal("down") {
-                    optional("max", IntegerArgumentType.integer(), default = 10) { max ->
-                        exec { ctx ->
-                            performAutomaticClip(abs(ctx.get(max)), Direction.DOWN)
-                            1
+                for (direction in arrayOf(Direction.UP, Direction.DOWN)) {
+                    literal(direction.serializedName) {
+                        optional("max", IntegerArgumentType.integer(), default = 10) { max ->
+                            exec { ctx ->
+                                smartClip(abs(ctx.get(max)), direction)
+                                1
+                            }
                         }
                     }
                 }
@@ -84,102 +75,63 @@ object CommandVClip : CommandRegistrar {
         }
     }
 
-    private fun CmdI18n.performAutomaticClip(max: Int, direction: Direction) {
-        val blockPos = player.vehicle?.blockPosition() ?: player.blockPosition()
-        val pos = player.vehicle?.position() ?: player.position()
+    private fun clip(dy: Double) = GlobalSettingsTeleport.teleport(entity.x, entity.y + dy, entity.z)
 
-        var newPos = blockPos
+    private fun CmdI18n.smartClip(max: Int, direction: Direction) {
+        // Down starts below the block the player is on.
+        var pos = entity.blockPosition().let { if (direction == Direction.DOWN) it.below() else it }
 
-        // avoid clipping on the block we're already on
-        if (direction == Direction.DOWN) {
-            newPos = newPos.below()
-        }
-
-        for (x in 0 until max) {
-            // go to the next position in the direction
-            newPos = newPos.relative(direction)
-
-            val shape = newPos.collisionShape
-
-            // we have to be able to stand on the position
-            if (canTpOn(newPos, shape)) {
-                // allows clipping on fences, etc.
-                val vOffset = shape.max(Direction.Axis.Y)
-
-                val dy = (newPos.y + vOffset) - pos.y
-
-                // check if the found position is too far away
-                if (abs(dy) > max) {
-                    break
-                }
-
-                // teleport
-                GlobalSettingsTeleport.teleport(getX(), getY() + dy, getZ())
-                return
+        for (step in 0 until max) {
+            pos = pos.relative(direction)
+            val shape = pos.collisionShape
+            if (!canTpOn(pos, shape)) {
+                continue
             }
+
+            // The top of the shape, so fences and the like work.
+            val dy = (pos.y + shape.max(Direction.Axis.Y)) - entity.y
+            if (abs(dy) > max) {
+                break
+            }
+
+            clip(dy)
+            return
         }
 
-        chat(
-            markAsError(t("noPositionFound")),
-            metadata = MessageMetadata(id = "CVClip#info")
-        )
+        chat(markAsError(t("noPositionFound")), metadata = MessageMetadata(id = "CVClip#info"))
     }
 
-    private fun canTpOn(pos: BlockPos, posCollisionShape: VoxelShape): Boolean {
-        // check if there is enough space at the new position
-        val boundingBox = player.vehicle?.boundingBox ?: player.boundingBox
-
-        if (isNotEnoughSpaceAboveBlock(pos, boundingBox, posCollisionShape)) {
+    private fun canTpOn(pos: BlockPos, shape: VoxelShape): Boolean {
+        val box = entity.boundingBox
+        if (lacksSpaceAbove(pos, box, shape) || player.isPassenger && lacksSpaceAbove(pos, player.boundingBox, shape)) {
             return false
         }
-
-        player.vehicle?.let {
-            if (isNotEnoughSpaceAboveBlock(pos, player.boundingBox, posCollisionShape)) {
-                return false
-            }
-        }
-
-        // a simple case, we can stand on the position
         if (pos.canStandOn()) {
             return true
         }
 
-        // even tho canStandOn returns false the block might not be full on the upper side, but we can stand on it tho
-        val shape = posCollisionShape.move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-        val dy = shape.min(Direction.Axis.Y) - boundingBox.min(Direction.Axis.Y)
-        return Shapes.joinIsNotEmpty(
-            shape,
-            Shapes.create(boundingBox.move(0.0, dy, 0.0)),
-            BooleanOp.AND
-        )
+        // A block without a sturdy top still carries a box that rests on its shape.
+        val placed = shape.move(pos)
+        val dy = placed.min(Direction.Axis.Y) - box.minY
+        return Shapes.joinIsNotEmpty(placed, Shapes.create(box.move(0.0, dy, 0.0)), BooleanOp.AND)
     }
 
-    private fun isNotEnoughSpaceAboveBlock(pos: BlockPos, boundingBox: AABB, posCollisionShape: VoxelShape): Boolean {
-        val requiredHeight = boundingBox.maxY - boundingBox.minY - (1.0 - posCollisionShape.max(Direction.Axis.Y))
-        var accumulatedHeight = 0.0
-        var newPos = pos
+    private fun lacksSpaceAbove(pos: BlockPos, box: AABB, shape: VoxelShape): Boolean {
+        val requiredHeight = box.ysize - (1.0 - shape.max(Direction.Axis.Y))
+        var height = 0.0
+        var above = pos
 
-        while (accumulatedHeight < requiredHeight) {
-            newPos = newPos.above()
-            val collisionShape = newPos.collisionShape
-
-            if (!collisionShape.isEmpty) {
-                val maxAvailableHeight = collisionShape.min(Direction.Axis.Y)
-                if (maxAvailableHeight < requiredHeight - accumulatedHeight) {
-                    return true
-                }
+        while (height < requiredHeight) {
+            above = above.above()
+            val ceiling = above.collisionShape
+            if (!ceiling.isEmpty && ceiling.min(Direction.Axis.Y) < requiredHeight - height) {
+                return true
             }
 
-            accumulatedHeight += 1.0
+            height += 1.0
         }
 
         return false
     }
-
-    private fun getX() = player.vehicle?.x ?: player.x
-
-    private fun getY() = player.vehicle?.y ?: player.y
-
-    private fun getZ() = player.vehicle?.z ?: player.z
 
 }

@@ -21,6 +21,12 @@ package net.ccbluex.liquidbounce.gametest.navigation
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.action.awaitServer
+import net.ccbluex.gametest.harness.action.fill
+import net.ccbluex.gametest.harness.action.give
+import net.ccbluex.gametest.harness.action.setBlock
+import net.ccbluex.gametest.harness.action.summon
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
@@ -30,353 +36,260 @@ import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAut
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.FuckerAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.gametest.command
+import net.ccbluex.liquidbounce.gametest.fillArea
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
+import net.ccbluex.liquidbounce.gametest.matchingBlocks
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
-import net.minecraft.client.Minecraft
+import net.ccbluex.liquidbounce.gametest.playerPosition
+import net.ccbluex.liquidbounce.gametest.restoring
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
+
+private const val DIRECTION_TICKS = 600
+private const val DIRECTION_END = 38.0
+private const val STILL = 0.02
+private const val MAX_STOPS = 3
+private const val SPRINT_TICKS = 200
+private const val FOLLOW_TICKS = 300
+private const val FOLLOW_DISTANCE = 3.5
+private const val FIGHT_TICKS = 400
+private const val FUCKER_TICKS = 800
 
 /**
  * AutoWalk walks the way the player faces around a wall, to a `.goto` destination around a closed room and up to a
  * `.follow` player, AutoFarm walks onto an item to pick it up, Fucker's AutoWalk bridges over to a bed and then a
  * dragon egg and breaks both, and KillAura's FightBot walks around a fence to hit a husk.
  */
-@Suppress("TooManyFunctions")
-class AutoWalkGameTest : FabricClientGameTest {
+class AutoWalkGameTest : LiquidBounceGameTest({
+    context.restoring(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker, ModuleKillAura) {
+        val y = origin.y
+        buildCourse(y)
+        give("minecraft:diamond_pickaxe")
+        give("minecraft:cobblestone", 64)
 
-    private val modules = listOf(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker, ModuleKillAura)
-
-    override fun runTest(context: ClientGameTestContext) {
-        if (!navigationGameTests) {
-            return
-        }
-        context.waitForClient()
-        val saved = context.fromClient { modules.map { ConfigSystem.serializeValueGroup(it) } }
-
-        try {
-            context.worldBuilder().create().use { world ->
-                val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
-                buildCourse(server, y)
-                server.runCommand("gamemode survival @a")
-                server.runCommand("clear @a")
-                server.runCommand("give @a diamond_pickaxe")
-                server.runCommand("give @a cobblestone 64")
-
-                checkDirection(context, server, y)
-                checkGoto(context, server, y)
-                checkSprint(context, server, y)
-                checkFollow(context, server, y)
-                checkFarmItem(context, server, y)
-                checkFuckerTargets(context, server, y)
-                checkFightBot(context, server, y)
-            }
-        } finally {
-            context.onClient {
-                for ((module, config) in modules.zip(saved)) {
-                    module.enabled = false
-                    ConfigSystem.deserializeValueGroup(module, config)
-                }
-            }
-        }
+        checkDirection(y)
+        checkGoto(y)
+        checkSprint(y)
+        checkFollow(y)
+        checkFarmItem(y)
+        checkFuckerTargets(y)
+        checkFightBot(y)
     }
+})
 
-    /**
-     * A wall at x 10, a closed stone room at x 22..28 and three floating islands at x 32..34, 40..42 and 48..50 with
-     * a bed on the second and a dragon egg on the third. Along z -18..-12 runs an uneven lane: a hill four blocks high
-     * with a pillar on top, a ditch, a wall and slabs. The ground floor is stone at y - 1.
-     */
-    private fun buildCourse(server: TestServerContext, y: Int) {
-        server.runCommand("fill 0 $y -20 60 ${y + 14} 20 air")
-        server.runCommand("fill 0 ${y - 1} -20 60 ${y - 1} 20 stone")
-        server.runCommand("fill 10 $y -6 10 ${y + 3} 6 stone")
-        server.runCommand("fill 22 $y -3 28 ${y + 3} 3 stone hollow")
-        server.runCommand("fill 32 ${y + 8} -1 34 ${y + 8} 1 stone")
-        server.runCommand("fill 40 ${y + 8} -1 42 ${y + 8} 1 stone")
-        server.runCommand("setblock 41 ${y + 9} 0 red_bed[part=foot,facing=east]")
-        server.runCommand("setblock 42 ${y + 9} 0 red_bed[part=head,facing=east]")
-        server.runCommand("fill 48 ${y + 8} -1 50 ${y + 8} 1 stone")
-        server.runCommand("setblock 49 ${y + 9} 0 dragon_egg")
+/**
+ * A wall at x 10, a closed stone room at x 22..28 and three floating islands at x 32..34, 40..42 and 48..50 with
+ * a bed on the second and a dragon egg on the third. Along z -18..-12 runs an uneven lane: a hill four blocks high
+ * with a pillar on top, a ditch, a wall with a copy far above to compare it with, and slabs. The ground floor is
+ * stone at y - 1.
+ */
+private fun GameTestScope.buildCourse(y: Int) {
+    fillArea(BlockPos(0, y, -20), BlockPos(60, y + 14, 20), "minecraft:air")
+    fill(BlockPos(0, y - 1, -20), BlockPos(60, y - 1, 20), "minecraft:stone")
+    fill(BlockPos(10, y, -6), BlockPos(10, y + 3, 6), "minecraft:stone")
+    fill(BlockPos(22, y, -3), BlockPos(28, y + 3, 3), "minecraft:stone hollow")
+    fill(BlockPos(32, y + 8, -1), BlockPos(34, y + 8, 1), "minecraft:stone")
+    fill(BlockPos(40, y + 8, -1), BlockPos(42, y + 8, 1), "minecraft:stone")
+    setBlock(BlockPos(41, y + 9, 0), "minecraft:red_bed[part=foot,facing=east]")
+    setBlock(BlockPos(42, y + 9, 0), "minecraft:red_bed[part=head,facing=east]")
+    fill(BlockPos(48, y + 8, -1), BlockPos(50, y + 8, 1), "minecraft:stone")
+    setBlock(BlockPos(49, y + 9, 0), "minecraft:dragon_egg")
 
-        for (step in 0..3) {
-            server.runCommand("fill ${6 + step} ${y + step} -18 ${20 - step} ${y + step} -12 stone")
-        }
-        server.runCommand("fill 13 ${y + 4} -16 13 ${y + 6} -14 stone")
-        server.runCommand("fill 23 ${y - 1} -18 24 ${y - 1} -12 air")
-        server.runCommand("fill 27 $y -20 27 ${y + 2} -11 stone")
-        server.runCommand("fill 31 $y -18 33 $y -12 stone_slab")
+    for (step in 0..3) {
+        fill(BlockPos(6 + step, y + step, -18), BlockPos(20 - step, y + step, -12), "minecraft:stone")
     }
-
-    /**
-     * Walks the uneven lane the way the player faces. Bumping into a stair while jumping up the next one is how
-     * the game moves, so only standing on the ground counts as a stop.
-     */
-    private fun checkDirection(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(2.5, y.toDouble(), -15.5), yaw = -90f)
-        context.onClient {
-            ModuleAutoWalk.containedValues.first { it.name == "Mode" }.setByString("Direction")
-            ModuleAutoWalk.enabled = true
-        }
-
-        var stops = 0
-        unhurt(context, server, "walking the way it faces") {
-            var last = context.fromClient { checkNotNull(it.player).position() }
-            repeat(DIRECTION_TICKS) {
-                context.waitTick()
-                val (position, onGround) = context.fromClient { mc ->
-                    val player = checkNotNull(mc.player)
-                    player.position() to player.onGround()
-                }
-                if (onGround && position.subtract(last).horizontalDistance() < STILL) {
-                    stops++
-                }
-                last = position
-                if (position.x > DIRECTION_END) {
-                    return@unhurt
-                }
-            }
-            error("Did not walk the lane within $DIRECTION_TICKS ticks, stopped at $last")
-        }
-        context.onClient { ModuleAutoWalk.enabled = false }
-        check(stops <= MAX_STOPS) { "Stood still on the ground for $stops ticks" }
-        check(server.countBlocks(BlockPos(27, y, -20), BlockPos(27, y + 2, -11)) == 10 * 3) { "The wall was changed" }
-    }
-
-    private fun checkGoto(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(18.5, y.toDouble(), 0.5))
-        val destination = Vec3(31.5, y.toDouble(), 0.5)
-        context.command("goto ${destination.x} ${destination.y} ${destination.z}")
-        check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
-
-        unhurt(context, server, "going around the room") {
-            awaitClient(context, 600, "Did not arrive behind the closed room") { !ModuleAutoWalk.enabled }
-        }
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        check(position.distanceTo(destination) <= 1.1) { "AutoWalk turned off at $position, not at $destination" }
-
-        val loaded = context.fromClient {
-            val json = ConfigSystem.serializeValueGroup(ModuleAutoWalk)
-            val saved = checkNotNull(json.destination()) { "No Destination in the AutoWalk config" }
-            saved.addProperty("x", saved["x"].asInt + 1)
-            ConfigSystem.deserializeValueGroup(ModuleAutoWalk, json)
-            ConfigSystem.serializeValueGroup(ModuleAutoWalk).destination()?.get("x")?.asInt
-        }
-        check(loaded == BlockPos.containing(destination).x + 1) { "A config did not load the Goto destination" }
-    }
-
-    /**
-     * The value object of the `Destination` setting somewhere in [this] config.
-     */
-    private fun JsonElement.destination(): JsonObject? = when {
-        isJsonArray -> asJsonArray.firstNotNullOfOrNull { it.destination() }
-        !isJsonObject -> null
-        asJsonObject["name"]?.takeIf { it.isJsonPrimitive }?.asString == "Destination" ->
-            asJsonObject["value"]?.takeIf { it.isJsonObject }?.asJsonObject
-        else -> asJsonObject.entrySet().firstNotNullOfOrNull { it.value.destination() }
-    }
-
-    /**
-     * Walking away from where the player looks still sprints, as the walk turns the head.
-     */
-    private fun checkSprint(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(2.5, y.toDouble(), 16.5), yaw = 90f)
-        context.command("goto 20 $y 16")
-
-        var ticks = 0
-        var sprinting = 0
-        unhurt(context, server, "sprinting along") {
-            repeat(SPRINT_TICKS) {
-                context.waitTick()
-                ticks++
-                if (context.fromClient { checkNotNull(it.player).isSprinting }) {
-                    sprinting++
-                }
-                if (context.fromClient { !ModuleAutoWalk.enabled }) {
-                    return@unhurt
-                }
-            }
-            val position = context.fromClient { checkNotNull(it.player).position() }
-            error("Did not arrive within $SPRINT_TICKS ticks, stopped at $position")
-        }
-        check(sprinting * 2 >= ticks) { "Sprinted for only $sprinting of $ticks ticks" }
-    }
-
-    /**
-     * `.follow` walks up to a player the tab list does not show.
-     */
-    private fun checkFollow(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        val twin = Vec3(16.5, y.toDouble(), 8.5)
-        moveTo(context, server, twin)
-        context.command("fakeplayer spawn Twin")
-        moveTo(context, server, Vec3(2.5, y.toDouble(), 8.5))
-
-        try {
-            context.command("follow Twin")
-            check(context.fromClient { ModuleAutoWalk.enabled }) { ".follow did not turn AutoWalk on" }
-            unhurt(context, server, "following") {
-                awaitClient(context, FOLLOW_TICKS, "Did not walk up to the followed player") {
-                    it.distanceTo(twin) <= FOLLOW_DISTANCE
-                }
-            }
-        } finally {
-            context.onClient { ModuleAutoWalk.enabled = false }
-            context.command("fakeplayer clear")
-        }
-    }
-
-    private fun checkFarmItem(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(4.5, y.toDouble(), 12.5))
-        server.runCommand(
-            "summon item 7.5 $y 12.5 {Item:{id:\"minecraft:wheat_seeds\",count:1},PickupDelay:0s,Motion:[0d,0d,0d]}"
-        )
-        context.onClient {
-            AutoFarmAutoWalk.enabled = true
-            ModuleAutoFarm.enabled = true
-        }
-
-        try {
-            unhurt(context, server, "walking to an item") {
-                repeat(200) {
-                    if (context.fromClient { checkNotNull(it.player).inventory.hasAnyOf(setOf(Items.WHEAT_SEEDS)) }) {
-                        return@unhurt
-                    }
-                    context.waitTick()
-                }
-                val position = context.fromClient { checkNotNull(it.player).position() }
-                error("AutoFarm did not pick up the item within 200 ticks, stopped at $position")
-            }
-        } finally {
-            context.onClient { ModuleAutoFarm.enabled = false }
-        }
-    }
-
-    private fun checkFuckerTargets(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(33.5, y + 9.0, 0.5))
-        context.onClient {
-            FuckerAutoWalk.enabled = true
-            ModuleFucker.enabled = true
-        }
-
-        try {
-            // The bed first, being closer; hitting the egg teleports it away.
-            for ((target, from, to) in listOf(
-                Triple("bed", BlockPos(41, y + 9, 0), BlockPos(42, y + 9, 0)),
-                Triple("dragon egg", BlockPos(49, y + 9, 0), BlockPos(49, y + 9, 0)),
-            )) {
-                unhurt(context, server, "walking to the $target", acting = { FuckerAutoWalk.isActing }) {
-                    repeat(800) {
-                        if (server.countBlocks(from, to) == 0) {
-                            return@unhurt
-                        }
-                        context.waitTick()
-                    }
-                    val position = context.fromClient { checkNotNull(it.player).position() }
-                    error("The $target was not hit within 800 ticks, stopped at $position")
-                }
-            }
-        } finally {
-            context.onClient { ModuleFucker.enabled = false }
-            server.runCommand("fill 30 ${y - 1} -20 60 ${y + 14} 20 air replace dragon_egg")
-        }
-    }
-
-    /**
-     * Far from the husk, FightBot walks up to it instead of keeping away while the weapon recharges.
-     */
-    private fun checkFightBot(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        server.runCommand("fill 50 $y 4 50 $y 12 oak_fence")
-        server.runCommand("summon husk 56.5 $y 8.5 {NoAI:1b,PersistenceRequired:1b}")
-        moveTo(context, server, Vec3(44.5, y.toDouble(), 8.5))
-        context.onClient {
-            KillAuraFightBot.enabled = true
-            ModuleKillAura.enabled = true
-        }
-
-        try {
-            repeat(FIGHT_TICKS) {
-                val hit = server.computeOnServer<Boolean, RuntimeException> { s ->
-                    s.overworld().allEntities.any { it is Husk && it.health < it.maxHealth }
-                }
-                if (hit) {
-                    return
-                }
-                context.waitTick()
-            }
-            val position = context.fromClient { checkNotNull(it.player).position() }
-            error("FightBot did not hit the husk within $FIGHT_TICKS ticks, stopped at $position")
-        } finally {
-            context.onClient { ModuleKillAura.enabled = false }
-            server.runCommand("kill @e[type=husk]")
-        }
-    }
-
-    /**
-     * Runs [block], a walk, and fails if it hurt the player or the player glanced back on the way, other than to mine
-     * or place while [acting].
-     */
-    private fun unhurt(
-        context: ClientGameTestContext,
-        server: TestServerContext,
-        what: String,
-        acting: () -> Boolean = { false },
-        block: () -> Unit,
-    ) {
-        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        TurnWatch.watch(context, "AutoWalk $what", acting, block)
-        val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        check(after >= health) { "AutoWalk hurt the player $what, from $health to $after" }
-    }
-
-    private fun awaitClient(
-        context: ClientGameTestContext,
-        ticks: Int,
-        failure: String,
-        condition: (Vec3) -> Boolean,
-    ) {
-        repeat(ticks) {
-            if (context.fromClient { condition(checkNotNull(it.player).position()) }) {
-                return
-            }
-            context.waitTick()
-        }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        error("$failure within $ticks ticks, stopped at $position")
-    }
-
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3, yaw: Float = 0f) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z} $yaw 0")
-        context.waitFor({ client: Minecraft ->
-            client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
-        }, WAIT)
-        context.waitTicks(5)
-    }
-
-    private fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int =
-        computeOnServer<Int, RuntimeException> { server ->
-            BlockPos.betweenClosed(from, to).count { !server.overworld().getBlockState(it).isAir }
-        }
-
-    private companion object {
-        const val WAIT = 200
-        const val EPSILON = 1.0E-4
-        const val DIRECTION_TICKS = 600
-        const val DIRECTION_END = 38.0
-        const val STILL = 0.02
-        const val MAX_STOPS = 3
-        const val SPRINT_TICKS = 200
-        const val FOLLOW_TICKS = 300
-        const val FOLLOW_DISTANCE = 3.5
-        const val FIGHT_TICKS = 400
-    }
-
+    fill(BlockPos(13, y + 4, -16), BlockPos(13, y + 6, -14), "minecraft:stone")
+    fill(BlockPos(23, y - 1, -18), BlockPos(24, y - 1, -12), "minecraft:air")
+    fill(BlockPos(27, y, -20), BlockPos(27, y + 2, -11), "minecraft:stone")
+    fill(BlockPos(27, y + 40, -20), BlockPos(27, y + 42, -11), "minecraft:stone")
+    fill(BlockPos(31, y, -18), BlockPos(33, y, -12), "minecraft:stone_slab")
+    awaitServer("block 33 $y -12 minecraft:stone_slab")
 }
+
+/** Bumping into a stair while jumping up the next is how the game moves; only standing on ground is a stop. */
+private fun GameTestScope.checkDirection(y: Int) {
+    moveTo(Vec3(2.5, y.toDouble(), -15.5), yaw = -90f)
+    context.onClient {
+        ModuleAutoWalk.containedValues.first { it.name == "Mode" }.setByString("Direction")
+        ModuleAutoWalk.enabled = true
+    }
+
+    var stops = 0
+    watched("walking the way it faces") {
+        var last = context.playerPosition()
+        repeat(DIRECTION_TICKS) {
+            ticks(1)
+            val (position, onGround) = context.fromClient { mc ->
+                val player = checkNotNull(mc.player)
+                player.position() to player.onGround()
+            }
+            if (onGround && position.subtract(last).horizontalDistance() < STILL) {
+                stops++
+            }
+            last = position
+            if (position.x > DIRECTION_END) {
+                return@watched
+            }
+        }
+        error("Did not walk the lane within $DIRECTION_TICKS ticks, stopped at $last")
+    }
+    context.onClient { ModuleAutoWalk.enabled = false }
+    check(stops <= MAX_STOPS) { "Stood still on the ground for $stops ticks" }
+    check(matchingBlocks(BlockPos(27, y, -20), BlockPos(27, y + 2, -11), BlockPos(27, y + 40, -20)) == 10 * 3) {
+        "The wall was changed"
+    }
+}
+
+private fun GameTestScope.checkGoto(y: Int) {
+    moveTo(Vec3(18.5, y.toDouble(), 0.5))
+    val destination = Vec3(31.5, y.toDouble(), 0.5)
+    context.command("goto ${destination.x} ${destination.y} ${destination.z}")
+    check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
+
+    watched("going around the room") {
+        awaitPlayer(context, 600, "Did not arrive behind the closed room") { !ModuleAutoWalk.enabled }
+    }
+    val position = context.playerPosition()
+    check(position.distanceTo(destination) <= 1.1) { "AutoWalk turned off at $position, not at $destination" }
+
+    val loaded = context.fromClient {
+        val json = ConfigSystem.serializeValueGroup(ModuleAutoWalk)
+        val saved = checkNotNull(json.destination()) { "No Destination in the AutoWalk config" }
+        saved.addProperty("x", saved["x"].asInt + 1)
+        ConfigSystem.deserializeValueGroup(ModuleAutoWalk, json)
+        ConfigSystem.serializeValueGroup(ModuleAutoWalk).destination()?.get("x")?.asInt
+    }
+    check(loaded == BlockPos.containing(destination).x + 1) { "A config did not load the Goto destination" }
+}
+
+/** The value object of the `Destination` setting somewhere in [this] config. */
+private fun JsonElement.destination(): JsonObject? = when {
+    isJsonArray -> asJsonArray.firstNotNullOfOrNull { it.destination() }
+    !isJsonObject -> null
+    asJsonObject["name"]?.takeIf { it.isJsonPrimitive }?.asString == "Destination" ->
+        asJsonObject["value"]?.takeIf { it.isJsonObject }?.asJsonObject
+    else -> asJsonObject.entrySet().firstNotNullOfOrNull { it.value.destination() }
+}
+
+/** Walking away from where the player looks still sprints, as the walk turns the head. */
+private fun GameTestScope.checkSprint(y: Int) {
+    moveTo(Vec3(2.5, y.toDouble(), 16.5), yaw = 90f)
+    context.command("goto 20 $y 16")
+
+    var elapsed = 0
+    var sprinting = 0
+    watched("sprinting along") {
+        repeat(SPRINT_TICKS) {
+            ticks(1)
+            elapsed++
+            if (context.fromClient { checkNotNull(it.player).isSprinting }) {
+                sprinting++
+            }
+            if (context.fromClient { !ModuleAutoWalk.enabled }) {
+                return@watched
+            }
+        }
+        error("Did not arrive within $SPRINT_TICKS ticks, stopped at ${context.playerPosition()}")
+    }
+    check(sprinting * 2 >= elapsed) { "Sprinted for only $sprinting of $elapsed ticks" }
+}
+
+/** `.follow` walks up to a player the tab list does not show. */
+private fun GameTestScope.checkFollow(y: Int) {
+    val twin = Vec3(16.5, y.toDouble(), 8.5)
+    moveTo(twin)
+    context.command("fakeplayer spawn Twin")
+    moveTo(Vec3(2.5, y.toDouble(), 8.5))
+
+    try {
+        context.command("follow Twin")
+        check(context.fromClient { ModuleAutoWalk.enabled }) { ".follow did not turn AutoWalk on" }
+        watched("following") {
+            awaitPlayer(context, FOLLOW_TICKS, "Did not walk up to the followed player") {
+                it.position().distanceTo(twin) <= FOLLOW_DISTANCE
+            }
+        }
+    } finally {
+        context.onClient { ModuleAutoWalk.enabled = false }
+        context.command("fakeplayer clear")
+    }
+}
+
+private fun GameTestScope.checkFarmItem(y: Int) {
+    moveTo(Vec3(4.5, y.toDouble(), 12.5))
+    summon(
+        "minecraft:item",
+        BlockPos(7, y, 12),
+        """{Item:{id:"minecraft:wheat_seeds",count:1},PickupDelay:0s,Motion:[0d,0d,0d]}""",
+    )
+    context.onClient {
+        AutoFarmAutoWalk.enabled = true
+        ModuleAutoFarm.enabled = true
+    }
+
+    try {
+        watched("walking to an item") {
+            awaitPlayer(context, 200, "AutoFarm did not pick up the item") {
+                it.inventory.hasAnyOf(setOf(Items.WHEAT_SEEDS))
+            }
+        }
+    } finally {
+        context.onClient { ModuleAutoFarm.enabled = false }
+    }
+}
+
+private fun GameTestScope.checkFuckerTargets(y: Int) {
+    moveTo(Vec3(33.5, y + 9.0, 0.5))
+    context.onClient {
+        // Anticheats allow no more than the reach of the game
+        ModuleFucker.containedValues.first { it.name == "Range" }.setByString("4.5")
+        FuckerAutoWalk.enabled = true
+        ModuleFucker.enabled = true
+    }
+
+    try {
+        // The bed first, being closer; hitting the egg teleports it away. Fucker aims at what it mines.
+        val acting = { FuckerAutoWalk.isActing || ModuleFucker.hasTarget }
+        watched("walking to the bed", acting) {
+            awaitServer("block 41 ${y + 9} 0 minecraft:air", FUCKER_TICKS)
+            awaitServer("block 42 ${y + 9} 0 minecraft:air", FUCKER_TICKS)
+        }
+        watched("walking to the dragon egg", acting) {
+            awaitServer("block 49 ${y + 9} 0 minecraft:air", FUCKER_TICKS)
+        }
+    } finally {
+        context.onClient { ModuleFucker.enabled = false }
+        fill(BlockPos(30, y - 1, -20), BlockPos(60, y + 14, 20), "minecraft:air replace minecraft:dragon_egg")
+    }
+}
+
+/** Far from the husk, FightBot walks up to it instead of keeping away while the weapon recharges. */
+private fun GameTestScope.checkFightBot(y: Int) {
+    // Peaceful has no husks
+    run("difficulty easy")
+    fill(BlockPos(50, y, 4), BlockPos(50, y, 12), "minecraft:oak_fence")
+    summon("minecraft:husk", BlockPos(56, y, 8), "{NoAI:1b,PersistenceRequired:1b}")
+    moveTo(Vec3(44.5, y.toDouble(), 8.5))
+    context.onClient {
+        // Anticheats allow no more than the reach of the game
+        ModuleKillAura.range.containedValues.first { it.name == "RangeIncrease" }.setByString("0")
+        KillAuraFightBot.enabled = true
+        ModuleKillAura.enabled = true
+    }
+
+    try {
+        awaitHuskHurt(FIGHT_TICKS)
+    } finally {
+        context.onClient { ModuleKillAura.enabled = false }
+        run("kill @e[type=minecraft:husk]")
+    }
+}
+
+/** Runs [block] unhurt and without glancing back. */
+private inline fun GameTestScope.watched(
+    what: String,
+    noinline acting: () -> Boolean = { false },
+    crossinline block: () -> Unit,
+) = unhurt("AutoWalk $what") { TurnWatch.watch(context, "AutoWalk $what", acting) { block() } }

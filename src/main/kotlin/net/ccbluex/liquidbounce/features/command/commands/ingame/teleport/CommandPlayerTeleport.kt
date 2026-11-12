@@ -25,19 +25,14 @@ import net.ccbluex.liquidbounce.features.command.arguments.WorldPlayerArgumentTy
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.client.player.AbstractClientPlayer
-import kotlin.math.floor
+import net.minecraft.util.Mth
 
-/**
- * Teleport Command
- *
- * Allows you to teleport.
- *
- * Settings: [GlobalSettingsTeleport]
- */
+/** Teleports to another player, or with `copy` puts the `.teleport` command to there on the clipboard. */
 object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
+
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("playerteleport", aliases = listOf("playertp", "ptp")) {
             requires { it.isIngame }
@@ -53,21 +48,13 @@ object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
     }
 
     private fun teleportTo(target: AbstractClientPlayer, copy: Boolean) {
-        val y = if (GlobalSettingsTeleport.highTp) {
-            GlobalSettingsTeleport.highTpAmount
-        } else {
-            target.y
-        }
+        val y = if (GlobalSettingsTeleport.highTp) GlobalSettingsTeleport.highTpAmount.toDouble() else target.y
 
         if (copy) {
-            val clipboard = ".teleport ${floor(target.x).toInt()} " +
-                "${floor(y.toDouble()).toInt()} ${floor(target.z).toInt()}"
-
-            mc.keyboardHandler.clipboard = clipboard
-            return
+            mc.keyboardHandler.clipboard = ".teleport ${Mth.floor(target.x)} ${Mth.floor(y)} ${Mth.floor(target.z)}"
+        } else {
+            GlobalSettingsTeleport.teleport(target.x, y, target.z)
         }
-
-        GlobalSettingsTeleport.teleport(target.x, y.toDouble(), target.z)
     }
 
 }

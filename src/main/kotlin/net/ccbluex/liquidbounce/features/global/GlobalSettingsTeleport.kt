@@ -16,20 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.navigation.teleport.teleportPlayer
+import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 
-/**
- * Options of the `.teleport`, `.playerteleport` and `.vclip` commands.
- */
+/** Options of the `.teleport`, `.playerteleport` and `.vclip` commands. */
 object GlobalSettingsTeleport : ValueGroup(name = "Teleport") {
 
     val highTp by boolean("HighTP", false)
@@ -42,11 +40,22 @@ object GlobalSettingsTeleport : ValueGroup(name = "Teleport") {
         teleportPlayer(x, y, z, resetMotion)
 
         chat(regular(
-            translation("liquidbounce.teleport.teleported",
+            translation(
+                "liquidbounce.teleport.teleported",
                 variable(decimalFormat.format(x)),
                 variable(decimalFormat.format(y)),
-                variable(decimalFormat.format(z)))
+                variable(decimalFormat.format(z)),
+            )
         ))
+    }
+
+    fun teleportPlayer(x: Double, y: Double, z: Double, resetMotion: Boolean) {
+        val entity = player.vehicle ?: player
+        entity.absSnapTo(x, y, z)
+
+        if (resetMotion) {
+            entity.deltaMovement = Vec3.ZERO
+        }
     }
 
 }

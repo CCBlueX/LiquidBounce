@@ -31,9 +31,7 @@ import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
-/**
- * Walks to the closest of Fucker's targets while nothing is in range, bridging and tunneling as needed.
- */
+/** Walks to the closest of Fucker's targets while none is in range. */
 object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
     ModuleFucker,
     "AutoWalk",
@@ -54,9 +52,7 @@ object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
         super.onDisabled()
     }
 
-    /**
-     * Finds the targets again after Fucker's target list changed.
-     */
+    /** For when Fucker's target list changed. */
     fun rescan() {
         if (running) {
             ChunkScanner.unsubscribe(TargetTracker)

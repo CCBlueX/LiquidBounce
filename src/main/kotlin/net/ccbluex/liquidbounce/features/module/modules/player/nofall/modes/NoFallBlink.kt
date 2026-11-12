@@ -93,7 +93,7 @@ internal object NoFallBlink : NoFallMode("Blink") {
             simulatedPlayer.tick()
         }
 
-        if (simulatedPlayer.onGround) {
+        if (simulatedPlayer.onGround()) {
             return@handler
         }
 
