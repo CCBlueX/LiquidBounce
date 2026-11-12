@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -100,29 +101,33 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val hand = findFishingRodHand() ?: return@tickHandler
+        findFishingRodHand() ?: return@tickHandler
 
-        tickUntil {
-            caughtFish || activeFishingHook() == null
-        }
+        guarded {
+            val hand by tracked(::findFishingRodHand)
 
-        if (caughtFish) {
-            caughtFish = false
-
-            waitTicks(reelDelay.random())
-            useItem(hand)
-
-            if (RecastRod.enabled) {
-                waitTicks(RecastRod.delay.random())
-                useItem(hand)
+            tickUntil {
+                caughtFish || activeFishingHook() == null
             }
 
-            return@tickHandler
-        }
+            if (caughtFish) {
+                caughtFish = false
 
-        if (AutoCastRod.enabled && activeFishingHook() == null) {
-            waitTicks(AutoCastRod.delay.random())
-            useItem(hand)
+                waitTicks(reelDelay.random())
+                useItem(hand)
+
+                if (RecastRod.enabled) {
+                    waitTicks(RecastRod.delay.random())
+                    useItem(hand)
+                }
+
+                return@guarded
+            }
+
+            if (AutoCastRod.enabled && activeFishingHook() == null) {
+                waitTicks(AutoCastRod.delay.random())
+                useItem(hand)
+            }
         }
     }
 

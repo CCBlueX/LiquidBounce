@@ -25,13 +25,14 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntMaps
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.event.tickConditional
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitFor
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig.loadAutoShopConfig
@@ -96,38 +97,27 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             startMilliseconds = System.currentTimeMillis()
         }
 
-        // wait after opening a shop (before the first click)
-        if (!waitedBeforeTheFirstClick) {
-            tickConditional(startDelay.random()) { !isShopOpen() }
-            waitedBeforeTheFirstClick = true
-        }
-
-        if (!isShopOpen()) {
-            reset()
-            return@tickHandler
-        }
-
-        for (index in currentConfig.elements.indices) {
-            val element = currentConfig.elements[index]
-            val remainingElements = currentConfig.elements.subList(index)
-            var needToBuy = checkElement(element, remainingElements) != null
-            // buy an item
-            while (needToBuy) {
-                canAutoClose = true
-                doClicks(currentConfig.elements.subList(index))
-
-                // check if it's capable of clicking
-                if (!isShopOpen()) {
-                    reset()
-                    return@tickHandler
-                }
-                needToBuy = checkElement(element, remainingElements) != null
+        guarded({ isShopOpen() }) {
+            // wait after opening a shop (before the first click)
+            if (!waitedBeforeTheFirstClick) {
+                waitTicks(startDelay.random())
+                waitedBeforeTheFirstClick = true
             }
-        }
 
-        // close the shop after buying items
-        if (waitedBeforeTheFirstClick && autoClose && canAutoClose) {
-            player.closeContainer()
+            for (index in currentConfig.elements.indices) {
+                val element = currentConfig.elements[index]
+                val remainingElements = currentConfig.elements.subList(index)
+                // buy an item
+                while (checkElement(element, remainingElements) != null) {
+                    canAutoClose = true
+                    doClicks(currentConfig.elements.subList(index))
+                }
+            }
+
+            // close the shop after buying items
+            if (autoClose && canAutoClose) {
+                player.closeContainer()
+            }
         }
         reset()
     }
@@ -139,12 +129,6 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
         // switches an item category to be able to buy an item
         switchCategory(categorySlot)
-
-        // checks if it's capable of clicking
-        // as a shop might get closed during switching the category
-        if (!isShopOpen()) {
-            return
-        }
 
         // buys an item (1 click only)
         if (purchaseMode.activeMode == NormalPurchaseMode) {
@@ -176,8 +160,8 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         prevCategorySlot = nextCategorySlot
-        tickUntil { !isShopOpen() || hasItemCategoryChanged(prevShopStacks) }
-        tickConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
+        tickUntil { hasItemCategoryChanged(prevShopStacks) }
+        waitTicks(extraCategorySwitchDelay.random())
     }
 
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
@@ -197,7 +181,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
         // waits to receive items from a server after clicking before performing the next click
         tickUntil {
-            !isShopOpen() || hasReceivedItems(
+            hasReceivedItems(
                 prevInventory = currentInventory,
                 expectedItems = Object2IntArrayMap(
                     arrayOf(shopElement.item.id, shopElement.price.id),
@@ -214,7 +198,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         // waits extra ticks
-        tickConditional(NormalPurchaseMode.extraDelay.random()) { !isShopOpen() }
+        waitTicks(NormalPurchaseMode.extraDelay.random())
     }
 
     private suspend fun buyAllItemsInCategory(remainingElements: List<ShopElement>) {
@@ -228,7 +212,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
                 return@forEachInt // it looks as if it doesn't require to switch an item category anymore
             }
 
-            delay(QuickPurchaseMode.delayMs.random().milliseconds)
+            waitFor(QuickPurchaseMode.delayMs.random().milliseconds)
 
             interaction.handleContainerInput(
                 (mc.gui.screen() as ContainerScreen).menu.containerId,
@@ -262,12 +246,12 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
         // waits for an inventory update and for an item category update
         tickUntil {
-            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.expectedItems)
-                && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks)))
+            hasReceivedItems(prevInventory, simulationResult.expectedItems)
+                && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks))
         }
 
         // waits extra ticks
-        tickConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
+        waitTicks(extraCategorySwitchDelay.random())
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {

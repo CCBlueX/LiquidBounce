@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
+import net.minecraft.world.phys.Vec3
 
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
@@ -44,5 +45,5 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
  */
 abstract class PointProcessor(parent: EventListener, name: String, enabled: Boolean)
     : ToggleableValueGroup(parent, name, enabled) {
-    abstract fun process(point: PointInsideBox): PointInsideBox
+    abstract fun process(point: PointInsideBox, eyes: Vec3): PointInsideBox
 }

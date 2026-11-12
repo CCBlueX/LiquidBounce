@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
@@ -27,7 +28,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -60,7 +63,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldTellyFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.sneaksAtLedge
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -68,16 +70,18 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.Visibility
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -137,7 +141,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    internal val requiresSight by boolean("RequiresSight", false)
+    internal val visibility by enumChoice("Visibility", Visibility.VISIBLE)
 
     init {
         tree(ScaffoldEagleFeature)
@@ -236,9 +240,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             get() = super.running && ModuleClutch.fall == null
     }
 
-    // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
-    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
+    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 3) { ModuleSafeWalk.safeWalkChoices(it, ::missesNextBlock) }
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
@@ -280,8 +283,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
     private var cooldown = 0
 
-    /** Degrees the view may still be off [aim] for the aim to count as arrived. */
-    private const val SETTLED_AIM = 3f
+    /** The rotation asked for this tick under [NORMAL] timing; null on ticks scaffold asks for none. */
+    private var planned: Rotation? = null
+    private var placing: Job? = null
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
@@ -307,12 +311,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
-    private val ledge by boolean("Ledge", true)
-
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
     private var placementY = 0
-    private var forceSneak = 0
     private var startY = 0
     private var jumps = 0
 
@@ -377,13 +378,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
+        ScaffoldPlacement.reset()
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
-        forceSneak = 0
         currentTarget = null
         aimed = false
         aim = null
+        planned = null
         cooldown = 0
         renderer.clearSilently()
     }
@@ -449,35 +451,41 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         aimed = false
+        planned = null
         if (rotationTiming == NORMAL) {
             val rotation = aimAt(target) ?: return@handler
             aimed = target != null
             aim = rotation
-
-            RotationManager.setRotationTarget(
-                ScaffoldRotationValueGroup.toRotationTarget(
-                    rotation,
-                    considerInventory = considerInventory,
-                    box = target?.takeIf { ModuleClutch.fall != null }?.let(ScaffoldClutchFeature::box),
-                    whenReady = target?.let(::placeWhenReady),
-                ),
-                Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                this@ModuleScaffold,
-            )
+            planned = rotation
+            placing = launchSequence(placing) { placeOnHit() }
         }
     }
 
     /**
-     * Places [target] on the tick the rotation going out clicks it.
+     * Asks for the planned rotation every tick and places the current target on the tick the rotation going out
+     * clicks it.
      */
-    private fun placeWhenReady(target: BlockPlacementTarget) =
-        Readiness({ rotation ->
-            if (target !== currentTarget || cooldown > 0) {
-                null
-            } else {
-                click(target, rotation)?.let { hit -> hit to rotation.normalize() }
+    private suspend fun placeOnHit() {
+        guarded {
+            val rotation by tracked { planned }
+            val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                ScaffoldRotationValueGroup.toRotationTarget(
+                    rotation,
+                    considerInventory = considerInventory,
+                    surface = currentTarget?.let(::surface),
+                )
+            }) { going ->
+                val target = currentTarget
+                if (target == null || cooldown > 0) {
+                    null
+                } else {
+                    click(target, going)?.let { hit -> Triple(target, hit, going.normalize()) }
+                }
             }
-        }) { (hit, rotation) -> place(target, hit, rotation) }
+
+            place(target, hit, going)
+        }
+    }
 
     private fun click(target: BlockPlacementTarget?, rotation: Rotation) =
         crosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
@@ -499,6 +507,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         ModuleClutch.fall != null -> target?.rotation
         expanding -> ScaffoldExpandFeature.rotation(target)
         else -> ScaffoldPlacement.rotation(target)
+    }
+
+    /** What a look has to meet to place [target], see [crosshairTarget]; nothing for the exact GodBridge look. */
+    private fun surface(target: BlockPlacementTarget): Surface? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.surface(target) ?: ScaffoldPlacement.surface(target)
+        expanding -> ScaffoldExpandFeature.surface(target)
+        ScaffoldPlacement.holdsGodBridgeLook -> null
+        else -> ScaffoldPlacement.surface(target)
     }
 
     /** The hit a click with [rotation] places [target] with, if it does. */
@@ -560,15 +576,23 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     var currentOptimalLine: Line? = null
         private set
+
+    /** The movement the player asks for, before [ScaffoldStabilizeMovementFeature] steers it towards the line. */
     var rawInput = DirectionalInput.NONE
         private set
+
+    @Suppress("unused")
+    private val rawInputHandler = handler<MovementInputEvent>(
+        priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
+    ) { event ->
+        rawInput = event.directionalInput
+    }
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.MODEL_STATE
     ) { event ->
         this.currentOptimalLine = null
-        this.rawInput = event.directionalInput
 
         val currentInput = event.directionalInput
 
@@ -579,28 +603,20 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
     }
 
-    @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(
-        // Runs after the model state
-        priority = EventPriorityConvention.SAFETY_FEATURE
-    ) { event ->
-        if (forceSneak > 0) {
-            event.sneak = true
-            forceSneak--
+    /**
+     * Whether an edge has to stop the player: no blocks left, or the view doesn't put the next block down before the
+     * player walks off.
+     */
+    private fun missesNextBlock(): Boolean {
+        val target = currentTarget
+        if (blockCount <= 0 || target == null) {
+            return true
         }
-
-        // Ledge feature - AutoSneak
-        if (ledge) {
-            val view = RotationManager.currentRotation ?: player.rotation
-            // A block is still owed and the view has not come round to it yet
-            val turning = aimed && currentTarget != null &&
-                aim?.let { view.directionAngleTo(it) > SETTLED_AIM } == true
-
-            if (sneaksAtLedge(turning) && forceSneak < 1) {
-                event.sneak = true
-                forceSneak = 1
-            }
+        val view = RotationManager.currentRotation ?: player.rotation
+        if (click(target, view) != null) {
+            return false
         }
+        return ModuleClutch.fall != null || expanding || !ScaffoldPlacement.placesInTime(target, view)
     }
 
     @Suppress("unused")
@@ -651,7 +667,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             )
         }
 
-        // An aimed target goes down once the rotation hits it, see placeWhenReady
+        // An aimed target goes down once the rotation hits it, see placeOnHit
         if (target == null || aimed || cooldown > 0) {
             return@handler
         }

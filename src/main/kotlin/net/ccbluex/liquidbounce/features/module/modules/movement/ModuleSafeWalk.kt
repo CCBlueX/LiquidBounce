@@ -52,26 +52,55 @@ import kotlin.math.min
 object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     @Suppress("UnusedPrivateProperty")
-    private val modes = choices("Mode", 1, ::safeWalkChoices) // Default safe mode
+    private val modes = choices("Mode", 1) { safeWalkChoices(it) } // Default safe mode
 
-    fun safeWalkChoices(mode: ModeValueGroup<Mode>): Array<Mode> {
+    /**
+     * [stops] tells the modes whether an edge has to stop the player at all, Scaffold says no while it places the
+     * next block in time.
+     */
+    fun safeWalkChoices(mode: ModeValueGroup<Mode>, stops: () -> Boolean = { true }): Array<Mode> {
         return arrayOf(
             NoneMode(mode),
-            Safe(mode),
-            OnEdge(mode)
+            Safe(mode, stops),
+            OnEdge(mode, stops),
+            Sneak(mode, stops),
         )
     }
 
-    private class Safe(override val parent: ModeValueGroup<Mode>) : Mode("Safe") {
+    private class Safe(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Safe") {
 
         @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
-            event.isSafeWalk = true
+            event.isSafeWalk = stops()
         }
 
     }
 
-    private class OnEdge(override val parent: ModeValueGroup<Mode>) : Mode("OnEdge") {
+    /**
+     * Sneaks at an edge. Anticheats simulate that, while [Safe] holds the player back without sneaking.
+     */
+    private class Sneak(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Sneak") {
+
+        private var sneaked = false
+
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+            val sneaks = player.onGround() && player.isCloseToEdge(event.directionalInput) && stops()
+            // One tick longer, so it doesn't stand up on the edge it just stopped at
+            if (sneaks || sneaked) {
+                event.sneak = true
+            }
+            sneaked = sneaks
+        }
+
+        override fun disable() {
+            sneaked = false
+            super.disable()
+        }
+
+    }
+
+    private class OnEdge(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("OnEdge") {
 
         private val edgeDistance = floatRange("Distance", 0.1f..0.15f, 0.05f..0.5f).asRefreshable()
         private var center: Vec3? = null
@@ -100,7 +129,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            val shouldBeActive = player.onGround() && !event.sneak
+            val shouldBeActive = player.onGround() && !event.sneak && stops()
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,

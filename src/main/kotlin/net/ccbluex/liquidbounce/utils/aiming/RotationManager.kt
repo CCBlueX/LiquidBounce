@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
@@ -84,6 +85,11 @@ import kotlin.math.roundToInt
 object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     private val rotationTargetHandler = RequestHandler<RotationTarget>()
+
+    /**
+     * The modules waiting in [lookAt] for the view.
+     */
+    internal val looks = Looks()
 
     /** The targets of this tick, most important first. */
     private val requests = ArrayList<RotationTarget>()
@@ -206,10 +212,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: EventListener,
-        whenReady: Readiness<*>? = null
+        surface: Surface? = null,
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
-            rotation, considerInventory = considerInventory, whenReady = whenReady
+            rotation, considerInventory = considerInventory, surface = surface
         ), priority, provider)
     }
 
@@ -318,9 +324,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         }
 
         previousRotationTarget = target
-        for (request in requests) {
-            request.whenReady?.offer(next, request)
-        }
+        looks.offer(next, requests)
     }
 
     private fun aimGoal(
@@ -331,10 +335,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         step: Float,
     ): AimGoal {
         val owner = yawTarget.takeIf { it === pitchTarget }
-        val box = owner?.hitBox
-        if (box != null) {
+        val surface = owner?.hitSurface
+        if (surface != null) {
             val eyes = player.eyePosition
-            return boxGoal(goal, eyes, box, eyes.hits(view, box, inSight = owner.entity != null), owner.entity)
+            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view), owner.entity)
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
@@ -345,27 +349,21 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     }
 
     /**
-     * [goal] on [box], with the yaw and pitch extents of the box as seen from [eyes].
+     * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
      */
-    private fun boxGoal(goal: Rotation, eyes: Vec3, box: AABB, reached: Boolean, entity: Entity?): AimGoal {
-        if (box.contains(eyes)) {
+    private fun surfaceGoal(goal: Rotation, eyes: Vec3, surface: Surface, reached: Boolean, entity: Entity?): AimGoal {
+        if (surface.box.contains(eyes)) {
             return AimGoal(goal, 180f, 180f, reached, entity)
         }
 
-        val center = Rotation.lookingAt(box.center, eyes)
-        var minYaw = 0f
-        var maxYaw = 0f
-        var minPitch = center.pitch
-        var maxPitch = center.pitch
-        for (corner in 0 until 8) {
-            val rotation = Rotation.lookingAt(
-                Vec3(
-                    if (corner and 1 == 0) box.minX else box.maxX,
-                    if (corner and 2 == 0) box.minY else box.maxY,
-                    if (corner and 4 == 0) box.minZ else box.maxZ,
-                ),
-                eyes,
-            )
+        val corners = surface.corners
+        val center = Rotation.lookingAt(corners.fold(Vec3.ZERO, Vec3::add).scale(1.0 / corners.size), eyes)
+        var minYaw = Float.POSITIVE_INFINITY
+        var maxYaw = Float.NEGATIVE_INFINITY
+        var minPitch = Float.POSITIVE_INFINITY
+        var maxPitch = Float.NEGATIVE_INFINITY
+        for (corner in corners) {
+            val rotation = Rotation.lookingAt(corner, eyes)
             val yaw = angleDifference(rotation.yaw, center.yaw)
             minYaw = min(minYaw, yaw)
             maxYaw = max(maxYaw, yaw)
@@ -454,7 +452,17 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         priority = FIRST_PRIORITY
     ) { event ->
         EventManager.callEvent(RotationUpdateEvent)
+        looks.request(::setRotationTarget)
         update()
+    }
+
+    /**
+     * Resumes the modules whose look was met this tick: after every other first handler, such as the clicker planning
+     * this tick's clicks, and before modules tick and the movement packet goes out.
+     */
+    @Suppress("unused")
+    private val lookHandler = handler<GameTickEvent>(priority = (FIRST_PRIORITY - 1).toShort()) {
+        looks.settle()
     }
 
     /**

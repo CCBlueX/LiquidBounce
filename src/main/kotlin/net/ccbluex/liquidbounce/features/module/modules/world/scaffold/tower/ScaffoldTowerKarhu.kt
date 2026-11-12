@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -40,17 +41,22 @@ object ScaffoldTowerKarhu : ScaffoldTower("Karhu-2024-05-10", aliases = listOf("
             return@sequenceHandler
         }
 
-        tickUntil { !player.onGround() }
-        Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
+        guarded {
+            // Belongs to this jump of this player only
+            same { player }
+            tickUntil { !player.onGround() }
+            guard { !player.onGround() }
+            Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
 
-        if (pulldown) {
-            tickUntil { !player.onGround() && player.deltaMovement.y < triggerMotion }
+            if (pulldown) {
+                tickUntil { !player.onGround() && player.deltaMovement.y < triggerMotion }
 
-            if (!isBlockBelow) {
-                return@sequenceHandler
+                if (!isBlockBelow) {
+                    return@guarded
+                }
+
+                player.deltaMovement.y -= 1f
             }
-
-            player.deltaMovement.y -= 1f
         }
     }
 

@@ -16,22 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
+package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
+import java.util.function.BooleanSupplier
 
 /**
- * Whether the player waits at the edge, sneaking, because it has no blocks or is still [turning] towards the block it
- * owes.
+ * A [Ticker] advanced by hand, put into a coroutine context in place of [CoroutineTicker].
  */
-fun sneaksAtLedge(turning: Boolean): Boolean {
-    if (!player.isCloseToEdge()) {
-        return false
+internal class ManualTicker : Ticker {
+    private val runningList = ReferenceArrayList<BooleanSupplier>()
+    private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    val taskCount: Int
+        get() = runningList.size + pendingList.size
+
+    override fun register(task: BooleanSupplier) {
+        pendingList.add(task)
     }
 
-    ModuleScaffold.debugParameter("Turning") { turning }
-    return ModuleScaffold.blockCount <= 0 || turning
+    override fun tick() {
+        runningList.addAll(pendingList)
+        pendingList.clear()
+        runningList.removeIf { it.asBoolean }
+    }
+
+    fun tick(times: Int) = repeat(times) { tick() }
 }

@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.FailedClick
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
@@ -74,9 +75,15 @@ object ScaffoldExpandFeature : ToggleableValueGroup(ModuleScaffold, "Expand", fa
         return Rotation.lookingAt(point = blockCenter, from = player.eyePosition)
     }
 
-    // Expanding must be able to place behind blocks, so a non-visible hit result is allowed
-    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        target?.verifyClick(rotation, onFailure = FailedClick.PLANNED_HIT)
+    /** What a look has to meet to place [target]: the space it fills, seen through whatever is in front of it. */
+    fun surface(target: BlockPlacementTarget) = Surface(AABB(target.placedBlock), throughWalls = true)
+
+    /** A block ahead is behind others, so the planned hit stands in once the look meets [surface]. */
+    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+        target ?: return null
+        return target.verifyClick(rotation)
+            ?: target.blockHitResult.takeIf { surface(target).isHitBy(player.eyePosition, rotation) }
+    }
 
     private fun expandPos(position: Vec3, expand: Int, yaw: Float = player.yRot) = position.toBlockPos().offset(
         (-sin(yaw.toRadians()) * expand).toInt(),

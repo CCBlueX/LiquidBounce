@@ -18,14 +18,11 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
-import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
@@ -40,34 +37,11 @@ class CoroutineTickerTest {
         assertTrue(actual === expected || actual?.cause === expected, "The original failure was not delivered")
     }
 
-    private class CoroutineTickerImpl : Ticker {
-        private val runningList = ReferenceArrayList<BooleanSupplier>()
-        private val pendingList = ReferenceArrayList<BooleanSupplier>()
-
-        val taskCount: Int
-            get() = runningList.size + pendingList.size
-
-        override fun register(task: BooleanSupplier) {
-            pendingList.add(task)
-        }
-
-        override fun tick() {
-            runningList.addAll(pendingList)
-            pendingList.clear()
-            runningList.removeIf { it.asBoolean }
-        }
-    }
-
-    private fun ticker() = CoroutineTickerImpl()
-
-    private suspend fun Ticker.tickUntil(stopAt: IntPredicate): Int =
-        suspendCancellableCoroutine { continuation ->
-            register(TickUntilCallback(continuation, stopAt))
-        }
+    private fun ticker() = ManualTicker()
 
     private fun CoroutineScope.waiter(ticker: Ticker, stopAt: IntPredicate): Deferred<Result<Int>> =
-        async(start = CoroutineStart.UNDISPATCHED) {
-            runCatching { ticker.tickUntil(stopAt) }
+        async(ticker, start = CoroutineStart.UNDISPATCHED) {
+            runCatching { tickUntil(stopAt) }
         }
 
     @Test
@@ -169,10 +143,10 @@ class CoroutineTickerTest {
         val ticker = ticker()
         var cleanedUp = false
         val failure = IllegalStateException("failed")
-        val result = async(start = CoroutineStart.UNDISPATCHED) {
+        val result = async(ticker, start = CoroutineStart.UNDISPATCHED) {
             runCatching {
                 try {
-                    ticker.tickUntil { throw failure }
+                    tickUntil { throw failure }
                 } finally {
                     cleanedUp = true
                 }

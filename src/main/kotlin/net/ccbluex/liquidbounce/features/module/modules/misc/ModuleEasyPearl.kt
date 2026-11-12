@@ -18,12 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.onInterrupted
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FontManager
@@ -36,10 +39,9 @@ import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -75,7 +77,10 @@ object ModuleEasyPearl :
     private val showDistance by boolean("ShowDistance", true)
 
     private var targetPosition: Vec3? = null
-    private var ready: Rotation? = null
+
+    /** The rotation that throws at [targetPosition], planned once per tick. */
+    private var planned: Rotation? = null
+    private var throwing: Job? = null
 
     private val fontRenderer get() = FontManager.FONT_RENDERER
 
@@ -88,7 +93,7 @@ object ModuleEasyPearl :
     override fun onDisabled() {
         currentTargetRotation = null
         targetPosition = null
-        ready = null
+        planned = null
         super.onDisabled()
     }
 
@@ -114,36 +119,28 @@ object ModuleEasyPearl :
 
         // The pearl goes once the rotation towards the target is ready
         targetPosition = hitResult.location
+        planned = getTargetRotation(hitResult.location)
         event.cancelEvent()
+        throwing = launchSequence(throwing) { throwPearl() }
     }
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
-        val finalTargetRotation = getTargetRotation(targetPosition ?: return@handler) ?: return@handler
-        currentTargetRotation = finalTargetRotation
-
-        RotationManager.setRotationTarget(
-            rotation.toRotationTarget(
-                finalTargetRotation,
-                tolerance = aimOffThreshold,
-                whenReady = Readiness.reached { ready = it },
-            ),
-            Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            this@ModuleEasyPearl,
-        )
+        planned = targetPosition?.let(::getTargetRotation)?.also { currentTargetRotation = it }
     }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val ready = ready ?: return@handler
-        this.ready = null
-        if (targetPosition == null) {
-            return@handler
-        }
+    private suspend fun throwPearl() {
+        guarded {
+            guard { targetPosition != null }
+            val aim by tracked { planned }
+            val going = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                rotation.toRotationTarget(aim, tolerance = aimOffThreshold)
+            })
 
-        useHotbarSlotOrOffhand(enderPearlSlot ?: return@handler, 0, ready.yaw, ready.pitch)
-        targetPosition = null
-        currentTargetRotation = null
+            useHotbarSlotOrOffhand(enderPearlSlot ?: return@guarded, 0, going.yaw, going.pitch)
+            targetPosition = null
+            currentTargetRotation = null
+        }.onInterrupted { targetPosition = null }
     }
 
     /**

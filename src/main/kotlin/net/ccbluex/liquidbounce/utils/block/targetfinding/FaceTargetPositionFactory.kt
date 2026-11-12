@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.VisibilityPredicate
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -136,6 +137,24 @@ object NearestRotationTargetPositionFactory : FaceTargetPositionFactory {
 
         return pointOnFace
     }
+}
+
+/**
+ * The point on the face nearest to the line [look] makes from the eyes: where that look meets the face, if it does.
+ * A look that stays the same while the player moves along keeps meeting the faces of a row at the same spot.
+ */
+class DirectionTargetPositionFactory(private val look: Rotation) : FaceTargetPositionFactory {
+
+    override fun producePositionOnFace(
+        face: AlignedFace,
+        targetPos: BlockPos,
+        playerLocation: PlayerLocationOnPlacement
+    ): Vec3 = NearestRotationTargetPositionFactory.aimAtNearestPointToRotationLine(
+        targetPos,
+        trimFace(face),
+        playerLocation.copy(rotation = look),
+    )
+
 }
 
 /**

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.gametest.server
 
-import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.query
 import net.ccbluex.gametest.harness.action.setBlock
@@ -59,7 +58,7 @@ class HarnessGameTest : LiquidBounceGameTest({
 
     // An anticheat catches a jump five blocks up; Paper alone only a move too fast for anything but a teleport. Some
     // anticheats check only a player that moves, and one standing still sends no positions for a while.
-    val height = if (anticheats.singleOrNull() == Anticheat.VANILLA) 20 else 5
+    val height = if (paperOnly) 20 else 5
     input.holdKey { options -> options.keyUp }
     ticks(10)
     expectViolation("the server to catch a move $height blocks up") {

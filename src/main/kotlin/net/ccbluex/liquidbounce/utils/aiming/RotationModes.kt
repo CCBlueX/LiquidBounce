@@ -21,9 +21,15 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.waitMatches
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -50,9 +56,24 @@ sealed class RotationMode(
     val instant by boolean("Instant", false)
 
     /**
-     * Turns to [rotation] and runs [onFinished] once [isFinished] holds for the rotation the action goes out with.
+     * Turns to the rotation [plan] gives on each tick, aimed at [surface], and suspends until the action may go out.
+     * Returns what [hit] makes of the rotation it goes out with, or null when this mode acts without one that hits.
      */
-    abstract fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable)
+    abstract suspend fun <T : Any> look(plan: () -> Rotation, surface: Surface?, hit: (Rotation) -> T?): T?
+
+    /**
+     * Waits for the movement packet when [postMove] is set and nothing else rotates, else for the next tick.
+     */
+    protected suspend fun afterMovementPacket() {
+        if (postMove) {
+            eventListener.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
+            if (RotationManager.currentRotation == null) {
+                return
+            }
+        }
+
+        waitTicks(1)
+    }
 
     override val parent: ModeValueGroup<*>
         get() = modeValueGroup
@@ -72,37 +93,24 @@ class NormalRotationMode(
     val rotations = tree(RotationsValueGroup(this))
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+    override suspend fun <T : Any> look(plan: () -> Rotation, surface: Surface?, hit: (Rotation) -> T?): T? {
+        fun target() = rotations.toRotationTarget(plan(), considerInventory = !ignoreOpenInventory, surface = surface)
+
         // Sent at once, so the server judges it with the rotation it already has
-        if (instant && isFinished(RotationManager.serverRotation)) {
-            onFinished.run()
-            if (aimAfterInstantAction) {
-                mc.execute {
-                    RotationManager.setRotationTarget(
-                        rotation,
-                        !ignoreOpenInventory,
-                        rotations,
-                        priority,
-                        eventListener
-                    )
+        if (instant) {
+            hit(RotationManager.serverRotation)?.let { found ->
+                if (aimAfterInstantAction) {
+                    RotationManager.setRotationTarget(target(), priority, eventListener)
                 }
+                return found
             }
-
-            return
         }
 
-        mc.execute {
-            RotationManager.setRotationTarget(
-                rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                provider = eventListener,
-                priority = priority,
-                whenReady = Readiness({ next -> next.takeIf(isFinished) }, {
-                    PostRotationExecutor.addTask(eventListener, postMove, task = onFinished, priority = true)
-                })
-            )
+        val found = eventListener.lookAt(priority, ::target) { going -> hit(going) }
+        if (postMove) {
+            eventListener.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
         }
+        return found
     }
 
 }
@@ -112,53 +120,40 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
 
     val send by boolean("SendRotationPacket", false)
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
-        fun task() {
-            if (send) {
-                val fixedRotation = rotation.normalize()
-                network.send(
-                    ServerboundMovePlayerPacket.Rot(
-                        fixedRotation.yaw, fixedRotation.pitch, player.onGround(),
-                        player.horizontalCollision
-                    )
+    override suspend fun <T : Any> look(plan: () -> Rotation, surface: Surface?, hit: (Rotation) -> T?): T? {
+        if (!instant) {
+            afterMovementPacket()
+        }
+
+        val rotation = plan()
+        if (send) {
+            val fixedRotation = rotation.normalize()
+            network.send(
+                ServerboundMovePlayerPacket.Rot(
+                    fixedRotation.yaw, fixedRotation.pitch, player.onGround(),
+                    player.horizontalCollision
                 )
-            }
-
-            onFinished.run()
+            )
         }
 
-        if (instant) {
-            task()
-            return
-        }
-
-        PostRotationExecutor.addTask(eventListener, postMove) { task() }
+        return hit(rotation)
     }
 
 }
 
 /**
- * Never rotates. The action only runs when [isFinished] holds for the rotation the player already has, so the
+ * Never rotates. The action only goes out when [look]'s hit holds for the rotation the player already has, so the
  * player's own crosshair decides what gets hit.
  */
 class CrosshairRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener: EventListener)
     : RotationMode("Crosshair", modeValueGroup, eventListener) {
 
-    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
-        fun task() {
-            if (isFinished(player.rotation)) {
-                onFinished.run()
-            }
+    override suspend fun <T : Any> look(plan: () -> Rotation, surface: Surface?, hit: (Rotation) -> T?): T? {
+        if (!instant) {
+            afterMovementPacket()
         }
 
-        if (instant) {
-            task()
-            return
-        }
-
-        PostRotationExecutor.addTask(eventListener, postMove) { task() }
+        return hit(player.rotation)
     }
 
 }
-
-

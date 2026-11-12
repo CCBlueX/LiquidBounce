@@ -18,21 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickConditional
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.onInterrupted
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.aiming.Readiness
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -65,6 +65,9 @@ private const val LANDING_TOLERANCE = 1.0
 
 /** Degrees the throw may be off the simulated rotation. */
 private const val AIM_TOLERANCE = 1f
+
+/** Ticks the throw waits for the rotation before giving up. */
+private const val AIM_TICKS = 20
 
 /**
  * Auto pearl module
@@ -99,7 +102,7 @@ object ModuleAutoPearl : ClientModule(
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     private val queue = ArrayDeque<Rotation>()
-    private var ready: Rotation? = null
+    private var throwing: Job? = null
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
@@ -124,45 +127,38 @@ object ModuleAutoPearl : ClientModule(
     }
 
     @Suppress("unused")
-    private val simulatedTickHandler = sequenceHandler<RotationUpdateEvent> {
-        val rotation = queue.firstOrNull() ?: return@sequenceHandler
-
-        CombatManager.pauseCombatForAtLeast(combatPauseTime)
-        if (Rotate.enabled) {
-            RotationManager.setRotationTarget(
-                Rotate.rotations.toRotationTarget(
-                    rotation,
-                    tolerance = AIM_TOLERANCE,
-                    whenReady = Readiness.reached { ready = it },
-                ),
-                Priority.IMPORTANT_FOR_USAGE_3,
-                this@ModuleAutoPearl
-            )
+    private val combatPauseHandler = handler<RotationUpdateEvent> {
+        if (queue.isNotEmpty()) {
+            CombatManager.pauseCombatForAtLeast(combatPauseTime)
         }
     }
 
-    @Suppress("unused")
-    private val gameTickHandler = tickHandler {
-        val rotation = queue.firstOrNull() ?: return@tickHandler
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
-        if (itemSlot == null) {
+    private suspend fun throwQueued() {
+        val rotation = queue.firstOrNull() ?: return
+        if (Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) == null) {
             queue.removeFirst()
-            return@tickHandler
+            return
         }
 
-        if (!Rotate.enabled) {
-            queue.removeFirst()
-            val (yaw, pitch) = rotation.normalize()
+        guarded {
+            val itemSlot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
+
+            if (!Rotate.enabled) {
+                CombatManager.pauseCombatForAtLeast(combatPauseTime)
+                queue.removeFirst()
+                val (yaw, pitch) = rotation.normalize()
+                useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+                return@guarded
+            }
+
+            val until = player.tickCount + AIM_TICKS
+            guard { player.tickCount <= until }
+            val (yaw, pitch) = lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
+                Rotate.rotations.toRotationTarget(rotation, tolerance = AIM_TOLERANCE)
+            })
+            queue.removeFirstOrNull()
             useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
-            return@tickHandler
-        }
-
-        // The rotation update keeps aiming at the head of the queue until it is ready
-        tickConditional(20) { ready != null }
-        queue.removeFirstOrNull()
-        val (yaw, pitch) = ready ?: return@tickHandler
-        ready = null
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+        }.onInterrupted { queue.removeFirstOrNull() }
     }
 
     private fun proceedPearl(
@@ -192,6 +188,7 @@ object ModuleAutoPearl : ClientModule(
 
         if (queue.isEmpty()) {
             queue.add(aim.rotation)
+            throwing = launchSequence(throwing) { throwQueued() }
         }
     }
 
@@ -277,7 +274,6 @@ object ModuleAutoPearl : ClientModule(
 
     override fun onDisabled() {
         queue.clear()
-        ready = null
     }
 
     private enum class Modes(override val tag: String) : Tagged {

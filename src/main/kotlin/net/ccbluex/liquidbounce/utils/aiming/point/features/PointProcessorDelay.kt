@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
+import net.minecraft.world.phys.Vec3
 
 /**
  * Lazy Point allows you to set a threshold when the point is going to be updated.
@@ -41,7 +42,7 @@ internal class PointProcessorDelay(parent: EventListener) : PointProcessor(paren
     private var currentDelay: Int = delay.random()
     private var currentPoint: PointInsideBox? = null
 
-    override fun process(point: PointInsideBox): PointInsideBox {
+    override fun process(point: PointInsideBox, eyes: Vec3): PointInsideBox {
         if (point == currentPoint) {
             return point
         }
