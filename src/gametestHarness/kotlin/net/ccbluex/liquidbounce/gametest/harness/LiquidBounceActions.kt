@@ -31,5 +31,20 @@ fun GameTestScope.disable(module: ClientModule) = client { module.enabled = fals
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> ValueGroup.setting(name: String) = containedValues.first { it.name == name } as Value<T>
 
+/**
+ * Sets values of [group] by name on the client thread. A text sets a value that holds something else the way a
+ * config does, such as a mode by its name.
+ */
+fun GameTestScope.configure(group: ValueGroup, vararg values: Pair<String, Any>) = client {
+    for ((name, value) in values) {
+        val setting = group.setting<Any>(name)
+        if (value is String && setting.get() !is String) {
+            setting.setByString(value)
+        } else {
+            setting.set(value)
+        }
+    }
+}
+
 /** Runs a `.command` of the client; it never reaches the server. */
 fun GameTestScope.command(line: String) = client { CommandManager.execute(line) }

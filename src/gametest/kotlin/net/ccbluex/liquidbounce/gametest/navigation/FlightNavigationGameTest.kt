@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
@@ -50,7 +49,7 @@ class FlightNavigationGameTest : LiquidBounceGameTest({
 
         checkElytra(y)
         // The Vanilla mode of Fly is plain flying, which only Paper's own checks let through
-        if (anticheats.singleOrNull() == Anticheat.VANILLA) {
+        if (paperOnly) {
             checkFlyModule(y)
         }
         // Last, as a creative player who stops flying in mid-air falls in a way not every anticheat follows
