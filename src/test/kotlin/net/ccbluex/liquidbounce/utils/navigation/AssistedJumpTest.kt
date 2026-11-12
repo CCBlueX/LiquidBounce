@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
 import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
@@ -51,6 +52,8 @@ class AssistedJumpTest {
         private const val TICKS_PER_BLOCK = 60
         private const val MAX_JUMP_TICKS = 40
         private const val LANDING_TOLERANCE = 0.3
+        private const val MAX_RUN_TICKS = 200
+        private const val TRACE_TOLERANCE = 1.0E-3
     }
 
     /**
@@ -226,10 +229,10 @@ class AssistedJumpTest {
         val held = LeapInput(1, 0, jump = false, sprint = true)
 
         assisted.tick(state, 0f, 0f, held, MAX_ANGLE, jumps, targets)
-        assisted.trace(state, 0f, jumps)
+        assisted.trace(state, 0f, 0f, MAX_ANGLE, jumps, targets)
         val target = assertNotNull(assisted.target)
-        val path = ArrayList(assisted.path)
-        val takeoff = assisted.takeoff
+        val path = ArrayList(assisted.arcs.first().path)
+        val takeoff = assisted.arcs.first().takeoff
         assertTrue(takeoff >= 0, "the jump starts on the ground")
 
         var yaw = 0f
@@ -252,6 +255,71 @@ class AssistedJumpTest {
         assertEquals(0.0, ground.distanceTo(path[takeoff]), 1.0E-6, "take-off spot")
         assertTrue(state.standsOn(3, 20, 7), "lands on the target, at ${state.position}")
         assertTrue(path.last().distanceTo(state.position) < LANDING_TOLERANCE, "predicted landing ${path.last()}")
+    }
+
+    @Test
+    fun `the traced landing of a jump is where the player comes down`() {
+        val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
+        val (traced, landed) = tracedAndLanded(world, TestWorld.feet(3, 20, 4).add(0.0, 0.0, -0.3), heading = 0f)
+
+        assertEquals(1, traced.size, "arcs")
+        assertLandsAsTraced(traced, landed)
+    }
+
+    @Test
+    fun `the traced landing on slime and the jump off its bounce are where the player comes down`() {
+        val world = TestWorld().fill(-3, 6, 0, -1, 6, 0)
+        course(world, BlockPos(0, 6, 0), BlockPos(4, 0, 0), BlockPos(8, 3, 0))
+        world.set(4, 0, 0, Blocks.SLIME_BLOCK.defaultBlockState())
+        val heading = Vec3(1.0, 0.0, 0.0).yaw
+        val (traced, landed) = tracedAndLanded(world, TestWorld.feet(-2, 7, 0), heading)
+
+        assertEquals(2, traced.size, "arcs")
+        assertLandsAsTraced(traced, landed)
+    }
+
+    /**
+     * Where the arcs the assist traces first come down, and where the run it then makes from [start] comes down, one
+     * landing per arc, holding forward towards [heading] and turning as ModuleParkour turns the player.
+     */
+    private fun tracedAndLanded(world: TestWorld, start: Vec3, heading: Float): Pair<List<Vec3>, List<Vec3>> {
+        val terrain = world.terrain()
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val targets = JumpTargets(terrain)
+        val assisted = AssistedJump()
+        val state = PlayerMotion(terrain)
+        state.reset(start, PlayerMotion.RESTING, onGround = true)
+        val held = LeapInput(1, 0, jump = false, sprint = true)
+        var traced = emptyList<Vec3>()
+        val landed = ArrayList<Vec3>()
+        var aimYaw = Float.NaN
+
+        for (tick in 0 until MAX_RUN_TICKS) {
+            val yaw = if (aimYaw.isNaN()) heading else aimYaw
+            val keys = assisted.tick(state, yaw, heading, held, MAX_ANGLE, jumps, targets) ?: held
+            if (traced.isEmpty() && assisted.target != null) {
+                assisted.trace(state, yaw, heading, MAX_ANGLE, jumps, targets)
+                traced = assisted.arcs.map { it.path.last() }
+            }
+            val inAir = !state.onGround
+            state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+            if (traced.isNotEmpty() && inAir && state.onGround) {
+                landed += state.position
+            }
+            if (traced.isNotEmpty() && landed.size >= traced.size) {
+                break
+            }
+            val turn = assisted.aimYaw(state.position, state.deltaMovement, state.onGround)
+            aimYaw = if (assisted.target == null) Float.NaN else turn.ifNaN { aimYaw }
+        }
+        return traced to landed
+    }
+
+    private fun assertLandsAsTraced(traced: List<Vec3>, landed: List<Vec3>) {
+        assertEquals(traced.size, landed.size, "landings, traced $traced")
+        for ((predicted, actual) in traced.zip(landed)) {
+            assertEquals(0.0, predicted.distanceTo(actual), TRACE_TOLERANCE, "traced $predicted, landed $actual")
+        }
     }
 
     /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */

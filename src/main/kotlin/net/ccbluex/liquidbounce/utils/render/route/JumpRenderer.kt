@@ -38,8 +38,8 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * Draws the jump [assisted] goes for: the run to the take-off and the flight, a bar where the jump starts, the block
- * it lands on and a post where to look. Everything is predicted again every tick from where the player is, so it
- * follows the player steering by hand.
+ * it lands on and a post where to look, and the jump after it when the landing bounces on. Everything is predicted
+ * again every tick from where the player is, so it follows the player steering by hand.
  */
 internal class JumpRenderer(
     owner: EventListener,
@@ -55,20 +55,23 @@ internal class JumpRenderer(
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val target = assisted.target ?: return@handler
-        val path = assisted.path
         val noDepthTest = !canBeCovered
 
         event.renderEnvironment {
-            drawLanding(target, path.lastOrNull(), noDepthTest)
             drawAim(target.aim, noDepthTest)
-            if (path.size < 2) {
-                return@renderEnvironment
-            }
+            for (index in assisted.arcs.indices) {
+                val arc = assisted.arcs[index]
+                val path = arc.path
+                drawLanding(arc.target, path.lastOrNull(), noDepthTest)
+                if (path.size < 2) {
+                    continue
+                }
 
-            if (target.step != null) {
-                drawRunUp(path.first(), noDepthTest)
+                if (index == 0 && target.step != null) {
+                    drawRunUp(path.first(), noDepthTest)
+                }
+                drawArc(path, arc.takeoff, noDepthTest)
             }
-            drawArc(path, assisted.takeoff, noDepthTest)
         }
     }
 

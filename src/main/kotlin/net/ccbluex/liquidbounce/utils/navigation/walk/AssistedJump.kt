@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -54,17 +55,76 @@ internal class AssistedJump {
         fun isLanded(position: Vec3, onGround: Boolean) = onGround && abs(position.y - feet) < FEET_PROBE &&
             abs(position.x - pos.x - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH &&
             abs(position.z - pos.z - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH
+
+        /**
+         * The yaw a player at [position], moving by [motion], turns to for the jump, or NaN to hold the one it has:
+         * close to the aim, where the way there turns around once it is passed, past it in the air, and down on the
+         * block until the next tick picks the jump after it.
+         */
+        fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean): Float {
+            val delta = aim.subtract(position)
+            val passed = !onGround && delta.x * motion.x + delta.z * motion.z < 0.0
+            val near = delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE * MIN_AIM_DISTANCE
+            return if (near || passed || isLanded(position, onGround)) Float.NaN else delta.yaw
+        }
+
+        /**
+         * The keys for [state], a player in the air moving with [yaw], that land the furthest inside the block, or
+         * with the most speed when the landing takes off again; sneaking on the tick it lands when it settles.
+         */
+        fun steer(state: PlayerMotion, yaw: Float, jumps: Jumps): LeapInput? {
+            val air = jumps.airKeys(state, yaw, pos, feet, keepSpeed = takesOff) ?: return null
+            val sprint = air.forward > 0
+            val lands = settles && state.copy().apply { tick(yaw, air.forward, air.strafe, false, sprint) }.onGround
+            return LeapInput(air.forward, air.strafe, jump = false, sprint = sprint && !lands, sneak = lands)
+        }
+    }
+
+    /**
+     * A jump of the way [trace] predicts: onto [target], the positions tick for tick in [path], and the index in it of
+     * the last one on the ground before the jump, or -1 when it starts in the air or off a bounce.
+     */
+    class Arc(val target: Target) {
+        val path = ArrayList<Vec3>()
+        var takeoff = -1
+            private set
+
+        /**
+         * Moves [state], moving with [yaw] or towards the aim when null, the way the assist takes it onto [target]:
+         * through the take-off of its jump, then steered and turned as in the air until it comes down. The yaw it
+         * comes down with.
+         */
+        fun follow(state: PlayerMotion, yaw: Float?, jumps: Jumps): Float {
+            path += state.position
+            // Off a bounce the player leaves the ground anyway and steers as in the air.
+            val bounces = state.motionY > 0.0 && !target.jump.jumps
+            if (state.onGround && !bounces) {
+                if (!jumps.takeOff(state, yaw, target.pos, target.feet, target.jump, path)) {
+                    return Float.NaN
+                }
+                takeoff = path.lastIndex - 1
+            }
+
+            var turn = yaw ?: target.aim.subtract(state.position).yaw
+            var ticks = 0
+            do {
+                turn = target.aimYaw(state.position, state.deltaMovement, state.onGround).ifNaN { turn }
+                val keys = target.steer(state, turn, jumps) ?: break
+                state.tick(turn, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+                path += state.position
+            } while (!state.onGround && ++ticks < MAX_AIR_TICKS)
+            return turn
+        }
     }
 
     var target: Target? = null
         private set
 
-    /** The way to [target], tick for tick, as [trace] predicted it: from its run-up when it has one. */
-    val path = ArrayList<Vec3>()
-
-    /** The index in [path] of the last position on the ground before the jump, or -1 when it is not on the way. */
-    var takeoff = -1
-        private set
+    /**
+     * The way to [target] as [trace] predicted it, jump by jump: from its run-up when it has one, and on to the next
+     * block when the landing takes off again.
+     */
+    val arcs = ArrayList<Arc>()
 
     private var leap = Leap()
 
@@ -72,18 +132,9 @@ internal class AssistedJump {
     private var airborne = false
     private var ticksSinceLanding = BRAKE_TICKS
 
-    /**
-     * The yaw a player at [position], moving by [motion], turns to for the jump, or NaN to hold the one it has: close
-     * to the aim, where the way there turns around once it is passed, past it in the air, and down on the target until
-     * the next tick picks the jump after it.
-     */
-    fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean): Float {
-        val target = target ?: return Float.NaN
-        val delta = target.aim.subtract(position)
-        val passed = !onGround && delta.x * motion.x + delta.z * motion.z < 0.0
-        val near = delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE * MIN_AIM_DISTANCE
-        return if (near || passed || target.isLanded(position, onGround)) Float.NaN else delta.yaw
-    }
+    /** [Target.aimYaw] of [target], or NaN without one. */
+    fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean) =
+        target?.aimYaw(position, motion, onGround) ?: Float.NaN
 
     /**
      * The keys for [state], a player moving with [yaw] who holds [keys] towards [heading], that make the jump it
@@ -100,7 +151,7 @@ internal class AssistedJump {
         targets: JumpTargets,
     ): LeapInput? {
         if (!state.onGround) {
-            return steerInAir(state, yaw, jumps)
+            return target?.steer(state, yaw, jumps)
         }
 
         if (airborne) {
@@ -126,50 +177,53 @@ internal class AssistedJump {
         if (state.motionY > 0.0 && !target.jump.jumps) {
             // Off a bounce the player leaves the ground anyway, so this tick steers as in the air.
             airborne = true
-            return steerInAir(state, yaw, jumps)
+            return target.steer(state, yaw, jumps)
         }
         val jumpNow = target.jump.jumps && target.jump.takeoff == 0
         airborne = jumpNow
         return LeapInput(1, 0, jump = jumpNow, sprint = true)
     }
 
-    /** Predicts the way to [target] for [state], a player moving with [yaw], into [path]. */
-    fun trace(state: PlayerMotion, yaw: Float, jumps: Jumps) {
-        val target = target
-        if (target == null) {
-            path.clear()
-            takeoff = -1
+    /**
+     * Predicts the way to [target] into [arcs] for [state], a player moving with [yaw] who heads for [heading], and
+     * from a landing that takes off again on to the block within [maxAngle] of it that the bounce goes for.
+     */
+    @Suppress("LongParameterList")
+    fun trace(
+        state: PlayerMotion,
+        yaw: Float,
+        heading: Float,
+        maxAngle: Float,
+        jumps: Jumps,
+        targets: JumpTargets,
+    ) {
+        arcs.clear()
+        val target = target ?: return
+        val probe = state.copy()
+        val runUp = target.step != null
+        if (runUp) {
+            probe.reset(target.jump.runUp, PlayerMotion.RESTING, onGround = true)
+        }
+        val first = Arc(target)
+        arcs += first
+        val turn = first.follow(probe, yaw.takeUnless { runUp }, jumps)
+        if (!target.takesOff || probe.motionY <= 0.0 || !target.isLanded(probe.position, probe.onGround)) {
             return
         }
 
-        val runUp = target.step?.let {
-            state.copy().apply { reset(target.jump.runUp, PlayerMotion.RESTING, onGround = true) }
-        }
-        val yawNow = if (runUp == null) yaw else null
-        takeoff = jumps.trace(runUp ?: state, yawNow, target.pos, target.feet, target.jump, path)
+        val next = pick(targets, jumps, probe, turn, heading, maxAngle) ?: return
+        arcs += Arc(next).also { it.follow(probe, turn, jumps) }
     }
 
     fun release() {
         target = null
-        path.clear()
+        arcs.clear()
     }
 
     fun reset() {
         release()
         airborne = false
         ticksSinceLanding = BRAKE_TICKS
-    }
-
-    /**
-     * The keys that land the furthest inside the block jumped to, or with the most speed when the landing takes off
-     * again; sneaking on the tick it lands when it settles.
-     */
-    private fun steerInAir(state: PlayerMotion, yaw: Float, jumps: Jumps): LeapInput? {
-        val target = target ?: return null
-        val air = jumps.airKeys(state, yaw, target.pos, target.feet, keepSpeed = target.takesOff) ?: return null
-        val sprint = air.forward > 0
-        val lands = target.settles && state.copy().apply { tick(yaw, air.forward, air.strafe, false, sprint) }.onGround
-        return LeapInput(air.forward, air.strafe, jump = false, sprint = sprint && !lands, sneak = lands)
     }
 
     /** The target being run up to, while the player is still on the block it jumps from and heads for it. */
@@ -205,10 +259,12 @@ internal class AssistedJump {
                 return best
             }
             val jump = jumps.lastFromHere(state, yaw, best.pos, best.feet) ?: return best
-            val landing = jumps.landing(state, yaw, best.pos, best.feet, jump)
-            val leadsOn = landing != null && landing.motionY > 0.0 &&
-                find(targets, jumps, landing, yaw, heading, maxAngle, best.pos, best.feet).best != null
-            return if (leadsOn) Target(best.pos, best.feet, jump, bounces = true, takesOff = true) else best
+            val chained = Target(best.pos, best.feet, jump, bounces = true, takesOff = true)
+            val landing = state.copy()
+            val turn = Arc(chained).follow(landing, yaw, jumps)
+            val leadsOn = chained.isLanded(landing.position, landing.onGround) && landing.motionY > 0.0 &&
+                find(targets, jumps, landing, turn, heading, maxAngle, best.pos, best.feet).best != null
+            return if (leadsOn) chained else best
         }
         return when {
             // Bouncing off slime leaves no run-up.
@@ -329,6 +385,7 @@ internal class AssistedJump {
         const val FEET_PROBE = 1.0E-3
         const val HALF_BLOCK = 0.5
         const val MIN_AIM_DISTANCE = 0.75
+        const val MAX_AIR_TICKS = 60
 
         const val BRAKE_TICKS = 10
         const val BRAKE_LOOKAHEAD = 3
