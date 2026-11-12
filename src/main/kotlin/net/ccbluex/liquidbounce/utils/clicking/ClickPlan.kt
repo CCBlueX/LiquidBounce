@@ -32,7 +32,7 @@ import kotlin.math.abs
  */
 @Suppress("TooManyFunctions")
 class ClickPlan(
-    timing: ClickTiming,
+    private val timing: ClickTiming,
     private val random: Random = Random(),
 ) {
 
@@ -43,14 +43,6 @@ class ClickPlan(
         private const val HISTORY = 32
         private const val NONE = Long.MIN_VALUE
     }
-
-    var timing = timing
-        set(value) {
-            if (field !== value) {
-                field = value
-                replan()
-            }
-        }
 
     var cps = 11..14
         set(value) {
