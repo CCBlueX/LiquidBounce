@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.features.global
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.navigation.teleport.teleportPlayer
+import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 
 /** Options of the `.teleport`, `.playerteleport` and `.vclip` commands. */
@@ -46,6 +47,15 @@ object GlobalSettingsTeleport : ValueGroup(name = "Teleport") {
                 variable(decimalFormat.format(z)),
             )
         ))
+    }
+
+    fun teleportPlayer(x: Double, y: Double, z: Double, resetMotion: Boolean) {
+        val entity = player.vehicle ?: player
+        entity.absSnapTo(x, y, z)
+
+        if (resetMotion) {
+            entity.deltaMovement = Vec3.ZERO
+        }
     }
 
 }

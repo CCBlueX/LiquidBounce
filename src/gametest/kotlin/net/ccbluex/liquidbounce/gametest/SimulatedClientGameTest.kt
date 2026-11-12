@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.network
@@ -36,8 +37,8 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.phys.Vec3
@@ -50,11 +51,9 @@ import net.minecraft.world.phys.Vec3
  * runs off a raised platform with it; a prediction made a few blocks before the edge has to follow the jump tick for
  * tick, where one without modules runs off the edge instead.
  */
-class SimulatedClientGameTest : FabricClientGameTest {
+class SimulatedClientGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             world.server.runCommand("gamemode survival @a")
             world.server.runCommand("attribute @p minecraft:fall_damage_multiplier base set 0")
@@ -122,7 +121,7 @@ class SimulatedClientGameTest : FabricClientGameTest {
         world.server.runCommand("fill $LANE_START $ground ${LANE_Z - 1} 40 $ground ${LANE_Z + 1} stone")
         world.server.runCommand("tp @p $START_X ${ground + 1} $LANE_Z.5 -90 0")
         context.waitTicks(SETTLE_TICKS)
-        val slot = world.server.player { it.inventory.selectedSlot }
+        val slot = world.server.selectedSlot()
 
         val sentInFork = context.fromClient {
             Sender.slot = SENT_SLOT
@@ -134,14 +133,18 @@ class SimulatedClientGameTest : FabricClientGameTest {
         context.waitTicks(SETTLE_TICKS)
 
         check(sentInFork > 0) { "the simulation never asked the module to send" }
-        val slotAfter = world.server.player { it.inventory.selectedSlot }
+        val slotAfter = world.server.selectedSlot()
         check(slotAfter == slot) { "a packet sent $sentInFork times from a simulated client reached the server" }
 
         context.onClient { network.send(ServerboundSetCarriedItemPacket(SENT_SLOT)) }
         context.waitTicks(SETTLE_TICKS)
-        val slotFromRealClient = world.server.player { it.inventory.selectedSlot }
+        val slotFromRealClient = world.server.selectedSlot()
         context.onClient { network.send(ServerboundSetCarriedItemPacket(slot)) }
         check(slotFromRealClient == SENT_SLOT) { "the same packet from the real client did not arrive either" }
+    }
+
+    private fun TestServerContext.selectedSlot() = computeOnServer<Int, RuntimeException> {
+        it.playerList.players.first().inventory.selectedSlot
     }
 
     /**

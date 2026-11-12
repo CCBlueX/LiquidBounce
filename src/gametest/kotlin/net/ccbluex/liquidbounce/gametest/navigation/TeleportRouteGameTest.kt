@@ -19,240 +19,221 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.action.awaitServer
+import net.ccbluex.gametest.harness.action.fill
+import net.ccbluex.gametest.harness.action.summon
+import net.ccbluex.gametest.harness.action.teleport
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
+import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.groundY
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.playerPosition
-import net.ccbluex.liquidbounce.gametest.waitForClient
+import net.ccbluex.liquidbounce.gametest.restoring
+import net.ccbluex.liquidbounce.gametest.serverPosition
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunFinish
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunState
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRun
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Route
+import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Teleport
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
+import net.ccbluex.liquidbounce.utils.navigation.teleport.WaypointSearch
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.phys.Vec3
 
+private const val WAIT_TICKS = 200
+private const val TPAURA_TICKS = 400
+private const val SETTLE_TICKS = 5
+private const val SLOW_STEP = 2.0
+
+private object Owner : EventListener
+
 /**
- * Routes from the teleport engine reach a survival player on the integrated server without setbacks or fall
- * damage, a setback ends a run, and TpAura drives the same engine end to end.
+ * Routes from the teleport engine reach a survival player on the server without setbacks or fall damage, a setback
+ * ends a run, and TpAura drives the same engine end to end.
  */
-@Suppress("TooManyFunctions")
-class TeleportRouteGameTest : FabricClientGameTest {
+class TeleportRouteGameTest : LiquidBounceGameTest({
+    context.restoring(ModuleTpAura) {
+        val y = origin.y
+        buildArena(y)
+        run("gamerule minecraft:natural_health_regeneration false")
+        // Peaceful has no husks
+        run("difficulty easy")
+        moveTo(Vec3(2.5, y.toDouble(), 0.5))
 
-    private object Owner : EventListener
-
-    override fun runTest(context: ClientGameTestContext) {
-        if (!navigationGameTests) {
-            return
-        }
-        context.waitForClient()
-        context.restoring(ModuleTpAura) {
-            context.worldBuilder().create().use { world ->
-                val server = world.server
-                val y = server.groundY()
-                buildArena(server, y)
-                server.runCommand("gamemode survival @a")
-                server.runCommand("gamerule natural_health_regeneration false")
-                moveTo(context, server, Vec3(2.5, y.toDouble(), 0.5))
-
-                checkDirectAndDetour(context, server, y)
-                checkClimbHoldAndUndo(context, server, y)
-                checkSetback(context, server, y)
-                checkOutcomes(context, server, y)
-                checkTpAura(context, server, y)
-
-                check(server.player { it.health } == server.player { it.maxHealth }) { "A route hurt the player" }
-            }
+        unhurt("A route") {
+            checkDirectAndDetour(y)
+            checkClimbHoldAndUndo(y)
+            checkSetback(y)
+            checkOutcomes(y)
+            checkTpAura(y)
         }
     }
+})
 
-    /**
-     * Floor at y - 1 for x 0..40 and z -12..12, a 12 high wall at x 20 for z -8..8, a platform at x 32..36
-     * with its top at y + 5, and a closed cell at 7, y, 9.
-     */
-    private fun buildArena(server: TestServerContext, y: Int) {
-        server.runCommand("fill 0 ${y - 1} -12 40 ${y - 1} 12 stone")
-        server.runCommand("fill 0 $y -12 40 ${y + 14} 12 air")
-        server.runCommand("fill 20 $y -8 20 ${y + 11} 8 stone")
-        server.runCommand("fill 32 $y -3 36 ${y + 4} 3 stone")
-        server.runCommand("fill 6 $y 8 8 ${y + 2} 10 stone")
-        server.runCommand("fill 7 $y 9 7 ${y + 1} 9 air")
+/**
+ * Floor at y - 1 for x 0..40 and z -12..12, a 12 high wall at x 20 for z -8..8, a platform at x 32..36
+ * with its top at y + 5, and a closed cell at 7, y, 9.
+ */
+private fun GameTestScope.buildArena(y: Int) {
+    fill(BlockPos(0, y - 1, -12), BlockPos(40, y - 1, 12), "minecraft:stone")
+    fill(BlockPos(0, y, -12), BlockPos(40, y + 14, 12), "minecraft:air")
+    fill(BlockPos(20, y, -8), BlockPos(20, y + 11, 8), "minecraft:stone")
+    fill(BlockPos(32, y, -3), BlockPos(36, y + 4, 3), "minecraft:stone")
+    fill(BlockPos(6, y, 8), BlockPos(8, y + 2, 10), "minecraft:stone")
+    fill(BlockPos(7, y, 9), BlockPos(7, y + 1, 9), "minecraft:air")
+    awaitServer("block 7 ${y + 1} 9 minecraft:air")
+}
+
+private fun GameTestScope.checkDirectAndDetour(y: Int) {
+    val direct = found(context.route(BlockPos(12, y, 0)))
+    check(direct.points.size == 2) { "Open ground took a detour: ${direct.points}" }
+    arrive(dispatch(direct, Teleport.Finish.LAND), Vec3(12.5, y.toDouble(), 0.5))
+
+    val detour = found(context.route(BlockPos(28, y, 0)))
+    val points = detour.points
+    check(points.size > 2) { "The route went through the wall: $points" }
+    val inWall = points.map(BlockPos::containing).filter { it.x == 20 && it.z in -8..8 }
+    check(inWall.isEmpty()) { "A waypoint is in the wall: $points" }
+    arrive(dispatch(detour, Teleport.Finish.LAND), Vec3(28.5, y.toDouble(), 0.5))
+}
+
+private fun GameTestScope.checkClimbHoldAndUndo(y: Int) {
+    val top = Vec3(34.5, y + 5.0, 0.5)
+    arrive(dispatch(found(context.route(BlockPos(34, y + 5, 0))), Teleport.Finish.LAND), top)
+
+    val below = Vec3(26.5, y.toDouble(), 0.5)
+    val hold = dispatch(found(context.route(BlockPos(26, y, 0))), Teleport.Finish.HOLD)
+    check(hold.state == Teleport.State.DONE) { "The held run ended as ${hold.state}" }
+    awaitServerAt(below, timeout = WAIT_TICKS)
+    check(context.playerPosition().near(top)) { "The client moved with a held run" }
+    check(context.fromClient { TeleportManager.serverPosition?.near(below) == true })
+
+    context.onClient { TeleportManager.undo(Owner) }
+    awaitClient("the undo", WAIT_TICKS) { !TeleportManager.holds(Owner) }
+    awaitServerAt(top, timeout = WAIT_TICKS)
+    ticks(SETTLE_TICKS)
+    check(serverPosition().near(top)) { "The server did not stay where the undo ended" }
+}
+
+private fun GameTestScope.checkSetback(y: Int) {
+    val slow = StepsValueGroup().apply {
+        containedValues.first { it.name == "Length" }.setByString(SLOW_STEP.toString())
+        containedValues.first { it.name == "PerTick" }.setByString("1")
+    }
+    val far = found(context.route(BlockPos(2, y, 0), stepLength = SLOW_STEP))
+    val run = context.fromClient {
+        checkNotNull(TeleportManager.dispatch(Owner, far, Teleport.Finish.LAND, slow))
+    }
+    check(run.ticks > SETTLE_TICKS * 2) { "The slow run is too short to interrupt" }
+
+    ticks(SETTLE_TICKS)
+    val setback = Vec3(30.5, y.toDouble(), -10.5)
+    teleport(BlockPos.containing(setback))
+    awaitClient("the run to end", WAIT_TICKS) { run.state != Teleport.State.ACTIVE }
+
+    check(run.state == Teleport.State.REJECTED) { "A setback ended the run as ${run.state}" }
+    check(context.fromClient { !TeleportManager.holds(Owner) && TeleportManager.serverPosition == null })
+    awaitClient("the client at the setback") { it.player?.position()?.near(setback) == true }
+    ticks(SETTLE_TICKS)
+    check(serverPosition().near(setback)) { "The rejected run kept moving the player" }
+}
+
+private fun GameTestScope.checkOutcomes(y: Int) {
+    moveTo(Vec3(3.5, y.toDouble(), 9.5))
+    check(context.route(BlockPos(3, y, 9)) == RouteResult.AlreadyThere) { "Standing on the goal is no arrival" }
+
+    val enclosed = context.route(BlockPos(7, y, 9), maxLength = 12.0)
+    check((enclosed as? RouteResult.Failed)?.failure == RouteFailure.NO_PATH) { "A closed cell gave $enclosed" }
+
+    val midAir = context.route(BlockPos(5, y + 3, 9))
+    check((midAir as? RouteResult.Failed)?.failure == RouteFailure.INVALID_DESTINATION) { "Mid-air gave $midAir" }
+}
+
+/** TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up. */
+private fun GameTestScope.checkTpAura(y: Int) {
+    checkTpAuraAttack(Vec3(2.5, y.toDouble(), -10.5), BlockPos(16, y, -11))
+
+    fill(BlockPos(26, y, -12), BlockPos(28, y + 13, -10), "minecraft:stone")
+    checkTpAuraAttack(Vec3(27.5, y + 14.0, -10.5), BlockPos(34, y, -11))
+    fill(BlockPos(26, y, -12), BlockPos(28, y + 13, -10), "minecraft:air")
+
+    fill(BlockPos(32, y + 12, -12), BlockPos(36, y + 12, -8), "minecraft:stone")
+    checkTpAuraAttack(Vec3(27.5, y.toDouble(), -10.5), BlockPos(34, y + 13, -11))
+    fill(BlockPos(32, y + 12, -12), BlockPos(36, y + 12, -8), "minecraft:air")
+}
+
+/** Starts TpAura at [origin] until it hits a husk standing at [target], then checks that the player came back. */
+private fun GameTestScope.checkTpAuraAttack(origin: Vec3, target: BlockPos) {
+    moveTo(origin)
+    summon("minecraft:husk", target, "{NoAI:1b,PersistenceRequired:1b}")
+    awaitClient("the husk", WAIT_TICKS) { client ->
+        client.level?.entitiesForRendering()?.any { it is Husk && it.isAlive } == true
     }
 
-    private fun checkDirectAndDetour(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        val direct = found(context.route(BlockPos(12, y, 0)))
-        check(direct.route.points.size == 2) { "Open ground took a detour: ${direct.route.points}" }
-        arrive(context, server, travel(context, direct, RunFinish.LAND), Vec3(12.5, y.toDouble(), 0.5))
+    context.onClient { ModuleTpAura.enabled = true }
+    awaitHuskHurt(TPAURA_TICKS)
 
-        val detour = found(context.route(BlockPos(28, y, 0)))
-        val points = detour.route.points
-        check(points.size > 2) { "The route went through the wall: $points" }
-        val inWall = points.map(BlockPos::containing).filter { it.x == 20 && it.z in -8..8 }
-        check(inWall.isEmpty()) { "A waypoint is in the wall: $points" }
-        arrive(context, server, travel(context, detour, RunFinish.LAND), Vec3(28.5, y.toDouble(), 0.5))
+    context.onClient { ModuleTpAura.enabled = false }
+    awaitClient("TpAura to let go", WAIT_TICKS) {
+        !TeleportManager.holds(ModuleTpAura) && !TeleportManager.isMoving
     }
+    check(context.playerPosition().near(origin)) { "TpAura moved the client from $origin" }
+    awaitServerAt(origin, timeout = WAIT_TICKS)
 
-    private fun checkClimbHoldAndUndo(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        val top = Vec3(34.5, y + 5.0, 0.5)
-        arrive(context, server, travel(context, found(context.route(BlockPos(34, y + 5, 0))), RunFinish.LAND), top)
-
-        val below = Vec3(26.5, y.toDouble(), 0.5)
-        val hold = travel(context, found(context.route(BlockPos(26, y, 0))), RunFinish.HOLD)
-        check(hold.state == RunState.DONE) { "The held run ended as ${hold.state}" }
-        server.waitFor({ it.player().position().near(below) }, WAIT_TICKS)
-        check(context.playerPosition().near(top)) { "The client moved with a held run" }
-        check(context.fromClient { TeleportDispatcher.serverPosition?.near(below) == true })
-
-        context.onClient { TeleportDispatcher.undo(Owner) }
-        context.waitFor({ !TeleportDispatcher.holds(Owner) }, WAIT_TICKS)
-        server.waitFor({ it.player().position().near(top) }, WAIT_TICKS)
-        context.waitTicks(SETTLE_TICKS)
-        check(server.player { it.position() }.near(top)) { "The server did not stay where the undo ended" }
+    run("kill @e[type=minecraft:husk]")
+    awaitClient("the husk gone", WAIT_TICKS) { client ->
+        client.level?.entitiesForRendering()?.none { it is Husk } == true
     }
+}
 
-    private fun checkSetback(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        val slow = TeleportStepSettings().apply {
-            containedValues.first { it.name == "Length" }.setByString(SLOW_STEP.toString())
-            containedValues.first { it.name == "PerTick" }.setByString("1")
-        }
-        val far = found(context.route(BlockPos(2, y, 0), stepLength = SLOW_STEP))
-        val run = context.fromClient {
-            checkNotNull(TeleportDispatcher.dispatch(Owner, far, RunFinish.LAND, slow))
-        }
-        check(run.ticks > SETTLE_TICKS * 2) { "The slow run is too short to interrupt" }
+/** Searches like a module does: over a copy of the world, slice by slice. */
+private fun ClientGameTestContext.route(
+    goal: BlockPos,
+    maxLength: Double = 80.0,
+    stepLength: Double = StepsValueGroup.DEFAULT_STEP_LENGTH,
+): RouteResult<Route> = fromClient { mc ->
+    val level = checkNotNull(mc.level)
+    val start = checkNotNull(mc.player).position()
+    val region = BlockGoal(goal).region(start, maxLength, maxLength.toInt())
+    val search = WaypointSearch(
+        Terrain(SectionCache.capture(level, region)),
+        start,
+        [goal],
+        RouteLimits(maxLength),
+        stepLength,
+    )
 
-        context.waitTicks(SETTLE_TICKS)
-        val setback = Vec3(30.5, y.toDouble(), -10.5)
-        server.runCommand("tp @a ${setback.x} ${setback.y} ${setback.z}")
-        context.waitFor({ run.state != RunState.ACTIVE }, WAIT_TICKS)
-
-        check(run.state == RunState.REJECTED) { "A setback ended the run as ${run.state}" }
-        check(context.fromClient { !TeleportDispatcher.holds(Owner) && TeleportDispatcher.serverPosition == null })
-        awaitPosition(context, setback)
-        check(server.player { it.position() }.near(setback)) { "The rejected run kept moving the player" }
+    var result = search.advance()
+    while (result == RouteResult.Searching) {
+        result = search.advance()
     }
+    result
+}
 
-    private fun checkOutcomes(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(3.5, y.toDouble(), 9.5))
-        check(context.route(BlockPos(3, y, 9)) == RouteResult.AlreadyThere) { "Standing on the goal is no arrival" }
+private fun found(result: RouteResult<Route>) =
+    (result as? RouteResult.Found<Route>)?.value ?: error("Expected a route, got $result")
 
-        val enclosed = context.route(BlockPos(7, y, 9), maxLength = 12.0)
-        check((enclosed as? RouteResult.Failed)?.failure == RouteFailure.NO_PATH) { "A closed cell gave $enclosed" }
-
-        val midAir = context.route(BlockPos(5, y + 3, 9))
-        check((midAir as? RouteResult.Failed)?.failure == RouteFailure.INVALID_DESTINATION) { "Mid-air gave $midAir" }
+private fun GameTestScope.dispatch(route: Route, finish: Teleport.Finish): Teleport {
+    val run = context.fromClient {
+        checkNotNull(TeleportManager.dispatch(Owner, route, finish, StepsValueGroup()))
     }
+    awaitClient("the run to end", WAIT_TICKS) { run.state != Teleport.State.ACTIVE }
+    return run
+}
 
-    /** TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up. */
-    private fun checkTpAura(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        checkTpAuraAttack(context, server, Vec3(2.5, y.toDouble(), -10.5), Vec3(16.5, y.toDouble(), -10.5))
-
-        server.runCommand("fill 26 $y -12 28 ${y + 13} -10 stone")
-        checkTpAuraAttack(context, server, Vec3(27.5, y + 14.0, -10.5), Vec3(34.5, y.toDouble(), -10.5))
-        server.runCommand("fill 26 $y -12 28 ${y + 13} -10 air")
-
-        server.runCommand("fill 32 ${y + 12} -12 36 ${y + 12} -8 stone")
-        checkTpAuraAttack(context, server, Vec3(27.5, y.toDouble(), -10.5), Vec3(34.5, y + 13.0, -10.5))
-        server.runCommand("fill 32 ${y + 12} -12 36 ${y + 12} -8 air")
-    }
-
-    /**
-     * Starts TpAura at [origin] until it hits a husk standing at [target], then checks that the player came back
-     * unhurt.
-     */
-    private fun checkTpAuraAttack(
-        context: ClientGameTestContext,
-        server: TestServerContext,
-        origin: Vec3,
-        target: Vec3,
-    ) {
-        moveTo(context, server, origin)
-        server.runCommand("summon husk ${target.x} ${target.y} ${target.z} {NoAI:1b,PersistenceRequired:1b}")
-        context.waitFor({ client ->
-            client.level?.entitiesForRendering()?.any { it is Husk && it.isAlive } == true
-        }, WAIT_TICKS)
-        val health = server.player { it.health }
-
-        context.onClient { ModuleTpAura.enabled = true }
-        server.waitFor({ s ->
-            s.overworld().allEntities.any { it is Husk && it.isAlive && it.health < it.maxHealth }
-        }, TPAURA_TICKS)
-
-        context.onClient { ModuleTpAura.enabled = false }
-        context.waitFor({ !TeleportDispatcher.holds(ModuleTpAura) && !TeleportDispatcher.isMoving }, WAIT_TICKS)
-        check(context.playerPosition().near(origin)) { "TpAura moved the client from $origin" }
-        server.waitFor({ it.player().position().near(origin) }, WAIT_TICKS)
-
-        val (after, source) = server.player { it.health to it.lastDamageSource?.type()?.msgId() }
-        check(after == health) { "TpAura from $origin hurt the player from $health to $after ($source)" }
-
-        server.runCommand("kill @e[type=husk]")
-        context.waitFor({ client -> client.level?.entitiesForRendering()?.none { it is Husk } == true }, WAIT_TICKS)
-    }
-
-    /** Searches like a module does: over a copy of the world, slice by slice. */
-    private fun ClientGameTestContext.route(
-        goal: BlockPos,
-        maxLength: Double = 80.0,
-        stepLength: Double = TeleportStepSettings.DEFAULT_STEP_LENGTH,
-    ): RouteResult<TeleportPlan> = fromClient { mc ->
-        val level = checkNotNull(mc.level)
-        val start = checkNotNull(mc.player).position()
-        val region = BlockGoal(goal).region(start, maxLength, maxLength.toInt())
-        val search = TeleportRouteSearch(
-            NavigationTerrain(SectionCache.capture(level, region)),
-            start,
-            [goal],
-            RouteLimits(maxLength),
-            stepLength,
-        )
-
-        var result = search.advance()
-        while (result == RouteResult.Searching) {
-            result = search.advance()
-        }
-        result
-    }
-
-    private fun found(result: RouteResult<TeleportPlan>) =
-        (result as? RouteResult.Found<TeleportPlan>)?.value ?: error("Expected a route, got $result")
-
-    private fun travel(context: ClientGameTestContext, plan: TeleportPlan, finish: RunFinish): TeleportRun {
-        val run = context.fromClient {
-            checkNotNull(TeleportDispatcher.dispatch(Owner, plan, finish, TeleportStepSettings()))
-        }
-        context.waitFor({ run.state != RunState.ACTIVE }, WAIT_TICKS)
-        return run
-    }
-
-    private fun arrive(context: ClientGameTestContext, server: TestServerContext, run: TeleportRun, destination: Vec3) {
-        check(run.state == RunState.DONE) { "The run to $destination ended as ${run.state}" }
-        server.waitFor({ it.player().position().near(destination) }, WAIT_TICKS)
-        context.waitTicks(SETTLE_TICKS)
-        check(context.playerPosition().near(destination)) { "Set back from $destination" }
-        check(server.player { it.position() }.near(destination)) { "The server did not keep $destination" }
-    }
-
-    private companion object {
-        const val WAIT_TICKS = 200
-        const val TPAURA_TICKS = 400
-        const val SETTLE_TICKS = 5
-        const val SLOW_STEP = 2.0
-    }
-
+private fun GameTestScope.arrive(run: Teleport, destination: Vec3) {
+    check(run.state == Teleport.State.DONE) { "The run to $destination ended as ${run.state}" }
+    awaitServerAt(destination, timeout = WAIT_TICKS)
+    ticks(SETTLE_TICKS)
+    check(context.playerPosition().near(destination)) { "Set back from $destination" }
+    check(serverPosition().near(destination)) { "The server did not keep $destination" }
 }

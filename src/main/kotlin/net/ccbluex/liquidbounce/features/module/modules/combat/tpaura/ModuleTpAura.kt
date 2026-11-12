@@ -35,19 +35,17 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
+import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunFinish
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunState
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportSteps
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportTrip
-import net.ccbluex.liquidbounce.utils.navigation.teleport.eyesAt
-import net.ccbluex.liquidbounce.utils.navigation.teleport.reachPositions
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Route
+import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Teleport
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Trip
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.reachPositions
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -70,9 +68,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
     private val clicker = tree(Clicker(this, mc.options.keyAttack))
     private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
-    private val steps = tree(TeleportStepSettings())
+    private val steps = tree(StepsValueGroup())
 
-    private val trip = TeleportTrip(this, steps)
+    private val trip = Trip(this, steps)
     private val view = trip.view
 
     init {
@@ -87,7 +85,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private enum class Phase { IDLE, ROUTING, READY, APPROACH, ATTACK, RETURN }
 
     private class Engagement(val target: LivingEntity) {
-        var plan: TeleportPlan? = null
+        var route: Route? = null
         var waited = 0
         var holdLeft = 0
         var retries = 0
@@ -110,7 +108,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         get() = engagement?.takeIf { targetSelector.validate(it.target) }
 
     override fun onDisabled() {
-        TeleportDispatcher.undo(this)
+        TeleportManager.undo(this)
         reset()
         restUntil = 0
         unreachable.clear()
@@ -147,12 +145,12 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         val engagement = engagement ?: return@handler
         val feet = when (phase) {
-            Phase.READY, Phase.APPROACH -> engagement.plan?.route?.destination
+            Phase.READY, Phase.APPROACH -> engagement.route?.destination
             Phase.ATTACK -> trip.feet
             else -> null
         } ?: return@handler
 
-        val eyes = eyesAt(feet)
+        val eyes = player.getEyePositionAt(feet)
         val box = engagement.target.boundingBox
         val rotation = raytraceBox(eyes, box, range = reach, wallsRange = 0.0)?.rotation
             ?: Rotation.lookingAt(box.center, eyes)
@@ -202,8 +200,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             RouteResult.Searching -> {}
             RouteResult.AlreadyThere -> startAttack()
             is RouteResult.Found -> {
-                val route = result.value.route
-                engagement.plan = result.value
+                val route = result.value
+                engagement.route = route
                 engagement.waited = 0
                 view.active(route.path)
                 view.attackPosition = route.destination
@@ -217,27 +215,27 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     /** Sets off once the clicker is about to click when the route arrives. */
     private fun launch() {
         val engagement = liveEngagement ?: return leave()
-        val plan = engagement.plan ?: return leave()
-        if (!isInReach(plan.route.destination, engagement.target)) {
+        val route = engagement.route ?: return leave()
+        if (!isInReach(route.destination, engagement.target)) {
             return replan()
         }
 
-        val arrival = TeleportSteps.batches(plan.route.start, plan.steps, steps.packetsPerTick).size
+        val arrival = route.batches(steps.packetsPerTick).size
         if (!clicker.willClickAt(arrival) && engagement.waited++ < MAX_WAIT) {
             return
         }
 
-        val finish = if (afterAttack == AfterAttack.RETURN) RunFinish.HOLD else RunFinish.LAND
-        trip.dispatch(plan, finish) ?: return leave()
+        val finish = if (afterAttack == AfterAttack.RETURN) Teleport.Finish.HOLD else Teleport.Finish.LAND
+        trip.dispatch(route, finish) ?: return leave()
         phase = Phase.APPROACH
     }
 
     private fun approach() {
         when (trip.run?.state ?: return leave()) {
-            RunState.ACTIVE -> {}
-            RunState.DONE -> startAttack()
-            RunState.REJECTED -> rejected()
-            RunState.INVALID, RunState.CANCELLED -> {
+            Teleport.State.ACTIVE -> {}
+            Teleport.State.DONE -> startAttack()
+            Teleport.State.REJECTED -> rejected()
+            Teleport.State.INVALID, Teleport.State.CANCELLED -> {
                 view.invalid()
                 trip.showReturn()
                 phase = Phase.RETURN
@@ -255,7 +253,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private fun attack() {
-        if (trip.run?.state == RunState.REJECTED) {
+        if (trip.run?.state == Teleport.State.REJECTED) {
             return rejected()
         }
 
@@ -268,7 +266,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.engaged = true
-        if (clicker.isClickTick && isFacing(eyesAt(feet), target) &&
+        if (clicker.isClickTick && isFacing(player.getEyePositionAt(feet), target) &&
             !player.cannotAttackWithItem(player.mainHandItem, 0)
         ) {
             clicker.click {
@@ -330,7 +328,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private fun isInReach(feet: Vec3, target: LivingEntity) =
-        target.boundingBox.distanceToSqr(eyesAt(feet)) <= Mth.square(reach)
+        target.boundingBox.distanceToSqr(player.getEyePositionAt(feet)) <= Mth.square(reach)
 
     /** Whether the rotation the server has hits [target] from [eyes]. */
     private fun isFacing(eyes: Vec3, target: LivingEntity): Boolean {
@@ -345,9 +343,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     /** Standable positions around [target] that see it within reach, closest to [from] first. */
-    private fun attackPositions(target: LivingEntity, from: Vec3) = reachPositions(
-        NavigationTerrain.live(), target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from
-    )
+    private fun attackPositions(target: LivingEntity, from: Vec3) =
+        Terrain.live().reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
 
     private const val REACH_MARGIN = 0.1
     private const val TARGET_MOVEMENT_MARGIN = 0.4

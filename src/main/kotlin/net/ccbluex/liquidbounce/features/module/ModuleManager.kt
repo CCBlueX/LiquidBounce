@@ -250,6 +250,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBedDefender
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBlockIn
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBlockTrap
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleExtinguish
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
@@ -702,6 +703,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleLiquidPlace,
             ModuleProjectilePuncher,
             ModuleScaffold,
+            ModuleClutch,
             ModuleTimer,
             ModuleNuker,
             ModuleExtinguish,

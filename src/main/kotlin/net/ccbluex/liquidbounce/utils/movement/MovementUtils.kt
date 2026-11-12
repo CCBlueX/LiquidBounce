@@ -22,6 +22,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -37,6 +38,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.roundToInt
 
 
 /**
@@ -77,6 +79,38 @@ fun getDirectionalInputForDegrees(
     }
 
     return DirectionalInput(forwards, backwards, left, right)
+}
+
+/** Keys that move towards [direction] when the input is applied relative to [frameYaw]. */
+fun getDirectionalInputTowards(direction: Vec3, frameYaw: Float): DirectionalInput {
+    if (direction.horizontalDistanceSqr() < 1.0E-6) {
+        return DirectionalInput.NONE
+    }
+
+    return getDirectionalInputForDegrees(DirectionalInput.NONE, getDegreesRelativeToView(direction, frameYaw))
+}
+
+/** Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. */
+fun getDirectionalInputForMovementYaw(forward: Int, strafe: Int, frameYaw: Float): DirectionalInput {
+    val rotation = RotationManager.currentRotation
+    if (rotation == null || RotationManager.activeRotationTarget?.movementCorrection != MovementCorrection.SILENT) {
+        return DirectionalInput(forward.toFloat(), strafe.toFloat())
+    }
+
+    // Silent correction reads the keys relative to the camera at frameYaw and turns them onto the rotation.
+    val delta = (frameYaw - rotation.yaw) * Mth.DEG_TO_RAD
+    val cos = Mth.cos(delta.toDouble())
+    val sin = Mth.sin(delta.toDouble())
+    for (z in -1..1) {
+        for (x in -1..1) {
+            val turnedX = (x * cos - z * sin).roundToInt()
+            val turnedZ = (z * cos + x * sin).roundToInt()
+            if (turnedX == strafe && turnedZ == forward) {
+                return DirectionalInput(z.toFloat(), x.toFloat())
+            }
+        }
+    }
+    return DirectionalInput(forward.toFloat(), strafe.toFloat())
 }
 
 fun findEdgeCollision(

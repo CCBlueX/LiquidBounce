@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.features.client.ClientOverview
 import net.ccbluex.liquidbounce.features.client.ClientSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext
 import net.minecraft.server.MinecraftServer
@@ -64,11 +64,9 @@ private const val STOOD_DISTANCE = 0.1
  * modules, the window goes from one to the other, and none of them loses its connection over it. A client in the
  * background shows what it sees, and the ClickGUI edits its modules over the interop server.
  */
-class MultiClientGameTest : FabricClientGameTest {
+class MultiClientGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.createServer().use { server ->
             server.connect().use { connection ->
                 connection.waitForChunksDownload()
