@@ -71,12 +71,14 @@ import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.Visibility
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -136,7 +138,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    internal val requiresSight by boolean("RequiresSight", false)
+    internal val visibility by enumChoice("Visibility", Visibility.VISIBLE)
 
     init {
         tree(ScaffoldEagleFeature)
@@ -369,6 +371,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
+        ScaffoldPlacement.reset()
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
@@ -449,7 +452,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 ScaffoldRotationValueGroup.toRotationTarget(
                     rotation,
                     considerInventory = considerInventory,
-                    surface = target?.takeIf { ModuleClutch.fall != null }?.let(ScaffoldClutchFeature::surface),
+                    surface = target?.let(::surface),
                     whenReady = target?.let(::placeWhenReady),
                 ),
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
@@ -490,6 +493,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         ModuleClutch.fall != null -> target?.rotation
         expanding -> ScaffoldExpandFeature.rotation(target)
         else -> ScaffoldPlacement.rotation(target)
+    }
+
+    /** What a look has to meet to place [target], see [crosshairTarget]; nothing for the exact GodBridge look. */
+    private fun surface(target: BlockPlacementTarget): Surface? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.surface(target) ?: ScaffoldPlacement.surface(target)
+        expanding -> ScaffoldExpandFeature.surface(target)
+        ScaffoldPlacement.holdsGodBridgeLook -> null
+        else -> ScaffoldPlacement.surface(target)
     }
 
     /** The hit a click with [rotation] places [target] with, if it does. */
@@ -551,15 +562,23 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     var currentOptimalLine: Line? = null
         private set
+
+    /** The movement the player asks for, before [ScaffoldStabilizeMovementFeature] steers it towards the line. */
     var rawInput = DirectionalInput.NONE
         private set
+
+    @Suppress("unused")
+    private val rawInputHandler = handler<MovementInputEvent>(
+        priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
+    ) { event ->
+        rawInput = event.directionalInput
+    }
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.MODEL_STATE
     ) { event ->
         this.currentOptimalLine = null
-        this.rawInput = event.directionalInput
 
         val currentInput = event.directionalInput
 
@@ -570,13 +589,20 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
     }
 
-    /** Whether an edge has to stop the player: no blocks left, or the view doesn't put the next block down. */
+    /**
+     * Whether an edge has to stop the player: no blocks left, or the view doesn't put the next block down before the
+     * player walks off.
+     */
     private fun missesNextBlock(): Boolean {
         val target = currentTarget
         if (blockCount <= 0 || target == null) {
             return true
         }
-        return click(target, RotationManager.currentRotation ?: player.rotation) == null
+        val view = RotationManager.currentRotation ?: player.rotation
+        if (click(target, view) != null) {
+            return false
+        }
+        return ModuleClutch.fall != null || expanding || !ScaffoldPlacement.placesInTime(target, view)
     }
 
     @Suppress("unused")

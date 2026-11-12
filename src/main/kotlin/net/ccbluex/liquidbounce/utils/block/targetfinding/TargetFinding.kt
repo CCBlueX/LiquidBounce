@@ -60,6 +60,23 @@ enum class AimMode(override val tag: String) : Tagged {
     DIAGONAL_YAW("DiagonalYaw"),
     ANGLE_YAW("AngleYaw"),
     EDGE_POINT("EdgePoint"),
+
+    /** The look god bridging players hold against the movement, see [DirectionTargetPositionFactory]. */
+    GOD_BRIDGE("GodBridge"),
+}
+
+/**
+ * Which faces a placement may click and how it has to see them.
+ */
+enum class Visibility(override val tag: String) : Tagged {
+    /** Faces turned towards the eyes, aimed at only while the ray reaches them first. */
+    VISIBLE_AND_RAYTRACED("VisibleAndRaytraced"),
+
+    /** Faces turned towards the eyes. */
+    VISIBLE("Visible"),
+
+    /** Any face, also one turned away or behind blocks: looked at and clicked through them. */
+    NOT_VISIBLE("NotVisible"),
 }
 
 /**
