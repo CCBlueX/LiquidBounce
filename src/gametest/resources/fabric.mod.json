@@ -16,6 +16,7 @@
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",
+      "net.ccbluex.liquidbounce.gametest.ScaffoldBridgeGameTest",
       "net.ccbluex.liquidbounce.gametest.server.HarnessGameTest",
       "net.ccbluex.liquidbounce.gametest.server.LegitMovementGameTest",
       "net.ccbluex.liquidbounce.gametest.server.SprintGameTest",
