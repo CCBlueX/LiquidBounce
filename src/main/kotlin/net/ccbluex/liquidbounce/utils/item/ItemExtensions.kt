@@ -160,6 +160,19 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
     return this.isMergeable(other) && this.count + other.count <= this.maxStackSize
 }
 
+/**
+ * ViaVersion keeps the 1.8 item tag, `Damage` included, in [DataComponents.CUSTOM_DATA], so every durability update
+ * from a 1.8 server would otherwise play the swap animation.
+ */
+fun ItemStack.matchesIgnoringLegacyDamage(other: ItemStack): Boolean =
+    isOlderThanOrEqual1_8 &&
+        ItemStack.matchesIgnoringComponents(this, other) {
+            it.ignoreSwapAnimation() || it === DataComponents.CUSTOM_DATA
+        } &&
+        legacyTagWithoutDamage() == other.legacyTagWithoutDamage()
+
+private fun ItemStack.legacyTagWithoutDamage() = get(DataComponents.CUSTOM_DATA)?.update { it.remove("Damage") }
+
 val ItemInstance.attackDamage: Double
     get() {
         val baseDamage = getAttributeValue(

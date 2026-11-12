@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.utils.item.ItemExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.FirstPersonHandsAndItems;
 import net.minecraft.client.player.LocalPlayer;
@@ -82,6 +83,15 @@ public abstract class MixinFirstPersonHandsAndItemsRenderer {
                 && ItemStack.isSameItemSameComponents(currentlyVisibleItem, expectedItem)
             );
         }
+    }
+
+    @ModifyExpressionValue(method = "shouldInstantlyReplaceVisibleItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;matchesIgnoringComponents(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Predicate;)Z"))
+    private boolean injectIgnoreLegacyDamage(
+        boolean original,
+        @Local(argsOnly = true, name = "currentlyVisibleItem") ItemStack currentlyVisibleItem,
+        @Local(argsOnly = true, name = "expectedItem") ItemStack expectedItem
+    ) {
+        return original || ItemExtensionsKt.matchesIgnoringLegacyDamage(currentlyVisibleItem, expectedItem);
     }
 
 }
