@@ -119,7 +119,9 @@ class Readiness<T : Any> private constructor(
                     player,
                 )
             )
-            result.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos && (side == null || it.direction == side) }
+            result.takeIf {
+                it.type == HitResult.Type.BLOCK && it.blockPos == pos && (side == null || it.direction == side)
+            }
         }, then)
 
     }
