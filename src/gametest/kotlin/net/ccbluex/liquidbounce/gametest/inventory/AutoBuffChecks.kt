@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.gametest.inventory
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.set
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.minecraft.core.Holder
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.effect.MobEffects
@@ -29,6 +31,8 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.alchemy.Potion
 import net.minecraft.world.item.alchemy.Potions
+import kotlin.math.abs
+import kotlin.math.max
 
 private const val THROW_TICKS = 100
 
@@ -59,7 +63,14 @@ private fun InventoryBench.checkPitch() {
     command("item replace entity @a hotbar.0 with ${splash("swiftness")}")
     withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot/Pitch", "0.0..0.0") }) {
         var horizontalSpeed = 0.0
+        var yawTurned = 0f
         waitUntil(THROW_TICKS, { "no potion was thrown" }) {
+            // A splash at the feet only needs the pitch; the yaw has to stay where the player looks
+            yawTurned = max(yawTurned, context.fromClient { client ->
+                RotationManager.currentRotation?.let { view ->
+                    abs(angleDifference(view.yaw, checkNotNull(client.player).yRot))
+                } ?: 0f
+            })
             horizontalSpeed = server.computeOnServer<Double, RuntimeException> { server ->
                 server.overworld().getEntities(EntityTypes.SPLASH_POTION) { true }
                     .maxOfOrNull { it.deltaMovement.horizontalDistance() } ?: 0.0
@@ -68,6 +79,7 @@ private fun InventoryBench.checkPitch() {
         }
         // Straight down leaves 0.17 blocks a tick sideways, a level throw 0.47
         check(horizontalSpeed > LEVEL_THROW_SPEED) { "the potion flew $horizontalSpeed blocks a tick sideways" }
+        check(yawTurned < 1e-3f) { "AutoBuff turned the yaw by $yawTurned degrees" }
     }
 }
 
