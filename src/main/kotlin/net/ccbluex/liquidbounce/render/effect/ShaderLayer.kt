@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render.effect
 
 import com.mojang.blaze3d.pipeline.RenderTarget
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
@@ -32,13 +32,12 @@ import net.minecraft.client.renderer.PostChain
 /**
  * World geometry drawn as silhouettes, which the chosen [PostStyle] then draws onto the scene.
  *
- * Draw into it with `event.renderEnvironment(layer) { ... }`. The style takes the color of the geometry and uses its
- * alpha as strength, so geometry fades by lowering its alpha.
+ * The style takes the color of the geometry and uses its alpha as strength, so geometry fades by lowering its alpha.
+ * Colors set for [Rendering.Plain] reach it through [WorldRenderEnvironment.shapeColor], which makes them opaque.
  *
  * @param solid thin geometry like lines, which styles fill instead of only surrounding it
- * @param name a module with several layers names them apart
  */
-class ShaderLayer(solid: Boolean = false, name: String = "Shader") : ValueGroup(name) {
+class ShaderLayer(parent: ModeValueGroup<*>, solid: Boolean) : Rendering("Shader", parent) {
 
     val styles = modes(null, "Style", { DEFAULT_STYLE }) {
         postStyles(it, fill = if (solid) 1f else SHAPE_FILL).toTypedArray()
@@ -50,11 +49,11 @@ class ShaderLayer(solid: Boolean = false, name: String = "Shader") : ValueGroup(
     private var frame: WorldRenderEvent? = null
     private var environment: WorldRenderEnvironment? = null
 
-    fun environment(event: WorldRenderEvent): WorldRenderEnvironment {
+    override fun environment(event: WorldRenderEvent): WorldRenderEnvironment {
         environment?.takeIf { frame === event }?.let { return it }
 
         val target = silhouettes.get() ?: silhouettes.initAndGet()
-        return WorldRenderEnvironment(target, event.poseStack, event.camera, collector).also {
+        return WorldRenderEnvironment(target, event.poseStack, event.camera, collector, shaded = true).also {
             frame = event
             environment = it
             event.layers += this

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
@@ -39,7 +38,7 @@ import kotlin.math.sin
  */
 internal object HatsOrbs : HatsMode("Orbs") {
 
-    val color by color("color", Color4b.LIQUID_BOUNCE)
+    val color by color("color", Color4b.LIQUID_BOUNCE.alpha(125))
 
     private object HatOrbsSettings : ValueGroup("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)
@@ -59,8 +58,6 @@ internal object HatsOrbs : HatsMode("Orbs") {
         tree(HatOrbsSettings)
         tree(HatOrbsSettings.WaveSettings)
     }
-
-    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
@@ -96,7 +93,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val dx = x - cosA
                 val dz = z + sinA
 
-                val color = if (!isHurt) color else Color4b(255, 0, 0, color.a)
+                val color = shapeColor(if (!isHurt) color else Color4b(255, 0, 0, color.a))
                 // Rendering of the top part of the rhombus (4 faces/8 triangles).
                 addVertex(matrix, x, top, z).setColor(color)
                 addVertex(matrix, dx, y, dz).setColor(color)

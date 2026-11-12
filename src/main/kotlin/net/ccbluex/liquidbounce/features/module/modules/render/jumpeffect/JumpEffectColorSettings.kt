@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 class JumpEffectColorSettings : ValueGroup("Colors") {
 
-    val innerColor by color("InnerColor", Color4b.LIQUID_BOUNCE.alpha(85))
-    val outerColor by color("OuterColor", Color4b.LIQUID_BOUNCE)
+    val innerColor by color("InnerColor", Color4b.LIQUID_BOUNCE.alpha(50))
+    val outerColor by color("OuterColor", Color4b.LIQUID_BOUNCE.alpha(150))
 
 }

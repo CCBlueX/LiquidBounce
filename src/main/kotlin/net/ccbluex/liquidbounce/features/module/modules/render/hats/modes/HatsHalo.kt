@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 
 /**
@@ -47,8 +45,6 @@ internal object HatsHalo : HatsMode("Halo") {
         tree(colors)
     }
 
-    override val shader = tree(ShaderLayer())
-
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
             val outerSegments = 144
@@ -60,12 +56,7 @@ internal object HatsHalo : HatsMode("Halo") {
                 val outerCurAngleTorus = segmentAngle(outerI, outerSegments)
                 val outerNextAngleTorus = segmentAngle(outerI + 1, outerSegments)
 
-                val color = if (!isHurt) {
-                    colors
-                        .getCurrentStepColor(outerCurAngleTorus)
-                } else {
-                    Color4b(255, 0, 0, colors.firstColor.a)
-                }
+                val color = shapeColor(colors.getColor(outerCurAngleTorus, isHurt))
 
                 for (innerI in 0 until innerSegments) {
                     addTorusQuad(

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
@@ -66,18 +65,17 @@ abstract class HatsMode(name: String) : Mode(name) {
     protected val showInFirstPerson by boolean("FirstPersonView", true)
 
     /**
-     * The layer the hat is drawn into as a silhouette. Textured hats have none and are drawn onto the scene.
+     * Textured hats are always drawn plain, the others the way [ModuleHats.render] says.
      */
-    protected open val shader: ShaderLayer? get() = null
+    protected open val textured: Boolean get() = false
 
     // --- Render ---
     protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val shader = shader
-        if (shader != null) {
-            event.renderEnvironment(shader) { drawHats(event) }
+        if (!textured) {
+            event.renderEnvironment(ModuleHats.render) { drawHats(event) }
         } else {
             event.renderEnvironment { drawHats(event) }
         }

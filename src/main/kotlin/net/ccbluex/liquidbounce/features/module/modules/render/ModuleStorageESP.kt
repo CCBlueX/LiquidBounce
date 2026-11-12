@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
@@ -293,6 +294,10 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     object GlowMode : Mode("Glow") {
         private val dirtyFlag = atomic(true)
+
+        init {
+            OutlineGlow.styles(this)
+        }
 
         private val renderState = CachedMeshStorage("${ModuleStorageESP.name} $name")
 

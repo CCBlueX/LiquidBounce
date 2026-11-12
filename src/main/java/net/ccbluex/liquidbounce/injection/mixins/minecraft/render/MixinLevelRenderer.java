@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -167,7 +167,7 @@ public abstract class MixinLevelRenderer {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ShaderManager;getPostChain(Lnet/minecraft/resources/Identifier;Ljava/util/Set;)Lnet/minecraft/client/renderer/PostChain;")
     )
     private PostChain replaceEntityOutlinePostChain(PostChain original) {
-        return EspGlowMode.replace(original);
+        return OutlineGlow.replace(original);
     }
 
     @ModifyExpressionValue(

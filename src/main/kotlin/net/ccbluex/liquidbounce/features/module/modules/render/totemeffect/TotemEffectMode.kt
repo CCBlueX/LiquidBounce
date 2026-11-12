@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.entities
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -41,18 +41,18 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     protected val canBeCovered by boolean("CanBeCovered", false)
 
     /**
-     * The layer the effect is drawn into as a silhouette. Textured effects have none and are drawn onto the scene.
+     * How the effect reaches the screen, null for effects that are always drawn plain.
      */
-    protected open val shader: ShaderLayer? get() = null
+    protected open val render: ModeValueGroup<Rendering>? get() = null
 
     protected abstract fun WorldRenderEnvironment
         .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val shader = shader
-        if (shader != null) {
-            event.renderEnvironment(shader) { drawTotemEffects(event) }
+        val render = render
+        if (render != null) {
+            event.renderEnvironment(render) { drawTotemEffects(event) }
         } else {
             event.renderEnvironment { drawTotemEffects(event) }
         }

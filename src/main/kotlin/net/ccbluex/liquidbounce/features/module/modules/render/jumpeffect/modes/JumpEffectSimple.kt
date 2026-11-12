@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEf
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.JumpEffectMode
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawGradientCircle
-import net.ccbluex.liquidbounce.render.effect.ShaderLayer
+import net.ccbluex.liquidbounce.render.effect.rendering
 
 internal object JumpEffectSimple : JumpEffectMode("Simple") {
 
@@ -33,14 +33,14 @@ internal object JumpEffectSimple : JumpEffectMode("Simple") {
         tree(colors)
     }
 
-    override val shader = tree(ShaderLayer())
+    override val render = rendering()
 
     override fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float) {
         drawGradientCircle(
             endRadius.endInclusive * progress,
             endRadius.start * progress,
-            animateColor(colors.outerColor, age),
-            animateColor(colors.innerColor, age),
+            animateColor(shapeColor(colors.outerColor), age),
+            animateColor(shapeColor(colors.innerColor), age),
             noDepthTest = !canBeCovered
         )
     }
