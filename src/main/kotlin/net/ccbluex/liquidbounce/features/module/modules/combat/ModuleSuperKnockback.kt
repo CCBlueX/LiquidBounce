@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
+import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -187,13 +188,17 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             }
 
             inSequence = true
-            this@WTap.debugParameter("State") { "Waiting for Movement Block" }
-            waitTicks(ticksUntilMovementBlock.random())
-            this@WTap.debugParameter("State") { "Disallowing Movement" }
-            cancelMovement = true
-            tickUntil { !player.input.hasForwardImpulse() }
-            this@WTap.debugParameter("State") { "Waiting for Allowed Movement" }
-            waitTicks(ticksUntilAllowedMovement.random())
+            // Stops at a world change, where the input to wait on is gone
+            guarded {
+                same { mc.level }
+                this@WTap.debugParameter("State") { "Waiting for Movement Block" }
+                waitTicks(ticksUntilMovementBlock.random())
+                this@WTap.debugParameter("State") { "Disallowing Movement" }
+                cancelMovement = true
+                tickUntil { !player.input.hasForwardImpulse() }
+                this@WTap.debugParameter("State") { "Waiting for Allowed Movement" }
+                waitTicks(ticksUntilAllowedMovement.random())
+            }
             this@WTap.debugParameter("State") { "Allowing Movement" }
             cancelMovement = false
             inSequence = false
