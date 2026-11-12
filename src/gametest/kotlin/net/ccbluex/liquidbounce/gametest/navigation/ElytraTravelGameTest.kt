@@ -56,7 +56,7 @@ class ElytraTravelGameTest : LiquidBounceGameTest({
 
         checkEndCruise()
         // ElytraRecast is made for vanilla servers
-        if (Anticheat.VANILLA in anticheats) {
+        if (anticheats == setOf(Anticheat.VANILLA)) {
             checkRoofBounce()
         }
     }
