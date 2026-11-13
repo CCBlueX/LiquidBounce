@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_EDITION
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
@@ -412,7 +412,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             name,
             MarketplaceItemType.CONFIG,
             description,
-            details.copy(branch = API_BRANCH)
+            details.copy(branch = API_EDITION)
         )
 
         val revision = try {

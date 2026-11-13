@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.services.client
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_EDITION
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.models.client.Build
 import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
@@ -30,10 +30,10 @@ object ClientApi {
 
     private val service = config.retrofitApiV1.create<Service>()
 
-    suspend fun requestNewestBuildEndpoint(branch: String = API_BRANCH, release: Boolean = false) =
-        if (release) service.newestReleaseBuild(branch) else service.newestBuild(branch)
+    suspend fun requestNewestBuildEndpoint(edition: String = API_EDITION, release: Boolean = false) =
+        if (release) service.newestReleaseBuild(edition) else service.newestBuild(edition)
 
-    suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) = service.messageOfTheDay(branch)
+    suspend fun requestMessageOfTheDayEndpoint(edition: String = API_EDITION) = service.messageOfTheDay(edition)
 
     internal interface Service {
         @GET("version/newest/{branch}")

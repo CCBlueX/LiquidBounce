@@ -32,10 +32,7 @@ object ClientUpdate {
     val update = ioScope.async {
         runCatching {
             val newestBuild = runCatching {
-                ClientApi.requestNewestBuildEndpoint(
-                    branch = LiquidBounce.clientBranch,
-                    release = !LiquidBounce.IN_DEVELOPMENT
-                )
+                ClientApi.requestNewestBuildEndpoint(release = !LiquidBounce.IN_DEVELOPMENT)
             }.onFailure { exception ->
                 logger.error("Unable to receive update information", exception)
             }.getOrNull() ?: return@async null
