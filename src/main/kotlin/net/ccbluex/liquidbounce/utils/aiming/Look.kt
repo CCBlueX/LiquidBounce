@@ -23,8 +23,9 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.GuardScope
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.Guards
+import net.ccbluex.liquidbounce.event.activeGuards
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -38,8 +39,8 @@ import kotlin.coroutines.CoroutineContext
  * rotation to the server, so the code after this acts with it the way vanilla acts on a look. That holds for
  * coroutines that are not dispatched, such as the ones of [net.ccbluex.liquidbounce.event.tickHandler].
  *
- * Inside a [guarded] scope the conditions are checked every tick before [target] plans and once more before this
- * returns. When one fails, the module stops asking for the rotation and nothing after this runs.
+ * The [guard]s of the run are checked every tick before [target] plans and once more before this returns. When one
+ * fails, the module stops asking for the rotation and the run ends here.
  */
 suspend fun <T : Any> EventListener.lookAt(
     priority: Priority,
@@ -47,9 +48,9 @@ suspend fun <T : Any> EventListener.lookAt(
     hit: RotationTarget.(going: Rotation) -> T?,
 ): T {
     val context = currentCoroutineContext()
-    val guard = context[GuardScope]
+    val guards = context.activeGuards()
     val result = suspendCancellableCoroutine { continuation ->
-        val look = Look(continuation, guard, this, priority.priority, target, hit)
+        val look = Look(continuation, guards, this, priority.priority, target, hit)
         val looks = context[Looks]
         when {
             looks != null -> looks.add(look)
@@ -58,7 +59,7 @@ suspend fun <T : Any> EventListener.lookAt(
             else -> mc.execute { RotationManager.looks.add(look) }
         }
     }
-    guard?.ensure()
+    guards?.ensure()
     return result
 }
 
@@ -126,7 +127,7 @@ class Looks : CoroutineContext.Element {
 
 internal class Look<T : Any>(
     private val continuation: CancellableContinuation<T>,
-    private val guard: GuardScope?,
+    private val guards: Guards?,
     private val provider: EventListener,
     private val priority: Int,
     private val target: () -> RotationTarget,
@@ -142,7 +143,7 @@ internal class Look<T : Any>(
         }
 
         outcome = runCatching {
-            guard?.broken()?.let { throw it }
+            guards?.broken()?.let { throw it }
             val planned = target()
             request = planned
             submit(planned, priority, provider)

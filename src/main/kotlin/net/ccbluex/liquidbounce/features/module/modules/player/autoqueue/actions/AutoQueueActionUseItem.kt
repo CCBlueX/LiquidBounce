@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -36,7 +36,8 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
         val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
-        guarded({ mode.activeMode.test(slot.itemStack) }) {
+        // Only up to the use, as the queue goes on with other actions afterwards
+        guard { mode.activeMode.test(slot.itemStack) }.use {
             waitTicks(1)
             interaction.useItem(player, slot.useHand)
         }

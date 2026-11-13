@@ -1,0 +1,426 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.event
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.annotations.Tag
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class GuardsTest {
+
+    private val ticker = ManualTicker()
+
+    private class Flag(var value: Boolean = true) : Condition {
+        var checks = 0
+
+        override fun holds(): Boolean {
+            checks++
+            return value
+        }
+    }
+
+    @Tag("GuardsTestEvent")
+    private class ProbeEvent(val id: Int) : Event()
+
+    /** How the last run started with [run] ended: null when it finished. */
+    private var ended: Throwable? = null
+
+    private fun TestScope.run(block: suspend CoroutineScope.() -> Unit): Job =
+        launch(ticker + Guards(), block = block).also { job -> job.invokeOnCompletion { ended = it } }
+
+    private fun assertEndedByGuard() = assertTrue(ended is GuardInterruption, "The run ended with $ended")
+
+    @Test
+    fun `a condition failing mid-wait ends the run before the code after the wait`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val alive = Flag()
+            var resumed = false
+            run {
+                guard(alive)
+                waitTicks(5)
+                resumed = true
+            }
+
+            ticker.tick(2)
+            alive.value = false
+            ticker.tick()
+
+            assertEndedByGuard()
+            assertFalse(resumed)
+            assertEquals(0, ticker.taskCount)
+        }
+
+    @Test
+    fun `a tracked value gone mid-wait ends the run`() = runTest(UnconfinedTestDispatcher()) {
+        var current: String? = "first"
+        val seen = mutableListOf<String>()
+        run {
+            val target by tracked { current }
+            while (true) {
+                seen += target
+                waitTicks(1)
+            }
+        }
+
+        current = "second"
+        ticker.tick()
+        current = null
+        ticker.tick()
+
+        assertEndedByGuard()
+        assertEquals(listOf("first", "second"), seen)
+    }
+
+    @Test
+    fun `a condition failing on the resume tick ends the run`() = runTest(UnconfinedTestDispatcher()) {
+        val alive = Flag()
+        var resumed = false
+        run {
+            guard(alive)
+            waitTicks(3)
+            resumed = true
+        }
+
+        ticker.tick(2)
+        alive.value = false
+        ticker.tick()
+
+        assertEndedByGuard()
+        assertFalse(resumed)
+    }
+
+    @Test
+    fun `a condition failing between the last tick and the resumption ends the run`() = runTest {
+        val alive = Flag()
+        var resumed = false
+        run {
+            guard(alive)
+            waitTicks(1)
+            resumed = true
+        }
+        runCurrent()
+
+        ticker.tick()
+        alive.value = false
+        runCurrent()
+
+        assertEndedByGuard()
+        assertFalse(resumed)
+    }
+
+    @Test
+    fun `a wait predicate never sees a broken condition`() = runTest(UnconfinedTestDispatcher()) {
+        var target: String? = "target"
+        run {
+            guard { target != null }
+            tickUntil { target!!.isEmpty() }
+        }
+
+        ticker.tick()
+        target = null
+        ticker.tick()
+
+        assertEndedByGuard()
+    }
+
+    @Test
+    fun `a guard added after a suspension only applies from then on`() = runTest(UnconfinedTestDispatcher()) {
+        val late = Flag()
+        run {
+            waitTicks(1)
+            guard(late)
+            waitTicks(5)
+        }
+
+        ticker.tick()
+        assertEquals(1, late.checks)
+        late.value = false
+        ticker.tick()
+
+        assertEndedByGuard()
+    }
+
+    @Test
+    fun `a closed guard no longer applies`() = runTest(UnconfinedTestDispatcher()) {
+        val swapping = Flag()
+        var finished = false
+        run {
+            guard(swapping).use { waitTicks(1) }
+            waitTicks(2)
+            finished = true
+        }
+
+        ticker.tick()
+        swapping.value = false
+        ticker.tick(2)
+
+        assertNull(ended)
+        assertTrue(finished)
+    }
+
+    @Test
+    fun `a guard that does not hold when added ends the run right there`() = runTest(UnconfinedTestDispatcher()) {
+        var ran = false
+        run {
+            guard { false }
+            ran = true
+        }
+
+        assertEndedByGuard()
+        assertFalse(ran)
+    }
+
+    @Test
+    fun `same holds only while the instance stays the same`() = runTest(UnconfinedTestDispatcher()) {
+        var world = Any()
+        run {
+            same { world }
+            waitTicks(5)
+        }
+
+        ticker.tick()
+        world = Any()
+        ticker.tick()
+
+        assertEndedByGuard()
+    }
+
+    @Test
+    fun `cleanup in finally runs when a guard ends the run`() = runTest(UnconfinedTestDispatcher()) {
+        val alive = Flag()
+        var cleanedUp = false
+        run {
+            guard(alive)
+            try {
+                waitTicks(5)
+            } finally {
+                cleanedUp = true
+            }
+        }
+
+        alive.value = false
+        ticker.tick()
+
+        assertTrue(cleanedUp)
+    }
+
+    @Test
+    fun `withContext stays in the run, a launched coroutine is a run of its own`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val inner = Flag()
+            val child = Flag()
+            var childEnded: Throwable? = null
+            var resumed = false
+            run {
+                withContext(ticker) { guard(inner) }
+                launch {
+                    guard(child)
+                    waitTicks(5)
+                }.invokeOnCompletion { childEnded = it }
+                waitTicks(2)
+                resumed = true
+            }
+
+            child.value = false
+            ticker.tick()
+            assertTrue(childEnded is GuardInterruption, "The child ended with $childEnded")
+
+            ticker.tick()
+            assertNull(ended)
+            assertTrue(resumed)
+            assertTrue(inner.checks > 1, "The guard added in withContext was not checked by the run")
+        }
+
+    @Test
+    fun `exceptions from the run pass through`() = runTest(UnconfinedTestDispatcher()) {
+        val result = async(ticker + Guards()) {
+            runCatching {
+                guard(Flag())
+                waitTicks(1)
+                error("boom")
+            }
+        }
+
+        ticker.tick()
+
+        val failure = result.await().exceptionOrNull()
+        assertTrue(failure is IllegalStateException && failure.message == "boom", "Got $failure")
+    }
+
+    @Test
+    fun `exceptions from a condition reach the waiting code`() = runTest(UnconfinedTestDispatcher()) {
+        var fail = false
+        val result = async(ticker + Guards()) {
+            runCatching {
+                guard { check(!fail) { "condition failed" }; true }
+                waitTicks(5)
+            }
+        }
+
+        fail = true
+        ticker.tick()
+
+        val failure = result.await().exceptionOrNull()
+        assertTrue(failure is IllegalStateException && failure.message == "condition failed", "Got $failure")
+    }
+
+    @Test
+    fun `an event wait ends the run on the tick its condition fails`() = runTest(UnconfinedTestDispatcher()) {
+        val listener = object : EventListener {}
+        val alive = Flag()
+        run {
+            guard(alive)
+            listener.waitMatches<ProbeEvent> { it.id == 1 }
+        }
+
+        alive.value = false
+        ticker.tick()
+
+        assertEndedByGuard()
+        assertEquals(0, ticker.taskCount)
+        EventManager.callEvent(ProbeEvent(1))
+    }
+
+    @Test
+    fun `an event matching after its condition failed does not resume the code`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val listener = object : EventListener {}
+            val alive = Flag()
+            var resumed = false
+            run {
+                guard(alive)
+                listener.waitMatches<ProbeEvent> { it.id == 2 }
+                resumed = true
+            }
+
+            alive.value = false
+            EventManager.callEvent(ProbeEvent(2))
+
+            assertEndedByGuard()
+            assertFalse(resumed)
+        }
+
+    @Test
+    fun `an event wait returns the event while its condition holds`() = runTest(UnconfinedTestDispatcher()) {
+        val listener = object : EventListener {}
+        val result = async(ticker + Guards()) {
+            guard(Flag())
+            listener.waitMatches<ProbeEvent> { it.id == 3 }.id
+        }
+
+        ticker.tick()
+        EventManager.callEvent(ProbeEvent(3))
+        ticker.tick()
+
+        assertEquals(3, result.await())
+        assertEquals(0, ticker.taskCount)
+    }
+
+    @Test
+    fun `waits without guards behave as before`() = runTest(UnconfinedTestDispatcher()) {
+        val result = async(ticker) { tickUntil { it >= 2 } }
+
+        ticker.tick(2)
+
+        assertEquals(2, result.await())
+    }
+
+    @Test
+    fun `a failing guard ends only that run of that handler`() = runTest {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val guarding = object : EventListener {}
+        val other = object : EventListener {}
+        val alive = Flag()
+        val finished = mutableListOf<String>()
+
+        with(SuspendHandlerBehavior.DiscardLatest.Default) {
+            guarding.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) { event ->
+                if (event.id == 1) {
+                    guard(alive)
+                }
+                waitTicks(2)
+                finished += "guarding ${event.id}"
+            }
+            other.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) { event ->
+                waitTicks(2)
+                finished += "other ${event.id}"
+            }
+        }
+
+        try {
+            EventManager.callEvent(ProbeEvent(1))
+            alive.value = false
+            ticker.tick(2)
+            assertEquals(listOf("other 1"), finished)
+
+            // Its next run starts without the guard of the one before, though that one still fails
+            EventManager.callEvent(ProbeEvent(2))
+            ticker.tick(2)
+            assertEquals(listOf("other 1", "guarding 2", "other 2"), finished)
+        } finally {
+            for (listener in arrayOf(guarding, other)) {
+                EventManager.unregisterEventHandler(listener)
+                listener.removeEventListenerScope()
+            }
+        }
+    }
+
+    @Test
+    fun `disabling the listener cancels the run instead of ending it by a guard`() = runTest {
+        val listener = object : EventListener {
+            override var running = true
+        }
+        var resumed = false
+        var cleanedUp = false
+        val job = launch(ticker + Guards() + listener.wrapContinuationInterceptor()) {
+            guard(Flag())
+            try {
+                waitTicks(2)
+                resumed = true
+            } finally {
+                cleanedUp = true
+            }
+        }
+        job.invokeOnCompletion { ended = it }
+
+        ticker.tick()
+        listener.running = false
+        ticker.tick()
+        job.join()
+
+        assertTrue(ended is EventListenerNotListeningException, "The run ended with $ended")
+        assertFalse(resumed)
+        assertTrue(cleanedUp)
+    }
+
+}
