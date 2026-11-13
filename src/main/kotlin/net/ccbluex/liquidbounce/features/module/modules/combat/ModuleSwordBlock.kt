@@ -33,10 +33,12 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.ShieldItem
 
 /**
- * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
+ * Shows blocking with a shield as 1.8 sword blocking. A sword that cannot block by itself (1.9 to 1.21.3) uses the
+ * shield as well, which ViaVersion puts into the offhand for 1.8 servers.
  */
 object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, aliases = listOf("OldBlocking")) {
 
@@ -48,8 +50,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
 
     private val LivingEntity.shouldApplySwordBlockAnimation: Boolean
         get() {
-            if (this === player &&
-                (KillAuraAutoBlock.showsBlockPose || fakeOnPressing && mc.options.keyUse.isPressedOnAny)) {
+            if (this === player && fakeOnPressing && mc.options.keyUse.isPressedOnAny) {
                 return true
             }
 
@@ -59,15 +60,17 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
         }
 
     /**
-     * Determines if the sword block animation should be applied no matter if we
-     * are actually blocking.
+     * Whether the sword in the main hand of [entity] is drawn blocking: while AutoBlock shows the block pose, or while
+     * SwordBlock draws the shield it blocks with as the sword.
      */
     @JvmStatic
     @JvmOverloads
     fun shouldAnimateSwordBlock(entity: LivingEntity, mainHandItem: ItemStack = entity.mainHandItem): Boolean {
-        return (running || KillAuraAutoBlock.showsBlockPose)
-            && entity.shouldApplySwordBlockAnimation
-            && mainHandItem.isSword
+        if (!mainHandItem.isSword) {
+            return false
+        }
+
+        return KillAuraAutoBlock.showsBlockPose && entity === player || running && entity.shouldApplySwordBlockAnimation
     }
 
     @JvmOverloads
@@ -75,7 +78,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
         offHandStack: ItemStack = player.offhandItem,
         mainHandStack: ItemStack = player.mainHandItem
     ): Boolean {
-        if (!running && !KillAuraAutoBlock.showsBlockPose) {
+        if (!running) {
             return false
         }
 
@@ -104,7 +107,8 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
             val hand = packet.hand
             val itemInHand = player.getItemInHand(hand) // or activeItem
 
-            if (hand == InteractionHand.MAIN_HAND && itemInHand.isSword) {
+            if (hand == InteractionHand.MAIN_HAND && itemInHand.isSword
+                && itemInHand.useAnimation != ItemUseAnimation.BLOCK) {
                 val offHandItem = player.offhandItem
                 if (offHandItem.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server

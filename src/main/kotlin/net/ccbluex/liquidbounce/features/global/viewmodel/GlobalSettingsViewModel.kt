@@ -112,13 +112,11 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
 
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
-     * of a sword. This choice is only used when the [ModuleSwordBlock] module is enabled.
+     * of a sword. None keeps the block pose of the game.
      */
-    val blockAnimationChoice = modes(
-        this,
-        "BlockingAnimation",
-        OneSevenAnimation,
+    val blockAnimationChoice = modes(this, "BlockingAnimation", { it.indexOf(OneSevenAnimation) }) {
         arrayOf(
+            NoneMode(it),
             OneSevenAnimation,
             PushdownAnimation,
             SigmaAnimation,
@@ -126,7 +124,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
             AvatarAnimation,
             DortwareAnimation
         )
-    )
+    }
 
     object EquipOffset : ToggleableValueGroup(this, "EquipOffset", true) {
         private val ignore by multiEnumChoice<Ignores>("Ignore")
