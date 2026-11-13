@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -47,6 +46,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
+import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -312,7 +312,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -320,11 +320,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(
-                visibility = visibility,
-                forkedFromItemId = itemId,
-                forkedFromRevisionId = revisionId
-            )
+            details.copy(forkedFromItemId = itemId, forkedFromRevisionId = revisionId)
         )
     }
 
@@ -336,7 +332,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -347,7 +343,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(visibility = visibility),
+            details,
             withContext(Dispatchers.Main) { changedSince(base) }
         ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
 
@@ -386,13 +382,15 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         }
     }
 
-    suspend fun delete(session: OAuthSession) {
-        check(state != State.NONE) { "No tracked config" }
-
-        val id = itemId
+    /**
+     * Deletes the config from the marketplace and stops tracking it when it is the tracked one.
+     */
+    suspend fun delete(session: OAuthSession, id: Int) {
         MarketplaceApi.deleteMarketplaceItem(session, id)
         cacheDir(id).deleteRecursively()
-        detach()
+        if (state != State.NONE && id == itemId) {
+            detach()
+        }
     }
 
     /**
@@ -616,6 +614,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         detectionJob?.cancel()
         ConfigSystem.store(this)
         EventManager.callEvent(RefreshArrayListEvent)
+        EventManager.callEvent(ConfigTrackerChangeEvent)
     }
 
 }

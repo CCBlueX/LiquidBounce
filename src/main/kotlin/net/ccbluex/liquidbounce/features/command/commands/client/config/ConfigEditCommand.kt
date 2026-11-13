@@ -63,7 +63,7 @@ object ConfigEditCommand {
             execSuspend {
                 requireOwnTracked()
                 val name = ConfigTracker.itemName
-                request { ConfigTracker.delete(session()) }
+                request { ConfigTracker.delete(session(), ConfigTracker.itemId) }
                 MarketplaceConfigs.refresh()
                 chat(regular(t("delete.deleted", variable(name))))
             }

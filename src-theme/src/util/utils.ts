@@ -60,3 +60,32 @@ export function isTextEntry(target: EventTarget | null): boolean {
 
     return target instanceof HTMLElement && target.isContentEditable;
 }
+
+const DAY_MILLIS = 24 * 60 * 60 * 1000;
+const DAYS_SHOWN_RELATIVE = 28;
+const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {month: "short", day: "numeric", year: "numeric"});
+const RELATIVE_FORMAT = new Intl.RelativeTimeFormat("en-US", {numeric: "auto"});
+const COUNT_FORMAT = new Intl.NumberFormat("en-US", {notation: "compact", maximumFractionDigits: 1});
+
+export function formatDate(time: number): string {
+    return DATE_FORMAT.format(time);
+}
+
+/**
+ * "today", "3 days ago" or "last week", and beyond four weeks the date as "on Aug 22, 2026".
+ */
+export function formatTimeAgo(time: number): string {
+    const days = Math.max(0, Math.floor((Date.now() - time) / DAY_MILLIS));
+    if (days > DAYS_SHOWN_RELATIVE) {
+        return `on ${formatDate(time)}`;
+    }
+
+    return days < 7 ? RELATIVE_FORMAT.format(-days, "day") : RELATIVE_FORMAT.format(-Math.floor(days / 7), "week");
+}
+
+/**
+ * 1430 as "1.4K".
+ */
+export function formatCount(value: number): string {
+    return COUNT_FORMAT.format(value);
+}

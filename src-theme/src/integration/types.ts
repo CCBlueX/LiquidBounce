@@ -296,6 +296,7 @@ export interface Session {
 export interface Server {
     id: number;
     address: string;
+    rootDomain: string;
     icon: string;
     label: TextComponent | string;
     players: {
@@ -589,3 +590,181 @@ type KeyboardKeyName =
 export type MinecraftMouseKey = `key.mouse.${MouseKeyName}`;
 export type MinecraftKeyboardKey = `key.keyboard.${KeyboardKeyName}`;
 export type MinecraftKey = MinecraftMouseKey | MinecraftKeyboardKey;
+
+export type MarketplaceItemType = "Config" | "Theme" | "Addon" | "Script" | "Other";
+
+export type MarketplaceVisibility = "public" | "unlisted";
+
+export type MarketplaceSort = "top" | "new";
+
+export type ConfigTrackerState = "None" | "Tracked" | "Editing";
+
+export interface MarketplacePagination {
+    current: number;
+    pages: number;
+    items: number;
+}
+
+export interface MarketplacePage<T> {
+    items: T[];
+    pagination: MarketplacePagination;
+}
+
+/**
+ * `code` is set when the query was a share code, `unfeatured` counts the configs the featured filter hides
+ * when it leaves nothing.
+ */
+export interface MarketplaceConfigPage extends MarketplacePage<MarketplaceConfig> {
+    code: boolean;
+    unfeatured: number;
+}
+
+export interface MarketplaceConfigQuery {
+    page: number;
+    query: string;
+    tags: string[];
+    server: boolean;
+    featured: boolean;
+    sort: MarketplaceSort;
+}
+
+export interface MarketplaceConfig {
+    id: number;
+    name: string;
+    address: string;
+    image?: string;
+    featured: boolean;
+    binds: boolean;
+    tags: string[];
+    servers: string[];
+    protocol?: string;
+    protocolMatches: boolean;
+    works: number;
+    fails: number;
+    downloads: number;
+    updatedAt?: number;
+    overlayOn?: string;
+    own: boolean;
+    editable: boolean;
+    visibility?: MarketplaceVisibility;
+}
+
+export interface MarketplaceLinkedConfig {
+    id: number;
+    address: string;
+    image?: string;
+    featured: boolean;
+}
+
+export interface MarketplaceConfigRevision {
+    id: number;
+    createdAt?: number;
+    changelog?: string;
+    works: number;
+    fails: number;
+    latest: boolean;
+    loaded: boolean;
+    first: boolean;
+}
+
+/**
+ * `report` is the account's own report on the newest revision.
+ */
+export interface MarketplaceConfigDetail {
+    config: MarketplaceConfig;
+    description: string;
+    createdAt?: number;
+    shareCode?: string;
+    forkOf?: MarketplaceLinkedConfig;
+    configs: MarketplaceLinkedConfig[];
+    installs: MarketplaceItem[];
+    revisions: MarketplaceConfigRevision[];
+    changes?: string[];
+    report?: boolean;
+}
+
+/**
+ * What publishing and editing a config send.
+ */
+export interface MarketplaceConfigListing {
+    name: string;
+    description: string;
+    tags: string[];
+    servers: string[];
+    visibility: MarketplaceVisibility;
+}
+
+export type MarketplacePublishKind = "New" | "Overlay" | "Fork";
+
+export interface MarketplacePublishedConfig {
+    id: number;
+    address: string;
+    shareCode?: string;
+}
+
+/**
+ * `id` is 0 while nothing is tracked. `backup` tells whether the settings from before the first load can be
+ * restored.
+ */
+export interface ConfigTracker {
+    state: ConfigTrackerState;
+    id: number;
+    address: string;
+    image?: string;
+    own: boolean;
+    editable: boolean;
+    backup: boolean;
+}
+
+export type ConfigTrackerAction = "revert" | "restore" | "detach";
+
+export interface MarketplaceRevision {
+    id: number;
+    version: string;
+    liquidbounce?: string;
+    createdAt?: number;
+    changelog?: string;
+}
+
+/**
+ * `summary` is the first line of the description, as Markdown. `notFor` is the running LiquidBounce when no
+ * revision is for it.
+ */
+export interface MarketplaceItem {
+    id: number;
+    type: MarketplaceItemType;
+    name: string;
+    author?: string;
+    image?: string;
+    summary: string;
+    featured: boolean;
+    downloads: number;
+    rating?: number;
+    reviews: number;
+    subscribed: boolean;
+    installable: boolean;
+    notFor?: string;
+    installed?: MarketplaceRevision;
+    update: boolean;
+    restartRequired: boolean;
+    inUse: boolean;
+}
+
+export interface MarketplaceItemVersion {
+    revision: MarketplaceRevision;
+    installed: boolean;
+    fits: boolean;
+}
+
+export interface MarketplaceItemDetail {
+    item: MarketplaceItem;
+    description: string;
+    liquidbounce: string;
+    versions: MarketplaceItemVersion[];
+}
+
+export interface MarketplaceInstalledItem {
+    id: number;
+    type: MarketplaceItemType;
+    name: string;
+}

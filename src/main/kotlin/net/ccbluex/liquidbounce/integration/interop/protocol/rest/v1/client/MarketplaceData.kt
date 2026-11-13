@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.command.commands.client.config.isEditableBy
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.features.marketplace.getInstallState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
@@ -54,6 +56,8 @@ internal class ConfigPageData(
 
 /**
  * @param overlayOn the config it loads on top of
+ * @param own the account published it
+ * @param editable the account may publish revisions of it
  */
 internal class ConfigData(
     val id: Int,
@@ -71,12 +75,15 @@ internal class ConfigData(
     val downloads: Int,
     val updatedAt: Long?,
     val overlayOn: String?,
+    val own: Boolean,
+    val editable: Boolean,
     val visibility: MarketplaceItemVisibility?,
 )
 
 internal class LinkedConfigData(val id: Int, val address: String, val image: String?, val featured: Boolean)
 
 /**
+ * @param shareCode only unlisted configs have one, and only their author gets it
  * @param configs loaded before it, in this order
  * @param installs add-ons and scripts loading it installs
  * @param changes the modules an overlay sets
@@ -86,6 +93,7 @@ internal class ConfigDetailData(
     val config: ConfigData,
     val description: String,
     val createdAt: Long?,
+    val shareCode: String?,
     val forkOf: LinkedConfigData?,
     val configs: List<LinkedConfigData>,
     val installs: List<ItemData>,
@@ -94,6 +102,9 @@ internal class ConfigDetailData(
     val report: Boolean?,
 )
 
+/**
+ * @param loaded the tracker runs this revision
+ */
 internal class ConfigRevisionData(
     val id: Int,
     val createdAt: Long?,
@@ -101,6 +112,7 @@ internal class ConfigRevisionData(
     val works: Int,
     val fails: Int,
     val latest: Boolean,
+    val loaded: Boolean,
     val first: Boolean,
 )
 
@@ -151,6 +163,23 @@ internal class ItemDetailData(
     val versions: List<VersionData>,
 )
 
+/**
+ * @param id 0 while nothing is tracked
+ * @param editable the account may publish revisions of the tracked config
+ * @param backup the settings from before the first load can be restored
+ */
+internal class TrackerData(
+    val state: ConfigTracker.State,
+    val id: Int,
+    val address: String,
+    val image: String?,
+    val own: Boolean,
+    val editable: Boolean,
+    val backup: Boolean,
+)
+
+internal class PublishedConfigData(val id: Int, val address: String, val shareCode: String?)
+
 internal class InstalledItemData(val id: Int, val type: MarketplaceItemType, val name: String)
 
 internal val clientVersionTag get() = "v${AddonInstaller.liquidbounce}"
@@ -161,7 +190,7 @@ private val MarketplaceLinkedItem.address
 private suspend fun MarketplaceItem.findServerIcon() =
     targetServers.orEmpty().firstNotNullOfOrNull { ServerIcons.of(it) }
 
-internal suspend fun MarketplaceItem.toConfigData(): ConfigData {
+internal suspend fun MarketplaceItem.toConfigData(userId: String?): ConfigData {
     val base = MarketplaceApi.getItemDependencies(id).firstOrNull { it.item.type == MarketplaceItemType.CONFIG }
     return ConfigData(
         id = id,
@@ -179,12 +208,33 @@ internal suspend fun MarketplaceItem.toConfigData(): ConfigData {
         downloads = downloads,
         updatedAt = parseEpochMillis(updatedAt ?: createdAt),
         overlayOn = base?.address,
+        own = userId != null && uid == userId,
+        editable = isEditableBy(userId),
         visibility = visibility,
     )
 }
 
-internal suspend fun List<MarketplaceItem>.toConfigData() = coroutineScope {
-    map { async { it.toConfigData() } }.awaitAll()
+internal suspend fun List<MarketplaceItem>.toConfigData(userId: String?) = coroutineScope {
+    map { async { it.toConfigData(userId) } }.awaitAll()
+}
+
+/**
+ * Works offline, then without the image and what the account may do.
+ */
+internal suspend fun getTrackerData(): TrackerData {
+    val userId = getOwnUserIdOrNull()
+    val item = ConfigTracker.trackedItemId?.let { id ->
+        runCatching { MarketplaceApi.getMarketplaceItem(id, getSessionOrNull()) }.getOrNull()
+    }
+    return TrackerData(
+        state = ConfigTracker.state,
+        id = ConfigTracker.itemId,
+        address = ConfigTracker.address,
+        image = item?.findServerIcon(),
+        own = item != null && userId == ConfigTracker.itemUid,
+        editable = item?.isEditableBy(userId) == true,
+        backup = ConfigTracker.hasBackup,
+    )
 }
 
 internal suspend fun MarketplaceItem.toLinkedConfigData() = LinkedConfigData(id, address, findServerIcon(), featured)

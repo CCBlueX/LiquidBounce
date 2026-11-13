@@ -16,6 +16,21 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    ConfigTracker,
+    ConfigTrackerAction,
+    MarketplaceConfig,
+    MarketplaceConfigDetail,
+    MarketplaceConfigListing,
+    MarketplaceConfigPage,
+    MarketplaceConfigQuery,
+    MarketplaceInstalledItem,
+    MarketplaceItem,
+    MarketplaceItemDetail,
+    MarketplaceItemType,
+    MarketplacePage,
+    MarketplacePublishedConfig,
+    MarketplacePublishKind,
+    MarketplaceSort,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -903,4 +918,158 @@ export function itemTextureUrl(identifier: string) {
 
 export function effectTextureUrl(effectId: string) {
     return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
+}
+
+/**
+ * The server the client is connected to, `null` in singleplayer and the menus.
+ */
+export async function getCurrentServer(): Promise<Omit<Server, "id" | "online"> | null> {
+    const response = await fetch(`${API_BASE}/client/servers/current`);
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    return await response.json();
+}
+
+/**
+ * A marketplace request the client refused, with the reason it gave. 503 means the marketplace is unreachable.
+ */
+export class MarketplaceError extends Error {
+    constructor(message: string, readonly status: number) {
+        super(message);
+    }
+}
+
+async function marketplaceRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+    const response = await fetch(`${API_BASE}/client/marketplace${path}`, {
+        method,
+        headers: body === undefined ? undefined : {
+            "Content-Type": "application/json"
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new MarketplaceError(error?.reason ?? response.statusText, response.status);
+    }
+
+    return response.status === 204 ? undefined as T : await response.json();
+}
+
+export async function getMarketplaceTags(): Promise<string[]> {
+    return await marketplaceRequest("/tags");
+}
+
+export async function getMarketplaceConfigs(query: MarketplaceConfigQuery): Promise<MarketplaceConfigPage> {
+    const searchParams = new URLSearchParams({
+        page: query.page.toString(),
+        query: query.query,
+        tags: query.tags.join(","),
+        server: query.server.toString(),
+        featured: query.featured.toString(),
+        sort: query.sort
+    });
+
+    return await marketplaceRequest(`/configs?${searchParams.toString()}`);
+}
+
+export async function getMarketplaceConfig(id: number): Promise<MarketplaceConfigDetail> {
+    return await marketplaceRequest(`/configs/${id}`);
+}
+
+export async function getMarketplaceConfigModules(id: number): Promise<string[]> {
+    return await marketplaceRequest(`/configs/${id}/modules`);
+}
+
+/**
+ * Without modules the whole config loads and is tracked.
+ */
+export async function loadMarketplaceConfig(id: number, modules: string[] | null) {
+    await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
+}
+
+/**
+ * Without `works` the report is withdrawn.
+ */
+export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceConfig> {
+    return await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
+}
+
+export async function editMarketplaceConfig(id: number, listing: MarketplaceConfigListing): Promise<MarketplaceConfig> {
+    return await marketplaceRequest(`/configs/${id}`, "PATCH", listing);
+}
+
+export async function deleteMarketplaceConfig(id: number) {
+    await marketplaceRequest(`/configs/${id}`, "DELETE");
+}
+
+/**
+ * The client puts the share code on the clipboard, pages can not.
+ */
+export async function copyMarketplaceShareCode(id: number) {
+    await marketplaceRequest(`/configs/${id}/share-code`, "POST");
+}
+
+export async function getConfigTracker(): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker");
+}
+
+export async function runConfigTrackerAction(action: ConfigTrackerAction): Promise<ConfigTracker> {
+    return await marketplaceRequest(`/tracker/${action}`, "POST");
+}
+
+export async function publishMarketplaceConfig(
+    kind: MarketplacePublishKind,
+    listing: MarketplaceConfigListing
+): Promise<MarketplacePublishedConfig> {
+    return await marketplaceRequest("/tracker/publish", "POST", {kind, ...listing});
+}
+
+export async function updateTrackedConfig(changelog: string): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker/update", "POST", {changelog});
+}
+
+export async function getMarketplaceItems(
+    type: MarketplaceItemType,
+    page: number,
+    query: string,
+    sort: MarketplaceSort
+): Promise<MarketplacePage<MarketplaceItem>> {
+    const searchParams = new URLSearchParams({type, page: page.toString(), query, sort});
+
+    return await marketplaceRequest(`/items?${searchParams.toString()}`);
+}
+
+export async function getMarketplaceItem(id: number): Promise<MarketplaceItemDetail> {
+    return await marketplaceRequest(`/items/${id}`);
+}
+
+export async function getInstalledMarketplaceItems(): Promise<MarketplaceInstalledItem[]> {
+    return await marketplaceRequest("/items/installed");
+}
+
+export async function installMarketplaceItem(id: number) {
+    await marketplaceRequest(`/items/${id}/install`, "POST");
+}
+
+export async function updateMarketplaceItem(id: number): Promise<MarketplaceItem> {
+    return await marketplaceRequest(`/items/${id}/update`, "POST");
+}
+
+export async function removeMarketplaceItem(id: number) {
+    await marketplaceRequest(`/items/${id}/remove`, "POST");
+}
+
+/**
+ * Opens a link of the item's or config's description in the system browser. The client refuses any other URL.
+ */
+export async function openMarketplaceLink(id: number, url: string) {
+    await marketplaceRequest(`/items/${id}/openLink`, "POST", {url});
+}
+
+export async function applyMarketplaceTheme(id: number) {
+    await marketplaceRequest(`/items/${id}/apply`, "POST");
 }
