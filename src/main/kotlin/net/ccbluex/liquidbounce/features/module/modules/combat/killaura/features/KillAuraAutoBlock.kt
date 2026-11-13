@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
@@ -166,11 +165,12 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private var wantsBlockPose = false
 
     /**
-     * Whether the sword is drawn in the block pose, blocking or not. 1.8 and older block with a sword, newer versions
-     * need SwordBlock to draw it.
+     * Whether the sword is drawn in the block pose, blocking or not: a sword that can block by itself, or one that
+     * SwordBlock draws for the shield it blocks with.
      */
     val showsBlockPose: Boolean
-        get() = wantsBlockPose && running && (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
+        get() = wantsBlockPose && running &&
+            (player.mainHandItem.useAnimation == ItemUseAnimation.BLOCK || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
