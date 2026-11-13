@@ -195,6 +195,7 @@ object ModuleFucker : ClientModule(
     override fun onDisabled() {
         clearCurrentTarget()
         oldTarget = null
+        cooldownLeft = 0
         targetRenderer.clearSilently()
     }
 
@@ -214,8 +215,16 @@ object ModuleFucker : ClientModule(
         updateCurrentTarget()
     }
 
+    /** Ticks of [delay] left after the last use. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val breaker = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
@@ -242,14 +251,12 @@ object ModuleFucker : ClientModule(
             return@tickHandler
         }
 
-        // Guards the aim only, not the delay after a use
-        val rayTraceResult = requires {
-            aim.takeIf { currentTarget == destroyerTarget && !ModuleBlink.running }
-        }.use { plan ->
-            val priority =
-                if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1
-            lookAt(priority, { plan.value }) { going -> hitOn(destroyerTarget.pos, going) }
-        }
+        val plan by requires { aim }
+        requires { currentTarget == destroyerTarget }
+        requires { !ModuleBlink.running }
+
+        val priority = if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1
+        val rayTraceResult = lookAt(priority, { plan }) { going -> hitOn(destroyerTarget.pos, going) }
         if (rayTraceResult.blockPos.state?.isNotBreakable(rayTraceResult.blockPos) != false) {
             return@tickHandler
         }
@@ -260,7 +267,7 @@ object ModuleFucker : ClientModule(
                 swingMode.interactSwing(InteractionHand.MAIN_HAND)
             }
 
-            waitTicks(delay)
+            cooldownLeft = delay
         } else {
             doBreak(rayTraceResult, immediate = forceImmediateBreak, swingMode)
         }

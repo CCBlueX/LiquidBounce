@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -149,8 +148,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         updateTarget()
     }
 
+    /** Ticks of [interactDelay] left after the last interaction. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         // Return if the user is inside a screen like the inventory
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
@@ -169,18 +176,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
 
         aim ?: return@tickHandler
-        // Guards the aim only, not the delay after the action
-        val (rayTraceResult, rotation) = requires {
-            aim.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> && !ModuleBlink.running }
-        }.use { plan ->
-            requires { currentTarget }.use { target ->
-                // The block the rotation going out this tick hits, once that is the target
-                lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan.value }) { going ->
-                    traceFromPlayer(going, range.toDouble())
-                        .takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == target.value }
-                        ?.let { it to going }
-                }
-            }
+        val plan by requires { aim }
+        val target by requires { currentTarget }
+        requires { mc.gui.screen() !is AbstractContainerScreen<*> }
+        requires { !ModuleBlink.running }
+
+        // The block the rotation going out this tick hits, once that is the target
+        val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
+            traceFromPlayer(going, range.toDouble())
+                .takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == target }
+                ?.let { it to going }
         }
         val blockPos = rayTraceResult.blockPos
 
@@ -199,7 +204,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
             if (interaction.destroyStage == -1) {
                 // Only wait if the block is completely broken
-                waitTicks(interactDelay.random())
+                cooldownLeft = interactDelay.random()
             }
         } else if (AutoUseBoneMeal.enabled && AutoUseBoneMeal.isReady && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot { it.item is BoneMealItem } ?: return@tickHandler
@@ -207,7 +212,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
             doPlacement(rayTraceResult, rotation, hand = boneMealSlot.useHand)
             AutoUseBoneMeal.reset()
-            waitTicks(interactDelay.random())
+            cooldownLeft = interactDelay.random()
         } else {
             val blockState = world.getBlockState(blockPos)
 
@@ -231,7 +236,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult, rotation, hand = slot.useHand)
 
-                waitTicks(interactDelay.random())
+                cooldownLeft = interactDelay.random()
             }
         }
     }
@@ -364,6 +369,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
         currentTarget = null
         aim = null
+        cooldownLeft = 0
         AutoUseBoneMeal.reset()
         SilentHotbar.resetSlot(this)
     }

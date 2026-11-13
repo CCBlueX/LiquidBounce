@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -332,9 +331,9 @@ internal object ModuleTickBase : ClientModule(
 
             busy = true
             try {
-                // The burst and the hold planned now must not land in another world, on a vehicle or while blinking
-                unchanged { mc.level }
-                requires { player.vehicle == null && !ModuleBlink.running }
+                // The burst and the hold planned now must not land on a vehicle or while blinking
+                requires { player.vehicle == null }
+                requires { !ModuleBlink.running }
 
                 if (holdFirst) {
                     holdFirst(delayTicks)

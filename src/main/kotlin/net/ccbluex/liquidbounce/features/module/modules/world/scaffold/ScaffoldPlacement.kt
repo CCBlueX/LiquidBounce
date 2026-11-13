@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -76,10 +77,13 @@ import kotlin.math.sin
 private const val GOD_BRIDGE_SIDE = 45f
 
 /**
- * How steeply a GodBridge look points down: steep enough to meet the face of a row a little before its edge, where
- * SafeWalk would stop the player, and still at that edge.
+ * How steeply a GodBridge look points down: the walking player meets the face of the row on the last step before
+ * leaving it, mostly. When that step misses it, SafeWalk's Ledge mode sneaks or jumps.
  */
-private const val GOD_BRIDGE_PITCH = 79f
+private const val GOD_BRIDGE_PITCH = 75.5f
+
+/** Blocks a predicted click has to land inside the edges of its face, see [ScaffoldPlacement.placesInTime]. */
+private const val FACE_MARGIN = 0.03
 
 /** Degrees past halfway to the next 45 degree step the movement has to turn before the GodBridge look follows. */
 private const val GOD_BRIDGE_STEP_HOLD = 10f
@@ -221,8 +225,9 @@ internal object ScaffoldPlacement {
         }
 
     /**
-     * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [HOLD_TICKS]
-     * ticks while still on the ground. If that's at the edge, SafeWalk holds the player there until it does.
+     * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [ticks] ticks
+     * while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [wellInside]
+     * only counts clicks that land clear of the face's edges.
      */
     private fun placesSoon(
         rotation: Rotation,
@@ -230,15 +235,18 @@ internal object ScaffoldPlacement {
         positions: List<BlockPos>,
         input: SimulatedPlayer.SimulatedPlayerInput =
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input)),
+        ticks: Int = HOLD_TICKS,
+        wellInside: Boolean = false,
     ): Boolean {
         val simulation = SimulatedPlayer.fromClientPlayer(input)
-        repeat(HOLD_TICKS) {
+        repeat(ticks) {
             simulation.tick()
             if (!simulation.onGround()) {
                 return false
             }
             val eyes = simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
-            if (placementTargetClickedBy(rotation, eyes, stack, positions) != null) {
+            val placement = placementTargetClickedBy(rotation, eyes, stack, positions)
+            if (placement != null && (!wellInside || placement.isWellInsideFace())) {
                 return true
             }
         }
@@ -247,21 +255,25 @@ internal object ScaffoldPlacement {
 
     /**
      * Whether [rotation] puts [target] down before the player, walking on without sneaking, leaves the ground. Only a
-     * view that reached the aim stays the same over those ticks.
+     * view that reached the aim stays the same over those ticks. A GodBridge view resting near its look barely moves,
+     * so its next tick counts as well.
      */
     fun placesInTime(target: BlockPlacementTarget, rotation: Rotation): Boolean {
-        val aim = ModuleScaffold.aim ?: return false
-        if (rotation.rotationDeltaLengthTo(aim) > RotationUtil.gcd) {
-            return false
+        val held = ModuleScaffold.aim?.let { aim -> rotation.rotationDeltaLengthTo(aim) <= RotationUtil.gcd } == true
+        val ticks = when {
+            held -> HOLD_TICKS
+            ModuleScaffold.aimMode == AimMode.GOD_BRIDGE -> 1
+            else -> return false
         }
         // Built by hand: asking for SafeWalk here would ask scaffold again
         val input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput(player.input),
             jumping = player.input.keyPresses.jump,
-            sprinting = player.isSprinting || player.input.keyPresses.sprint,
+            // The held key alone does not sprint: walking against the view, movement correction keeps it off
+            sprinting = player.isSprinting,
             sneaking = false,
         )
-        return placesSoon(rotation, stack, listOf(target.placedBlock), input)
+        return placesSoon(rotation, stack, listOf(target.placedBlock), input, ticks, wellInside = true)
     }
 
     fun rotation(target: BlockPlacementTarget?): Rotation? {
@@ -353,3 +365,16 @@ internal object ScaffoldPlacement {
     }
 
 }
+
+    /**
+     * Whether the predicted click lands at least [FACE_MARGIN] inside the edges of its face. A prediction that only
+     * grazes the face often misses for real, and the player walks off without SafeWalk stepping in.
+     */
+    private fun BlockPlacementTarget.isWellInsideFace(): Boolean {
+        val bounds = interactedBlockPos.outlineShape.bounds()
+        val local = blockHitResult.location.subtract(Vec3.atLowerCornerOf(interactedBlockPos))
+        return Direction.Axis.entries.all { axis ->
+            axis == direction.axis ||
+                local.get(axis) in bounds.min(axis) + FACE_MARGIN..bounds.max(axis) - FACE_MARGIN
+        }
+    }

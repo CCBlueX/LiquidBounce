@@ -80,7 +80,10 @@ fun EventListener.launchSequence(running: Job?, block: suspend CoroutineScope.()
         return running
     }
 
-    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED, block)
+    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED) {
+        beginRun()
+        block()
+    }
 }
 
 /**

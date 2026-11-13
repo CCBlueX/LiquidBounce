@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -63,8 +62,16 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
         super.enable()
     }
 
+    /** Ticks left before the next look at the situation, after a notice, the Duels NPC or the head. */
+    private var cooldownLeft = 0
+
     val repeatable = tickHandler {
         if (ModuleAutoQueue.shouldPause) {
+            return@tickHandler
+        }
+
+        if (cooldownLeft > 0) {
+            cooldownLeft--
             return@tickHandler
         }
 
@@ -82,7 +89,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             inMatch = false
 
             notification("AutoPlay", "Not on GommeHD.net", NotificationEvent.Severity.ERROR)
-            waitTicks(20)
+            cooldownLeft = 20
             return@tickHandler
         }
 
@@ -130,9 +137,10 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
         super.disable()
 
         inMatch = false
+        cooldownLeft = 0
     }
 
-    private suspend fun handleLobbySituation() {
+    private fun handleLobbySituation() {
         inMatch = false
 
         val duelsEntity = world.entityGetter.firstOrNull(EntityTypes.ARMOR_STAND) {
@@ -152,7 +160,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        waitSeconds(5)
+        cooldownLeft = 5 * 20
     }
 
     private suspend fun handleDuelsSituation() {
@@ -164,23 +172,20 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
 
             val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot ?: return
 
-            // Guards the use only, not the wait after it
-            requires { !inMatch && Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }.use {
-                unchanged { mc.level }.use {
-                    if (headSlot != player.inventory.selectedSlot) {
-                        SilentHotbar.selectSlotSilently(this@AutoQueueGommeDuels, headSlot, 20)
-                    }
+            requires { !inMatch }
+            requires { Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }
 
-                    waitTicks(5)
-
-                    // Use head
-                    interaction.startPrediction(world) { sequence ->
-                        ServerboundUseItemPacket(InteractionHand.MAIN_HAND, sequence, player.yRot, player.xRot)
-                    }
-                }
+            if (headSlot != player.inventory.selectedSlot) {
+                SilentHotbar.selectSlotSilently(this@AutoQueueGommeDuels, headSlot, 20)
             }
 
-            waitTicks(20)
+            waitTicks(5)
+
+            // Use head
+            interaction.startPrediction(world) { sequence ->
+                ServerboundUseItemPacket(InteractionHand.MAIN_HAND, sequence, player.yRot, player.xRot)
+            }
+            cooldownLeft = 20
         } else if (!ModuleKillAura.running && controlKillAura) {
             ModuleKillAura.enabled = true
         }

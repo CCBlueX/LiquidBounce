@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
@@ -56,15 +57,20 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     /**
      * [stops] tells the modes whether an edge has to stop the player at all, Scaffold says no while it places the
-     * next block in time.
+     * next block in time. A caller placing blocks passes its [blockCount] and gets [Ledge] as well.
      */
-    fun safeWalkChoices(mode: ModeValueGroup<Mode>, stops: () -> Boolean = { true }): Array<Mode> {
-        return arrayOf(
+    fun safeWalkChoices(
+        mode: ModeValueGroup<Mode>,
+        stops: () -> Boolean = { true },
+        blockCount: (() -> Int)? = null,
+    ): Array<Mode> {
+        val choices = arrayOf(
             NoneMode(mode),
             Safe(mode, stops),
             OnEdge(mode, stops),
             Sneak(mode, stops),
         )
+        return if (blockCount != null) choices + Ledge(mode, stops, blockCount) else choices
     }
 
     private class Safe(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Safe") {
@@ -95,6 +101,81 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
         override fun disable() {
             sneaked = false
+            super.disable()
+        }
+
+    }
+
+    /**
+     * Walks over the edge as if nothing was there and only acts on the last tick before leaving it, when [stops]
+     * says the block won't go down in time: one of the [actions], picked at random.
+     */
+    private class Ledge(
+        override val parent: ModeValueGroup<Mode>,
+        private val stops: () -> Boolean,
+        private val blockCount: () -> Int,
+    ) : Mode("Ledge") {
+
+        private enum class Action(override val tag: String) : Tagged {
+            JUMP("Jump"),
+            SNEAK("Sneak"),
+
+            /** Lets go of the keys, the player still slides a little. */
+            STOP_INPUT("StopInput"),
+            BACKWARDS("Backwards"),
+        }
+
+        private val actions by multiEnumChoice("Actions", Action.SNEAK, canBeNone = false)
+
+        /** Below this many blocks a jump could leave the player in the air without one, so it sneaks. */
+        private val sneakBelowBlocks by int("SneakBelowBlocks", 3, 0..10)
+        private val sneakTime by intRange("SneakTime", 1..1, 1..10, suffix = "ticks")
+        private var sneakTicks = 0
+
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+            if (sneakTicks > 0) {
+                sneakTicks--
+                event.sneak = true
+                return@handler
+            }
+
+            val leaves = player.onGround() && event.directionalInput.isMoving && leavesEdge(event)
+            if (!leaves || !stops()) {
+                return@handler
+            }
+
+            val action = if (blockCount() < sneakBelowBlocks) Action.SNEAK else actions.random()
+            debugParameter("Action") { action }
+            when (action) {
+                Action.JUMP -> event.jump = true
+                Action.SNEAK -> {
+                    event.sneak = true
+                    sneakTicks = sneakTime.random() - 1
+                }
+                Action.STOP_INPUT -> event.directionalInput = DirectionalInput.NONE
+                Action.BACKWARDS -> event.directionalInput = event.directionalInput.invert()
+            }
+        }
+
+        /**
+         * Whether the step [event] asks for leaves the block, so that the next one falls. Just short of leaving counts
+         * too: the simulation is off by a little now and then.
+         */
+        private fun leavesEdge(event: MovementInputEvent): Boolean {
+            val input = SimulatedPlayer.SimulatedPlayerInput(
+                event.directionalInput,
+                jumping = false,
+                sprinting = player.isSprinting,
+                sneaking = false,
+            )
+            val simulation = SimulatedPlayer.fromClientPlayer(input)
+            simulation.tick()
+            return simulation.clipLedged || player.wouldBeCloseToFallOff(simulation.pos)
+        }
+
+        override fun disable() {
+            sneakTicks = 0
             super.disable()
         }
 
