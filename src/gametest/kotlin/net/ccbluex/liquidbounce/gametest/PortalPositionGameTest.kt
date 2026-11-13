@@ -18,13 +18,12 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.PortalMode
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -34,78 +33,64 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 
 /** Rejects obstructed portal sites, then exercises a successful enable and teardown. */
-class PortalPositionGameTest : LocalGameTest() {
+class PortalPositionGameTest : SingleplayerGameTest({
+    context.restoring(ModuleAutoBuild) {
+        run("gamemode creative $playerName")
+        awaitClient("creative mode") { it.player?.hasInfiniteMaterials() == true }
+        client { mc ->
+            ModuleAutoBuild.settings.getValue("Mode").setByString("Portal")
+            checkNotNull(mc.player).setItemInHand(
+                InteractionHand.MAIN_HAND, ItemStack(Items.OBSIDIAN, 64)
+            )
+            fillSurroundings(mc, Blocks.STONE.defaultBlockState())
 
-    override fun test(context: ClientGameTestContext) {
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoBuild) }
-
-        try {
-            context.worldBuilder().create().use { world ->
-                world.server.runCommand("gamemode creative @a")
-                context.waitFor({ client -> client.player?.hasInfiniteMaterials() == true }, 200)
-                context.onClient { mc ->
-                    ModuleAutoBuild.enabled = false
-                    ModuleAutoBuild.settings.getValue("Mode").setByString("Portal")
-                    checkNotNull(mc.player).setItemInHand(
-                        InteractionHand.MAIN_HAND, ItemStack(Items.OBSIDIAN, 64)
-                    )
-                    fillSurroundings(mc, Blocks.STONE.defaultBlockState())
-
-                    // Call the mode directly too: Value.set logs listener exceptions instead of propagating them.
-                    PortalMode.enabled()
-                    check(ModuleAutoBuild.placer.isDone()) { "An invalid site queued frame blocks" }
-                    check(ModuleAutoBuild.placer.support.blockedPositions.isEmpty())
-                }
-                context.waitTicks(1)
-
-                repeat(2) {
-                    context.onClient {
-                        ModuleAutoBuild.enabled = true
-                        EventManager.callEvent(RotationUpdateEvent)
-                    }
-                    context.waitFor({ !ModuleAutoBuild.enabled }, 20)
-                    context.onClient {
-                        check(ModuleAutoBuild.placer.isDone())
-                        check(ModuleAutoBuild.placer.support.blockedPositions.isEmpty())
-                    }
-                }
-
-                assertImmediateRetry(context)
-            }
-        } finally {
-            context.onClient {
-                ModuleAutoBuild.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleAutoBuild, saved)
-            }
-        }
-    }
-
-    private fun assertImmediateRetry(context: ClientGameTestContext) {
-        context.onClient { mc ->
-            // Leave an invalid attempt's disable queued, then immediately start a valid attempt.
-            ModuleAutoBuild.enabled = true
-            ModuleAutoBuild.enabled = false
-            fillSurroundings(mc, Blocks.AIR.defaultBlockState())
-            ModuleAutoBuild.enabled = true
-            check(ModuleAutoBuild.enabled) { "A valid portal site could not be enabled" }
-            check(!ModuleAutoBuild.placer.isDone()) { "A valid site did not queue frame blocks" }
-            check(ModuleAutoBuild.placer.support.blockedPositions.size == 6)
-        }
-        context.waitTicks(1)
-        context.onClient {
-            check(ModuleAutoBuild.enabled) { "An old invalid attempt disabled the valid retry" }
-            ModuleAutoBuild.enabled = false
-            check(ModuleAutoBuild.placer.isDone())
+            // Call the mode directly too: Value.set logs listener exceptions instead of propagating them.
+            PortalMode.enabled()
+            check(ModuleAutoBuild.placer.isDone()) { "An invalid site queued frame blocks" }
             check(ModuleAutoBuild.placer.support.blockedPositions.isEmpty())
         }
-    }
+        ticks(1)
 
-    private fun fillSurroundings(mc: Minecraft, state: BlockState) {
-        val level = checkNotNull(mc.level)
-        val center = checkNotNull(mc.player).blockPosition()
-        for (pos in BlockPos.betweenClosed(center.offset(-3, -1, -3), center.offset(3, 4, 3))) {
-            level.setBlock(pos, state, 3)
+        repeat(2) {
+            client {
+                ModuleAutoBuild.enabled = true
+                EventManager.callEvent(RotationUpdateEvent)
+            }
+            awaitClient("AutoBuild to turn itself off", timeout = 20) { !ModuleAutoBuild.enabled }
+            client {
+                check(ModuleAutoBuild.placer.isDone())
+                check(ModuleAutoBuild.placer.support.blockedPositions.isEmpty())
+            }
         }
-    }
 
+        assertImmediateRetry()
+    }
+})
+
+private fun GameTestScope.assertImmediateRetry() {
+    client { mc ->
+        // Leave an invalid attempt's disable queued, then immediately start a valid attempt.
+        ModuleAutoBuild.enabled = true
+        ModuleAutoBuild.enabled = false
+        fillSurroundings(mc, Blocks.AIR.defaultBlockState())
+        ModuleAutoBuild.enabled = true
+        check(ModuleAutoBuild.enabled) { "A valid portal site could not be enabled" }
+        check(!ModuleAutoBuild.placer.isDone()) { "A valid site did not queue frame blocks" }
+        check(ModuleAutoBuild.placer.support.blockedPositions.size == 6)
+    }
+    ticks(1)
+    client {
+        check(ModuleAutoBuild.enabled) { "An old invalid attempt disabled the valid retry" }
+        ModuleAutoBuild.enabled = false
+        check(ModuleAutoBuild.placer.isDone())
+        check(ModuleAutoBuild.placer.support.blockedPositions.isEmpty())
+    }
+}
+
+private fun fillSurroundings(mc: Minecraft, state: BlockState) {
+    val level = checkNotNull(mc.level)
+    val center = checkNotNull(mc.player).blockPosition()
+    for (pos in BlockPos.betweenClosed(center.offset(-3, -1, -3), center.offset(3, 4, 3))) {
+        level.setBlock(pos, state, 3)
+    }
 }

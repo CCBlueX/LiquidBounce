@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.gametest.server
 
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import java.util.concurrent.CopyOnWriteArrayList
 
 private const val MESSAGE = "A message from the server"
@@ -28,7 +28,7 @@ private const val MESSAGE = "A message from the server"
 /**
  * Server messages must reach chat handlers as game messages; AutoChatGame and AutoQueue only read those.
  */
-class ChatReceiveTypeGameTest : LiquidBounceGameTest({
+class ChatReceiveTypeGameTest : SingleplayerGameTest({
     val types = CopyOnWriteArrayList<ChatReceiveEvent.ChatType>()
     val listener = object : EventListener {}
 

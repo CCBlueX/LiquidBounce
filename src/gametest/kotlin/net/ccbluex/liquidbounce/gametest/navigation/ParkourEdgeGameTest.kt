@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -40,7 +40,7 @@ private val COURSE = listOf(
 )
 
 /** With Assist off, Parkour still jumps at the very edge: holding forward and sprint gets across gaps over a lake. */
-class ParkourEdgeGameTest : LiquidBounceGameTest({
+class ParkourEdgeGameTest : ServerGameTest({
     val assist = context.fromClient {
         ModuleParkour.containedValues.first { it.name == "Assist" } as ToggleableValueGroup
     }

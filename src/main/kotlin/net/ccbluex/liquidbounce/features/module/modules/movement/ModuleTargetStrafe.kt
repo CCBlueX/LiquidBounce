@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -54,12 +55,15 @@ import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MoverType
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.liquidbounce.utils.math.yaw
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * Target Strafe Module
@@ -100,6 +104,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         it.coerceAtLeast(targetSelector.maxRange)
     }
     private val followRange get() = followRangeValue.get()
+    private val verticalRange by float("VerticalRange", 2f, 0f..8f)
 
     private val requirements by multiEnumChoice<Requirements>("Requirements")
 
@@ -187,6 +192,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         init {
             tree(Validation)
             tree(AdaptiveRange)
+            tree(Visibility)
         }
 
         object Validation : ToggleableValueGroup(Planner, "Validation", true) {
@@ -237,9 +243,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             }
 
             private fun isCloseToFall(position: Vec3): Boolean {
-                position.y = floor(position.y)
                 val hitbox = player.dimensions
-                    .makeBoundingBox(position)
+                    .makeBoundingBox(position.x, floor(position.y), position.z)
                     .inflate(-0.05, 0.0, -0.05)
                     .move(0.0, -EdgeCheck.maxFallHeight.toDouble(), 0.0)
                 return world.noCollision(player, hitbox)
@@ -249,6 +254,74 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         object AdaptiveRange : ToggleableValueGroup(Planner, "AdaptiveRange", false) {
             val maxRange by float("MaxRange", 4f, 1f..5f)
             val rangeStep by float("RangeStep", 0.5f, 0.1f..1.0f)
+        }
+
+        /**
+         * Keeps the target in line of sight: behind a wall, strafes to the side that sees it sooner, or not at all.
+         */
+        object Visibility : ToggleableValueGroup(Planner, "Visibility", true) {
+            private val searchDistance by float("SearchDistance", 4f, 0.5f..10f)
+
+            private const val PROBE_STEP = 0.5
+            private const val PROBE_POINTS = 32
+
+            /**
+             * Points [direction] at the side that keeps or regains sight of [target] on an orbit of [orbitRadius].
+             * Returns `false` when neither side sees it within [searchDistance].
+             */
+            fun steer(target: LivingEntity, orbitRadius: Float): Boolean {
+                val box = target.boundingBox
+
+                if (sees(player.position(), box, maxPoints = 256)) {
+                    if (stepsToSight(target, orbitRadius, direction, 1) == null &&
+                        stepsToSight(target, orbitRadius, -direction, 1) != null
+                    ) {
+                        direction = -direction
+                    }
+                    return true
+                }
+
+                val steps = (searchDistance / PROBE_STEP).toInt().coerceAtLeast(1)
+                val ahead = stepsToSight(target, orbitRadius, direction, steps)
+                val behind = stepsToSight(target, orbitRadius, -direction, steps)
+                if (behind != null && (ahead == null || behind < ahead)) {
+                    direction = -direction
+                }
+                return ahead != null || behind != null
+            }
+
+            /**
+             * Walks the strafe path in [side] for up to [steps] probes and returns the first one that sees [target],
+             * or `null` when none does before the path becomes unsafe.
+             */
+            private fun stepsToSight(target: LivingEntity, orbitRadius: Float, side: Int, steps: Int): Int? {
+                val targetPos = target.position()
+                var point = player.position()
+
+                for (step in 1..steps) {
+                    val yaw = atan2(targetPos.z - point.z, targetPos.x - point.x)
+                    val distance = point.horizontalDistanceTo(targetPos)
+                    point = point.add(computeDirectionVec(yaw, distance, PROBE_STEP, orbitRadius, side))
+
+                    if (!Validation.validatePoint(point)) {
+                        return null
+                    }
+
+                    if (sees(point, target.boundingBox, PROBE_POINTS)) {
+                        return step
+                    }
+                }
+
+                return null
+            }
+
+            private fun sees(feet: Vec3, box: AABB, maxPoints: Int) = canSeeBox(
+                eyes = feet.add(0.0, player.eyeHeight.toDouble(), 0.0),
+                box = box,
+                range = Double.MAX_VALUE,
+                wallsRange = 0.0,
+                maxPoints = maxPoints,
+            )
         }
     }
 
@@ -359,13 +432,20 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
         val playerPos = player.position()
         val targetPos = target.position()
-        val distance = playerPos.horizontalDistanceTo(targetPos)
+        val heightDifference = targetPos.y - playerPos.y
+        val maxRange = targetSelector.maxRange
 
-        // return if we're too far
-        if (distance > followRange) {
+        // The range is a sphere around the target, the orbit its slice at the player's height
+        if (abs(heightDifference) > verticalRange || abs(heightDifference) >= maxRange ||
+            playerPos.distanceTo(targetPos) > followRange
+        ) {
             renderState.reset()
             return null
         }
+
+        val distance = playerPos.horizontalDistanceTo(targetPos)
+        fun orbitRadius(range: Float) =
+            sqrt((range * range - heightDifference * heightDifference).coerceAtLeast(0.0)).toFloat()
 
         if (player.horizontalCollision) {
             direction = -direction
@@ -379,25 +459,31 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             }
         }
 
+        if (Planner.Visibility.enabled && !Planner.Visibility.steer(target, orbitRadius(maxRange))) {
+            renderState.reset()
+            return null
+        }
+
         val strafeYaw = atan2(targetPos.z - playerPos.z, targetPos.x - playerPos.x)
         fun createPlan(range: Float): StrafePlan {
-            val strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            val radius = orbitRadius(range)
+            val strafeVec = computeDirectionVec(strafeYaw, distance, speed, radius, direction)
             val pointCoords = playerPos.add(strafeVec)
             return StrafePlan(
                 target = target,
-                orbitRadius = range,
+                orbitRadius = radius,
                 strafeVec = strafeVec,
                 pointCoords = pointCoords,
                 pointValid = Planner.Validation.validatePoint(pointCoords),
             )
         }
 
-        var plan = createPlan(targetSelector.maxRange)
+        var plan = createPlan(maxRange)
 
         if (!plan.pointValid) {
             if (!Planner.AdaptiveRange.enabled) {
                 direction = -direction
-                plan = createPlan(targetSelector.maxRange)
+                plan = createPlan(maxRange)
             } else {
                 var currentRange = Planner.AdaptiveRange.rangeStep
                 while (!plan.pointValid) {
@@ -406,7 +492,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
                     if (currentRange > Planner.AdaptiveRange.maxRange) {
                         direction = -direction
-                        plan = createPlan(targetSelector.maxRange)
+                        plan = createPlan(maxRange)
                         break
                     }
                 }

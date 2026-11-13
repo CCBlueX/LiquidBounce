@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.query
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 
 private val SOUTH = Regex("""(-?[\d.]+)d$""")
 
@@ -32,7 +32,7 @@ private const val SPRINT_JUMPED = 17.0
  * Plain vanilla movement has to pass, or no other verdict means anything: the player walks and then
  * sprint-jumps south, the server sees it get there and the anticheat reports nothing.
  */
-class LegitMovementGameTest : LiquidBounceGameTest({
+class LegitMovementGameTest : ServerGameTest({
     val start = south()
 
     input.holdKey { it.keyUp }

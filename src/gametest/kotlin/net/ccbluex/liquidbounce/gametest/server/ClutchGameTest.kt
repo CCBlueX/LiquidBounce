@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.TestWorld
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.Ant
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.carried
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -68,7 +68,7 @@ private const val FAR = 4.0
  * on the ground, and it steps off where only a wall below is left to build against. [ModuleAntiVoid] runs along with
  * its ghost blocks, which would make the fall look like a landing and leave the player standing on nothing.
  */
-class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
+class ClutchGameTest : ServerGameTest(TestWorld.VOID, {
     give(BLOCK, BLOCKS)
     awaitClient("the blocks") { checkNotNull(it.player).inventory.countItem(Items.OAK_PLANKS) == BLOCKS }
     // The blocks are not in the hand, so the catch has to take them out of the hotbar itself

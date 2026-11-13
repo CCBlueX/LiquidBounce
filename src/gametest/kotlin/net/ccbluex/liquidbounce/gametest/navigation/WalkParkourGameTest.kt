@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.gametest.forceLoadArea
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -50,7 +50,7 @@ private class ParkourCourse(
  * blocks, jumps up and down, diagonal and odd angles, turns, landings on fences, panes and walls and jumps under a
  * low ceiling, each without falling.
  */
-class WalkParkourGameTest : LiquidBounceGameTest({
+class WalkParkourGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     context.onClient {
         walker = TestWalker("TestParkourWalker", GOAL_RADIUS)

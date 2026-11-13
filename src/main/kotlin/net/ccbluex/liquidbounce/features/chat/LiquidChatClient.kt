@@ -51,6 +51,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -70,6 +71,8 @@ object LiquidChatClient {
 
     private const val MALFORMED_LOG_LENGTH = 200
     private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
+
+    private val isSkipping = env("LB_CHAT_SKIP", "net.ccbluex.liquidbounce.chat.skip")?.toBoolean() ?: false
 
     private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
 
@@ -115,6 +118,11 @@ object LiquidChatClient {
      */
     @Synchronized
     fun restart() {
+        if (isSkipping) {
+            logger.warn("Environment variable 'LB_CHAT_SKIP' is set to 'true'.")
+            return
+        }
+
         val previous = connection
         connection = scope.launch {
             previous?.cancelAndJoin()

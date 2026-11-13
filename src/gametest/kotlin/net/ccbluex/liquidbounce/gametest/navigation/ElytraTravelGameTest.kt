@@ -19,13 +19,12 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitAnswer
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -50,13 +49,13 @@ private const val ARRIVAL = 1.5
  * `.goto` with an elytra over long distances, unhurt: with rockets between platforms over the void of the End, a
  * pillar in the way, and bouncing along the Nether roof with ElytraRecast, faster than sprinting.
  */
-class ElytraTravelGameTest : LiquidBounceGameTest({
+class ElytraTravelGameTest : ServerGameTest({
     context.restoring(ModuleAutoWalk, ModuleElytraRecast) {
         run("item replace entity $playerName armor.chest with minecraft:elytra")
 
         checkEndCruise()
         // ElytraRecast is made for vanilla servers
-        if (anticheats.singleOrNull() == Anticheat.VANILLA) {
+        if (paperOnly) {
             checkRoofBounce()
         }
     }
