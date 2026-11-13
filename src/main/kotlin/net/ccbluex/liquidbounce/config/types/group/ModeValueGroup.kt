@@ -37,8 +37,9 @@ class ModeValueGroup<T : Mode>(
     @Exclude @ProtocolExclude val eventListener: EventListener?,
     name: String,
     activeModeIndexCallback: ToIntFunction<List<T>>,
-    modesCallback: (ModeValueGroup<T>) -> Array<T>
-) : ValueGroup(name, valueType = ValueType.CHOICE) {
+    modesCallback: (ModeValueGroup<T>) -> Array<T>,
+    aliases: List<String> = emptyList(),
+) : ValueGroup(name, valueType = ValueType.CHOICE, aliases = aliases) {
 
     var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set

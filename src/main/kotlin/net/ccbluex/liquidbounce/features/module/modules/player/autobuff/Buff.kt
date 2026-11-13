@@ -70,7 +70,7 @@ abstract class Buff(
     /**
      * Whether [slot] still has an item this buff can use, for waits between finding the slot and using it.
      */
-    protected fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
+    protected open fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
 
     /**
      * Try to run feature if possible, otherwise return false
@@ -80,8 +80,7 @@ abstract class Buff(
             return false
         }
 
-        // Check if the item is in the hotbar
-        val slot = Slots.OffhandWithHotbar.findClosestSlot { isValidItem(it, true) } ?: return false
+        val slot = findBuffSlot() ?: return false
 
         CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
 
@@ -110,6 +109,12 @@ abstract class Buff(
             return false
         }
     }
+
+    /**
+     * The hotbar or offhand slot holding the item to use next, closest first.
+     */
+    protected open fun findBuffSlot(): HotbarItemSlot? =
+        Slots.OffhandWithHotbar.findClosestSlot { isValidItem(it, true) }
 
     abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
 

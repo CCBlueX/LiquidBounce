@@ -19,24 +19,29 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_USE
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
@@ -53,7 +58,7 @@ import net.minecraft.world.item.SplashPotionItem
 import net.minecraft.world.level.entity.EntityTypeTest
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.abs
 
 internal object Pot : StatusEffectBasedBuff("Pot") {
 
@@ -82,6 +87,11 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 return false
             }
 
+            // Mid-air throws follow each other after MidAir's delay instead of waiting for the ground or a splash
+            if (isMidAir) {
+                return true
+            }
+
             val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
             val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
 
@@ -94,22 +104,71 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
     private val allowLingering by boolean("AllowLingering", false)
 
+    private val trigger by enumChoice("Trigger", Trigger.NEEDED)
+    private val pitch by floatRange("Pitch", 85f..90f, -90f..90f)
+
+    /**
+     * Throws potions while airborne, e.g. before a mace hit.
+     */
+    private object MidAir : ToggleableValueGroup(Pot, "MidAir", false) {
+        val pitch by float("Pitch", 90f, -90f..90f)
+        val delay by intRange("Delay", 2..3, 1..20, "ticks")
+    }
+
+    init {
+        tree(MidAir)
+    }
+
+    private val disableWhenBuffed by boolean("DisableWhenBuffed", false)
+
+    private enum class Trigger(override val tag: String) : Tagged {
+        /**
+         * Throws a potion once one of its effects is wanted.
+         */
+        NEEDED("Needed"),
+
+        /**
+         * Throws the potion in the selected slot, whether or not its effect is wanted.
+         */
+        HELD("Held"),
+    }
+
+    private val isMidAir
+        get() = MidAir.enabled && !player.onGround() && !player.isFallFlying && !player.isInLiquid
+
+    override fun findBuffSlot(): HotbarItemSlot? = if (trigger == Trigger.HELD) {
+        Slots.OffhandWithHotbar.find { it.isSelected && isValidPotion(it.itemStack) }
+    } else {
+        super.findBuffSlot()
+    }
+
+    override fun isUsable(slot: HotbarItemSlot) =
+        if (trigger == Trigger.HELD) isValidPotion(slot.itemStack) else super.isUsable(slot)
+
+    @Suppress("unused")
+    private val buffedHandler = handler<GameTickEvent> {
+        if (disableWhenBuffed && hasAllWantedEffects) {
+            ModuleAutoBuff.enabled = false
+        }
+    }
+
+    private const val PITCH_TOLERANCE = 3f
+
     override suspend fun execute(slot: HotbarItemSlot) {
-        var rotation = calculateSplashRotation()
+        val midAir = isMidAir
+        var rotation = if (midAir) Rotation(player.yRot, MidAir.pitch) else calculateSplashRotation()
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
-                RotationManager.setRotationTarget(
-                    rotation,
-                    valueGroup = ModuleAutoBuff.Rotations,
-                    provider = ModuleAutoBuff,
-                    priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
-                )
-
+                // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
                 requires { isUsable(slot) }
-                tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
-
-                rotation = rotation.normalize()
+                rotation = ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                    ModuleAutoBuff.Rotations.toRotationTarget(
+                        pitch = rotation.pitch,
+                        considerInventory = true,
+                        tolerance = PITCH_TOLERANCE,
+                    )
+                })
             }
 
             ON_TICK -> {
@@ -142,8 +201,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             else -> {}
         }
 
-        // The next buff waits at least a tick, so we do not continue with something else too early
-        ModuleAutoBuff.waitBeforeNextBuff(1)
+        // The next buff waits at least a tick so we do not continue with something else too early, mid-air throws
+        // follow each other after MidAir's delay
+        ModuleAutoBuff.waitBeforeNextBuff(if (midAir) MidAir.delay.random() else 1)
     }
 
     /**
@@ -156,7 +216,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      *   precise landing control / throwing against walls (see #2051) is deferred.
      */
     private fun calculateSplashRotation(): Rotation {
-        var rotation = Rotation(player.yRot, ThreadLocalRandom.current().nextFloat(85f, 90f))
+        var rotation = Rotation(player.yRot, pitch.random())
 
         repeat(4) { _ ->
             val sim = TrajectoryInfoRenderer.getHypotheticalTrajectory(

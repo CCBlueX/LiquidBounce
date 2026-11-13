@@ -62,6 +62,23 @@ class RequestHandler<T> {
     }
 
     /**
+     * Fills [into] with the values of all requests that have not expired, highest priority first, starting with the one
+     * [getActiveRequestValue] returns.
+     */
+    fun activeRequestValues(into: MutableList<T>) {
+        into.clear()
+        val top = getActiveRequestValue() ?: return
+        into += top
+        if (activeRequests.size == 1) {
+            return
+        }
+        activeRequests
+            .filter { it.request.value !== top && it.expiresAt > currentTick && it.request.provider.running }
+            .sortedByDescending { it.request.priority }
+            .mapTo(into) { it.request.value }
+    }
+
+    /**
      * A requested state of the system.
      *
      * Note: A request is deleted when its corresponding module is disabled.

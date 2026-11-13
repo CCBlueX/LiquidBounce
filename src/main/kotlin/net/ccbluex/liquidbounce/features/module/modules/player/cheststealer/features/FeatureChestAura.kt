@@ -24,12 +24,12 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickConditional
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
@@ -108,8 +109,8 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     // Rotation configuration settings
     private val rotations = tree(RotationsValueGroup(this))
 
-    // The block position currently being interacted with
-    private var currentTargetBlock: BlockPos? = null
+    // The block position currently being interacted with and the target that aims at it
+    private var currentTarget: Pair<BlockPos, RotationTarget>? = null
     val interactedBlocksSet: Set<BlockPos>
         field = hashSetOf<BlockPos>()
 
@@ -122,7 +123,9 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     override fun onDisabled() {
         interactedBlocksSet.clear()
         interactionAttempts = 0
-        currentTargetBlock = null
+        currentTarget = null
+        awaitedContainer = null
+        cooldownLeft = 0
         super.onDisabled()
     }
 
@@ -137,7 +140,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
 
         if (notDuringCombat && CombatManager.isInCombat) {
-            currentTargetBlock = null
+            currentTarget = null
             return@handler
         }
 
@@ -146,22 +149,21 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
         }
 
-        var nextTargetBlock = selectBlockTarget(
+        val nextTarget = selectBlockTarget(
             player.eyePosition,
             interactionRange,
             wallInteractionRange,
             nearbyStorageBlocks,
             rotations,
-            ModuleChestStealer
         )
 
         // If the current target has changed, reset the retries counter
-        if (currentTargetBlock != nextTargetBlock) {
+        if (currentTarget?.first != nextTarget?.first) {
             interactionAttempts = 0
         }
 
         // Update the current target block
-        currentTargetBlock = nextTargetBlock
+        currentTarget = nextTarget
     }
 
     @Suppress("unused")
@@ -173,67 +175,81 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
     }
 
+    // The storage block interacted with last, while waiting for its container to open
+    private var awaitedContainer: BlockPos? = null
+    private var awaitTicksLeft = 0
+
+    /** Ticks of [interactionDelay] left after the last interaction. */
+    private var cooldownLeft = 0
+
     // Task that repeats to interact with the target block
     @Suppress("unused")
     private val interactionRepeatableTask = tickHandler {
-        if (mc.gui.screen() is AbstractContainerScreen<*>) {
-            // Do not proceed if a screen is open which implies player might be in a GUI
+        val containerOpen = mc.gui.screen() is AbstractContainerScreen<*>
+
+        awaitedContainer?.let { pos ->
+            when {
+                // TODO: check if the inner type matches?
+                containerOpen -> finish(pos)
+                awaitTicksLeft > 0 -> {
+                    awaitTicksLeft--
+                    return@tickHandler
+                }
+                interactionAttempts >= AwaitContainerSettings.maxInteractionRetries -> finish(pos)
+                else -> {
+                    interactionAttempts++
+                    awaitedContainer = null
+                }
+            }
+        }
+
+        // Do not proceed if a screen is open which implies player might be in a GUI
+        if (containerOpen) {
             return@tickHandler
         }
 
-        val targetBlockPos = currentTargetBlock ?: return@tickHandler
-        val currentPlayerRotation = RotationManager.serverRotation
-
-        // Trace a ray from the player to the target block position
-        val rayTraceResult = raytraceBlock(
-            interactionRange.toDouble(),
-            currentPlayerRotation,
-            targetBlockPos,
-            targetBlockPos.state ?: return@tickHandler
-        )
-
-        // Verify if the block is hit and is the correct target
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != targetBlockPos) {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
             return@tickHandler
+        }
+
+        currentTarget ?: return@tickHandler
+        val target by requires { currentTarget }
+        requires { mc.gui.screen() !is AbstractContainerScreen<*> }
+
+        val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
+            val (pos, _) = target
+            val state = pos.state ?: return@lookAt null
+            raytraceBlock(interactionRange.toDouble(), going, pos, state)
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
         }
 
         // Attempt to interact with the block
         val useItemOnResult = interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult)
-        if (useItemOnResult is InteractionResult.Success) {
-            if (useItemOnResult.shouldSwingHand()) {
-                swingMode.interactSwing(InteractionHand.MAIN_HAND)
-            }
-
-            var wasInteractionSuccessful = false
-
-            if (AwaitContainerSettings.enabled) {
-                tickConditional(AwaitContainerSettings.retryTimeout) {
-                    val currentScreen = mc.gui.screen()
-                    if (currentScreen is AbstractContainerScreen<*>) { // TODO: check if the inner type matches?
-                        // Interaction was successful if the inventory screen is open
-                        wasInteractionSuccessful = true
-                        true
-                    } else {
-                        false
-                    }
-                }
-            } else {
-                track(targetBlockPos)
-                currentTargetBlock = null
-                wasInteractionSuccessful = true
-
-                // Delay until next interaction
-                waitTicks(interactionDelay)
-            }
-
-            // Update interacted block set and reset target if successful or exceeded retries
-            if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
-                track(targetBlockPos)
-                currentTargetBlock = null
-            } else {
-                interactionAttempts++
-            }
+        if (useItemOnResult !is InteractionResult.Success) {
+            return@tickHandler
         }
+
+        if (useItemOnResult.shouldSwingHand()) {
+            swingMode.interactSwing(InteractionHand.MAIN_HAND)
+        }
+
+        if (AwaitContainerSettings.enabled) {
+            awaitedContainer = rayTraceResult.blockPos
+            awaitTicksLeft = AwaitContainerSettings.retryTimeout
+        } else {
+            finish(rayTraceResult.blockPos)
+            cooldownLeft = interactionDelay
+        }
+    }
+
+    /**
+     * Done with the storage block at [pos], whether its container opened or it ran out of retries.
+     */
+    private fun finish(pos: BlockPos) {
+        track(pos)
+        currentTarget = null
+        awaitedContainer = null
     }
 
     private fun track(blockPos: BlockPos) {

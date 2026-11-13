@@ -166,6 +166,7 @@ class BlockPlacer(
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent>(priority = -20) {
+        rotationMode.activeMode.onTickStart()
         debugParameter("Blocks") { blocks.size }
 
         if (ticksToWait > 0) {
@@ -195,7 +196,6 @@ class BlockPlacer(
         val itemStack = slot.itemStack
 
         inaccessible.clear()
-        rotationMode.activeMode.onTickStart()
         if (scheduleCurrentPlacements(itemStack)) {
             return@handler
         }
@@ -283,7 +283,7 @@ class BlockPlacer(
      * Schedules placements for all queued positions.
      *
      * @return `true` when at least one placement was scheduled. The scheduled action may still
-     * fail later (e.g. in the post-rotation task), so this is not a placement guarantee.
+     * fail later (e.g. once the rotation goes out), so this is not a placement guarantee.
      */
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
         var hasScheduled = false
@@ -346,7 +346,15 @@ class BlockPlacer(
         return false
     }
 
-    fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
+    /**
+     * Places a block at [pos] by clicking [placementTarget] with [rotation].
+     */
+    fun doPlacement(
+        isSupport: Boolean,
+        pos: BlockPos,
+        placementTarget: BlockPlacementTarget,
+        rotation: Rotation = placementTarget.rotation,
+    ): Boolean {
         // choose block to place
         val slot = if (isSupport) {
             support.filter.getSlot(support.blocks)
@@ -354,15 +362,13 @@ class BlockPlacer(
             slotFinder.apply(pos)
         } ?: return false
 
-        val verificationRotation = rotationMode.activeMode.getVerificationRotation(placementTarget.rotation)
-
         // check if we can still reach the target
-        if (!canReach(placementTarget.interactedBlockPos, verificationRotation)) {
+        if (!canReach(placementTarget.interactedBlockPos, rotation)) {
             return false
         }
 
         // get the block hit result needed for the placement
-        val blockHitResult = raytraceTarget(placementTarget, verificationRotation) ?: return false
+        val blockHitResult = raytraceTarget(placementTarget, rotation) ?: return false
 
         if (!SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())) {
             return false
@@ -381,7 +387,7 @@ class BlockPlacer(
 
             doPlacement(
                 blockHitResult,
-                rotation = verificationRotation,
+                rotation = rotation,
                 hand = slot.useHand,
                 onPlacementSuccess = onSuccess,
                 onItemUseSuccess = onSuccess,

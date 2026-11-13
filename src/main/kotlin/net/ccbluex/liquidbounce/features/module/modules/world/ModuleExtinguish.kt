@@ -19,24 +19,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -82,23 +83,14 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        this.currentTarget = null
+
         // we can't place water in the nether
         if (world.waterEvaporates) {
             return@handler
         }
 
-        this.currentTarget = null
-
-        val target = findAction() ?: return@handler
-
-        this.currentTarget = target
-
-        RotationManager.setRotationTarget(
-            target.placementTarget.rotation,
-            valueGroup = rotations,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleExtinguish
-        )
+        this.currentTarget = findAction()
     }
 
     @Suppress("unused")
@@ -132,14 +124,22 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val target = currentTarget ?: return@handler
+    private val tickHandler = tickHandler {
+        currentTarget ?: return@tickHandler
 
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return@handler
+        val target by requires { currentTarget }
+        val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            rotations.toRotationTarget(
+                target.placementTarget.rotation,
+                considerInventory = true,
+                surface = target.placementTarget.surface(),
+            )
+        }) { going ->
+            target.placementTarget.verifyClick(going)?.let { hit -> hit to going }
+        }
 
-        if (!SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
-            return@handler
+        if (!SilentHotbar.selectSlotSilently(this@ModuleExtinguish, target.hotbarItemSlot, 1)) {
+            return@tickHandler
         }
 
         val successFunction = {

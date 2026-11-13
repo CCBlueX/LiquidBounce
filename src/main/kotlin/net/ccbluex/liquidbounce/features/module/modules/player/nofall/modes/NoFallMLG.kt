@@ -19,16 +19,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.isInteractable
@@ -39,16 +43,17 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.resolvePlacementAt
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
@@ -60,6 +65,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ScaffoldingBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.phys.BlockHitResult
 
 internal object NoFallMLG : NoFallMode("MLG") {
     private const val PICKUP_TRACKER_CAPACITY = 8
@@ -77,6 +83,9 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val rotations = tree(RotationsValueGroup(this))
 
     private var currentTarget: PlacementAction? = null
+
+    /** What this tick aims at; [currentTarget] unless the player still has to sneak for it. */
+    private var goal: PlacementAction? = null
     private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
     private var scaffoldingTarget: BlockPos? = null
     private var scaffoldingPlacedAtTick = 0
@@ -114,6 +123,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
     private fun resetState() {
         currentTarget = null
+        goal = null
         pickupTracker.clear()
         scaffoldingTarget = null
         forceSneak = false
@@ -135,6 +145,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val tickMovementHandler =
         handler<RotationUpdateEvent> {
             forceSneak = false
+            goal = null
 
             if (maintainScaffoldingAttempt()) {
                 currentTarget = null
@@ -155,35 +166,37 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
             forceSneak = currentGoal.requiresSneak
             currentTarget = currentGoal.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
-
-            RotationManager.setRotationTarget(
-                currentGoal.plan.placementTarget.rotation,
-                valueGroup = rotations,
-                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                provider = ModuleNoFall,
-            )
+            goal = currentGoal
         }
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val action = currentTarget ?: return@handler
+    private val tickHandler = tickHandler {
+        goal ?: return@tickHandler
+        val aimed by requires { goal }
+
+        val (action, hit, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            val placementTarget = aimed.plan.placementTarget
+            rotations.toRotationTarget(
+                placementTarget.rotation,
+                considerInventory = true,
+                surface = placementTarget.surface(),
+            )
+        }) { going ->
+            // Not before the player sneaks, when the placement needs it
+            val action = currentTarget ?: return@lookAt null
+            aimed.plan.placementTarget.verifyClick(going)?.let { hit -> Triple(action, hit, going) }
+        }
 
         if (isOlderThan1_21) {
             currentTarget = null
-            PostRotationExecutor.addTask(ModuleNoFall, postMove = true, priority = true) {
-                executePlacement(action)
-            }
-            return@handler
+            waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
         }
 
-        executePlacement(action)
+        executePlacement(action, hit, rotation)
     }
 
-    private fun executePlacement(action: PlacementAction) {
+    private fun executePlacement(action: PlacementAction, rayTraceResult: BlockHitResult, rotation: Rotation) {
         val target = action.plan
-
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return
 
         if (target.hotbarItemSlot.itemStack.item !== action.item ||
             !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)

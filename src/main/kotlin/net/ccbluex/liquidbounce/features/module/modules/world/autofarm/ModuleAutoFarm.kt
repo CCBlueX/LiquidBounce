@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -33,10 +33,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -55,7 +57,7 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.math.ifEmpty
 import net.ccbluex.liquidbounce.utils.math.isSideVisible
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BoneMealItem
@@ -129,10 +131,15 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     var currentTarget: BlockPos? = null
         private set
 
+    /** Aims at [currentTarget], chosen anew every tick. */
+    private var aim: RotationTarget? = null
+
     // Find the target on RotationUpdateEvent, which runs right before RotationManager.update, so the
     // requested rotation is applied within the same tick.
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        aim = null
+
         // Return if the user is inside a screen like the inventory
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
@@ -141,8 +148,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         updateTarget()
     }
 
+    /** Ticks of [interactDelay] left after the last interaction. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         // Return if the user is inside a screen like the inventory
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
@@ -160,27 +175,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             return@tickHandler
         }
 
-        // Return if we don't have a target
-        val target = currentTarget ?: return@tickHandler
+        aim ?: return@tickHandler
+        val plan by requires { aim }
+        val target by requires { currentTarget }
+        requires { mc.gui.screen() !is AbstractContainerScreen<*> }
+        requires { !ModuleBlink.running }
 
-        val rotation = RotationManager.serverRotation
-        val rayTraceResult = traceFromPoint(
-            range = range.toDouble(),
-            start = player.eyePosition,
-            // Use the rotation already sent to the server, so we only interact when the server sees the aim
-            direction = rotation.directionVector,
-            entity = player,
-        )
-        if (rayTraceResult.type != HitResult.Type.BLOCK) {
-            return@tickHandler
+        // The block the rotation going out this tick hits, once that is the target
+        val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
+            traceFromPlayer(going, range.toDouble())
+                .takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == target }
+                ?.let { it to going }
         }
-
         val blockPos = rayTraceResult.blockPos
-
-        // Only act when we are actually aiming at the target block
-        if (blockPos != target) {
-            return@tickHandler
-        }
 
         val state = blockPos.state ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
@@ -197,7 +204,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
             if (interaction.destroyStage == -1) {
                 // Only wait if the block is completely broken
-                waitTicks(interactDelay.random())
+                cooldownLeft = interactDelay.random()
             }
         } else if (AutoUseBoneMeal.enabled && AutoUseBoneMeal.isReady && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot { it.item is BoneMealItem } ?: return@tickHandler
@@ -205,7 +212,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
             doPlacement(rayTraceResult, rotation, hand = boneMealSlot.useHand)
             AutoUseBoneMeal.reset()
-            waitTicks(interactDelay.random())
+            cooldownLeft = interactDelay.random()
         } else {
             val blockState = world.getBlockState(blockPos)
 
@@ -229,23 +236,24 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult, rotation, hand = slot.useHand)
 
-                waitTicks(interactDelay.random())
+                cooldownLeft = interactDelay.random()
             }
         }
     }
 
     private fun updateTarget(possible: Iterable<Pair<BlockPos, BlockState>>): Boolean {
-        val target = selectBlockTarget(
+        val (target, plan) = selectBlockTarget(
             player.eyePosition,
             range - 0.1f,
             wallRange - 0.1f,
             possible,
             rotations,
-            this
+            throughWalls = false,
         ) ?: return false
 
         // set currentTarget to the new target
         currentTarget = target
+        aim = plan
         return true
     }
 
@@ -288,7 +296,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
         val collisionContext = CollisionContext.of(player)
         for ((pos, sides) in blocksToPlace) {
-            val (rotation, _) = sides.firstNotNullOfOrNull { side ->
+            val (rotation, side) = sides.firstNotNullOfOrNull { side ->
                 raytraceBlockSide(
                     side,
                     pos,
@@ -296,18 +304,13 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                     rangeSquared = range.sq().toDouble() - 0.1,
                     wallsRangeSquared = wallRange.sq().toDouble() - 0.1,
                     collisionContext,
-                )
+                )?.let { it.rotation to side }
             } ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.setRotationTarget(
-                rotation,
-                valueGroup = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider = this@ModuleAutoFarm
-            )
+            aim = rotations.toRotationTarget(rotation, considerInventory = true, surface = Surface.of(pos, side))
 
             return true // We got a free angle at the block? No need to see more of them.
         }
@@ -365,6 +368,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     override fun onDisabled() {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
         currentTarget = null
+        aim = null
+        cooldownLeft = 0
         AutoUseBoneMeal.reset()
         SilentHotbar.resetSlot(this)
     }

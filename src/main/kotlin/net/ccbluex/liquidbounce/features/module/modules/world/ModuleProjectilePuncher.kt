@@ -18,13 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -60,39 +63,44 @@ object ModuleProjectilePuncher : ClientModule(
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    // Target
-    private var target: Entity? = null
+    /** The projectile to punch, picked once per tick. */
+    private var projectile: Entity? = null
+
+    /** The rotation that hits [projectile]. */
+    private var spot: Rotation? = null
+    private var punching: Job? = null
 
     // Rotation
     private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
-        target = null
+        projectile = null
+        spot = null
     }
 
-    val tickHandler = handler<RotationUpdateEvent> {
+    val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        projectile = null
+        spot = null
+
         if (player.isSpectator) {
             return@handler
         }
 
         updateTarget()
+        if (projectile != null) {
+            punching = launchSequence(punching) { punch() }
+        }
     }
 
     /**
-     * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
+     * Punches the projectile once the rotation faces it.
      */
-    val repeatable = handler<GameTickEvent> {
-        val target = target ?: return@handler
-
-        if (target.squaredBoxedDistanceTo(player) > range * range ||
-            isLookingAtEntity(
-                toEntity = target,
-                rotation = RotationManager.serverRotation,
-                range = range.toDouble(),
-                throughWallsRange = 0.0
-            ) == null) {
-            return@handler
-        }
+    private suspend fun punch() {
+        val target by requires { projectile }
+        val rotation by requires { spot }
+        lookAt(Priority.IMPORTANT_FOR_USER_SAFETY, {
+            rotations.toRotationTarget(rotation, target, considerInventory = !ignoreOpenInventory)
+        }) { going -> isLookingAtEntity(player, target, going, range.toDouble(), 0.0) }
 
         clicker.click {
             attackEntity(target, swingMode)
@@ -102,8 +110,6 @@ object ModuleProjectilePuncher : ClientModule(
 
     private fun updateTarget() {
         val rangeSquared = range * range
-
-        target = null
 
         for (entity in world.entitiesForRendering().sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
@@ -124,16 +130,9 @@ object ModuleProjectilePuncher : ClientModule(
                 player.eyePosition, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
-            target = entity
-
             // aim at target
-            RotationManager.setRotationTarget(
-                spot.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                Priority.IMPORTANT_FOR_USER_SAFETY,
-                this@ModuleProjectilePuncher
-            )
+            projectile = entity
+            this.spot = spot.rotation
             break
         }
     }

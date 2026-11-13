@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -68,6 +69,21 @@ inline fun EventListener.tickHandler(
     behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)
 ) {
     eventHandler()
+}
+
+/**
+ * Starts [block] in place, the way [sequenceHandler] does, unless [running] has not finished yet; then that one keeps
+ * going and is returned instead. For work started from plain handlers that must not overlap with itself.
+ */
+fun EventListener.launchSequence(running: Job?, block: suspend CoroutineScope.() -> Unit): Job {
+    if (running?.isActive == true) {
+        return running
+    }
+
+    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED) {
+        beginRun()
+        block()
+    }
 }
 
 /**

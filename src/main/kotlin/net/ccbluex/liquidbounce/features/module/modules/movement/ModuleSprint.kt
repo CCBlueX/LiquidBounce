@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
@@ -115,13 +114,11 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        val yaw = player.getMovementDirectionOfInput()
-
-        // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
-        val rotation = Rotation(yaw, player.xRot)
-
-        RotationManager.setRotationTarget(rotations.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
-            this@ModuleSprint)
+        RotationManager.setRotationTarget(
+            rotations.toRotationTarget(yaw = player.getMovementDirectionOfInput()),
+            Priority.NOT_IMPORTANT,
+            this@ModuleSprint
+        )
     }
 
     private fun shouldPreventSprint(): Boolean {

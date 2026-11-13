@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Worlds
@@ -82,7 +81,6 @@ import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
-import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
@@ -304,7 +302,6 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         ConfigSystem.root(ConfigTracker)
-        PostRotationExecutor
         ServerObserver
         KillDeathTracker
         PlayerStatisticsTracker
@@ -447,7 +444,6 @@ object LiquidBounce : EventListener {
                 launch("Deep Learning") { task ->
                     runCatching {
                         DeepLearningEngine.init(task)
-                        ModelManager.load()
                         DeepLearningEngine.markInitialized()
                     }.onFailure { exception ->
                         task.subTasks.clear()

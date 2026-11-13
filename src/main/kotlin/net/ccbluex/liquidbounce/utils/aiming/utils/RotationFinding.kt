@@ -20,16 +20,17 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.preference.RotationPreference
 import net.ccbluex.liquidbounce.utils.block.state
@@ -37,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -104,9 +104,8 @@ fun raytraceBlockRotation(
 }
 
 /**
- * Aims at the first block from [candidates] whose face is reachable within the given ranges and
- * returns its position, or null if none is reachable. Skips setting the rotation target when
- * [rotate] is false, e.g. when another module owns the rotation.
+ * The first block from [candidates] whose face is reachable within the given ranges, with the target that aims at it,
+ * or null if none is reachable. [throughWalls] lets the view meet the block behind others.
  */
 fun selectBlockTarget(
     eyePosition: Vec3,
@@ -114,10 +113,9 @@ fun selectBlockTarget(
     wallsRange: Float,
     candidates: Iterable<Pair<BlockPos, BlockState>>,
     valueGroup: RotationsValueGroup,
-    provider: ClientModule,
     considerInventory: Boolean = true,
-    rotate: Boolean = true,
-): BlockPos? {
+    throughWalls: Boolean = wallsRange > 0f,
+): Pair<BlockPos, RotationTarget>? {
     for ((blockPos, state) in candidates) {
         val (rotation, _) = raytraceBlockRotation(
             eyePosition,
@@ -127,17 +125,11 @@ fun selectBlockTarget(
             wallsRange = wallsRange.toDouble()
         ) ?: continue
 
-        if (rotate) {
-            RotationManager.setRotationTarget(
-                rotation,
-                considerInventory = considerInventory,
-                valueGroup = valueGroup,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider
-            )
-        }
-
-        return blockPos
+        return blockPos to valueGroup.toRotationTarget(
+            rotation,
+            considerInventory = considerInventory,
+            surface = Surface.of(blockPos, throughWalls = throughWalls),
+        )
     }
 
     return null

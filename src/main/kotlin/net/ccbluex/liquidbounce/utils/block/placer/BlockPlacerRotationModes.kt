@@ -18,16 +18,23 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.waitMatches
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -42,14 +49,22 @@ sealed class BlockPlacerRotationMode(
 
     val postMove by boolean("PostMove", false)
 
+    /**
+     * Schedules placing a block at [pos] by clicking [placementTarget].
+     *
+     * @return whether no further placement can be scheduled this tick
+     */
     abstract operator fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean
 
-    open fun getVerificationRotation(targetedRotation: Rotation) = targetedRotation
-
+    /**
+     * Called at the start of every rotation update, before anything is scheduled.
+     */
     open fun onTickStart() {}
 
     override val parent: ModeValueGroup<*>
         get() = modeValueGroup
+
+    protected class Placement(val isSupport: Boolean, val pos: BlockPos, val target: BlockPlacementTarget)
 
 }
 
@@ -62,39 +77,57 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
 
     private val rotations = tree(RotationsValueGroup(this))
 
+    /** The placement the rotation is planned for this tick; null on ticks nothing is scheduled. */
+    private var planned: Placement? = null
+    private var placing: Job? = null
+
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
-        val interactedBlockPos = placementTarget.interactedBlockPos
-        RotationManager.setRotationTarget(
-            placementTarget.rotation,
-            considerInventory = !placer.ignoreOpenInventory,
-            valueGroup = rotations,
-            provider = placer.parent,
-            priority = placer.priority,
-            whenReached = RestrictedSingleUseAction({
-                val raytraceResult = raytraceBlock(
-                    max(placer.range, placer.wallRange).toDouble(),
-                    RotationManager.currentRotation ?: return@RestrictedSingleUseAction false,
-                    interactedBlockPos,
-                    interactedBlockPos.stateOrEmpty
-                ) ?: return@RestrictedSingleUseAction false
-
-                raytraceResult.type == HitResult.Type.BLOCK && raytraceResult.blockPos == interactedBlockPos
-            }, {
-                PostRotationExecutor.addTask(placer.parent, postMove, priority = true) {
-                    if (placer.ticksToWait > 0) {
-                        return@addTask
-                    }
-
-                    placer.doPlacement(isSupport, pos, placementTarget)
-                    placer.ranAction = true
-                }
-            })
-        )
-
+        planned = Placement(isSupport, pos, placementTarget)
+        placing = placer.launchSequence(placing) { placeOnHit() }
         return true
     }
 
-    override fun getVerificationRotation(targetedRotation: Rotation): Rotation = RotationManager.serverRotation
+    override fun onTickStart() {
+        planned = null
+    }
+
+    /**
+     * Asks for the rotation of the placement planned each tick and places on the tick the rotation going out hits
+     * the block it clicks.
+     */
+    private suspend fun placeOnHit() {
+        requires { running }
+        val placement by requires { planned }
+        val (clicked, going) = placer.parent.lookAt(placer.priority, {
+            rotations.toRotationTarget(
+                placement.target.rotation,
+                considerInventory = !placer.ignoreOpenInventory,
+                surface = placement.target.surface(
+                    throughWalls = placer.wallRange > 0f || placer.constructFailResult
+                ),
+            )
+        }) { going ->
+            val interactedBlockPos = placement.target.interactedBlockPos
+            raytraceBlock(
+                max(placer.range, placer.wallRange).toDouble(),
+                going,
+                interactedBlockPos,
+                interactedBlockPos.stateOrEmpty
+            )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == interactedBlockPos }
+                ?.let { placement to going }
+        }
+
+        if (postMove) {
+            placer.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
+        }
+
+        if (placer.ticksToWait > 0) {
+            return
+        }
+
+        placer.doPlacement(clicked.isSupport, clicked.pos, clicked.target, going)
+        placer.ranAction = true
+    }
 
 }
 
@@ -113,23 +146,13 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, pl
 
     private var placementsDone = 0
 
+    /** Placements scheduled since the last ones went down. */
+    private val pending = ArrayList<Placement>()
+    private var placing: Job? = null
+
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
-        PostRotationExecutor.addTask(placer.parent, postMove, task = {
-            if (placer.ticksToWait > 0) {
-                return@addTask
-            }
-
-            if (send) {
-                val rotation = placementTarget.rotation.normalize()
-                network.send(
-                    ServerboundMovePlayerPacket.Rot(rotation.yaw, rotation.pitch, player.onGround(),
-                        player.horizontalCollision)
-                )
-            }
-
-            placer.doPlacement(isSupport, pos, placementTarget)
-            placer.ranAction = true
-        })
+        pending += Placement(isSupport, pos, placementTarget)
+        placing = placer.launchSequence(placing) { placeAfterMovementPacket() }
 
         placementsDone++
         return placementsDone == placements
@@ -137,6 +160,41 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, pl
 
     override fun onTickStart() {
         placementsDone = 0
+    }
+
+    /**
+     * Does the pending placements right after the movement packet when [postMove] is set and nothing else rotates,
+     * else at the start of the next tick.
+     */
+    private suspend fun placeAfterMovementPacket() {
+        try {
+            if (postMove) {
+                placer.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
+            }
+
+            if (!postMove || RotationManager.currentRotation != null) {
+                waitTicks(1)
+            }
+
+            if (placer.ticksToWait > 0) {
+                return
+            }
+
+            for (placement in pending) {
+                if (send) {
+                    val rotation = placement.target.rotation.normalize()
+                    network.send(
+                        ServerboundMovePlayerPacket.Rot(rotation.yaw, rotation.pitch, player.onGround(),
+                            player.horizontalCollision)
+                    )
+                }
+
+                placer.doPlacement(placement.isSupport, placement.pos, placement.target)
+                placer.ranAction = true
+            }
+        } finally {
+            pending.clear()
+        }
     }
 
 }

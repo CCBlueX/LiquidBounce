@@ -81,8 +81,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         RotationManager.setRotationTarget(
-            Rotation(aimYaw, player.xRot),
-            valueGroup = Assist.rotations,
+            Assist.rotations.toRotationTarget(yaw = aimYaw, considerInventory = true),
             priority = Priority.NOT_IMPORTANT,
             provider = this,
         )

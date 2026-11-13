@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -59,6 +60,23 @@ enum class AimMode(override val tag: String) : Tagged {
     DIAGONAL_YAW("DiagonalYaw"),
     ANGLE_YAW("AngleYaw"),
     EDGE_POINT("EdgePoint"),
+
+    /** The look god bridging players hold against the movement, see [DirectionTargetPositionFactory]. */
+    GOD_BRIDGE("GodBridge"),
+}
+
+/**
+ * Which faces a placement may click and how it has to see them.
+ */
+enum class Visibility(override val tag: String) : Tagged {
+    /** Faces turned towards the eyes, aimed at only while the ray reaches them first. */
+    VISIBLE_AND_RAYTRACED("VisibleAndRaytraced"),
+
+    /** Faces turned towards the eyes. */
+    VISIBLE("Visible"),
+
+    /** Any face, also one turned away or behind blocks: looked at and clicked through them. */
+    NOT_VISIBLE("NotVisible"),
 }
 
 /**
@@ -336,6 +354,32 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
     }
 
     return null
+}
+
+/**
+ * The placement a click with [rotation] from [eyes] makes, if it puts [stack] at one of [positions].
+ */
+fun placementTargetClickedBy(
+    rotation: Rotation,
+    eyes: Vec3,
+    stack: ItemStack,
+    positions: Collection<BlockPos>,
+    range: Double = player.blockInteractionRange(),
+): BlockPlacementTarget? {
+    val hit = traceFromPoint(range = range, start = eyes, direction = rotation.directionVector)
+    if (hit.type != HitResult.Type.BLOCK) {
+        return null
+    }
+
+    val context = BlockPlaceContext(player, InteractionHand.MAIN_HAND, stack, hit)
+    val placed = positions.firstOrNull { context.resolvePlacementAt(it) != null } ?: return null
+    val local = hit.location - hit.blockPos
+    val box = hit.blockPos.outlineShape(CollisionContext.of(player)).toAabbs()
+        .firstOrNull { it.inflate(FACE_HIT_EPSILON).contains(local) } ?: return null
+    val face = AlignedFace.get(hit.direction, box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ)
+    return BlockPlacementTarget(
+        hit.blockPos, placed, hit.direction, hit.location, face.from.y + hit.blockPos.y, rotation,
+    )
 }
 
 private fun findTargetPointOnFace(

@@ -74,12 +74,25 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
         ).onEach(::tree).associateBy { it.statusEffect }
 
         operator fun get(statusEffect: Holder<MobEffect>) = values[statusEffect]
+
+        /**
+         * Effects of the enabled potions that last, so they can be active on the player.
+         */
+        val lastingEffects
+            get() = values.values.filter { it.enabled && it.statusEffect != MobEffects.INSTANT_HEALTH }
+                .map { it.statusEffect }
     }
 
     private val potions = tree(Potions(this))
 
     protected fun foundTargetEffect(effect: MobEffectInstance, health: Float) =
         potions[effect.effect]?.isValid(effect, health) ?: false
+
+    /**
+     * Whether every lasting effect of the enabled potions is active on the player.
+     */
+    protected val hasAllWantedEffects: Boolean
+        get() = potions.lastingEffects.let { wanted -> wanted.isNotEmpty() && wanted.all(player::hasEffect) }
 
     protected abstract fun isValidPotion(stack: ItemStack): Boolean
 

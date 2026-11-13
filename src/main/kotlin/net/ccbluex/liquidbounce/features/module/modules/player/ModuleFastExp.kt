@@ -31,9 +31,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -214,26 +213,23 @@ object ModuleFastExp : ClientModule(
         }
     }
 
+    private const val PITCH_TOLERANCE = 5f
+
     private suspend fun action(slot: Required<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
-        if (Rotate.enabled) {
-            tickUntil {
-                val rotation = Rotation(player.yRot, 90f)
-                RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleFastExp
-                )
-                RotationManager.serverRotation.pitch > 85f
-            }
+        val pitch = if (Rotate.enabled) {
+            lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
+                Rotate.rotations.toRotationTarget(pitch = 90f, tolerance = PITCH_TOLERANCE)
+            }).pitch
+        } else {
+            90f
         }
 
         itemsToThrow += throwMode.activeMode.nextTickItems()
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 
-        val pitch = if (Rotate.enabled) RotationManager.serverRotation.pitch else 90f
         repeat(times) {
             useHotbarSlotOrOffhand(
                 slot.value,
