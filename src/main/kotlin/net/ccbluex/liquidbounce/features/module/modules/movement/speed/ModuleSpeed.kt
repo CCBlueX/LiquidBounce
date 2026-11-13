@@ -34,10 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedPiercingAttack
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc.SpeedBlocksMC20241123
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrim2373
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylex20241117Ground
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylex20241117
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrix7
@@ -49,8 +46,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ver
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286Ground
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20231212
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20250125
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -76,9 +71,6 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
         SpeedVerusB3882(modeValueGroup),
 
-        SpeedHypixel20231212(modeValueGroup),
-        SpeedHypixel20250125(modeValueGroup),
-
         SpeedSpartanV4043(modeValueGroup),
         SpeedSpartanV4043FastFall(modeValueGroup),
 
@@ -93,11 +85,6 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
         SpeedIntave14(modeValueGroup),
         SpeedIntave14Fast(modeValueGroup),
-
-        SpeedHylex20241117(modeValueGroup),
-        SpeedHylex20241117Ground(modeValueGroup),
-
-        SpeedBlocksMC20241123(modeValueGroup),
 
         SpeedMatrix7(modeValueGroup)
     )

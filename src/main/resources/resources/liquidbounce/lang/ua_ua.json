@@ -441,7 +441,6 @@
   "liquidbounce.module.regen.description": "Відновлює ваше здоров'я значно швидше.",
   "liquidbounce.module.replenish.description": "Автоматично поповнює гарячу панель предметами з інвентаря, коли їхня кількість падає до певного порогу.",
   "liquidbounce.module.reportHelper.description": "Автоматично подає скаргу та підтверджує її за вас.",
-  "liquidbounce.module.resetVL.description": "Скидає порушення античита на недосконалих античитах.",
   "liquidbounce.module.resourceSpoof.description": "Опис підробки ресурсів",
   "liquidbounce.module.reverseStep.description": "Опис зворотного кроку",
   "liquidbounce.module.richPresence.description": "Опис багатої присутності",

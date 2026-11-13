@@ -28,12 +28,8 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityAAC442
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC20241123
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityDexland20241001
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrim2344MC117
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrim2371
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHylex20241117
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHypixel20250127
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityIntave20261002
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityJumpReset
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityLag
@@ -63,12 +59,6 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
             VelocityJumpReset,
             VelocityLag,
             VelocityReduce,
-
-            // Server modes
-            VelocityHypixel20250127,
-            VelocityDexland20241001,
-            VelocityHylex20241117,
-            VelocityBlocksMC20241123,
 
             // Anti cheat modes
             VelocityGrim2371,

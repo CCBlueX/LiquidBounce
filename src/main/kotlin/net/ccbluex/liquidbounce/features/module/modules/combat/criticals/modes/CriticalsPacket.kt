@@ -97,21 +97,13 @@ object CriticalsPacket : Mode("Packet") {
                     showCriticals(event.entity)
                 }
             }
-
-            Mode.BLOCKSMC -> {
-                if (player.tickCount % 4 == 0) {
-                    p(0.0011, true)
-                    p(0.0)
-                    showCriticals(event.entity)
-                }
-            }
         }
     }
 
-    private fun p(mod: Double, onGround: Boolean = false) {
+    private fun p(mod: Double) {
         network.send(packetType.generatePacket().apply {
             this.y += mod
-            this.onGround = onGround
+            this.onGround = false
         })
     }
 
@@ -122,7 +114,5 @@ object CriticalsPacket : Mode("Packet") {
         LOW("Low"),
         DOWN("Down"),
         GRIM("Grim-2.3.59", listOf("Grim")),
-        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
-        BLOCKSMC("BlocksMC"),
     }
 }
