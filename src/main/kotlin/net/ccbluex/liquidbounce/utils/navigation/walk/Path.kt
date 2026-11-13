@@ -46,10 +46,20 @@ class Step(
     /** Closed doors, trapdoors and fence gates to open before the move; a door by its lower half. */
     val opens: List<BlockPos>,
     val cost: Double,
+
+    /** Through a gap only a crouching player fits. */
     val sneak: Boolean = false,
+
+    /** Level past a deadly drop: walked with safe walk, which keeps to the edge as sneaking does but at full speed. */
+    val edge: Boolean = false,
     val underwater: Boolean = false,
     val jump: Jump? = null,
-)
+) {
+    /** A level walk onto a floor placed on the way, which another feature such as Scaffold can place instead. */
+    val isBridge: Boolean
+        get() = move == Move.TRAVERSE && to.y == from.y && breaks.isEmpty() && opens.isEmpty() && jump == null &&
+            places.size == 1 && places[0] == to.below()
+}
 
 /** A walking path; an incomplete one ends at the reachable spot closest to the goal. */
 class Path(

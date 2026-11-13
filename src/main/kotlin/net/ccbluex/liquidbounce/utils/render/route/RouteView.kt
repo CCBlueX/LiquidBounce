@@ -101,6 +101,21 @@ class RouteView {
     var preview: Vec3? = null
     var isPreviewValid = false
 
+    /** The goal last asked for and how close to it counts as arrived; [destination] is where the route ends. */
+    var goal: Vec3? = null
+    var goalRadius = 0.0
+
+    /** Where the walk last got stuck, and how often it did; a recorder notices a new one by the count. */
+    var stuckAt: BlockPos? = null
+        private set
+    var stuckCount = 0
+        private set
+
+    fun stuck(pos: BlockPos) {
+        stuckAt = pos
+        stuckCount++
+    }
+
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start
         this.destination = destination

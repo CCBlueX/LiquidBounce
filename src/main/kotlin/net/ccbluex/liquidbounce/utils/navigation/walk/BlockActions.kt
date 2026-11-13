@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -46,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
@@ -54,13 +56,18 @@ import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.HitResult
 
 /**
  * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts in
- * [GameTickEvent] once the server has the aim.
+ * [GameTickEvent] once the server has the aim. A placed block counts as unconfirmed until the server sends it back
+ * or [verdictTicks] pass, as a server that refuses it only says so with an update to air.
  */
+@Suppress("TooManyFunctions")
 class BlockActions(
     private val owner: EventListener,
     private val rotations: RotationsValueGroup,
@@ -73,9 +80,26 @@ class BlockActions(
         private set
 
     private var useCooldown = 0
+    private var ticks = 0
+
+    private val unconfirmed = HashMap<BlockPos, PlacedBlock>()
+
+    /** The block placed last. */
+    var placement: PlacedBlock? = null
+        private set
+
+    /** Placements the server refused since it last kept one. */
+    var rejectedInRow = 0
+        private set
 
     val isActive: Boolean
         get() = action != null
+
+    fun isUnconfirmed(pos: BlockPos) = pos in unconfirmed
+
+    fun forgetRejections() {
+        rejectedInRow = 0
+    }
 
     fun mine(pos: BlockPos) {
         if ((action as? Action.Mine)?.pos != pos) {
@@ -146,9 +170,11 @@ class BlockActions(
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        ticks++
         if (useCooldown > 0) {
             useCooldown--
         }
+        expireVerdicts()
 
         when (val action = action) {
             is Action.Mine -> breakTick(action.pos)
@@ -195,8 +221,48 @@ class BlockActions(
         val hit = plan.placementTarget.verifyClick(rotation) ?: return
         if (SilentHotbar.selectSlotSilently(this, plan.hotbarItemSlot, SLOT_RESET_TICKS)) {
             doPlacement(hit, rotation, hand = plan.hotbarItemSlot.useHand)
+            val placed = PlacedBlock(hit.blockPos.relative(hit.direction), ticks)
+            unconfirmed[placed.pos] = placed
+            placement = placed
         }
     }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        when (val packet = event.packet) {
+            is ClientboundBlockUpdatePacket -> mc.execute { answer(packet.pos, packet.blockState) }
+            is ClientboundSectionBlocksUpdatePacket -> mc.execute { packet.runUpdates(::answer) }
+        }
+    }
+
+    private fun answer(pos: BlockPos, state: BlockState) {
+        unconfirmed.remove(pos)?.let { judge(it, kept = !state.canBeReplaced()) }
+    }
+
+    /** Without an answer, the block counts as kept if it is still there. */
+    private fun expireVerdicts() {
+        if (unconfirmed.isEmpty()) {
+            return
+        }
+
+        val timeout = verdictTicks()
+        val iterator = unconfirmed.values.iterator()
+        while (iterator.hasNext()) {
+            val placed = iterator.next()
+            if (ticks - placed.tick > timeout) {
+                iterator.remove()
+                judge(placed, kept = !world.getBlockState(placed.pos).canBeReplaced())
+            }
+        }
+    }
+
+    private fun judge(placed: PlacedBlock, kept: Boolean) {
+        placed.verdict = if (kept) PlacedBlock.Verdict.KEPT else PlacedBlock.Verdict.REJECTED
+        rejectedInRow = if (kept) 0 else rejectedInRow + 1
+    }
+
+    /** Twice the round trip and some ticks for the server to get to it. */
+    private fun verdictTicks() = VERDICT_TICKS + player.ping / MILLIS_PER_TICK * 2
 
     @Suppress("unused")
     private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
@@ -209,6 +275,9 @@ class BlockActions(
     private val worldChangeHandler = handler<WorldChangeEvent> {
         action = null
         rotation = null
+        unconfirmed.clear()
+        placement = null
+        rejectedInRow = 0
     }
 
     override fun parent() = owner
@@ -224,8 +293,22 @@ class BlockActions(
     private companion object {
         const val SLOT_RESET_TICKS = 2
         const val USE_COOLDOWN_TICKS = 10
+        const val VERDICT_TICKS = 10
+        const val MILLIS_PER_TICK = 50
     }
 
+}
+
+/** A block placed at [pos] in [tick], and whether the server kept it. */
+class PlacedBlock(val pos: BlockPos, val tick: Int) {
+    var verdict = Verdict.PENDING
+        internal set
+
+    enum class Verdict(val tag: String) {
+        PENDING("pending"),
+        KEPT("kept"),
+        REJECTED("rejected"),
+    }
 }
 
 private fun placementPlan(pos: BlockPos): PlacementPlan? {
