@@ -40,10 +40,10 @@ class GuardsTest {
 
     private val ticker = ManualTicker()
 
-    private class Flag(var value: Boolean = true) : Condition {
+    private class Flag(var value: Boolean = true) {
         var checks = 0
 
-        override fun holds(): Boolean {
+        fun holds(): Boolean {
             checks++
             return value
         }
@@ -61,12 +61,12 @@ class GuardsTest {
     private fun assertEndedByGuard() = assertTrue(ended is GuardInterruption, "The run ended with $ended")
 
     @Test
-    fun `a condition failing mid-wait ends the run before the code after the wait`() =
+    fun `a requirement failing mid-wait ends the run before the code after the wait`() =
         runTest(UnconfinedTestDispatcher()) {
             val alive = Flag()
             var resumed = false
             run {
-                guard(alive)
+                requires { alive.holds() }
                 waitTicks(5)
                 resumed = true
             }
@@ -81,11 +81,11 @@ class GuardsTest {
         }
 
     @Test
-    fun `a tracked value gone mid-wait ends the run`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a required value gone mid-wait ends the run`() = runTest(UnconfinedTestDispatcher()) {
         var current: String? = "first"
         val seen = mutableListOf<String>()
         run {
-            val target by tracked { current }
+            val target by requires { current }
             while (true) {
                 seen += target
                 waitTicks(1)
@@ -102,11 +102,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `a condition failing on the resume tick ends the run`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a requirement failing on the resume tick ends the run`() = runTest(UnconfinedTestDispatcher()) {
         val alive = Flag()
         var resumed = false
         run {
-            guard(alive)
+            requires { alive.holds() }
             waitTicks(3)
             resumed = true
         }
@@ -120,11 +120,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `a condition failing between the last tick and the resumption ends the run`() = runTest {
+    fun `a requirement failing between the last tick and the resumption ends the run`() = runTest {
         val alive = Flag()
         var resumed = false
         run {
-            guard(alive)
+            requires { alive.holds() }
             waitTicks(1)
             resumed = true
         }
@@ -139,10 +139,10 @@ class GuardsTest {
     }
 
     @Test
-    fun `a wait predicate never sees a broken condition`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a wait predicate never sees a failed requirement`() = runTest(UnconfinedTestDispatcher()) {
         var target: String? = "target"
         run {
-            guard { target != null }
+            requires { target != null }
             tickUntil { target!!.isEmpty() }
         }
 
@@ -154,11 +154,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `a guard added after a suspension only applies from then on`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a requirement added after a suspension only applies from then on`() = runTest(UnconfinedTestDispatcher()) {
         val late = Flag()
         run {
             waitTicks(1)
-            guard(late)
+            requires { late.holds() }
             waitTicks(5)
         }
 
@@ -171,11 +171,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `a closed guard no longer applies`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a closed requirement no longer applies`() = runTest(UnconfinedTestDispatcher()) {
         val swapping = Flag()
         var finished = false
         run {
-            guard(swapping).use { waitTicks(1) }
+            requires { swapping.holds() }.use { waitTicks(1) }
             waitTicks(2)
             finished = true
         }
@@ -189,11 +189,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `a closed tracked value no longer applies`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a closed required value no longer applies`() = runTest(UnconfinedTestDispatcher()) {
         var current: String? = "target"
         var acted: String? = null
         run {
-            acted = tracked { current }.use { target ->
+            acted = requires { current }.use { target ->
                 waitTicks(1)
                 target.value
             }
@@ -209,10 +209,10 @@ class GuardsTest {
     }
 
     @Test
-    fun `a guard that does not hold when added ends the run right there`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a requirement that is false when added ends the run right there`() = runTest(UnconfinedTestDispatcher()) {
         var ran = false
         run {
-            guard { false }
+            requires { false }
             ran = true
         }
 
@@ -221,10 +221,10 @@ class GuardsTest {
     }
 
     @Test
-    fun `same holds only while the instance stays the same`() = runTest(UnconfinedTestDispatcher()) {
+    fun `unchanged holds only while the instance stays the same`() = runTest(UnconfinedTestDispatcher()) {
         var world = Any()
         run {
-            same { world }
+            unchanged { world }
             waitTicks(5)
         }
 
@@ -236,11 +236,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `cleanup in finally runs when a guard ends the run`() = runTest(UnconfinedTestDispatcher()) {
+    fun `cleanup in finally runs when a requirement ends the run`() = runTest(UnconfinedTestDispatcher()) {
         val alive = Flag()
         var cleanedUp = false
         run {
-            guard(alive)
+            requires { alive.holds() }
             try {
                 waitTicks(5)
             } finally {
@@ -262,9 +262,9 @@ class GuardsTest {
             var childEnded: Throwable? = null
             var resumed = false
             run {
-                withContext(ticker) { guard(inner) }
+                withContext(ticker) { requires { inner.holds() } }
                 launch {
-                    guard(child)
+                    requires { child.holds() }
                     waitTicks(5)
                 }.invokeOnCompletion { childEnded = it }
                 waitTicks(2)
@@ -278,14 +278,14 @@ class GuardsTest {
             ticker.tick()
             assertNull(ended)
             assertTrue(resumed)
-            assertTrue(inner.checks > 1, "The guard added in withContext was not checked by the run")
+            assertTrue(inner.checks > 1, "The requirement added in withContext was not checked by the run")
         }
 
     @Test
     fun `exceptions from the run pass through`() = runTest(UnconfinedTestDispatcher()) {
         val result = async(ticker + Guards()) {
             runCatching {
-                guard(Flag())
+                requires { true }
                 waitTicks(1)
                 error("boom")
             }
@@ -298,11 +298,11 @@ class GuardsTest {
     }
 
     @Test
-    fun `exceptions from a condition reach the waiting code`() = runTest(UnconfinedTestDispatcher()) {
+    fun `exceptions from a requirement reach the waiting code`() = runTest(UnconfinedTestDispatcher()) {
         var fail = false
         val result = async(ticker + Guards()) {
             runCatching {
-                guard { check(!fail) { "condition failed" }; true }
+                requires { check(!fail) { "requirement failed" }; true }
                 waitTicks(5)
             }
         }
@@ -311,15 +311,15 @@ class GuardsTest {
         ticker.tick()
 
         val failure = result.await().exceptionOrNull()
-        assertTrue(failure is IllegalStateException && failure.message == "condition failed", "Got $failure")
+        assertTrue(failure is IllegalStateException && failure.message == "requirement failed", "Got $failure")
     }
 
     @Test
-    fun `an event wait ends the run on the tick its condition fails`() = runTest(UnconfinedTestDispatcher()) {
+    fun `an event wait ends the run on the tick its requirement fails`() = runTest(UnconfinedTestDispatcher()) {
         val listener = object : EventListener {}
         val alive = Flag()
         run {
-            guard(alive)
+            requires { alive.holds() }
             listener.waitMatches<ProbeEvent> { it.id == 1 }
         }
 
@@ -332,13 +332,13 @@ class GuardsTest {
     }
 
     @Test
-    fun `an event matching after its condition failed does not resume the code`() =
+    fun `an event matching after its requirement failed does not resume the code`() =
         runTest(UnconfinedTestDispatcher()) {
             val listener = object : EventListener {}
             val alive = Flag()
             var resumed = false
             run {
-                guard(alive)
+                requires { alive.holds() }
                 listener.waitMatches<ProbeEvent> { it.id == 2 }
                 resumed = true
             }
@@ -351,10 +351,10 @@ class GuardsTest {
         }
 
     @Test
-    fun `an event wait returns the event while its condition holds`() = runTest(UnconfinedTestDispatcher()) {
+    fun `an event wait returns the event while its requirement holds`() = runTest(UnconfinedTestDispatcher()) {
         val listener = object : EventListener {}
         val result = async(ticker + Guards()) {
-            guard(Flag())
+            requires { true }
             listener.waitMatches<ProbeEvent> { it.id == 3 }.id
         }
 
@@ -367,7 +367,7 @@ class GuardsTest {
     }
 
     @Test
-    fun `waits without guards behave as before`() = runTest(UnconfinedTestDispatcher()) {
+    fun `waits that require nothing behave as before`() = runTest(UnconfinedTestDispatcher()) {
         val result = async(ticker) { tickUntil { it >= 2 } }
 
         ticker.tick(2)
@@ -376,7 +376,7 @@ class GuardsTest {
     }
 
     @Test
-    fun `a failing guard ends only that run of that handler`() = runTest {
+    fun `a failing requirement ends only that run of that handler`() = runTest {
         val dispatcher = UnconfinedTestDispatcher(testScheduler)
         val guarding = object : EventListener {}
         val other = object : EventListener {}
@@ -386,7 +386,7 @@ class GuardsTest {
         with(SuspendHandlerBehavior.DiscardLatest.Default) {
             guarding.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) { event ->
                 if (event.id == 1) {
-                    guard(alive)
+                    requires { alive.holds() }
                 }
                 waitTicks(2)
                 finished += "guarding ${event.id}"
@@ -403,7 +403,7 @@ class GuardsTest {
             ticker.tick(2)
             assertEquals(listOf("other 1"), finished)
 
-            // Its next run starts without the guard of the one before, though that one still fails
+            // Its next run starts without the requirement of the one before, though that one still fails
             EventManager.callEvent(ProbeEvent(2))
             ticker.tick(2)
             assertEquals(listOf("other 1", "guarding 2", "other 2"), finished)
@@ -416,14 +416,14 @@ class GuardsTest {
     }
 
     @Test
-    fun `disabling the listener cancels the run instead of ending it by a guard`() = runTest {
+    fun `disabling the listener cancels the run instead of ending it by a requirement`() = runTest {
         val listener = object : EventListener {
             override var running = true
         }
         var resumed = false
         var cleanedUp = false
         val job = launch(ticker + Guards() + listener.wrapContinuationInterceptor()) {
-            guard(Flag())
+            requires { true }
             try {
                 waitTicks(2)
                 resumed = true

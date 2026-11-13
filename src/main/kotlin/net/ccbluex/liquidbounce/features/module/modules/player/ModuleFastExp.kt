@@ -21,12 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.Tracked
-import net.ccbluex.liquidbounce.event.guard
+import net.ccbluex.liquidbounce.event.Required
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
@@ -163,8 +162,8 @@ object ModuleFastExp : ClientModule(
             return@tickHandler
         }
 
-        guard { !InventoryManager.isHandledScreenOpen && !player.isDeadOrDying }
-        val slot = tracked { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
+        requires { !InventoryManager.isHandledScreenOpen && !player.isDeadOrDying }
+        val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
         if (!NoWaste.enabled) {
             action(slot)
@@ -214,7 +213,7 @@ object ModuleFastExp : ClientModule(
         }
     }
 
-    private suspend fun action(slot: Tracked<HotbarItemSlot>) {
+    private suspend fun action(slot: Required<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
         if (Rotate.enabled) {

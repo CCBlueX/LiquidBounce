@@ -124,7 +124,7 @@ suspend fun <T : Event> EventListener.waitMatches(
                 }
             }
 
-            // Guard conditions may read the world, so they are checked on game ticks, not on the event thread.
+            // Requirements may read the world, so they are checked on game ticks, not on the event thread.
             override fun getAsBoolean(): Boolean {
                 if (!continuation.isActive) {
                     return true
@@ -158,7 +158,7 @@ suspend fun <T : Event> EventListener.waitMatches(
  * - [net.ccbluex.liquidbounce.event.events.PacketEvent]: client Netty IO (EventLoopGroup)
  * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
  *
- * The [guard]s of the run are checked on every game tick while waiting and once more on the resuming thread before
+ * What the run [requires] is checked on every game tick while waiting and once more on the resuming thread before
  * returning.
  *
  * @param priority The priority of the event hook.
