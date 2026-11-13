@@ -13,6 +13,7 @@
       "net.ccbluex.liquidbounce.gametest.PortalPositionGameTest",
       "net.ccbluex.liquidbounce.gametest.LocalConfigTrackingGameTest",
       "net.ccbluex.liquidbounce.gametest.HoleFillerBudgetGameTest",
+      "net.ccbluex.liquidbounce.gametest.InventoryCleanerGameTest",
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",

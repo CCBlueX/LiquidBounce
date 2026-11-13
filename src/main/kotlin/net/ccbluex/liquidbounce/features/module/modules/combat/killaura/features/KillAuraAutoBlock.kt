@@ -58,6 +58,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -457,6 +458,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         itemStack.useAnimation == ItemUseAnimation.BLOCK
             && itemStack.isItemEnabled(world.enabledFeatures())
             && !player.cooldowns.isOnCooldown(itemStack)
+            && !InventoryManager.isServerLocked(itemStack)
     } ?: if (assumeShield && !isBlocksAttacksExisting && player.mainHandItem.isSword) {
         InteractionHand.MAIN_HAND
     } else {
