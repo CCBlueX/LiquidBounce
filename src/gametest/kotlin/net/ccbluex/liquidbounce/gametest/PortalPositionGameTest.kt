@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.PortalMode
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -33,7 +33,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 
 /** Rejects obstructed portal sites, then exercises a successful enable and teardown. */
-class PortalPositionGameTest : LiquidBounceGameTest({
+class PortalPositionGameTest : SingleplayerGameTest({
     context.restoring(ModuleAutoBuild) {
         run("gamemode creative $playerName")
         awaitClient("creative mode") { it.player?.hasInfiniteMaterials() == true }
@@ -65,9 +65,7 @@ class PortalPositionGameTest : LiquidBounceGameTest({
 
         assertImmediateRetry()
     }
-}) {
-    override val integrated = true
-}
+})
 
 private fun GameTestScope.assertImmediateRetry() {
     client { mc ->

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.utils.entity.MotionTraits
 import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -39,7 +39,7 @@ private const val SETTLE_TICKS = 10
  * [PlayerMotion], which route searches plan jumps with, has to move like the game moves the player on land. It is
  * held against [SimulatedPlayer], which is the game's own movement, with the same keys from the same spot.
  */
-class PlayerMotionGameTest : LiquidBounceGameTest({
+class PlayerMotionGameTest : SingleplayerGameTest({
     val y = origin.y
     run("gamemode survival $playerName")
 
@@ -56,9 +56,7 @@ class PlayerMotionGameTest : LiquidBounceGameTest({
     }
 
     check(failures.isEmpty()) { "PlayerMotion moves unlike the game:\n" + failures.joinToString("\n") }
-}) {
-    override val integrated = true
-}
+})
 
 /**
  * The player starts [height] above the ground at x 2.5, looking down the x axis, with the keys held from then on.

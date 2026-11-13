@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.query
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 
@@ -38,7 +38,7 @@ private const val WALKED = 150
  * Sprint's default Legit mode starts only the sprint the key would: the server counts sprinting forward, on the
  * ground, between jumps and while strafing, walking backwards, and the anticheat reports nothing.
  */
-class SprintGameTest : LiquidBounceGameTest({
+class SprintGameTest : ServerGameTest({
     val sprinted = statistic("sprint_one_cm")
     val walked = statistic("walk_one_cm")
 

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.gametest
 
 import com.google.gson.JsonArray
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
@@ -37,7 +37,7 @@ private val requirements = ModuleAutoRod::class.java.getDeclaredMethod("getRequi
 private val blockers = listOf(ModuleBlink, ModuleScaffold, ModuleFreeze)
 
 /** Checks the real guard shared by rod targeting and use, with no nearby enemies. */
-class AutoRodRequirementsGameTest : LiquidBounceGameTest({
+class AutoRodRequirementsGameTest : SingleplayerGameTest({
     context.restoring(ModuleAutoRod) {
         run("gamemode creative $playerName")
         awaitClient("creative mode") { it.player?.hasInfiniteMaterials() == true }
@@ -60,9 +60,7 @@ class AutoRodRequirementsGameTest : LiquidBounceGameTest({
             }
         }
     }
-}) {
-    override val integrated = true
-}
+})
 
 private fun prepareInventory() {
     val player = checkNotNull(mc.player)

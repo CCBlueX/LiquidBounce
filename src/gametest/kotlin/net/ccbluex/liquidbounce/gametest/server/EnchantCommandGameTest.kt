@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.command
 import net.minecraft.core.registries.Registries
 import net.minecraft.world.item.Items
@@ -33,7 +33,7 @@ private const val CAPPED_LEVEL = 255
  * The enchant command against the real creative inventory and enchantment registry: the client puts the enchanted
  * item into the hand, and the server takes it.
  */
-class EnchantCommandGameTest : LiquidBounceGameTest({
+class EnchantCommandGameTest : SingleplayerGameTest({
     run("gamemode creative $playerName")
     awaitClient("creative mode") { checkNotNull(it.player).hasInfiniteMaterials() }
 
@@ -49,9 +49,7 @@ class EnchantCommandGameTest : LiquidBounceGameTest({
     checkSingleLevel("max", null)
     checkSingleLevel("7", 7)
     checkSingleLevel(Int.MAX_VALUE.toString(), CAPPED_LEVEL)
-}) {
-    override val integrated = true
-}
+})
 
 private fun GameTestScope.checkBulkLevels(command: String, levelArgument: String?, explicitLevel: Int?) {
     holdSword()

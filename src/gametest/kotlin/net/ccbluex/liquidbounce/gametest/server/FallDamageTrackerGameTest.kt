@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.gametest.server
 
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.action.teleport
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.minecraft.client.Minecraft
 
@@ -30,7 +30,7 @@ private const val DAMAGE_COOLDOWN_TICKS = 20
  * A hurt cycle from fall damage must be told apart from one from an attack, see [LocalPlayerFallDamageTracker].
  * Both are caused by commands on a player that stays alive.
  */
-class FallDamageTrackerGameTest : LiquidBounceGameTest({
+class FallDamageTrackerGameTest : SingleplayerGameTest({
     // 8 blocks, hurting for 5
     teleport(origin.above(8))
     awaitClient("the landing") { it.hurt() }
@@ -44,8 +44,6 @@ class FallDamageTrackerGameTest : LiquidBounceGameTest({
     run("damage $playerName 1 minecraft:player_attack")
     awaitClient("the attack") { it.hurt() }
     check(!client { LocalPlayerFallDamageTracker.isCurrentFallDamage }) { "an attack is tracked as fall damage" }
-}) {
-    override val integrated = true
-}
+})
 
 private fun Minecraft.hurt() = (player?.hurtTime ?: 0) > 0

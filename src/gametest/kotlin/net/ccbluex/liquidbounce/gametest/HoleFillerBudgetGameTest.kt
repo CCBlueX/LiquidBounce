@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.gametest
 
 import com.google.gson.JsonArray
 import com.mojang.authlib.GameProfile
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
@@ -37,7 +37,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import java.util.UUID
 
 /** Exercises the smart collector with two targets competing for one hotbar budget. */
-class HoleFillerBudgetGameTest : LiquidBounceGameTest({
+class HoleFillerBudgetGameTest : SingleplayerGameTest({
     val savedTargets = client { ConfigSystem.serializeValueGroup(GlobalSettingsTarget) }
     context.restoring(ModuleHoleFiller) {
         try {
@@ -74,9 +74,7 @@ class HoleFillerBudgetGameTest : LiquidBounceGameTest({
             client { ConfigSystem.deserializeValueGroup(GlobalSettingsTarget, savedTargets) }
         }
     }
-}) {
-    override val integrated = true
-}
+})
 
 private fun assertBudgets(mc: Minecraft, base: BlockPos, targets: List<RemotePlayer>) {
     val player = checkNotNull(mc.player)

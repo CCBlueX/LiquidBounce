@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.action.screenshot
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.render.effect.PostStyle
 import net.ccbluex.liquidbounce.render.effect.StyleChain
 import net.minecraft.client.gui.Hud
@@ -44,7 +44,7 @@ private const val STYLE_TICKS = 10
  * and post effect lists, where resource packs and servers could find them. Leaves a screenshot of every style in front
  * of a few mobs, some behind a wall.
  */
-class EspGlowGameTest : LiquidBounceGameTest({
+class EspGlowGameTest : SingleplayerGameTest({
     context.restoring(ModuleESP) {
         try {
             buildStage(origin.y)
@@ -80,9 +80,7 @@ class EspGlowGameTest : LiquidBounceGameTest({
             client { it.gui.hud.setHidden(false) }
         }
     }
-}) {
-    override val integrated = true
-}
+})
 
 private fun Hud.setHidden(hidden: Boolean) {
     if (isHidden != hidden) {

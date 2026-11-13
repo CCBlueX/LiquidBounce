@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
@@ -42,7 +42,7 @@ private const val LAND_TICKS = 20
  * far away, unhurt, a survival player with the Vanilla mode of Fly onto a pillar where only Paper watches, and a
  * creative player across a canyon into the void and over a wall wider than the searched area.
  */
-class FlightNavigationGameTest : LiquidBounceGameTest({
+class FlightNavigationGameTest : ServerGameTest({
     context.restoring(ModuleAutoWalk, ModuleFly) {
         val y = origin.y
         buildCourse(y)

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.give
@@ -38,7 +39,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucke
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fillArea
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.matchingBlocks
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
@@ -62,7 +62,7 @@ private const val FUCKER_TICKS = 800
  * `.follow` player, AutoFarm walks onto an item to pick it up, Fucker's AutoWalk bridges over to a bed and then a
  * dragon egg and breaks both, and KillAura's FightBot walks around a fence to hit a husk.
  */
-class AutoWalkGameTest : LiquidBounceGameTest({
+class AutoWalkGameTest : ServerGameTest({
     context.restoring(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker, ModuleKillAura) {
         val y = origin.y
         buildCourse(y)

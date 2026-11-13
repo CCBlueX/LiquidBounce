@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.minecraft.world.entity.EntityTypes
 import kotlin.math.abs
@@ -37,7 +37,7 @@ private const val WALL_END_X = 2.0
  * [ModuleTargetStrafe] has to strafe out from behind a wall that ends on one side until it sees the target,
  * and must leave a target alone that stands above its range sphere, even though the horizontal circle reaches it.
  */
-class TargetStrafeGameTest : LiquidBounceGameTest({
+class TargetStrafeGameTest : SingleplayerGameTest({
     context.restoring(ModuleTargetStrafe) {
         val y = origin.y
         run("time set noon")
@@ -53,9 +53,7 @@ class TargetStrafeGameTest : LiquidBounceGameTest({
         strafesToTheOpenSide(y)
         skipsTargetAbove(y)
     }
-}) {
-    override val integrated = true
-}
+})
 
 /**
  * The wall covers x -7 to 1 between the player and the husk. Westwards the orbit runs into the wall,

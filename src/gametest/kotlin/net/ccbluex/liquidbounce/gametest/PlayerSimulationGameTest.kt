@@ -19,12 +19,12 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
@@ -57,7 +57,7 @@ private const val ORE_WALK_TICKS = 40
  * went through. A simulation is made both before the player's tick and during it, where the client makes most of its
  * own.
  */
-class PlayerSimulationGameTest : LiquidBounceGameTest({
+class PlayerSimulationGameTest : SingleplayerGameTest({
     run("gamemode survival $playerName")
     run("attribute $playerName minecraft:fall_damage_multiplier base set 0")
     awaitClient("the player on the ground", SETTLE_TIMEOUT_TICKS) { it.player?.onGround() == true }
@@ -67,9 +67,7 @@ class PlayerSimulationGameTest : LiquidBounceGameTest({
 
     check(failures.isEmpty()) { "simulated movement differs:\n" + failures.joinToString("\n") }
     assertLevelStaysUntouched(ground)
-}) {
-    override val integrated = true
-}
+})
 
 /**
  * Redstone ore lights up under whoever walks over it, on the client as well.

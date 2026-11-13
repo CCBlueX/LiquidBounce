@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.give
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge
 import net.ccbluex.liquidbounce.gametest.carried
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.minecraft.world.item.Items
@@ -39,7 +39,7 @@ private const val BOUNCE_TIMEOUT_TICKS = 300
  * Holding jump with [ModuleAutoWindCharge] has to launch the player high on every bounce, with one charge each.
  * The superflat ground is solid everywhere, so each charge bursts right below the player.
  */
-class AutoWindChargeGameTest : LiquidBounceGameTest({
+class AutoWindChargeGameTest : ServerGameTest({
     give("minecraft:wind_charge", CHARGES)
     awaitClient("the wind charges") { checkNotNull(it.player).inventory.countItem(Items.WIND_CHARGE) == CHARGES }
 
