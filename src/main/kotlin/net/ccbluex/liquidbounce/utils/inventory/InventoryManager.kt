@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -106,7 +105,6 @@ object InventoryManager : EventListener {
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
         debugParameter("Cursor Stack") { player.containerMenu.carried }
-        requires { inGame }
 
         var maximumCloseDelay = 0
 
@@ -183,31 +181,42 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    // The chain has to stay possible while waiting for its action, not over the click delay after it
-                    val performed = requires { chained.canPerformAction() }.use {
-                        // Check if this is the first action in the chain, which allows us to simulate a miss click
-                        // This is only possible for container-type slots and also does not make much sense when
-                        // the action is a throw action (you cannot miss-click really when throwing)
-                        if (index == 0 && action is InventoryAction.Click
-                            && constraints.missChance.random() > Random.nextInt(100)
-                            && action.actionType != ContainerInput.THROW
-                        ) {
-                            // Simulate a miss click (this is only possible for container-type slots)
-                            // TODO: Add support for inventory slots
-                            if (action.performMissClick()) {
-                                waitTicks(constraints.clickDelay.random())
-                                cycles = 0
-                            }
+                    // The waits may outlive the chain, e.g. when its menu closes meanwhile
+                    fun isStillPossible() = chained.canPerformAction().also { possible ->
+                        if (!possible) {
+                            logger.warn("Cannot perform action $action because it is not possible")
                         }
-
-                        if (action is InventoryAction.CloseScreen) {
-                            waitTicks(constraints.closeDelay.random())
-                            cycles = 0
-                        }
-                        action.performAction()
                     }
 
-                    if (performed && action !is InventoryAction.CloseScreen) {
+                    if (!isStillPossible()) {
+                        break
+                    }
+
+                    // Check if this is the first action in the chain, which allows us to simulate a miss click
+                    // This is only possible for container-type slots and also does not make much sense when
+                    // the action is a throw action (you cannot miss-click really when throwing)
+                    if (index == 0 && action is InventoryAction.Click
+                        && constraints.missChance.random() > Random.nextInt(100)
+                        && action.actionType != ContainerInput.THROW
+                    ) {
+                        // Simulate a miss click (this is only possible for container-type slots)
+                        // TODO: Add support for inventory slots
+                        if (action.performMissClick()) {
+                            waitTicks(constraints.clickDelay.random())
+                            cycles = 0
+                        }
+                    }
+
+                    if (action is InventoryAction.CloseScreen) {
+                        waitTicks(constraints.closeDelay.random())
+                        cycles = 0
+                    }
+
+                    if (!isStillPossible()) {
+                        break
+                    }
+
+                    if (action.performAction() && action !is InventoryAction.CloseScreen) {
                         waitTicks(constraints.clickDelay.random())
                         cycles = 0
                     }

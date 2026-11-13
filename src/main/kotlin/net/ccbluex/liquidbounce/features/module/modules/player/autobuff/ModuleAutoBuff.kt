@@ -113,8 +113,16 @@ object ModuleAutoBuff : ClientModule(
     internal val activeFeatures
         get() = features.filter { it.enabled }
 
+    /** Ticks of AutoSwap's DelayOut left after the last buff, before the next one may start. */
+    internal var ticksUntilNextBuff = 0
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (ticksUntilNextBuff > 0) {
+            ticksUntilNextBuff--
+            return@tickHandler
+        }
+
         if (notDuringCombat && CombatManager.isInCombat) {
             return@tickHandler
         }
@@ -141,6 +149,7 @@ object ModuleAutoBuff : ClientModule(
     }
 
     override fun onDisabled() {
+        ticksUntilNextBuff = 0
         SilentHotbar.resetSlot(ModuleAutoBuff)
         super.onDisabled()
     }

@@ -162,7 +162,8 @@ object ModuleFastExp : ClientModule(
             return@tickHandler
         }
 
-        requires { !InventoryManager.isHandledScreenOpen && !player.isDeadOrDying }
+        requires { !InventoryManager.isHandledScreenOpen }
+        requires { !player.isDeadOrDying }
         val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
         if (!NoWaste.enabled) {

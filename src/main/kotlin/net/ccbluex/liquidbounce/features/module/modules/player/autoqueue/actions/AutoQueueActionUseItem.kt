@@ -36,11 +36,9 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
         val slot = Slots.OffhandWithHotbar.findSlot(mode.activeMode) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
-        // Only up to the use, as the queue goes on with other actions afterwards
-        requires { mode.activeMode.test(slot.itemStack) }.use {
-            waitTicks(1)
-            interaction.useItem(player, slot.useHand)
-        }
+        requires { mode.activeMode.test(slot.itemStack) }
+        waitTicks(1)
+        interaction.useItem(player, slot.useHand)
     }
 
 }

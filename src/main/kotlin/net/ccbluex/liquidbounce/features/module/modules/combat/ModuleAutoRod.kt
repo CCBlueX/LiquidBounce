@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
@@ -164,9 +163,17 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         )
     }
 
+    /** Ticks of [cooldown] left before the next throw. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val handleAutoRod = tickHandler {
         debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedIn }
+
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
 
         if (!requirementsMet) {
             return@tickHandler
@@ -200,25 +207,23 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
-        // Up to the pull, not over the cooldown after it
-        val level = mc.level
-        requires { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
-            // 3. timeout / hit entity / no movement / out of range
-            tickConditional(hitTimeout) {
-                fishingBobberEntity?.hookedIn != null ||
-                    fishingBobberEntity?.knownMovement == Vec3.ZERO ||
-                    pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
-            }
+        requires { slot.itemStack.`is`(Items.FISHING_ROD) }
 
-            // 4. pull
-            // 5. reset slot (this ticksUntilReset will override prev action)
-            useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+        // 3. timeout / hit entity / no movement / out of range
+        tickConditional(hitTimeout) {
+            fishingBobberEntity?.hookedIn != null ||
+                fishingBobberEntity?.knownMovement == Vec3.ZERO ||
+                pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
         }
 
-        waitTicks(cooldown.random())
+        // 4. pull
+        // 5. reset slot (this ticksUntilReset will override prev action)
+        useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+        cooldownLeft = cooldown.random()
     }
 
     override fun onDisabled() {
+        cooldownLeft = 0
         targetTracker.reset()
         fishingBobberEntity?.let {
             interaction.releaseUsingItemInTickLoop()

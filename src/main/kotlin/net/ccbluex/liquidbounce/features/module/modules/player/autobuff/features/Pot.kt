@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -108,9 +107,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                requires { inGame && isUsable(slot) }.use {
-                    tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
-                }
+                requires { isUsable(slot) }
+                tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
 
                 rotation = rotation.normalize()
             }
