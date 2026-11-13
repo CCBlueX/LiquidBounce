@@ -21,15 +21,19 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 
-object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura) {
+object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatSpecific = true) {
 
-    val rotationTiming by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
+    private val rotationTimingChoice by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
     val aimThroughWalls by boolean("ThroughWalls", false)
 
     /**
      * When enabled, if current rotation can still raytrace the target, skip rotating.
      */
-    val lazyRotation by boolean("LazyRotation", false)
+    private val lazyRotationChoice by boolean("LazyRotation", false)
+
+    // The AI turns every tick, like the players it learned from
+    val rotationTiming get() = if (usesAiAim) KillAuraRotationTiming.NORMAL else rotationTimingChoice
+    val lazyRotation get() = lazyRotationChoice && !usesAiAim
 
     enum class KillAuraRotationTiming(override val tag: String) : Tagged {
         NORMAL("Normal"),

@@ -286,7 +286,6 @@
   "liquidbounce.module.damageParticles.description": "エンティティの体力変化を表示します。",
   "liquidbounce.module.dankBobbing.description": "さらに画面の揺れを追加します。",
   "liquidbounce.module.debug.description": "デベロッパーのみ。",
-  "liquidbounce.module.debugRecorder.description": "デベロッパーのみ。",
   "liquidbounce.module.derp.description": "ふざけているように見せます。",
   "liquidbounce.module.disabler.description": "特定のアンチチートまたはサーバーを無効化します。",
   "liquidbounce.module.disabler.messages.grimSpectateMessage": "検知されました。Disablerモジュールを無効化するべきです。",

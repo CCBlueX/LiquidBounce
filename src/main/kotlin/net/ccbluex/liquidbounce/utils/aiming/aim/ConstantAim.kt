@@ -34,10 +34,14 @@ import kotlin.math.max
  * Turns straight at the goal, instantly by default. Each turn follows the In curve for its first half and the Out
  * curve for its second, as fast as the turn speeds allow.
  */
-class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("Linear")) {
+class ConstantAim(
+    parent: ModeValueGroup<*>,
+    horizontalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+    verticalTurnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+) : Aim("Constant", parent, listOf("Linear")) {
 
-    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0f..180f)
-    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0f..180f)
+    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", horizontalTurnSpeed, 0f..180f)
+    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", verticalTurnSpeed, 0f..180f)
     private val easeIn by enumChoice("In", Easing.LINEAR, CURVES)
     private val easeOut by enumChoice("Out", Easing.LINEAR, CURVES)
 
