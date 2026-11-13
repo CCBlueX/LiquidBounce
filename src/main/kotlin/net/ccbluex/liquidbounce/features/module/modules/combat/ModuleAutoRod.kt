@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
@@ -150,6 +149,12 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private var throwing: Pair<Rotation, Surface?>? = null
     private var rodUse: Job? = null
 
+    /** Whether our hook is out and still has to be pulled. */
+    private var thrown = false
+
+    /** Ticks of [cooldown] left after the last pull before the next throw. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedIn }
@@ -157,18 +162,31 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         if (!requirementsMet) {
             targetTracker.reset()
-            return@handler
+        } else {
+            planThrow()
         }
 
+        if (thrown) {
+            rodUse = launchSequence(rodUse) { pullRod() }
+        } else if (cooldownLeft > 0) {
+            cooldownLeft--
+        } else if (throwing != null) {
+            // A cast of the player's own is pulled like one of ours
+            val manualCast = fishingBobberEntity != null
+            rodUse = launchSequence(rodUse) { if (manualCast) pullRod() else throwRod() }
+        }
+    }
+
+    private fun planThrow() {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
         val target = targetTracker.selectFirst { enemy ->
             player.distanceToSqr(enemy) in minRangeSq..maxRangeSq && player.hasLineOfSight(enemy)
                 && enemy.getActualHealth() > minTargetHealth
-        } ?: return@handler
+        } ?: return
 
-        val (rotation, surface) = gravityType.apply(target)?.also { throwing = it } ?: return@handler
+        val (rotation, surface) = gravityType.apply(target)?.also { throwing = it } ?: return
 
         // Keeps aiming while the hook flies and during the cooldown
         RotationManager.setRotationTarget(
@@ -176,62 +194,50 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
             Priority.IMPORTANT_FOR_USAGE_1,
             this
         )
-        rodUse = launchSequence(rodUse) { useRod() }
     }
 
-    private suspend fun useRod() {
-        // Only while aiming: the pull must go on when the target leaves the range or the plan
-        val (target, slot) = requires {
-            throwing?.takeIf { requirementsMet && targetTracker.target != null && availableRodSlot != null }
-        }.use { planned ->
-            lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
-                val (rotation, surface) = planned.value
-                rotations.toRotationTarget(rotation, considerInventory = false, surface = surface)
-            }) { going -> going.takeIf { it.directionAngleTo(planned.value.first) <= aimOffThreshold } }
+    private suspend fun throwRod() {
+        val planned by requires { throwing }
+        val slot by requires { availableRodSlot }
 
-            // Checked with the plan right before the look resumed
-            checkNotNull(targetTracker.target) to checkNotNull(availableRodSlot)
-        }
+        lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
+            val (rotation, surface) = planned
+            rotations.toRotationTarget(rotation, considerInventory = false, surface = surface)
+        }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
 
-        // If the player used rod manually, skip use
-        if (fishingBobberEntity == null) {
-            // 1. select rod
-            // 2. push
-            if (!useHotbarSlotOrOffhand(
-                    slot,
-                    // The player should hold the rod util pulling
-                    ticksUntilReset = slotResetDelay.last + hitTimeout,
-                    swingMode = swingMode
-                ).consumesAction()
-            ) {
-                // Action failed
-                return
-            }
+        // 1. select rod
+        // 2. push, holding the rod until the pull
+        if (useHotbarSlotOrOffhand(slot, slotResetDelay.last + hitTimeout, swingMode = swingMode).consumesAction()) {
+            thrown = true
             currentScanExtraRange = scanExtraRange.random()
         }
+    }
 
+    private suspend fun pullRod() {
+        val slot by requires { availableRodSlot }
+        val target = targetTracker.target
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
-        // Up to the pull, not over the cooldown after it
-        val level = mc.level
-        requires { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
-            // 3. timeout / hit entity / no movement / out of range
-            tickConditional(hitTimeout) {
-                fishingBobberEntity?.hookedIn != null ||
-                    fishingBobberEntity?.knownMovement == Vec3.ZERO ||
-                    pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
-            }
-
-            // 4. pull
-            // 5. reset slot (this ticksUntilReset will override prev action)
-            useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+        // 3. timeout / hit entity / no movement / out of range
+        tickConditional(hitTimeout) {
+            val hook = fishingBobberEntity
+            hook?.hookedIn != null || hook?.knownMovement == Vec3.ZERO || pullOnOutOfRange &&
+                (target == null || player.distanceToSqr(target) !in minRangeSq..maxRangeSq)
         }
 
-        waitTicks(cooldown.random())
+        // 4. pull
+        // 5. reset slot (this ticksUntilReset will override prev action)
+        if (fishingBobberEntity != null) {
+            useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+        }
+        thrown = false
+        cooldownLeft = cooldown.random()
     }
 
     override fun onDisabled() {
+        thrown = false
+        cooldownLeft = 0
         targetTracker.reset()
         fishingBobberEntity?.let {
             interaction.releaseUsingItemInTickLoop()

@@ -172,21 +172,19 @@ internal object NoFallMLG : NoFallMode("MLG") {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         goal ?: return@tickHandler
+        val aimed by requires { goal }
 
-        // Guards the aim only, not the wait for the movement packet
-        val (action, hit, rotation) = requires { goal }.use { aimed ->
-            lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                val placementTarget = aimed.value.plan.placementTarget
-                rotations.toRotationTarget(
-                    placementTarget.rotation,
-                    considerInventory = true,
-                    surface = placementTarget.surface(),
-                )
-            }) { going ->
-                // Not before the player sneaks, when the placement needs it
-                val action = currentTarget ?: return@lookAt null
-                aimed.value.plan.placementTarget.verifyClick(going)?.let { hit -> Triple(action, hit, going) }
-            }
+        val (action, hit, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            val placementTarget = aimed.plan.placementTarget
+            rotations.toRotationTarget(
+                placementTarget.rotation,
+                considerInventory = true,
+                surface = placementTarget.surface(),
+            )
+        }) { going ->
+            // Not before the player sneaks, when the placement needs it
+            val action = currentTarget ?: return@lookAt null
+            aimed.plan.placementTarget.verifyClick(going)?.let { hit -> Triple(action, hit, going) }
         }
 
         if (isOlderThan1_21) {

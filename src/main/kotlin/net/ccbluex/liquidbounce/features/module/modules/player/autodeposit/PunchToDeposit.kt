@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
@@ -87,6 +86,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
     override fun onDisabled() {
         currentTarget = null
+        cooldownLeft = 0
         super.onDisabled()
     }
 
@@ -128,8 +128,16 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
     private fun depositSlot() = ModuleAutoDeposit.matchingSlots(inventory = false).firstOrNull() as? HotbarItemSlot
 
+    /** Ticks of [interactionDelay] left after the last deposit. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
@@ -138,22 +146,20 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
             currentTarget ?: return@tickHandler
             depositSlot() ?: return@tickHandler
 
-            // Guards the aim only, not the delay after the deposit
-            requires { depositSlot() }.use { slot ->
-                requires {
-                    currentTarget.takeIf { rotateToTarget && mc.gui.screen() !is AbstractContainerScreen<*> }
-                }.use { target ->
-                    val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->
-                        val (pos, _) = target.value
-                        val state = pos.state ?: return@lookAt null
-                        raytraceBlock(interactionRange.toDouble(), going, pos, state)
-                            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
-                    }
+            val slot by requires { depositSlot() }
+            val target by requires { currentTarget }
+            requires { rotateToTarget }
+            requires { mc.gui.screen() !is AbstractContainerScreen<*> }
 
-                    deposit(slot.value, hit)
-                    currentTarget = null
-                }
+            val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
+                val (pos, _) = target
+                val state = pos.state ?: return@lookAt null
+                raytraceBlock(interactionRange.toDouble(), going, pos, state)
+                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
             }
+
+            deposit(slot, hit)
+            currentTarget = null
         } else {
             val slot = depositSlot() ?: return@tickHandler
             val hit = mc.hitResult as? BlockHitResult ?: return@tickHandler
@@ -165,7 +171,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
             deposit(slot, hit)
         }
 
-        waitTicks(interactionDelay)
+        cooldownLeft = interactionDelay
     }
 
     private fun deposit(slot: HotbarItemSlot, hit: BlockHitResult) {

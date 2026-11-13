@@ -171,44 +171,6 @@ class GuardsTest {
     }
 
     @Test
-    fun `a closed requirement no longer applies`() = runTest(UnconfinedTestDispatcher()) {
-        val swapping = Flag()
-        var finished = false
-        run {
-            requires { swapping.holds() }.use { waitTicks(1) }
-            waitTicks(2)
-            finished = true
-        }
-
-        ticker.tick()
-        swapping.value = false
-        ticker.tick(2)
-
-        assertNull(ended)
-        assertTrue(finished)
-    }
-
-    @Test
-    fun `a closed required value no longer applies`() = runTest(UnconfinedTestDispatcher()) {
-        var current: String? = "target"
-        var acted: String? = null
-        run {
-            acted = requires { current }.use { target ->
-                waitTicks(1)
-                target.value
-            }
-            waitTicks(2)
-        }
-
-        ticker.tick()
-        current = null
-        ticker.tick(2)
-
-        assertNull(ended)
-        assertEquals("target", acted)
-    }
-
-    @Test
     fun `a requirement that is false when added ends the run right there`() = runTest(UnconfinedTestDispatcher()) {
         var ran = false
         run {
@@ -233,6 +195,71 @@ class GuardsTest {
         ticker.tick()
 
         assertEndedByGuard()
+    }
+
+    @Test
+    fun `a run started in a world ends once that world is left`() = runTest(UnconfinedTestDispatcher()) {
+        Worlds.changed(inWorld = true)
+        try {
+            var resumed = false
+            run {
+                beginRun()
+                waitTicks(5)
+                resumed = true
+            }
+
+            ticker.tick()
+            Worlds.changed(inWorld = true)
+            ticker.tick()
+
+            assertEndedByGuard()
+            assertFalse(resumed)
+        } finally {
+            Worlds.changed(inWorld = false)
+        }
+    }
+
+    @Test
+    fun `a run started outside of a world keeps going when one is joined`() = runTest(UnconfinedTestDispatcher()) {
+        Worlds.changed(inWorld = false)
+        var resumed = false
+        try {
+            run {
+                beginRun()
+                waitTicks(2)
+                resumed = true
+            }
+
+            ticker.tick()
+            Worlds.changed(inWorld = true)
+            ticker.tick()
+
+            assertNull(ended)
+            assertTrue(resumed)
+        } finally {
+            Worlds.changed(inWorld = false)
+        }
+    }
+
+    @Test
+    fun `a coroutine that is no handler run outlives a world change`() = runTest(UnconfinedTestDispatcher()) {
+        Worlds.changed(inWorld = true)
+        var resumed = false
+        try {
+            run {
+                waitTicks(2)
+                resumed = true
+            }
+
+            ticker.tick()
+            Worlds.changed(inWorld = true)
+            ticker.tick()
+
+            assertNull(ended)
+            assertTrue(resumed)
+        } finally {
+            Worlds.changed(inWorld = false)
+        }
     }
 
     @Test
