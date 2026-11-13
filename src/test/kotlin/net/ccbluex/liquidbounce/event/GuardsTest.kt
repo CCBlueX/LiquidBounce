@@ -189,6 +189,26 @@ class GuardsTest {
     }
 
     @Test
+    fun `a closed tracked value no longer applies`() = runTest(UnconfinedTestDispatcher()) {
+        var current: String? = "target"
+        var acted: String? = null
+        run {
+            acted = tracked { current }.use { target ->
+                waitTicks(1)
+                target.value
+            }
+            waitTicks(2)
+        }
+
+        ticker.tick()
+        current = null
+        ticker.tick(2)
+
+        assertNull(ended)
+        assertEquals("target", acted)
+    }
+
+    @Test
     fun `a guard that does not hold when added ends the run right there`() = runTest(UnconfinedTestDispatcher()) {
         var ran = false
         run {
