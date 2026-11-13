@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
@@ -27,7 +28,6 @@ import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fillArea
 import net.ccbluex.liquidbounce.gametest.forceLoadArea
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.minecraft.core.BlockPos
@@ -42,7 +42,7 @@ private const val ARRIVAL = 1.1
  * `.goto` walks to a destination far beyond the path range, across a field with three walls, in stages and without
  * stopping between them, and turns AutoWalk off on arrival.
  */
-class AutoWalkStagesGameTest : LiquidBounceGameTest({
+class AutoWalkStagesGameTest : ServerGameTest({
     context.restoring(ModuleAutoWalk) {
         val y = origin.y
         buildField(y)

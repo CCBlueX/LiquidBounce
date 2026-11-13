@@ -105,9 +105,11 @@ loom {
 // `-PgameTestNavigation=false` skips the slow navigation tests. The client starts without the browser, theme, deep
 // learning, LiquidChat, Discord and API requests, which none of its tests need; `-PgameTestFull` starts them too.
 //
-// `LiquidBounceGameTest`s play on the game test server (https://github.com/CCBlueX/gametest) with GAMETEST_API_TOKEN,
-// or on a server of one's own at GAMETEST_SERVER_ADDRESS. GAMETEST_SERVER_ANTICHEAT picks the anticheat;
-// `LocalGameTest`s run only without it. `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
+// A test's class says where it plays. `ServerGameTest`s play on the game test server (https://github.com/CCBlueX/gametest)
+// with GAMETEST_API_TOKEN, or on a server of one's own at GAMETEST_SERVER_ADDRESS, against the anticheat in
+// GAMETEST_SERVER_ANTICHEAT. Without it, `SingleplayerGameTest`s play on the integrated server and `ClientGameTest`s
+// need no world.
+// `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
 fabricApi {
     configureTests {
         createSourceSet = true

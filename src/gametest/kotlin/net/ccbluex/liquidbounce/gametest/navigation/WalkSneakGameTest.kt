@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.liquidbounce.gametest.fillArea
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3
 private const val GOAL_RADIUS = 0.8
 
 /** A survival player sneaks through a low tunnel and along narrow bridges high over the ground, unhurt. */
-class WalkSneakGameTest : LiquidBounceGameTest({
+class WalkSneakGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     context.onClient {
         walker = TestWalker("TestSneakWalker", GOAL_RADIUS)

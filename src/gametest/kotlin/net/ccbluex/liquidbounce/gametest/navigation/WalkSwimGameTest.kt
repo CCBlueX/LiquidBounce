@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -34,7 +34,7 @@ private const val ARRIVAL_TICKS = 800
 private const val GOAL_RADIUS = 0.8
 
 /** A survival player walks between two rooms joined only under water, unhurt and without running out of air. */
-class WalkSwimGameTest : LiquidBounceGameTest({
+class WalkSwimGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     context.onClient {
         walker = TestWalker("TestSwimWalker", GOAL_RADIUS)
