@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.utils.item.ItemExtensionsKt;
 import net.minecraft.client.player.FirstPersonHandsAndItems;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
@@ -57,8 +58,8 @@ public abstract class MixinFirstPersonHandsAndItemsRenderer {
     }
 
     @Inject(method = "itemUsed", at = @At("HEAD"), cancellable = true)
-    private void injectIgnorePlace(InteractionHand hand, CallbackInfo ci) {
-        if (GlobalSettingsViewModel.INSTANCE.getRunning() && GlobalSettingsViewModel.EquipOffset.INSTANCE.getIgnorePlace()) {
+    private void injectKeepItemUp(InteractionHand hand, CallbackInfo ci) {
+        if (GlobalSettingsViewModel.INSTANCE.keepsItemUpOnUse(hand)) {
             ci.cancel();
         }
     }
@@ -71,6 +72,15 @@ public abstract class MixinFirstPersonHandsAndItemsRenderer {
                 && ItemStack.isSameItemSameComponents(currentlyVisibleItem, expectedItem)
             );
         }
+    }
+
+    @ModifyExpressionValue(method = "shouldInstantlyReplaceVisibleItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;matchesIgnoringComponents(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Predicate;)Z"))
+    private boolean injectIgnoreLegacyDamage(
+        boolean original,
+        @Local(argsOnly = true, name = "currentlyVisibleItem") ItemStack currentlyVisibleItem,
+        @Local(argsOnly = true, name = "expectedItem") ItemStack expectedItem
+    ) {
+        return original || ItemExtensionsKt.matchesIgnoringLegacyDamage(currentlyVisibleItem, expectedItem);
     }
 
 }
