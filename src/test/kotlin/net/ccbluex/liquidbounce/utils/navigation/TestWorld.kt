@@ -108,6 +108,7 @@ fun walkAbilities(
     safeFall: Int = 3,
     breakTicks: Double = Double.POSITIVE_INFINITY,
     avoid: LongSet = LongOpenHashSet(),
+    jumpClimbs: Boolean = true,
 ) = Abilities(
     canBreak = canBreak,
     canPlace = canPlace,
@@ -119,4 +120,5 @@ fun walkAbilities(
     waterFall = 20,
     breakTicks = { breakTicks },
     avoid = avoid,
+    jumpClimbs = jumpClimbs,
 )

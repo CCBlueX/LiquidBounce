@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.BaseFireBlock
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.DoorBlock
 import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -176,6 +177,28 @@ class Terrain(
     fun isWater(x: Int, y: Int, z: Int) = state(x, y, z).fluidState.type.isSame(Fluids.WATER)
 
     fun isClimbable(x: Int, y: Int, z: Int) = state(x, y, z).block in CLIMBABLE
+
+    /**
+     * The side a player in the climbable block at [x] [y] [z] pushes against to climb: the wall of a ladder, else a
+     * block beside it. Null when there is none, where only jumping climbs.
+     */
+    fun climbSide(x: Int, y: Int, z: Int): Direction? {
+        val state = state(x, y, z)
+        if (state.block is LadderBlock) {
+            return state.getValue(LadderBlock.FACING).opposite
+        }
+
+        for (side in HORIZONTAL) {
+            val sx = x + side.stepX
+            val sz = z + side.stepZ
+            if (isGrip(sx, y, sz) || isGrip(sx, y + 1, sz)) {
+                return side
+            }
+        }
+        return null
+    }
+
+    private fun isGrip(x: Int, y: Int, z: Int) = isKnown(x, y, z) && !isHazard(x, y, z) && !isPassable(x, y, z)
 
     /**
      * How much of a fall onto feet at [top] in column [x] [z] bounces back up, 0 for none: the restitution of the block
@@ -386,6 +409,8 @@ class Terrain(
 
         /** Offsets from a block to the trapdoors whose counting as open depends on it. */
         private val TRAPDOOR_NEIGHBOURS = intArrayOf(-2, -1, 1)
+
+        private val HORIZONTAL = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
 
         private val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
         private val FULL: VoxelShape = Shapes.block()

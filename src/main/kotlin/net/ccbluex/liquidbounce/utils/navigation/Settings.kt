@@ -23,11 +23,13 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_13_2
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.MotionTraits
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
+import net.ccbluex.liquidbounce.utils.navigation.walk.Costs
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity.BASE_SAFE_FALL_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -40,12 +42,13 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 
-/** What a walking navigator may do on its way, as settings of [values]. */
+/** What a walking navigator may do on its way, as settings of [values]. [fastBridges] are run across, not built. */
 class Settings(
     values: ValueGroup,
     allowBreak: Boolean,
     allowPlace: Boolean,
     allowParkour: Boolean,
+    private val fastBridges: Boolean = false,
 ) {
 
     private val allowBreak by values.boolean("AllowBreak", allowBreak)
@@ -85,6 +88,8 @@ class Settings(
             avoid = LongOpenHashSet(avoid),
             air = player.airSupply,
             motion = MotionTraits.capture(player),
+            jumpClimbs = !isOlderThanOrEqual1_13_2,
+            bridgeTicks = if (fastBridges) Costs.RUN_BRIDGE else Costs.PLACE,
         )
     }
 

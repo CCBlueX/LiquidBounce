@@ -201,6 +201,19 @@ class WalkRoutingTest {
     }
 
     @Test
+    fun `a vine with nothing beside it is only climbed where jumping climbs`() {
+        val world = TestWorld.flat()
+            .fill(0, 1, 0, 0, 4, 0, Blocks.VINE.defaultBlockState())
+            .set(1, 4, 0, STONE)
+        val goal = BlockPos(1, 5, 0)
+
+        val path = completePath(search(world, feet(-3, 1, 0), goal))
+        assertTrue(Move.CLIMB_UP in path.moves())
+        val pushOnly = walkAbilities(breakTicks = 20.0, jumpClimbs = false)
+        assertFalse(isComplete(search(world, feet(-3, 1, 0), goal, pushOnly)))
+    }
+
+    @Test
     fun `unreachable goals give an incomplete path that ends closer`() {
         val world = TestWorld.flat()
             .fill(8, 1, -2, 12, 3, 2)
@@ -259,7 +272,7 @@ class WalkRoutingTest {
     }
 
     @Test
-    fun `narrow bridges over deep drops are walked sneaking`() {
+    fun `narrow bridges over deep drops are walked with safe walk`() {
         // Two platforms ten blocks over the ground, joined by a bridge one block wide.
         val world = TestWorld.flat()
             .fill(-3, 10, -3, 0, 10, 3)
@@ -268,8 +281,8 @@ class WalkRoutingTest {
         val path = completePath(search(world, feet(-2, 11, 0), BlockPos(11, 11, 0)))
 
         val bridge = path.steps.filter { it.to.x in 1..8 }
-        assertTrue(bridge.isNotEmpty() && bridge.all { it.sneak })
-        assertFalse(path.steps.first().sneak, "the middle of a platform is no edge")
+        assertTrue(bridge.isNotEmpty() && bridge.all { it.edge && !it.sneak })
+        assertFalse(path.steps.first().edge, "the middle of a platform is no edge")
         assertTrue(path.steps.all { it.to.y == 11 })
     }
 

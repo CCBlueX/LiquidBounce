@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
+import net.ccbluex.liquidbounce.utils.movement.inputFrameYaw
 import net.ccbluex.liquidbounce.utils.navigation.flight.Flying
 import net.ccbluex.liquidbounce.utils.navigation.flight.captureFlight
 import net.ccbluex.liquidbounce.utils.navigation.glide.Gliding
@@ -56,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.BlockActions
 import net.ccbluex.liquidbounce.utils.navigation.walk.Follower
 import net.ccbluex.liquidbounce.utils.navigation.walk.Path
 import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
+import net.ccbluex.liquidbounce.utils.navigation.walk.PlacedBlock
 import net.ccbluex.liquidbounce.utils.navigation.walk.isStraightWalkable
 import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
 import net.ccbluex.liquidbounce.utils.render.route.RouteView
@@ -71,6 +73,9 @@ import kotlin.math.min
  * Walks the player to a goal given every tick: straight on where nothing is in the way, else along a searched path,
  * opening doors and, when allowed, breaking and placing blocks. A ridden vehicle is driven there instead, and the
  * player flies or glides where it can.
+ *
+ * With [placesBridgeFloors], searches count level bridges as quick to cross, and while it is true another feature
+ * such as Scaffold places their floor and the walk only runs across them; [bridgeAhead] tells when one comes up.
  */
 @Suppress("TooManyFunctions")
 class Navigator(
@@ -81,19 +86,22 @@ class Navigator(
     allowPlace: Boolean = false,
     allowParkour: Boolean = true,
     showRoute: Boolean = true,
+    placesBridgeFloors: (() -> Boolean)? = null,
 ) : EventListener {
 
-    private val settings = Settings(values, allowBreak, allowPlace, allowParkour)
+    private val settings = Settings(values, allowBreak, allowPlace, allowParkour, placesBridgeFloors != null)
     private val rotations = rotations ?: values.tree(RotationsValueGroup(owner))
-    private val view = RouteView()
+    internal val view = RouteView()
 
     init {
         values.tree(RouteRenderer(owner, view, showRoute))
     }
 
+    private val lookAhead = values.tree(LookAhead(owner))
+
     private val routes = Replanner<Path>(this, VERTICAL_MARGIN) { Terrain(it, opensDoors = true) }
     private val actions = BlockActions(this, this.rotations)
-    private val follower = Follower(actions)
+    private val follower = Follower(actions, placesBridgeFloors ?: { false })
     private val flight = Flying(this, view)
     private val glide = Gliding(this, view)
     private val bounce = RoofBounce(this, view)
@@ -116,8 +124,50 @@ class Navigator(
 
     private var lastLookYaw = Float.NaN
 
+    /** The goal of the last tick navigated, null once halted. */
+    private var lastGoal: Vec3? = null
+
     val isActing: Boolean
         get() = actions.isActive
+
+    /** Whether the walk mines or places blocks in this step or the next, such as while bridging. */
+    val isBuilding: Boolean
+        get() = actions.isActive || follower.path != null && follower.building
+
+    /** The level bridge steps in a row from this step of the path or the next, 0 without. */
+    val bridgeAhead: Int
+        get() = if (follower.path != null) follower.bridgeAhead else 0
+
+    /** The yaw a bridge is crossed along, null while not crossing one. */
+    val bridgeHeading: Float?
+        get() = follower.bridgeHeading
+
+    /** Times following the path overshot it, so the aim lay behind the way the player moved. */
+    val overshoots: Int
+        get() = follower.overshoots
+
+    /** Why to slow down: a sharp `turn` of the path just ahead, or the goal close (`approach`); null to go on. */
+    val slowdown: String?
+        get() {
+            val goal = lastGoal ?: return null
+            return when {
+                player.position().closerThan(goal, APPROACH_DISTANCE) -> "approach"
+                follower.path != null && follower.turnAhead(TURN_LOOK) > SHARP_TURN -> "turn"
+                else -> null
+            }
+        }
+
+    /** The block the walk placed last, and whether the server kept it. */
+    val placement: PlacedBlock?
+        get() = actions.placement
+
+    /** Whether the searches found no way closer to the goal, so the walk stays short of it. */
+    val isStranded: Boolean
+        get() = !straight && follower.path == null && (routes.failed || settledAt != null)
+
+    /** The walking path followed now, null while flying, walking straight or searching. */
+    internal val path: Path?
+        get() = follower.path
 
     /** Where the walk heads: the aim of a block action, else the way to the next point, else the movement input. */
     fun movementRotation(): Rotation {
@@ -182,6 +232,13 @@ class Navigator(
     }
 
     @Suppress("unused")
+    private val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
+        if (follower.path != null && follower.safeWalk) {
+            event.isSafeWalk = true
+        }
+    }
+
+    @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         reset()
     }
@@ -192,10 +249,14 @@ class Navigator(
      * Moves one tick towards [goal], within [radius]; true if the movement is a plain walk other features may add
      * to. Call from a [MovementInputEvent] handler at [CRITICAL_MODIFICATION].
      */
+    @Suppress("ReturnCount")
     fun navigate(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         routes.tick()
+        lastGoal = goal
         stuckSpots.tick(goal)
         val position = player.position()
+        view.goal = goal
+        view.goalRadius = radius
 
         if (player.rootVehicle.position().closerThan(goal, radius)) {
             stop(event)
@@ -210,14 +271,19 @@ class Navigator(
                 isStraightWalkable(Terrain.live(), position, goal, radius, settings.safeFall)
         }
 
-        if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
-            bounce(event, goal)
-        ) {
+        // A ridden vehicle follows the view, which the ride turns itself.
+        if (rideVehicle(event, goal, radius)) {
+            return false
+        }
+
+        if (fly(event, goal, radius) || glide(event, goal, radius) || bounce(event, goal)) {
+            lookAhead.aim(steeringTarget)
             return false
         }
 
         if (straight) {
             walkStraight(event, goal)
+            lookAhead.aim(goal)
             return true
         }
 
@@ -226,9 +292,14 @@ class Navigator(
 
         val path = follower.path
         val plainWalk = if (path != null && !follower.isFinished) {
-            followPath(event, path)
+            followPath(event, path).also {
+                // Along a bridge the view keeps to its far end rather than turning with the steps.
+                lookAhead.aim(
+                    follower.bridgeTarget ?: follower.pointAhead(player.position(), lookAhead.distance.toDouble())
+                )
+            }
         } else {
-            fallback(event, goal, radius)
+            fallback(event, goal, radius).also { lookAhead.aim(steeringTarget) }
         }
 
         planIfNeeded(goal, radius, position)
@@ -237,15 +308,23 @@ class Navigator(
 
     /** For ticks without a goal. */
     fun halt() {
+        view.goal = null
+        lastGoal = null
         ride.halt()
         haltFlying()
         stopWalking()
+    }
+
+    /** Turns the camera towards [point] after this tick, for ticks something else moves the player. */
+    fun lookAt(point: Vec3) {
+        lookAhead.aim(point)
     }
 
     /** For when the owner is turned off. */
     fun reset() {
         halt()
         stuckSpots.clear()
+        lookAhead.reset()
     }
 
     private fun rideVehicle(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
@@ -273,7 +352,7 @@ class Navigator(
             stopWalking()
         }
 
-        flight.navigate(event, goal, radius, settings.maxLength, abilities, frameYaw())
+        flight.navigate(event, goal, radius, settings.maxLength, abilities, inputFrameYaw())
         steeringTarget = flight.target
         sprintWanted = flight.sprint
         return true
@@ -281,7 +360,7 @@ class Navigator(
 
     private fun glide(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         val wasGliding = glide.isActive
-        if (!glide.navigate(event, goal, radius, settings.captureGlide(), straight, frameYaw())) {
+        if (!glide.navigate(event, goal, radius, settings.captureGlide(), straight, inputFrameYaw())) {
             return false
         }
 
@@ -295,7 +374,7 @@ class Navigator(
 
     private fun bounce(event: MovementInputEvent, goal: Vec3): Boolean {
         val wasBouncing = bounce.isActive
-        if (!bounce.navigate(event, goal, settings.captureGlide(), frameYaw())) {
+        if (!bounce.navigate(event, goal, settings.captureGlide(), inputFrameYaw())) {
             return false
         }
 
@@ -322,9 +401,12 @@ class Navigator(
     }
 
     private fun followPath(event: MovementInputEvent, path: Path): Boolean {
-        val state = follower.tick(event, frameYaw())
+        val state = follower.tick(event, inputFrameYaw())
         if (state == FollowState.STUCK) {
-            follower.stuckAt?.let(stuckSpots::add)
+            follower.stuckAt?.let {
+                stuckSpots.add(it)
+                view.stuck(it)
+            }
             stuck = true
         }
 
@@ -492,16 +574,10 @@ class Navigator(
         }
     }
 
-    /** The yaw the keys move relative to: the rotation under strict movement correction, else the view. */
-    private fun frameYaw(): Float {
-        val strict = RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.STRICT
-        return if (strict && RotationManager.currentRotation != null) RotationManager.movementYaw else player.yRot
-    }
-
     private fun walkTowards(event: MovementInputEvent, target: Vec3, sprint: Boolean) {
         steeringTarget = target
         sprintWanted = sprint
-        event.directionalInput = getDirectionalInputTowards(target.subtract(player.position()), frameYaw())
+        event.directionalInput = getDirectionalInputTowards(target.subtract(player.position()), inputFrameYaw())
         event.jump = player.isInWater
         event.sneak = false
     }
@@ -547,6 +623,11 @@ class Navigator(
         /** How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind. */
         const val LOOK_DISTANCE = 0.75
         const val QUARTER_TURN = 90f
+
+        /** Turns of the path sharper than this within [TURN_LOOK] blocks, and the goal this close, slow down. */
+        const val SHARP_TURN = 45f
+        const val TURN_LOOK = 4.0
+        const val APPROACH_DISTANCE = 4.0
         const val VERTICAL_MARGIN = 16
         const val SETTLE_TICKS = 100
         const val JOIN_POINTS = 8

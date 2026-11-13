@@ -97,7 +97,8 @@ internal class Moves(private val terrain: Terrain, private val abilities: Abilit
                 val feet = Vec3(to.x + 0.5, height(to.x, to.y, to.z), to.z + 0.5)
                 best = Step(
                     from, to, move, feet, breaks.toList(), places.toList(), opens.toList(), cost,
-                    sneak = isSneaking(to, move), underwater = isUnderwater(to), jump = jump,
+                    sneak = crouches(from.x, from.y, from.z) || crouches(to.x, to.y, to.z),
+                    edge = isAtEdge(to, move), underwater = isUnderwater(to), jump = jump,
                 )
             }
         }
@@ -194,7 +195,8 @@ internal class Moves(private val terrain: Terrain, private val abilities: Abilit
         if (breaks.isEmpty() && places.isEmpty() || jump.isNaN() || jump > 0.0 && !hasJumpRoom(tx, tz)) {
             return
         }
-        val cost = walkCost(tx, tz, floor, wet) + jump + breakCost + places.size * Costs.PLACE
+        val placeCost = if (breaks.isEmpty()) abilities.bridgeTicks else Costs.PLACE
+        val cost = walkCost(tx, tz, floor, wet) + jump + breakCost + places.size * placeCost
         emit(tx, y, tz, Move.TRAVERSE, cost)
     }
 
@@ -362,13 +364,23 @@ internal class Moves(private val terrain: Terrain, private val abilities: Abilit
 
     private fun climb() {
         val (x, y, z) = from
-        begin()
+        if (!terrain.isClimbable(x, y, z)) {
+            return
+        }
 
-        if (terrain.isClimbable(x, y, z) && (climbs(x, y + 1, z) || stands(x, y + 1, z))) {
+        begin()
+        val canClimbUp = abilities.jumpClimbs || terrain.climbSide(x, y, z) != null
+        if (canClimbUp && (climbs(x, y + 1, z) || stands(x, y + 1, z))) {
             emit(x, y + 1, z, Move.CLIMB_UP, Costs.CLIMB_UP)
         }
         if (climbs(x, y - 1, z)) {
             emit(x, y - 1, z, Move.CLIMB_DOWN, Costs.CLIMB_DOWN)
+        } else if (!fromStands && terrain.isPassable(x, y - 1, z)) {
+            // Off the bottom of a ladder or vine that ends above the ground.
+            val landing = landing(x, y - 1, z, fromHeight) ?: return
+            val blocks = ceil(landing.drop).toInt()
+            val bounce = Costs.bounce(floorBlock(x, z, fromHeight - landing.drop), blocks)
+            emit(x, landing.y, z, Move.FALL, Costs.fall(blocks) + bounce)
         }
     }
 
@@ -386,19 +398,16 @@ internal class Moves(private val terrain: Terrain, private val abilities: Abilit
         }
     }
 
-    /** Whether the move to [to] is sneaked: through a gap only a crouching player fits, or level past a deadly drop. */
-    private fun isSneaking(to: BlockPos, move: Move): Boolean {
+    /** Whether the move to [to] goes level past a deadly drop. */
+    private fun isAtEdge(to: BlockPos, move: Move): Boolean {
         val (x, y, z) = from
-        if (crouches(x, y, z) || crouches(to.x, to.y, to.z)) {
-            return true
-        }
         val level = move == Move.TRAVERSE || move == Move.DIAGONAL
         if (!level || swims(x, y, z) || swims(to.x, to.y, to.z)) {
             return false
         }
 
         val toHeight = height(to.x, to.y, to.z)
-        // Sneaking stops at every ledge higher than a step, the ones the move goes down included.
+        // Safe walk stops at every ledge higher than a step, the ones the move goes down included.
         if (abs(toHeight - fromHeight) > Terrain.STEP) {
             return false
         }
@@ -411,6 +420,10 @@ internal class Moves(private val terrain: Terrain, private val abilities: Abilit
         for (i in DX.indices) {
             val nx = x + DX[i]
             val nz = z + DZ[i]
+            // Servers may never send the empty chunks of the void, so an unloaded side counts as one.
+            if (!terrain.isKnown(nx, y, nz)) {
+                return true
+            }
             val open = terrain.isOpen(nx, y, nz) && floorTop(nx, y, nz).isNaN() && !terrain.isWater(nx, y, nz)
             if (open && landing(nx, y - 1, nz, height) == null) {
                 return true

@@ -65,12 +65,15 @@ internal fun isStraightWalkable(
     return false
 }
 
-/** Whether a side of column [x] [z] drops deeper than [safeFall] blocks below feet at [level], or into a hazard. */
+/** Whether a side of column [x] [z] drops deeper than [safeFall] blocks below feet at [level], into hazard or void. */
 private fun Terrain.isNearDrop(x: Int, level: Double, z: Int, safeFall: Int): Boolean {
     val y = Mth.floor(level)
     for (i in SIDE_X.indices) {
         val sideX = x + SIDE_X[i]
         val sideZ = z + SIDE_Z[i]
+        if (!isKnown(sideX, y, sideZ)) {
+            return true
+        }
         val open = isOpen(sideX, y, sideZ) && !isWater(sideX, y, sideZ)
         if (open && !isSafeDrop(sideX, y, sideZ, level, safeFall)) {
             return true
