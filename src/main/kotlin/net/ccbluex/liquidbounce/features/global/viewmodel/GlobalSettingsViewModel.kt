@@ -31,9 +31,13 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant.player
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.HumanoidArm
+import net.minecraft.world.item.ItemUseAnimation
 import org.joml.Quaternionf
 import kotlin.math.roundToInt
 
@@ -139,6 +143,19 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
             PLACE("Place"),
             AMOUNT("Amount")
         }
+    }
+
+    /**
+     * Whether using the item in [hand] skips lowering and raising it again. A sword that can block is used again after
+     * every hit and would drop out of the block pose each time.
+     */
+    fun keepsItemUpOnUse(hand: InteractionHand): Boolean {
+        if (running && EquipOffset.ignorePlace) {
+            return true
+        }
+
+        val itemStack = mc.player?.getItemInHand(hand) ?: return false
+        return itemStack.isSword && itemStack.useAnimation == ItemUseAnimation.BLOCK
     }
 
     /**

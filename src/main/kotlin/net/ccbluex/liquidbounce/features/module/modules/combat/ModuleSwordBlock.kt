@@ -65,13 +65,9 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
     @JvmStatic
     @JvmOverloads
     fun shouldAnimateSwordBlock(entity: LivingEntity, mainHandItem: ItemStack = entity.mainHandItem): Boolean {
-        if (!mainHandItem.isSword) {
-            return false
-        }
-
-        // On 1.8 AutoBlock keeps the block pose between unblock and reblock without SwordBlock
-        return entity === mc.player && KillAuraAutoBlock.blockVisual
-            || running && entity.shouldApplySwordBlockAnimation
+        return (running || KillAuraAutoBlock.blockVisual)
+            && entity.shouldApplySwordBlockAnimation
+            && mainHandItem.isSword
     }
 
     @JvmOverloads
