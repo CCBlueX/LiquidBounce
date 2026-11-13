@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -109,15 +109,14 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
                 val offHandItem = player.offhandItem
                 if (offHandItem.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
-                    guarded({ player.mainHandItem.isSword }) {
-                        waitTicks(1)
-                        interaction.startPrediction(world) { sequence ->
-                            // This time we use a new sequence
-                            ServerboundUseItemPacket(
-                                InteractionHand.OFF_HAND, sequence,
-                                player.yRot, player.xRot
-                            )
-                        }
+                    guard { player.mainHandItem.isSword }
+                    waitTicks(1)
+                    interaction.startPrediction(world) { sequence ->
+                        // This time we use a new sequence
+                        ServerboundUseItemPacket(
+                            InteractionHand.OFF_HAND, sequence,
+                            player.yRot, player.xRot
+                        )
                     }
                 } else {
                     event.cancelEvent()

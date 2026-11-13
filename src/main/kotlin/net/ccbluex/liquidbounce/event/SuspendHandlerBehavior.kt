@@ -82,7 +82,7 @@ sealed interface SuspendHandlerBehavior {
                         onBufferOverflow = BufferOverflow.SUSPEND,
                     ).also { channel ->
                         eventListenerScope.launch {
-                            channel.consumeEach { handler(it) }
+                            channel.consumeEach { asRun { handler(it) } }
                         }.invokeOnCompletion {
                             channelRef.getAndSet(null)?.close(it)
                         }

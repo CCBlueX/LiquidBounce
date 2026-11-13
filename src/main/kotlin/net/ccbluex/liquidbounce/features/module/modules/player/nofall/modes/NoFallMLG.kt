@@ -24,10 +24,9 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -174,10 +173,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val tickHandler = tickHandler {
         goal ?: return@tickHandler
 
-        val (action, hit, rotation) = guarded {
-            val aimed by tracked { goal }
+        // Guards the aim only, not the wait for the movement packet
+        val (action, hit, rotation) = tracked { goal }.use { aimed ->
             lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                val placementTarget = aimed.plan.placementTarget
+                val placementTarget = aimed.value.plan.placementTarget
                 rotations.toRotationTarget(
                     placementTarget.rotation,
                     considerInventory = true,
@@ -186,9 +185,9 @@ internal object NoFallMLG : NoFallMode("MLG") {
             }) { going ->
                 // Not before the player sneaks, when the placement needs it
                 val action = currentTarget ?: return@lookAt null
-                aimed.plan.placementTarget.verifyClick(going)?.let { hit -> Triple(action, hit, going) }
+                aimed.value.plan.placementTarget.verifyClick(going)?.let { hit -> Triple(action, hit, going) }
             }
-        }.getOrNull() ?: return@tickHandler
+        }
 
         if (isOlderThan1_21) {
             currentTarget = null

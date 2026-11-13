@@ -23,10 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -170,19 +169,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
 
         aim ?: return@tickHandler
-        val (rayTraceResult, rotation) = guarded({
-            mc.gui.screen() !is AbstractContainerScreen<*> && !ModuleBlink.running
-        }) {
-            val plan by tracked { aim }
-            val target by tracked { currentTarget }
-
-            // The block the rotation going out this tick hits, once that is the target
-            lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
-                traceFromPlayer(going, range.toDouble())
-                    .takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == target }
-                    ?.let { it to going }
+        // Guards the aim only, not the delay after the action
+        val (rayTraceResult, rotation) = tracked {
+            aim.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> && !ModuleBlink.running }
+        }.use { plan ->
+            tracked { currentTarget }.use { target ->
+                // The block the rotation going out this tick hits, once that is the target
+                lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan.value }) { going ->
+                    traceFromPlayer(going, range.toDouble())
+                        .takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == target.value }
+                        ?.let { it to going }
+                }
             }
-        }.getOrNull() ?: return@tickHandler
+        }
         val blockPos = rayTraceResult.blockPos
 
         val state = blockPos.state ?: return@tickHandler

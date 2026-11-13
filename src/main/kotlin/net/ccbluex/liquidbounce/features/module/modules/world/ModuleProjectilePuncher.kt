@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -96,17 +96,15 @@ object ModuleProjectilePuncher : ClientModule(
      * Punches the projectile once the rotation faces it.
      */
     private suspend fun punch() {
-        guarded {
-            val target by tracked { projectile }
-            val rotation by tracked { spot }
-            lookAt(Priority.IMPORTANT_FOR_USER_SAFETY, {
-                rotations.toRotationTarget(rotation, target, considerInventory = !ignoreOpenInventory)
-            }) { going -> isLookingAtEntity(player, target, going, range.toDouble(), 0.0) }
+        val target by tracked { projectile }
+        val rotation by tracked { spot }
+        lookAt(Priority.IMPORTANT_FOR_USER_SAFETY, {
+            rotations.toRotationTarget(rotation, target, considerInventory = !ignoreOpenInventory)
+        }) { going -> isLookingAtEntity(player, target, going, range.toDouble(), 0.0) }
 
-            clicker.click {
-                attackEntity(target, swingMode)
-                true
-            }
+        clicker.click {
+            attackEntity(target, swingMode)
+            true
         }
     }
 

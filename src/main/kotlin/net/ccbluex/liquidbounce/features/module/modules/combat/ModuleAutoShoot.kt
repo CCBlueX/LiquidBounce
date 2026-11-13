@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -187,31 +187,29 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      * Shoots once the rotation going out points within [aimOffThreshold] of the target.
      */
     private suspend fun shoot() {
-        guarded {
-            val planned by tracked { throwing }
+        val planned by tracked { throwing }
 
-            // Set the rotation with the usage priority of 2.
-            lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
-                rotations.toRotationTarget(
-                    planned.first,
-                    considerInventory = considerInventory,
-                    surface = planned.second,
-                )
-            }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
+        // Set the rotation with the usage priority of 2.
+        lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
+            rotations.toRotationTarget(
+                planned.first,
+                considerInventory = considerInventory,
+                surface = planned.second,
+            )
+        }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
 
-            // Check if we have a throwable, if not we can't shoot.
-            val slot = getThrowableSlot() ?: return@guarded
+        // Check if we have a throwable, if not we can't shoot.
+        val slot = getThrowableSlot() ?: return
 
-            clicker.click {
-                if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
-                    return@click false
-                }
-
-                useItem(
-                    slot.useHand,
-                    swingMode = swingMode,
-                ).consumesAction()
+        clicker.click {
+            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
+                return@click false
             }
+
+            useItem(
+                slot.useHand,
+                swingMode = swingMode,
+            ).consumesAction()
         }
     }
 

@@ -22,8 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
@@ -164,7 +163,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
                 // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
-                rotation = guarded({ inGame }, usable(slot)) {
+                rotation = guard { inGame && isUsable(slot) }.use {
                     ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
                         ModuleAutoBuff.Rotations.toRotationTarget(
                             pitch = rotation.pitch,
@@ -172,7 +171,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                             tolerance = PITCH_TOLERANCE,
                         )
                     })
-                }.getOrNull() ?: return
+                }
             }
 
             ON_TICK -> {

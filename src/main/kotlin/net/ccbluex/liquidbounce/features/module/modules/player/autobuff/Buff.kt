@@ -20,11 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.Condition
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.onInterrupted
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
@@ -70,10 +68,8 @@ abstract class Buff(
     }
 
     /**
-     * Holds while [slot] still has an item this buff can use, for waits between finding the slot and using it.
+     * Whether [slot] still has an item this buff can use, for waits between finding the slot and using it.
      */
-    protected fun usable(slot: HotbarItemSlot) = Condition { isUsable(slot) }
-
     protected open fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
 
     /**
@@ -97,9 +93,10 @@ abstract class Buff(
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
             try {
-                guarded({ passesRequirements }, usable(slot)) {
+                // Only the wait before the use, the delay after it no longer depends on the item
+                guard { passesRequirements && isUsable(slot) }.use {
                     waitTicks(AutoSwap.delayIn.random())
-                }.onInterrupted { return false }
+                }
 
                 execute(slot)
                 waitTicks(AutoSwap.delayOut.random())

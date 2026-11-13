@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -127,37 +127,35 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val tickHandler = tickHandler {
         currentTarget ?: return@tickHandler
 
-        guarded {
-            val target by tracked { currentTarget }
-            val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                rotations.toRotationTarget(
-                    target.placementTarget.rotation,
-                    considerInventory = true,
-                    surface = target.placementTarget.surface(),
-                )
-            }) { going ->
-                target.placementTarget.verifyClick(going)?.let { hit -> hit to going }
-            }
-
-            if (!SilentHotbar.selectSlotSilently(this@ModuleExtinguish, target.hotbarItemSlot, 1)) {
-                return@guarded
-            }
-
-            val successFunction = {
-                cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
-                pickupTracker.record(target.placementTarget.placedBlock)
-
-                true
-            }
-
-            doPlacement(
-                rayTraceResult,
-                rotation,
-                hand = target.hotbarItemSlot.useHand,
-                onItemUseSuccess = successFunction,
-                onPlacementSuccess = successFunction,
+        val target by tracked { currentTarget }
+        val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            rotations.toRotationTarget(
+                target.placementTarget.rotation,
+                considerInventory = true,
+                surface = target.placementTarget.surface(),
             )
+        }) { going ->
+            target.placementTarget.verifyClick(going)?.let { hit -> hit to going }
         }
+
+        if (!SilentHotbar.selectSlotSilently(this@ModuleExtinguish, target.hotbarItemSlot, 1)) {
+            return@tickHandler
+        }
+
+        val successFunction = {
+            cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
+            pickupTracker.record(target.placementTarget.placedBlock)
+
+            true
+        }
+
+        doPlacement(
+            rayTraceResult,
+            rotation,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = successFunction,
+            onPlacementSuccess = successFunction,
+        )
     }
 
     private fun planExtinguishing(): PlacementPlan? {

@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.onInterrupted
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FontManager
@@ -130,17 +130,18 @@ object ModuleEasyPearl :
     }
 
     private suspend fun throwPearl() {
-        guarded {
+        try {
             guard { targetPosition != null }
             val aim by tracked { planned }
             val going = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
                 rotation.toRotationTarget(aim, tolerance = aimOffThreshold)
             })
 
-            useHotbarSlotOrOffhand(enderPearlSlot ?: return@guarded, 0, going.yaw, going.pitch)
-            targetPosition = null
+            useHotbarSlotOrOffhand(enderPearlSlot ?: return, 0, going.yaw, going.pitch)
             currentTargetRotation = null
-        }.onInterrupted { targetPosition = null }
+        } finally {
+            targetPosition = null
+        }
     }
 
     /**

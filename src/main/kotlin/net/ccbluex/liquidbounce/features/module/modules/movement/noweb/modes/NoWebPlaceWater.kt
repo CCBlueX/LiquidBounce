@@ -23,9 +23,9 @@ import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -141,30 +141,28 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private val tickHandler = tickHandler {
         currentAction ?: return@tickHandler
 
-        guarded {
-            val action by tracked { currentAction }
-            val (resolvedHitResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                rotations.toRotationTarget(action.rotation, considerInventory = true, surface = action.surface)
-            }) { going ->
-                action.resolveHitResult(traceFromPlayer(going))?.let { hit -> hit to going }
-            }
-
-            SilentHotbar.selectSlotSilently(this@NoWebPlaceWater, action.slot, 1)
-            val onSuccess = {
-                action.onSuccess(resolvedHitResult)
-                true
-            }
-
-            doPlacement(
-                resolvedHitResult,
-                rotation,
-                hand = action.slot.useHand,
-                onItemUseSuccess = onSuccess,
-                onPlacementSuccess = onSuccess,
-            )
-
-            currentAction = null
+        val action by tracked { currentAction }
+        val (resolvedHitResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            rotations.toRotationTarget(action.rotation, considerInventory = true, surface = action.surface)
+        }) { going ->
+            action.resolveHitResult(traceFromPlayer(going))?.let { hit -> hit to going }
         }
+
+        SilentHotbar.selectSlotSilently(this@NoWebPlaceWater, action.slot, 1)
+        val onSuccess = {
+            action.onSuccess(resolvedHitResult)
+            true
+        }
+
+        doPlacement(
+            resolvedHitResult,
+            rotation,
+            hand = action.slot.useHand,
+            onItemUseSuccess = onSuccess,
+            onPlacementSuccess = onSuccess,
+        )
+
+        currentAction = null
     }
 
     private fun buildPlaceAction(
