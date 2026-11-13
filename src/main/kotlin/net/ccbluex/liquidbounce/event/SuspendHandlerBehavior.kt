@@ -53,6 +53,7 @@ sealed interface SuspendHandlerBehavior {
             handler: SuspendableEventHandler<T>
         ): EventHook<T> = handler(eventClass, priority) { event ->
             eventListenerScope.launch(wrappedContext, start) {
+                beginRun()
                 handler(event)
             }.onCancellation(onCancellation)
         }
@@ -109,6 +110,7 @@ sealed interface SuspendHandlerBehavior {
             val jobRef = atomic<Job?>(null)
             return handler(eventClass, priority) { event ->
                 jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
+                    beginRun()
                     handler(event)
                 })?.cancel()
             }
@@ -136,6 +138,7 @@ sealed interface SuspendHandlerBehavior {
 
                     if (newJob == null) {
                         newJob = eventListenerScope.launch(wrappedContext, start = CoroutineStart.LAZY) {
+                            beginRun()
                             handler(event)
                         }.onCancellation(onCancellation)
                     }

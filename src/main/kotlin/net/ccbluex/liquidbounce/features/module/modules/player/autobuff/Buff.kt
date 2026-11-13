@@ -93,15 +93,16 @@ abstract class Buff(
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
             try {
-                // Only the wait before the use, the delay after it no longer depends on the item
-                requires { passesRequirements && isUsable(slot) }.use {
-                    waitTicks(AutoSwap.delayIn.random())
-                }
-
+                requires { passesRequirements }
+                requires { isUsable(slot) }
+                waitTicks(AutoSwap.delayIn.random())
                 execute(slot)
-                waitTicks(AutoSwap.delayOut.random())
             } finally {
-                SilentHotbar.resetSlot(ModuleAutoBuff)
+                // DelayOut outlives the run, however it ended: the next buff waits, then the hotbar goes back
+                ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
+                if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
+                    SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
+                }
             }
             return true
         } else {
