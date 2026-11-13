@@ -140,7 +140,12 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         tree(ScaffoldMovementPrediction)
     }
 
-    internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    /** GodBridge walks over the edges, so choosing it hands them to the SafeWalk mode made for that. */
+    internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED).onChanged { mode ->
+        if (mode == AimMode.GOD_BRIDGE) {
+            safeWalkMode.setByString("Ledge")
+        }
+    }
     internal val visibility by enumChoice("Visibility", Visibility.VISIBLE)
 
     init {
@@ -240,8 +245,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             get() = super.running && ModuleClutch.fall == null
     }
 
-    @Suppress("unused")
-    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 3) { ModuleSafeWalk.safeWalkChoices(it, ::missesNextBlock) }
+    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 3) {
+        ModuleSafeWalk.safeWalkChoices(it, ::missesNextBlock) { blockCount }
+    }
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
