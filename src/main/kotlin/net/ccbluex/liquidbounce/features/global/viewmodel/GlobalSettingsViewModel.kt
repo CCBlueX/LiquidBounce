@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant.player
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
@@ -154,7 +153,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
             return true
         }
 
-        val itemStack = mc.player?.getItemInHand(hand) ?: return false
+        val itemStack = player.getItemInHand(hand)
         return itemStack.isSword && itemStack.useAnimation == ItemUseAnimation.BLOCK
     }
 
