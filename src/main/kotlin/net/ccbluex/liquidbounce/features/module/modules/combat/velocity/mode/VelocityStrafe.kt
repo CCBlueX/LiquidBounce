@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.same
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -74,8 +74,8 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
 
         // Check if this is a regular velocity update
         if (packet.isLocalPlayerVelocity()) {
-            same { mc.level }
-            guard { !OnlyFacing.enabled || shouldStrafe }
+            unchanged { mc.level }
+            requires { !OnlyFacing.enabled || shouldStrafe }
 
             // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
             waitTicks(delay)

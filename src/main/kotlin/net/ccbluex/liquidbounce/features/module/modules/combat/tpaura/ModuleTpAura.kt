@@ -23,10 +23,9 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -169,8 +168,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return@tickHandler
         }
 
-        guard { phase == Phase.ATTACK }
-        val current by tracked { engagement }
+        requires { phase == Phase.ATTACK }
+        val current by requires { engagement }
         val facing = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { aimFrom(trip.feet, current.target) }) { going ->
             isFacing(player.getEyePositionAt(trip.feet), current.target, going)
         }

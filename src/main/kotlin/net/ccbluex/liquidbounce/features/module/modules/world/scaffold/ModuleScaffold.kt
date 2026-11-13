@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -466,7 +466,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      * clicks it.
      */
     private suspend fun placeOnHit() {
-        val rotation by tracked { planned }
+        val rotation by requires { planned }
         val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
             ScaffoldRotationValueGroup.toRotationTarget(
                 rotation,

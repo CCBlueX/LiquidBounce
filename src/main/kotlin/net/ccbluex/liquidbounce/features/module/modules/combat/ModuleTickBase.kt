@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.same
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -333,8 +333,8 @@ internal object ModuleTickBase : ClientModule(
             busy = true
             try {
                 // The burst and the hold planned now must not land in another world, on a vehicle or while blinking
-                same { mc.level }
-                guard { player.vehicle == null && !ModuleBlink.running }
+                unchanged { mc.level }
+                requires { player.vehicle == null && !ModuleBlink.running }
 
                 if (holdFirst) {
                     holdFirst(delayTicks)

@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -185,7 +185,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
 
         currentTarget ?: return@tickHandler
         // Guards the aim only, not the waits for the container and the delay
-        val rayTraceResult = tracked {
+        val rayTraceResult = requires {
             currentTarget.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> }
         }.use { target ->
             lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->

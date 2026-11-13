@@ -22,10 +22,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
@@ -122,8 +121,8 @@ object LegitNukerMode : Mode("Legit") {
             return@tickHandler
         }
 
-        guard { currentTarget == target }
-        val plan by tracked { aim }
+        requires { currentTarget == target }
+        val plan by requires { aim }
 
         // Keeps aiming while the switch delay passes
         val switching = wasTarget != null && target != wasTarget

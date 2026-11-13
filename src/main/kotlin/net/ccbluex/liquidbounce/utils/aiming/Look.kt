@@ -25,7 +25,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Guards
 import net.ccbluex.liquidbounce.event.activeGuards
-import net.ccbluex.liquidbounce.event.guard
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -39,7 +39,7 @@ import kotlin.coroutines.CoroutineContext
  * rotation to the server, so the code after this acts with it the way vanilla acts on a look. That holds for
  * coroutines that are not dispatched, such as the ones of [net.ccbluex.liquidbounce.event.tickHandler].
  *
- * The [guard]s of the run are checked every tick before [target] plans and once more before this returns. When one
+ * What the run [requires] is checked every tick before [target] plans and once more before this returns. When it
  * fails, the module stops asking for the rotation and the run ends here.
  */
 suspend fun <T : Any> EventListener.lookAt(

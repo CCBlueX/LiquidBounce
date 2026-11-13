@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -101,7 +101,7 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
             return@tickHandler
         }
 
-        val planned by tracked { aim }
+        val planned by requires { aim }
         val onTarget = ModuleAutoBow.lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
             rotations.toRotationTarget(planned, considerInventory = true)
         }) { going -> AutoBowAutoShootFeature.isAimedAt(going, planned) }

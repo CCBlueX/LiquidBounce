@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -243,7 +243,7 @@ object ModuleFucker : ClientModule(
         }
 
         // Guards the aim only, not the delay after a use
-        val rayTraceResult = tracked {
+        val rayTraceResult = requires {
             aim.takeIf { currentTarget == destroyerTarget && !ModuleBlink.running }
         }.use { plan ->
             val priority =

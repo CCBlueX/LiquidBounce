@@ -21,10 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -132,8 +131,8 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
             return@tickHandler
         }
 
-        guard { isBoosting && player.onGround() }
-        val charge by tracked(::chargeSlot)
+        requires { isBoosting && player.onGround() }
+        val charge by requires { chargeSlot() }
         // Stays on the ground while turning down, until it gives up and jumps without a charge
         holdJump = aimTicks++ < MAX_AIM_TICKS
         val going = lookAt(Priority.IMPORTANT_FOR_USAGE_3) {

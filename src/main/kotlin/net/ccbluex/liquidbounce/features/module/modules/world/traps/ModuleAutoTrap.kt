@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -132,10 +132,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
         aim ?: return@tickHandler
         // Guards the aim only, not the delay after the placement
-        val (raycast, rotation) = tracked {
+        val (raycast, rotation) = requires {
             aim.takeIf { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
         }.use { plan ->
-            tracked { currentPlan }.use { intent ->
+            requires { currentPlan }.use { intent ->
                 lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { plan.value }) { going ->
                     traceFromPlayer(going).takeIf { intent.value.validate(it) }?.let { hit -> hit to going }
                 }

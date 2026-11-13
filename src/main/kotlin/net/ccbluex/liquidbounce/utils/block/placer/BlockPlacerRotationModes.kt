@@ -23,9 +23,8 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -97,8 +96,8 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
      * the block it clicks.
      */
     private suspend fun placeOnHit() {
-        guard { running }
-        val placement by tracked { planned }
+        requires { running }
+        val placement by requires { planned }
         val (clicked, going) = placer.parent.lookAt(placer.priority, {
             rotations.toRotationTarget(
                 placement.target.rotation,

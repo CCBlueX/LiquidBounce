@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
@@ -94,7 +94,7 @@ abstract class Buff(
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
             try {
                 // Only the wait before the use, the delay after it no longer depends on the item
-                guard { passesRequirements && isUsable(slot) }.use {
+                requires { passesRequirements && isUsable(slot) }.use {
                     waitTicks(AutoSwap.delayIn.random())
                 }
 
