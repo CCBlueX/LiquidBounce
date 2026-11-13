@@ -49,7 +49,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
     private val LivingEntity.shouldApplySwordBlockAnimation: Boolean
         get() {
             if (this === player &&
-                (KillAuraAutoBlock.blockVisual || fakeOnPressing && mc.options.keyUse.isPressedOnAny)) {
+                (KillAuraAutoBlock.showsBlockPose || fakeOnPressing && mc.options.keyUse.isPressedOnAny)) {
                 return true
             }
 
@@ -65,7 +65,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
     @JvmStatic
     @JvmOverloads
     fun shouldAnimateSwordBlock(entity: LivingEntity, mainHandItem: ItemStack = entity.mainHandItem): Boolean {
-        return (running || KillAuraAutoBlock.blockVisual)
+        return (running || KillAuraAutoBlock.showsBlockPose)
             && entity.shouldApplySwordBlockAnimation
             && mainHandItem.isSword
     }
@@ -75,7 +75,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
         offHandStack: ItemStack = player.offhandItem,
         mainHandStack: ItemStack = player.mainHandItem
     ): Boolean {
-        if (!running && !KillAuraAutoBlock.blockVisual) {
+        if (!running && !KillAuraAutoBlock.showsBlockPose) {
             return false
         }
 
