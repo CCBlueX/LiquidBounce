@@ -33,7 +33,6 @@ import java.util.function.Supplier
 enum class ClientUniformDefine(val uboName: String, val size: Int) {
     DISTANCE_FADE("u_DistanceFade", std140Size { vec4 }),
     MESH_BASE_BLOCK_POS("u_MeshBaseBlockPos", std140Size { ivec3 }),
-    ROUNDED_RECT("u_RoundedRect", std140Size { vec2 + float }),
     HAND_ITEM_LIGHTMAP("ItemChamsData", std140Size { int + float + vec4 + float + vec4 + float + int }),
     ITEM_CHAMS_EFFECTS(
         "ItemChamsEffectData",

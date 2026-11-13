@@ -104,9 +104,6 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val ItemChamsTrail = "item_chams_trail"("shaders/item_chams/trail.frag")
 
         @JvmField
-        val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
-
-        @JvmField
         val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.fsh")
 
         @JvmField

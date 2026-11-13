@@ -27,7 +27,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.effect.Rendering
@@ -38,7 +37,6 @@ import net.ccbluex.liquidbounce.render.utils.VertexList
 import net.ccbluex.liquidbounce.render.utils.forEachVertex
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -49,6 +47,7 @@ import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.util.function.Consumer
+import java.util.Map as JavaMap
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -70,15 +69,6 @@ val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
-    slice.writeStd140 {
-        putVec2(1f, 1f)
-        putFloat(2f)
-    }
-    slice
-}
 
 @AddonApi
 inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
@@ -185,7 +175,7 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) = drawCustomMesh(
     pipeline = pipeline,
-    textures = objectObjectMapOf("Sampler0", sampler0),
+    textures = JavaMap.of("Sampler0", sampler0),
     uniforms = uniforms,
     drawer = drawer,
 )
@@ -663,23 +653,6 @@ private fun WorldRenderEnvironment.drawGradientCircleQuad(
     }
 }
 
-private fun WorldRenderEnvironment.drawRoundedRectQuad(
-    radius: Float,
-    argb: Int,
-    noDepthTest: Boolean,
-    uniform: GpuBufferSlice,
-) {
-    drawCustomMesh(
-        pipeline = ClientRenderPipelines.roundedRect(noDepthTest),
-        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, uniform),
-    ) { pose ->
-        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
-        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
-        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
-        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(argb)
-    }
-}
-
 fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
@@ -697,6 +670,8 @@ fun WorldRenderEnvironment.drawCircle(
     )
 }
 
+private const val CIRCLE_OUTLINE_WIDTH_RATIO = 0.01f
+
 /**
  * Function to draw the outline of a circle of the size [radius]
  *
@@ -709,11 +684,12 @@ fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDe
         return
     }
 
-    drawRoundedRectQuad(
+    drawGradientCircleQuad(
         radius = radius,
-        argb = color.argb,
+        outerColor = color,
+        innerColor = color,
+        innerRatio = 1f - CIRCLE_OUTLINE_WIDTH_RATIO,
         noDepthTest = noDepthTest,
-        uniform = ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO,
     )
 }
 

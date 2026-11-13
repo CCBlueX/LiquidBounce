@@ -369,15 +369,6 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    private fun RenderPipeline.Builder.roundedRectSnippet() {
-        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withVertexShader(ClientShaders.Vertex.Circle)
-        withFragmentShader(ClientShaders.Fragment.RoundedRect)
-        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-        withPrimitiveTopology(PrimitiveTopology.QUADS)
-        withUniformBuffer(ClientUniformDefine.ROUNDED_RECT)
-    }
-
     private fun RenderPipeline.Builder.gradientCircleSnippet() {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withVertexShader(ClientShaders.Vertex.GradientCircle)
@@ -385,18 +376,6 @@ object ClientRenderPipelines {
         withVertexBinding(0, ClientVertexFormats.GRADIENT_CIRCLE)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
     }
-
-    private val RoundedRect = newPipeline("rounded_rect") {
-        roundedRectSnippet()
-        forWorldRender(noDepthTest = false)
-    }
-
-    private val RoundedRectNoDepthTest = newPipeline("rounded_rect_no_depth_test") {
-        roundedRectSnippet()
-        forWorldRender(noDepthTest = true)
-    }
-
-    fun roundedRect(noDepthTest: Boolean) = if (noDepthTest) RoundedRectNoDepthTest else RoundedRect
 
     private val GradientCircle = newPipeline("gradient_circle") {
         gradientCircleSnippet()
