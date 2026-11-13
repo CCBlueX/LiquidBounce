@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -170,10 +170,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
         aim ?: return@tickHandler
         // Guards the aim only, not the delay after the action
-        val (rayTraceResult, rotation) = tracked {
+        val (rayTraceResult, rotation) = requires {
             aim.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> && !ModuleBlink.running }
         }.use { plan ->
-            tracked { currentTarget }.use { target ->
+            requires { currentTarget }.use { target ->
                 // The block the rotation going out this tick hits, once that is the target
                 lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan.value }) { going ->
                     traceFromPlayer(going, range.toDouble())

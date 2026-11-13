@@ -22,9 +22,9 @@ import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -103,7 +103,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
     private val tickHandler = tickHandler {
         findFishingRodHand() ?: return@tickHandler
 
-        val hand by tracked(::findFishingRodHand)
+        val hand by requires { findFishingRodHand() }
 
         tickUntil {
             caughtFish || activeFishingHook() == null

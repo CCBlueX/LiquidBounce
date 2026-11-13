@@ -26,7 +26,7 @@ import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.GuardInterruption
 import net.ccbluex.liquidbounce.event.Guards
-import net.ccbluex.liquidbounce.event.guard
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import kotlin.test.Test
@@ -111,7 +111,7 @@ class LookTest {
         var acted = false
         var ended: Throwable? = null
         launch(looks + Guards()) {
-            guard { alive }
+            requires { alive }
             module.lookAt(Priority.NORMAL, { plans++; yawTarget(90f) }) { going -> near(going) }
             acted = true
         }.invokeOnCompletion { ended = it }
@@ -133,7 +133,7 @@ class LookTest {
         var acted = false
         var ended: Throwable? = null
         launch(looks + Guards()) {
-            guard { alive }
+            requires { alive }
             module.lookAt(Priority.NORMAL, { yawTarget(90f) }) { going ->
                 // The target dies while the update runs, after the guard was checked for this tick
                 alive = false

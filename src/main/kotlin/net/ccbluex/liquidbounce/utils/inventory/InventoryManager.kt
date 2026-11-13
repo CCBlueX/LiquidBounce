@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -106,7 +106,7 @@ object InventoryManager : EventListener {
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
         debugParameter("Cursor Stack") { player.containerMenu.carried }
-        guard { inGame }
+        requires { inGame }
 
         var maximumCloseDelay = 0
 
@@ -184,7 +184,7 @@ object InventoryManager : EventListener {
                     }
 
                     // The chain has to stay possible while waiting for its action, not over the click delay after it
-                    val performed = guard { chained.canPerformAction() }.use {
+                    val performed = requires { chained.canPerformAction() }.use {
                         // Check if this is the first action in the chain, which allows us to simulate a miss click
                         // This is only possible for container-type slots and also does not make much sense when
                         // the action is a throw action (you cannot miss-click really when throwing)

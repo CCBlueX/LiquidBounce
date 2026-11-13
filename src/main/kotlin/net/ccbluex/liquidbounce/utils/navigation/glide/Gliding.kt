@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -245,7 +245,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
 
     /** Fires on the tick the rotation the rocket is used with goes out. */
     private suspend fun fireRocket() {
-        val aim by tracked { rocketAim }
+        val aim by requires { rocketAim }
         owner.lookAt(Priority.IMPORTANT_FOR_USAGE_2, { aim })
         Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
     }

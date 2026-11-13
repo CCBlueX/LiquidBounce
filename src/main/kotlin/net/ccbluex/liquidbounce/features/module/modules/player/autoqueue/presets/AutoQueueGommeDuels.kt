@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.guard
-import net.ccbluex.liquidbounce.event.same
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -165,8 +165,8 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot ?: return
 
             // Guards the use only, not the wait after it
-            guard { !inMatch && Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }.use {
-                same { mc.level }.use {
+            requires { !inMatch && Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }.use {
+                unchanged { mc.level }.use {
                     if (headSlot != player.inventory.selectedSlot) {
                         SilentHotbar.selectSlotSilently(this@AutoQueueGommeDuels, headSlot, 20)
                     }

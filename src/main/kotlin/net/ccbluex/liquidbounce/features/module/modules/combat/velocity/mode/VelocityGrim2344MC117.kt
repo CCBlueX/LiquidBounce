@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -62,7 +62,7 @@ internal object VelocityGrim2344MC117 : VelocityMode("Grim-2.3.44-MC1.17", alias
         if (packet.isLocalPlayerVelocity() && canCancel) {
             event.cancelEvent()
             try {
-                same { mc.level }
+                unchanged { mc.level }
                 waitTicks(1)
                 repeat(if (alternativeBypass) 4 else 1) {
                     network.send(

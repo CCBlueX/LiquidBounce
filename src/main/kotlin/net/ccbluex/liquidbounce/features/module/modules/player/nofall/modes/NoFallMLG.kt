@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -174,7 +174,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
         goal ?: return@tickHandler
 
         // Guards the aim only, not the wait for the movement packet
-        val (action, hit, rotation) = tracked { goal }.use { aimed ->
+        val (action, hit, rotation) = requires { goal }.use { aimed ->
             lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
                 val placementTarget = aimed.value.plan.placementTarget
                 rotations.toRotationTarget(

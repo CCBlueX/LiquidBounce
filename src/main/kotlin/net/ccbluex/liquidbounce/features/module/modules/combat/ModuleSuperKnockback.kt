@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -189,7 +189,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
             inSequence = true
             // Stops at a world change, where the input to wait on is gone; onCancellation allows movement again
-            same { mc.level }
+            unchanged { mc.level }
             this@WTap.debugParameter("State") { "Waiting for Movement Block" }
             waitTicks(ticksUntilMovementBlock.random())
             this@WTap.debugParameter("State") { "Disallowing Movement" }

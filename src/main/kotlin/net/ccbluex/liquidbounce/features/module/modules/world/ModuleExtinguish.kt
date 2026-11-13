@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -127,7 +127,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val tickHandler = tickHandler {
         currentTarget ?: return@tickHandler
 
-        val target by tracked { currentTarget }
+        val target by requires { currentTarget }
         val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
             rotations.toRotationTarget(
                 target.placementTarget.rotation,

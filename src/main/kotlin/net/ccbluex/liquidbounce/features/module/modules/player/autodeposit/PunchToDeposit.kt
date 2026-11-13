@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -139,8 +139,8 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
             depositSlot() ?: return@tickHandler
 
             // Guards the aim only, not the delay after the deposit
-            tracked(::depositSlot).use { slot ->
-                tracked {
+            requires { depositSlot() }.use { slot ->
+                requires {
                     currentTarget.takeIf { rotateToTarget && mc.gui.screen() !is AbstractContainerScreen<*> }
                 }.use { target ->
                     val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->
