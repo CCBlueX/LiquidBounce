@@ -3,7 +3,7 @@ name: Sync LiquidBounce Theme Repository
 on:
   push:
     branches:
-      - nextgen
+      - main
     paths:
       - 'src-theme/**'
   workflow_dispatch:

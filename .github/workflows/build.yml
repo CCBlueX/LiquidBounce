@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [ nextgen ]
+    branches: [ main ]
   pull_request:
-    branches: [ nextgen ]
+    branches: [ main ]
   release:
     types: [ published ]
 
@@ -75,7 +75,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: extract-versions
-    if: github.ref == 'refs/heads/nextgen'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v7
@@ -101,7 +101,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       - name: Build
         env:
           CI: true
@@ -144,10 +144,11 @@ jobs:
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           
+          # The API files builds under the branch named in gh_ref; released launchers ask for nextgen
           curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
             -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" \
             -F "gh_id=${{ github.event.head_commit.id }}" \
-            -F "gh_ref=${{ github.ref }}" \
+            -F "gh_ref=refs/heads/nextgen" \
             -F "gh_message=${COMMIT_MESSAGE}" \
             -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" \
             -F "lb_version=$LB_VERSION" \
@@ -231,7 +232,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       - name: Build
         env:
           CI: true
