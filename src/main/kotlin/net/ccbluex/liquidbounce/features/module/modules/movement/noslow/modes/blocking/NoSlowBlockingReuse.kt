@@ -95,22 +95,6 @@ internal object NoSlowBlockingReuse : Mode("Reuse") {
             }
         }
 
-
-        blockingHand?.let { blockingHand ->
-            when (event.state) {
-                EventState.PRE -> {
-
-                }
-
-                EventState.POST -> {
-                    untracked {
-                        interaction.startPrediction(world) { sequence ->
-                            ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private enum class TimingMode(override val tag: String) : Tagged {

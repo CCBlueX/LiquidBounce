@@ -63,6 +63,7 @@ class NavigationGameTests : FabricClientGameTest {
         ParkourEdgeGameTest(),
         WalkSneakGameTest(),
         WalkSwimGameTest(),
+        WalkClimbGameTest(),
         WalkBlockedGameTest(),
         PlayerMotionGameTest(),
         FlightNavigationGameTest(),

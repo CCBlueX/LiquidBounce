@@ -181,6 +181,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autodeposit.Modul
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
+import net.ccbluex.liquidbounce.features.module.modules.player.gamebot.ModuleGameBot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
@@ -615,6 +616,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleNoSlotSet,
             ModuleReach,
             ModuleAutoQueue,
+            ModuleGameBot,
             ModuleSmartEat,
             ModuleReplenish,
             ModulePotionSpoof,

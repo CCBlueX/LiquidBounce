@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
+import net.ccbluex.liquidbounce.utils.network.NetworkTelemetry
 import net.ccbluex.liquidbounce.utils.text.toText
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
@@ -119,6 +120,10 @@ data class PlayerData(
     val experienceLevel: Int,
     val experienceProgress: Float,
     val ping: Int,
+    val setbacks: Int,
+    val packetsOut: Long,
+    val movePacketsPerSecond: Int,
+    val speedBps: Double,
     val effects: List<MobEffectInstance>,
     val mainHandStack: ItemStack,
     val offHandStack: ItemStack,
@@ -129,37 +134,48 @@ data class PlayerData(
     companion object {
 
         @JvmStatic
-        fun fromPlayer(player: Player) = PlayerData(
-            ModuleNameProtect.replace(player.scoreboardName),
-            player.stringUUID,
-            player.level().dimension().identifier(),
-            player.position(),
-            player.netherPosition,
-            player.blockPosition(),
-            player.deltaMovement,
-            player.inventory.selectedSlot,
-            player.gameMode() ?: GameType.DEFAULT_MODE,
-            player.health.fixNaN(),
-            player.getActualHealth().fixNaN(),
-            player.maxHealth.fixNaN(),
-            if (player.hasHealthScoreboard()) 0f else player.absorptionAmount.fixNaN(),
-            player.yRot.fixNaN(),
-            player.xRot.fixNaN(),
-            player.armorValue.coerceAtMost(20),
-            min(player.foodData.foodLevel, 20),
-            player.airSupply,
-            player.maxAirSupply,
-            player.experienceLevel,
-            player.experienceProgress.fixNaN(),
-            player.ping,
-            player.activeEffects.toList(),
-            player.mainHandItem,
-            if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offhandItem,
-            player.armorItems.toList(),
-            ScoreboardData.fromScoreboard(
-                player.level().scoreboard
+        fun fromPlayer(player: Player): PlayerData {
+            val telemetry = NetworkTelemetry.snapshot
+            return PlayerData(
+                ModuleNameProtect.replace(player.scoreboardName),
+                player.stringUUID,
+                player.level().dimension().identifier(),
+                player.position(),
+                player.netherPosition,
+                player.blockPosition(),
+                player.deltaMovement,
+                player.inventory.selectedSlot,
+                player.gameMode() ?: GameType.DEFAULT_MODE,
+                player.health.fixNaN(),
+                player.getActualHealth().fixNaN(),
+                player.maxHealth.fixNaN(),
+                if (player.hasHealthScoreboard()) 0f else player.absorptionAmount.fixNaN(),
+                player.yRot.fixNaN(),
+                player.xRot.fixNaN(),
+                player.armorValue.coerceAtMost(20),
+                min(player.foodData.foodLevel, 20),
+                player.airSupply,
+                player.maxAirSupply,
+                player.experienceLevel,
+                player.experienceProgress.fixNaN(),
+                player.ping,
+                telemetry.setbacks,
+                telemetry.packetsOut,
+                telemetry.movePacketsPerSecond,
+                telemetry.speedBps,
+                player.activeEffects.toList(),
+                player.mainHandItem,
+                if (player == mc.player && shouldHideOffhand() && hideShieldSlot) {
+                    ItemStack.EMPTY
+                } else {
+                    player.offhandItem
+                },
+                player.armorItems.toList(),
+                ScoreboardData.fromScoreboard(
+                    player.level().scoreboard
+                )
             )
-        )
+        }
     }
 
 }

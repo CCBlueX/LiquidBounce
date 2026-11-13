@@ -37,6 +37,7 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.util.Util
+import java.util.function.IntPredicate
 
 /**
  * An attack scheduler
@@ -97,6 +98,11 @@ open class Clicker<T>(
 
     private val human = HumanClickTiming()
 
+    /**
+     * Adds a guaranteed click to the tick `tick` when nothing is planned for it, on top of the item cooldown.
+     */
+    var forcedAt: IntPredicate = IntPredicate { false }
+
     private val plan = ClickPlan({ recent, comboMs, cps, random ->
         when (technique) {
             ClickTechnique.HUMAN -> human
@@ -105,9 +111,13 @@ open class Clicker<T>(
     }).apply {
         // Once, on the tick the cooldown fills up; one that is always ready would otherwise click every tick
         enforced = { tick ->
-            val cooldown = itemCooldown
-            player.hasCooldown && cooldown != null &&
-                cooldown.isCooldownPassed(tick) && !cooldown.isCooldownPassed(tick - 1)
+            if (forcedAt.test(tick)) {
+                true
+            } else {
+                val cooldown = itemCooldown
+                player.hasCooldown && cooldown != null &&
+                    cooldown.isCooldownPassed(tick) && !cooldown.isCooldownPassed(tick - 1)
+            }
         }
     }
 

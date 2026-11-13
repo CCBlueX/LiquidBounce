@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
@@ -205,12 +206,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
 
-        val bestSlot = Slots.Hotbar
+        val weapons = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
+        val bestSlot = weapons
             .filter { itemFacet ->
                 val itemStack = itemFacet.itemStack
 
-                
                 when {
                     // A mace's smash attack cannot be blocked by a shield
                     requiresMace -> WeaponType.MACE.test(itemStack)
@@ -241,6 +242,10 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
                 }
             }
             .maxOrNull()
+            // Without a fitting weapon at hand, any one is better than the bare hand.
+            ?: weapons
+                .filter { it.itemStack.attackDamage > player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) }
+                .maxOrNull()
 
         return bestSlot?.itemSlot as HotbarItemSlot?
     }

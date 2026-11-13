@@ -52,7 +52,9 @@ import net.minecraft.world.item.Items
 
 object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases = listOf("FastEat")) {
 
-    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime, Crossbow)).apply { tagBy(this) }
+    private val modes = choices(
+        "Mode", Immediate, arrayOf(Immediate, ItemUseTime, Crossbow, FastUseRewound20261112)
+    ).apply { tagBy(this) }
 
     private val conditions by multiEnumChoice("Conditions", UseConditions.NOT_IN_THE_AIR)
     private val stopInput by boolean("StopInput", false)
@@ -178,6 +180,49 @@ object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases 
                 interaction.useItem(player, hand)
             }
         }
+    }
+
+    /**
+     * Use speed of a 1.8 server.
+     *
+     * The server ticks the player from the movement packet, so [packets] duplicate packets finish
+     * the use at once. NoCheatPlus only accepts a consume 700 ms after the right click, which is
+     * why the packets go out from [useTicks] on. Duplicates fire no player move event, so
+     * moving.morepackets does not count them.
+     *
+     * @anticheat NoCheatPlus (Rewound fork, based on April 2017)
+     * @testedOn rewound.cc
+     */
+    private object FastUseRewound20261112 : Mode("Rewound-2026-11-12", listOf("Rewound")) {
+
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        /**
+         * Ticks to keep using before the packets are sent, 15 ticks are 750 ms.
+         */
+        private val useTicks by int("UseTicks", 15, 1..32, "ticks")
+
+        /**
+         * Ticks one use takes on a 1.8 server, every food and potion has a use duration of 32.
+         */
+        private val packets by int("Packets", 32, 1..64, "packets")
+
+        private val packetType by enumChoice("PacketType", MovePacketType.ON_GROUND_ONLY)
+
+        @Suppress("unused")
+        val repeatable = tickHandler {
+            if (!accelerateNow || player.ticksUsingItem < useTicks) {
+                return@tickHandler
+            }
+
+            repeat(packets) {
+                network.send(packetType.generatePacket())
+            }
+
+            player.releaseUsingItem()
+        }
+
     }
 
     @Suppress("unused")

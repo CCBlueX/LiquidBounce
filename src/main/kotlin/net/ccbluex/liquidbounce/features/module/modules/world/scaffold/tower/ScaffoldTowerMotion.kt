@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.minecraft.stats.Stats
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.truncate
 
 object ScaffoldTowerMotion : ScaffoldTower("Motion") {
@@ -31,6 +33,7 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
     private val motion by float("Motion", 0.42f, 0.0f..1.0f)
     private val triggerHeight by float("TriggerHeight", 0.78f, 0.76f..1.0f)
     private val slow by float("Slow", 1.0f, 0.0f..3.0f)
+    private val constantGround by boolean("ConstantGround", false)
 
     /**
      * The position where the player jumped off
@@ -65,6 +68,16 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
             player.awardStat(Stats.JUMP)
 
             jumpOffPosition = player.y
+        }
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+        if (constantGround && packet is ServerboundMovePlayerPacket && !jumpOffPosition.isNaN()) {
+            if (packet.y % 1.0 == 0.0) {
+                packet.onGround = true
+            }
         }
     }
 

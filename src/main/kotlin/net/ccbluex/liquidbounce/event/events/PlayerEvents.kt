@@ -80,9 +80,17 @@ class PlayerNetworkMovementTickEvent(
 @Tag("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
+/**
+ * @param simulated set for the moves of a [net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer] predicting the
+ * local player; handlers that keep state per tick must not advance it on these.
+ */
 @AddonApi
 @Tag("playerMove")
-class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
+class PlayerMoveEvent @JvmOverloads constructor(
+    val type: MoverType,
+    var movement: Vec3,
+    val simulated: Boolean = false
+) : Event()
 
 @AddonApi
 @Tag("playerJump")

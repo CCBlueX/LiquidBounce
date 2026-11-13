@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPipeline;
 import io.netty.resolver.NoopAddressResolverGroup;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
+import net.ccbluex.liquidbounce.utils.network.NetworkTelemetry;
 import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
@@ -74,6 +76,16 @@ public abstract class MixinConnection {
         if (event.isCancelled()) {
             callbackInfo.cancel();
         }
+    }
+
+    /**
+     * Counts every packet that goes out, including the ones sent without a {@link PacketEvent}.
+     *
+     * @see net.ccbluex.liquidbounce.utils.network.sendPacketSilently
+     */
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V", at = @At("HEAD"))
+    private void hookCountingPacket(Packet<?> packet, ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
+        NetworkTelemetry.INSTANCE.onOutgoing(packet);
     }
 
     /**

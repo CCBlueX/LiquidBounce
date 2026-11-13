@@ -42,4 +42,10 @@ class Abilities(
     val avoid: LongSet,
     val air: Int = Water.MAX_AIR,
     val motion: MotionTraits = MotionTraits.DEFAULT,
+
+    /** Whether holding jump climbs a ladder or vine; before 1.14 only pushing against a block beside it does. */
+    val jumpClimbs: Boolean = true,
+
+    /** Extra ticks per floor block a level walk places; few where another feature runs bridges across. */
+    val bridgeTicks: Double = Costs.PLACE,
 )

@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.cubecraft.SpeedCubeCraft20240630
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043FastFall
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.rewound.SpeedRewound20261112
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
@@ -98,6 +99,8 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
         SpeedHylex20241117Ground(modeValueGroup),
 
         SpeedBlocksMC20241123(modeValueGroup),
+
+        SpeedRewound20261112(modeValueGroup),
 
         SpeedMatrix7(modeValueGroup)
     )

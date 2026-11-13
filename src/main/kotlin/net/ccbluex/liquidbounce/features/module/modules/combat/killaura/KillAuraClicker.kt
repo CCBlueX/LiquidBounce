@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.HurtTimeSync
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
@@ -44,12 +45,18 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
+import java.util.function.IntPredicate
 
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
     mc.options.keyAttack,
     KillAuraClickerItemCooldown()
 ) {
+
+    init {
+        // A click is due on the tick the target can take damage again, whatever the CPS plan says
+        forcedAt = IntPredicate(HurtTimeSync::forcedAt)
+    }
 
     override val isClickTick: Boolean
         get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.remainingAttackCount == 0)

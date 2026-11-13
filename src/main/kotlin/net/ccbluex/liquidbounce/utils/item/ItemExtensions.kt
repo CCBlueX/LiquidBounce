@@ -39,6 +39,7 @@ import net.minecraft.core.Holder
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.resources.ResourceKey
@@ -173,7 +174,7 @@ private fun ItemStack.legacyTagWithoutDamage() = get(DataComponents.CUSTOM_DATA)
 
 val ItemInstance.attackDamage: Double
     get() {
-        val baseDamage = getAttributeValue(
+        val baseDamage = legacyAttackDamage ?: getAttributeValue(
             Attributes.ATTACK_DAMAGE,
             EquipmentSlot.MAINHAND,
             player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
@@ -189,6 +190,34 @@ val ItemInstance.attackDamage: Double
          * else -> 1.25 * level
          */
         return baseDamage + getSharpnessDamage()
+    }
+
+/**
+ * Damage of a tool on 1.8, which had its own values: sword 4, axe 3, pickaxe 2 and shovel 1, plus 1 for stone, 2 for
+ * iron and 3 for diamond, on top of the hand. Other items only deal the hand's damage there. Null on newer versions.
+ */
+private val ItemInstance.legacyAttackDamage: Double?
+    get() {
+        if (!isOlderThanOrEqual1_8) {
+            return null
+        }
+
+        val hand = player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+        val tool = when {
+            isSword -> 4.0
+            isAxe -> 3.0
+            isPickaxe -> 2.0
+            isShovel -> 1.0
+            else -> return hand
+        }
+        val material = BuiltInRegistries.ITEM.getKey(typeHolder().value()).path.substringBefore('_')
+        val bonus = when (material) {
+            "stone" -> 1.0
+            "iron" -> 2.0
+            "diamond", "netherite" -> 3.0
+            else -> 0.0
+        }
+        return hand + tool + bonus
     }
 
 @JvmOverloads

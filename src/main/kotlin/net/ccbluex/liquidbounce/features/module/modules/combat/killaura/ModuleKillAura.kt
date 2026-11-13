@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.HurtTimeSync
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
@@ -94,6 +95,15 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
+    /**
+     * Minimum time between attacking another target than the current one.
+     */
+    private val switchDelay by int("SwitchDelay", 0, 0..1000, "ms")
+
+    private var lastSwitchTime = 0L
+
+    private fun canSwitchTarget() = System.currentTimeMillis() - lastSwitchTime >= switchDelay
+
     private val requirementsMet
         get() = requires.all { it.asBoolean }
 
@@ -121,10 +131,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         tree(KillAuraFailSwing)
         tree(KillAuraFightBot)
         tree(KillAuraRangeIndicator)
+        tree(HurtTimeSync)
     }
 
     override fun onDisabled() {
         targetTracker.reset()
+        HurtTimeSync.reset()
+        lastSwitchTime = 0L
         failedHits.clear()
         KillAuraNotifyWhenFail.failedHitsIncrement = 0
     }
@@ -212,11 +225,18 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             else -> target
         }
 
+        var effectiveTarget = crosshairTarget
+
         if (crosshairTarget is LivingEntity && crosshairTarget.shouldBeAttacked() && crosshairTarget != target) {
-            targetTracker.target = crosshairTarget
+            if (canSwitchTarget()) {
+                lastSwitchTime = System.currentTimeMillis()
+                targetTracker.target = crosshairTarget
+            } else {
+                effectiveTarget = target
+            }
         }
 
-        attackTarget(crosshairTarget, rotation)
+        attackTarget(effectiveTarget, rotation)
     }
 
     val shouldBlockSprinting
@@ -254,12 +274,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         // Check if our target is in range, otherwise deal with auto block
         if (!isInRange) {
-            if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()) {
-                if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
-                    KillAuraAutoBlock.startBlocking()
-                }
-
+            if (KillAuraAutoBlock.holdsOutOfReach(target)) {
                 return
             }
 
@@ -276,18 +291,24 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         debugParameter("Valid Rotation") { rotation }
 
         val mainHandStack = player.mainHandItem
+        val canTakeDamage = target !is LivingEntity || HurtTimeSync.allowsAttack(target)
+        val readyToClick = clicker.isClickTick && canAttackNow(target, mainHandStack) &&
+            !KillAuraAutoBlock.isPrioritizingBlocking
 
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
-            !KillAuraAutoBlock.isPrioritizingBlocking) {
+        if (readyToClick && canTakeDamage) {
             clicker.prepareForAttack(rotation) {
                 // On each click, we check if we are still ready to attack
-                if (!canAttackNow(target, mainHandStack)) {
+                if (!canAttackNow(target, mainHandStack) ||
+                    target is LivingEntity && !HurtTimeSync.allowsAttack(target)) {
                     return@prepareForAttack false
                 }
 
                 // Attack enemy
-                attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
+                val attacked = attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
+                if (attacked && target is LivingEntity) {
+                    HurtTimeSync.onAttackSent(target)
+                }
                 range.update()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
                 KillAuraAutoBlock.hasBlockedSinceAttack = false
@@ -297,8 +318,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                     add("targetPos", GenericDebugRecorder.debugObject(target))
                 })
 
-                true
+                attacked
             }
+        } else if (readyToClick) {
+            // The target can not take damage yet, so only the arm swings, which is no attack and no fight check
+            clicker.click { HurtTimeSync.swingSpare() }
         } else if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
             KillAuraAutoBlock.startBlocking()
         }
@@ -323,7 +347,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             .firstOrNull { entity -> processTarget(entity, maximumRange, range.interactionThroughWallsRange) }
 
         if (target != null) {
-            targetTracker.target = target
+            val current = targetTracker.target
+            // Keep the current target until the switch delay passed
+            val keepCurrent = current != null && current !== target && !canSwitchTarget() &&
+                current.squaredBoxedDistanceTo(player) <= squaredMaxRange &&
+                targetTracker.validate(current) &&
+                processTarget(current, maximumRange, range.interactionThroughWallsRange)
+
+            if (!keepCurrent) {
+                if (current !== target) {
+                    lastSwitchTime = System.currentTimeMillis()
+                }
+                targetTracker.target = target
+            }
         } else if (KillAuraFightBot.enabled) {
             KillAuraFightBot.updateTarget()
 

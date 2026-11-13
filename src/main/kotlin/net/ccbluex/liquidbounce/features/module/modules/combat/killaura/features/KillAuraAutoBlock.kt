@@ -39,8 +39,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
@@ -58,6 +60,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -70,6 +73,8 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
 import kotlin.jvm.optionals.getOrNull
@@ -103,7 +108,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     val blink by int("Blink", 0, 0..10, "ticks")
 
     private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
-    val onScanRange by boolean("OnScanRange", true)
+
+    /** Keeps a block up while the target is out of reach but within scan range; a new one waits for reach. */
+    private val onScanRange by boolean("OnScanRange", true)
 
     /**
      * Check if we are in danger by going through all possible targets and checking if they are looking at us.
@@ -182,6 +189,11 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     private var isInDanger = false
 
+    /** A block in the hand to place, from Scaffold or a silent slot switch; using a sword would hold it up. */
+    private val isPlacing: Boolean
+        get() = ModuleScaffold.running ||
+            SilentHotbar.isSlotModified() && player.inventory.getItem(SilentHotbar.serversideSlot).item is BlockItem
+
     /**
      * This will decrease our CPS and prioritize blocking.
      */
@@ -193,7 +205,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             }
 
             // Check if we cannot prioritize blocking
-            if (!running || !prioritizeBlocking || blockMode == BlockMode.FAKE || findBlockableHand() == null) {
+            if (!running || !prioritizeBlocking || blockMode == BlockMode.FAKE || isPlacing ||
+                findBlockableHand() == null) {
                 return false
             }
 
@@ -219,12 +232,22 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         wantsBlockPose = true
     }
 
+    /** Whether to keep blocking for a [target] out of reach, which only holds a block already up. */
+    fun holdsOutOfReach(target: Entity): Boolean =
+        running && onScanRange && !isPlacing && (enforcedBlockingHand != null || player.isBlockingServerside) &&
+            player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
+
     /**
      * Starts blocking.
      */
     @Suppress("ReturnCount", "CognitiveComplexMethod")
     fun startBlocking(): Boolean {
         if (!running) {
+            return false
+        }
+
+        if (isPlacing) {
+            this.stopBlocking()
             return false
         }
 
@@ -457,6 +480,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         itemStack.useAnimation == ItemUseAnimation.BLOCK
             && itemStack.isItemEnabled(world.enabledFeatures())
             && !player.cooldowns.isOnCooldown(itemStack)
+            && !InventoryManager.isServerLocked(itemStack)
     } ?: if (assumeShield && !isBlocksAttacksExisting && player.mainHandItem.isSword) {
         InteractionHand.MAIN_HAND
     } else {

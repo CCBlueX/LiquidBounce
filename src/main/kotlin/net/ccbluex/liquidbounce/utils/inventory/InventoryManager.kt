@@ -38,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -45,10 +47,14 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
+import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.item.ItemStack
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -90,6 +96,34 @@ object InventoryManager : EventListener {
      * we have to update the scheduled inventory actions
      */
     private var requiresUpdate = false
+
+    /**
+     * After interacting with a container block or an entity, the server may already have a container open
+     * that we do not know of yet. It silently drops clicks for another container id, so player inventory
+     * clicks sent in that window are only applied client-side.
+     */
+    private var containerOpenPendingUntil = 0L
+
+    val isContainerOpenPending
+        get() = System.currentTimeMillis() < containerOpenPendingUntil
+
+    private class SentClick(val containerId: Int, val stack: ItemStack, val time: Long)
+
+    private class Rejection(val stack: ItemStack, var count: Int)
+
+    private val recentClicks = ArrayDeque<SentClick>()
+    private val rejections = ArrayList<Rejection>()
+
+    /**
+     * Items the server keeps putting back, such as lobby menu items. Moving them only loops.
+     */
+    private val serverLockedItems = ArrayList<ItemStack>()
+
+    val hasServerLockedItems
+        get() = serverLockedItems.isNotEmpty()
+
+    fun isServerLocked(stack: ItemStack) =
+        !stack.isEmpty && serverLockedItems.any { ItemStack.isSameItemSameComponents(it, stack) }
 
     /**
      * We keep running during the entire time
@@ -206,6 +240,11 @@ object InventoryManager : EventListener {
                         waitTicks(constraints.closeDelay.random())
                         cycles = 0
                     }
+                    if (action is InventoryAction.Click && !action.slot.itemStack.isEmpty) {
+                        recentClicks.addLast(
+                            SentClick(action.screen.syncId, action.slot.itemStack.copy(), System.currentTimeMillis())
+                        )
+                    }
                     if (action.performAction()) {
                         if (action !is InventoryAction.CloseScreen) {
                             waitTicks(constraints.clickDelay.random())
@@ -265,6 +304,27 @@ object InventoryManager : EventListener {
             }
         }
 
+        val mayOpenContainer = when (packet) {
+            is ServerboundUseItemOnPacket -> {
+                val pos = packet.hitResult.blockPos
+                world.getBlockState(pos).getMenuProvider(world, pos) != null
+            }
+            is ServerboundInteractPacket -> true
+            else -> false
+        }
+
+        if (mayOpenContainer) {
+            containerOpenPendingUntil = System.currentTimeMillis() + player.ping + CONTAINER_OPEN_GRACE_MS
+        } else if (packet is ClientboundOpenScreenPacket) {
+            containerOpenPendingUntil = 0L
+        }
+
+        // A full content update right after our click means the server rejected or reverted it
+        if (packet is ClientboundContainerSetContentPacket) {
+            val containerId = packet.containerId
+            mc.execute { onContainerResync(containerId) }
+        }
+
         if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket
             || packet is ClientboundOpenScreenPacket
         ) {
@@ -313,6 +373,34 @@ object InventoryManager : EventListener {
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
         isInventoryOpenServerSide = false
+        containerOpenPendingUntil = 0L
+        recentClicks.clear()
+        rejections.clear()
+        serverLockedItems.clear()
+    }
+
+    private fun onContainerResync(containerId: Int) {
+        val now = System.currentTimeMillis()
+        val window = player.ping + RESYNC_GRACE_MS
+
+        while (recentClicks.firstOrNull()?.let { now - it.time > window } == true) {
+            recentClicks.removeFirst()
+        }
+
+        for (click in recentClicks) {
+            if (click.containerId != containerId || isServerLocked(click.stack)) {
+                continue
+            }
+
+            val rejection = rejections.find { ItemStack.isSameItemSameComponents(it.stack, click.stack) }
+                ?: Rejection(click.stack, 0).also(rejections::add)
+
+            if (++rejection.count >= LOCK_AFTER_REJECTIONS) {
+                serverLockedItems += click.stack
+            }
+        }
+
+        recentClicks.clear()
     }
 
     private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryAction.Chain> =
@@ -322,4 +410,7 @@ object InventoryManager : EventListener {
             it.priority
         }
 
+    private const val CONTAINER_OPEN_GRACE_MS = 150L
+    private const val RESYNC_GRACE_MS = 300L
+    private const val LOCK_AFTER_REJECTIONS = 3
 }

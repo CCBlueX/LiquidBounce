@@ -75,6 +75,7 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.Comman
 import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandClip
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
@@ -160,6 +161,7 @@ object CommandManager : EventListener {
         register(CommandTargets)
         register(CommandBinds)
         register(CommandAutoDisable)
+        register(CommandClip)
         register(CommandInvsee)
         register(CommandXRay)
         register(CommandValue)

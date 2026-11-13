@@ -282,7 +282,7 @@ class SimulatedPlayer private constructor(
     }
 
     override fun move(moverType: MoverType, delta: Vec3) {
-        super.move(moverType, if (local) callEvent(PlayerMoveEvent(moverType, delta)).movement else delta)
+        super.move(moverType, if (local) callEvent(PlayerMoveEvent(moverType, delta, true)).movement else delta)
     }
 
     override fun maybeBackOffFromEdge(delta: Vec3, moverType: MoverType): Vec3 {

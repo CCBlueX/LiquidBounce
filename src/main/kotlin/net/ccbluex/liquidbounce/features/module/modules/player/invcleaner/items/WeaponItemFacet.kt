@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -82,7 +83,12 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
 
             val probabilityAdjustmentFactor = p.pow(ceil(bigT * 0.9))
 
-            val speedAdjustedDamage = attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
+            // 1.8 has no attack cooldown, so every hit deals the full damage.
+            val speedAdjustedDamage = if (isOlderThanOrEqual1_8) {
+                attackDamage
+            } else {
+                attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
+            }
 
             val damageFromFireAspect = (stack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f - 1)
                     .coerceAtLeast(0.0F) * 0.33F

@@ -34,6 +34,9 @@ object Costs {
     const val SNEAK = 20.0 / 1.295
     const val SPRINT_SWIM = 20.0 / 3.918
     const val PLACE = 20.0
+
+    /** On top of walking: a Scaffold bridge crossed at about 3 blocks per second. */
+    const val RUN_BRIDGE = 3.0
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0
     const val JUMP_PENALTY = 20.0

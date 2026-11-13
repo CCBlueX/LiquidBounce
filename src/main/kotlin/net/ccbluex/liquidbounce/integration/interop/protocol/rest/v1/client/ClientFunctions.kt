@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
@@ -34,6 +36,11 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ScoreboardData
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
@@ -41,7 +48,11 @@ import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.network.NetworkTelemetry
+import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
+import com.google.gson.JsonArray
+import java.util.ArrayDeque
 import java.io.File
 import java.net.URI
 import java.util.Properties
@@ -166,6 +177,105 @@ private fun Route.postFileDialog() = post("/fileDialog") {
     })
 }
 
+// POST /api/v1/client/command
+private fun Route.postCommand() = post("/command") {
+    data class Request(val command: String)
+    val command = runCatching { call.receive<Request>().command }.getOrNull()
+        ?: call.badRequest("No command provided")
+
+    val sent = withContext(Dispatchers.Main) {
+        val prefix = CommandManager.GlobalSettings.prefix
+        if (command.startsWith(prefix)) {
+            CommandManager.execute(command.substring(prefix.length))
+            return@withContext true
+        }
+
+        val connection = mc.player?.connection ?: return@withContext false
+        if (command.startsWith('/')) {
+            connection.sendCommand(command.substring(1))
+        } else {
+            connection.sendChat(command)
+        }
+        true
+    }
+
+    if (!sent) {
+        call.badRequest("Not in game")
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
+// GET /api/v1/client/player
+private fun Route.getPlayerState() = get("/player") {
+    val state = withContext(Dispatchers.Main) {
+        JsonObject().apply {
+            val player = mc.player
+            addProperty("inGame", inGame)
+            addProperty("screen", mc.gui.screen()?.javaClass?.simpleName)
+            add("chat", ChatHistory.toJson())
+
+            val telemetry = NetworkTelemetry.snapshot
+            addProperty("setbacks", telemetry.setbacks)
+            addProperty("packetsOut", telemetry.packetsOut)
+            addProperty("movePacketsPerSecond", telemetry.movePacketsPerSecond)
+            addProperty("speedBps", telemetry.speedBps)
+
+            player ?: return@apply
+            addProperty("name", player.scoreboardName)
+            addProperty("x", player.x)
+            addProperty("y", player.y)
+            addProperty("z", player.z)
+            addProperty("health", player.health)
+            addProperty("food", player.foodData.foodLevel)
+            addProperty("onGround", player.onGround())
+            addProperty("dimension", player.level().dimension().identifier().toString())
+            addProperty("gameMode", mc.gameMode?.playerMode?.getName())
+
+            ScoreboardData.fromScoreboard(player.level().scoreboard)?.let { scoreboard ->
+                add("scoreboard", JsonObject().apply {
+                    addProperty("title", scoreboard.header.string.stripFormatting())
+                    add("lines", JsonArray().apply {
+                        scoreboard.entries.filterNotNull().forEach { entry ->
+                            add(entry.name.string.stripFormatting())
+                        }
+                    })
+                })
+            }
+        }
+    }
+    call.respond(state)
+}
+
+private fun String.stripFormatting() = ChatFormatting.stripFormatting(this) ?: this
+
+private object ChatHistory : EventListener {
+
+    private const val CAPACITY = 50
+    private val lines = ArrayDeque<Pair<Long, String>>(CAPACITY)
+
+    @Suppress("unused")
+    private val chatHandler = handler<ChatReceiveEvent> { event ->
+        synchronized(lines) {
+            if (lines.size == CAPACITY) {
+                lines.removeFirst()
+            }
+            lines.addLast(System.currentTimeMillis() to event.textData.string.stripFormatting())
+        }
+    }
+
+    fun toJson() = JsonArray().apply {
+        synchronized(lines) {
+            lines.forEach { (time, text) ->
+                add(JsonObject().apply {
+                    addProperty("timestamp", time)
+                    addProperty("message", text)
+                })
+            }
+        }
+    }
+
+}
+
 private val POSSIBLE_URL_TARGETS: Map<String, URI> = buildMap {
     val properties = Properties()
 
@@ -185,4 +295,7 @@ internal fun Route.clientRoutes() {
     postOpenLink()
     postBrowsePath()
     postFileDialog()
+    postCommand()
+    getPlayerState()
+    ChatHistory
 }
