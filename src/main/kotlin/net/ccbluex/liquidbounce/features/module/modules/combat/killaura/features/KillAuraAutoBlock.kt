@@ -180,7 +180,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     var hasBlockedSinceAttack = false
 
-    private var isInDanger = false
+    var isInDanger = false
+        private set
 
     /**
      * This will decrease our CPS and prioritize blocking.
