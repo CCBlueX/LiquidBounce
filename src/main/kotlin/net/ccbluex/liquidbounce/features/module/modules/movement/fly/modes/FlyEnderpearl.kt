@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
@@ -89,26 +89,24 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
         // If there isn't a pearl, return
         Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
 
-        guarded {
-            val slot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
+        val slot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
 
-            if (player.xRot <= 80) {
-                RotationManager.setRotationTarget(
-                    Rotation(player.yRot, (80f..90f).random()),
-                    valueGroup = rotations,
-                    provider = ModuleFastUse,
-                    priority = Priority.IMPORTANT_FOR_USAGE_2
-                )
-            }
-
-            waitTicks(2)
-            SilentHotbar.selectSlotSilently(this@FlyEnderpearl, slot, 1)
-            interaction.startPrediction(world) { sequence ->
-                ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
-            }
-
-            threwPearl = true
+        if (player.xRot <= 80) {
+            RotationManager.setRotationTarget(
+                Rotation(player.yRot, (80f..90f).random()),
+                valueGroup = rotations,
+                provider = ModuleFastUse,
+                priority = Priority.IMPORTANT_FOR_USAGE_2
+            )
         }
+
+        waitTicks(2)
+        SilentHotbar.selectSlotSilently(this@FlyEnderpearl, slot, 1)
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
+        }
+
+        threwPearl = true
     }
 
     val packetHandler = handler<PacketEvent> { event ->

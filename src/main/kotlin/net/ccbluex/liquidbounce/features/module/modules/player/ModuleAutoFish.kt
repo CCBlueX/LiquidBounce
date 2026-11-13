@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -103,31 +103,29 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
     private val tickHandler = tickHandler {
         findFishingRodHand() ?: return@tickHandler
 
-        guarded {
-            val hand by tracked(::findFishingRodHand)
+        val hand by tracked(::findFishingRodHand)
 
-            tickUntil {
-                caughtFish || activeFishingHook() == null
-            }
+        tickUntil {
+            caughtFish || activeFishingHook() == null
+        }
 
-            if (caughtFish) {
-                caughtFish = false
+        if (caughtFish) {
+            caughtFish = false
 
-                waitTicks(reelDelay.random())
-                useItem(hand)
+            waitTicks(reelDelay.random())
+            useItem(hand)
 
-                if (RecastRod.enabled) {
-                    waitTicks(RecastRod.delay.random())
-                    useItem(hand)
-                }
-
-                return@guarded
-            }
-
-            if (AutoCastRod.enabled && activeFishingHook() == null) {
-                waitTicks(AutoCastRod.delay.random())
+            if (RecastRod.enabled) {
+                waitTicks(RecastRod.delay.random())
                 useItem(hand)
             }
+
+            return@tickHandler
+        }
+
+        if (AutoCastRod.enabled && activeFishingHook() == null) {
+            waitTicks(AutoCastRod.delay.random())
+            useItem(hand)
         }
     }
 

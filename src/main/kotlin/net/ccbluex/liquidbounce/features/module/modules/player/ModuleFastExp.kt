@@ -22,10 +22,11 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.Tracked
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
@@ -162,32 +163,31 @@ object ModuleFastExp : ClientModule(
             return@tickHandler
         }
 
-        guarded({ !InventoryManager.isHandledScreenOpen && !player.isDeadOrDying }) {
-            val slot = tracked { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
+        guard { !InventoryManager.isHandledScreenOpen && !player.isDeadOrDying }
+        val slot = tracked { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
-            if (!NoWaste.enabled) {
-                action(slot)
-                return@guarded
-            }
-
-            val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot.value)
-
-            if (bottlesRequiredCurrently < 1) {
-                bottlesUsed = 0
-                bottlesRequired = 0
-                return@guarded
-            }
-
-            // waits for the orbs, in case there are any, to get absorbed before repairing items
-            tickUntil {
-                repairing || !anyExpOrbMovingToPlayer()
-            }
-
-            repairing = true
-            bottlesRequired = bottlesRequired.coerceAtLeast(bottlesRequiredCurrently)
-
+        if (!NoWaste.enabled) {
             action(slot)
+            return@tickHandler
         }
+
+        val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot.value)
+
+        if (bottlesRequiredCurrently < 1) {
+            bottlesUsed = 0
+            bottlesRequired = 0
+            return@tickHandler
+        }
+
+        // waits for the orbs, in case there are any, to get absorbed before repairing items
+        tickUntil {
+            repairing || !anyExpOrbMovingToPlayer()
+        }
+
+        repairing = true
+        bottlesRequired = bottlesRequired.coerceAtLeast(bottlesRequiredCurrently)
+
+        action(slot)
 
         // after all experience bottles have been thrown
         if (bottlesUsed > 0 && bottlesUsed >= bottlesRequired) {

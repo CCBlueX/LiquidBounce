@@ -19,8 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.event.guarded
-import net.ccbluex.liquidbounce.event.onInterrupted
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
@@ -109,9 +108,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                guarded({ inGame }, usable(slot)) {
+                guard { inGame && isUsable(slot) }.use {
                     tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
-                }.onInterrupted { return }
+                }
 
                 rotation = rotation.normalize()
             }

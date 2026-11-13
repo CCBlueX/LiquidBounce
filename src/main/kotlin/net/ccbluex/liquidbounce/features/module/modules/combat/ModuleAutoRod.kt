@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -200,10 +200,9 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
-        guarded {
-            same { mc.level }
-            guard { slot.itemStack.`is`(Items.FISHING_ROD) }
-
+        // Up to the pull, not over the cooldown after it
+        val level = mc.level
+        guard { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
             // 3. timeout / hit entity / no movement / out of range
             tickConditional(hitTimeout) {
                 fishingBobberEntity?.hookedIn != null ||

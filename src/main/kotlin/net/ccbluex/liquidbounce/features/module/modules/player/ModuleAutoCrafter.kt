@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -72,62 +72,60 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
         val context = SlotDisplayContext.fromLevel(mc.level ?: return@tickHandler)
         val collections = player.recipeBook.getCollection(menuType.searchCategory)
 
-        guarded {
-            same { mc.player?.containerMenu }
+        same { mc.player?.containerMenu }
 
-            for ((index, targetItem) in itemsToCraft.withIndex()) {
-                val remainingItems = itemsToCraft.subList(index + 1, itemsToCraft.size)
+        for ((index, targetItem) in itemsToCraft.withIndex()) {
+            val remainingItems = itemsToCraft.subList(index + 1, itemsToCraft.size)
 
-                val recipe = collections.firstNotNullOfOrNull { collection ->
-                    collection.recipes.firstOrNull { recipe ->
-                        recipe.resultItems(context).any { it.item == targetItem } &&
-                            collection.isCraftable(recipe.id)
+            val recipe = collections.firstNotNullOfOrNull { collection ->
+                collection.recipes.firstOrNull { recipe ->
+                    recipe.resultItems(context).any { it.item == targetItem } &&
+                        collection.isCraftable(recipe.id)
 
-                            // Prevent crafting loops (ingot->block->ingot)
-                            // by rejecting recipes that use items that appear later in the list
-                            && (recipe.craftingRequirements.isEmpty ||
-                            recipe.craftingRequirements.get()
-                                .none { req -> remainingItems.any { req.test(it.defaultInstance) } })
-                    }
-                } ?: continue
+                        // Prevent crafting loops (ingot->block->ingot)
+                        // by rejecting recipes that use items that appear later in the list
+                        && (recipe.craftingRequirements.isEmpty ||
+                        recipe.craftingRequirements.get()
+                            .none { req -> remainingItems.any { req.test(it.defaultInstance) } })
+                }
+            } ?: continue
 
-                val resultSlotId = if (menu is AbstractFurnaceMenu) 2 else 0
-                val resultSlot = menu.slots[resultSlotId]
-                if (resultSlot.item.isEmpty) {
-                    interaction.handlePlaceRecipe(menu.containerId, recipe.id, stackCrafting)
+            val resultSlotId = if (menu is AbstractFurnaceMenu) 2 else 0
+            val resultSlot = menu.slots[resultSlotId]
+            if (resultSlot.item.isEmpty) {
+                interaction.handlePlaceRecipe(menu.containerId, recipe.id, stackCrafting)
+            } else {
+                if (Slots.HotbarAndInventory.mergeableCapacityFor(resultSlot.item) >= resultSlot.item.count) {
+                    interaction.handleContainerInput(
+                        menu.containerId, resultSlotId, 0, ContainerInput.QUICK_MOVE, player
+                    )
                 } else {
-                    if (Slots.HotbarAndInventory.mergeableCapacityFor(resultSlot.item) >= resultSlot.item.count) {
-                        interaction.handleContainerInput(
-                            menu.containerId, resultSlotId, 0, ContainerInput.QUICK_MOVE, player
-                        )
-                    } else {
-                        when (onFull) {
-                            OnFull.DISABLE -> {
-                                enabled = false
-                                return@guarded
-                            }
+                    when (onFull) {
+                        OnFull.DISABLE -> {
+                            enabled = false
+                            return@tickHandler
+                        }
 
-                            OnFull.CLOSE_SCREEN -> {
-                                player.closeContainer()
-                                return@guarded
-                            }
+                        OnFull.CLOSE_SCREEN -> {
+                            player.closeContainer()
+                            return@tickHandler
+                        }
 
-                            OnFull.WAIT -> {
-                                waitTicks(delay.random())
-                                return@guarded
-                            }
+                        OnFull.WAIT -> {
+                            waitTicks(delay.random())
+                            return@tickHandler
+                        }
 
-                            OnFull.THROW -> {
-                                interaction.handleContainerInput(
-                                    menu.containerId, resultSlotId, 1, ContainerInput.THROW, player
-                                )
-                            }
+                        OnFull.THROW -> {
+                            interaction.handleContainerInput(
+                                menu.containerId, resultSlotId, 1, ContainerInput.THROW, player
+                            )
                         }
                     }
                 }
-                waitTicks(delay.random())
-                if (sequentialCrafting || menu is AbstractFurnaceMenu) return@guarded
             }
+            waitTicks(delay.random())
+            if (sequentialCrafting || menu is AbstractFurnaceMenu) return@tickHandler
         }
 
     }
