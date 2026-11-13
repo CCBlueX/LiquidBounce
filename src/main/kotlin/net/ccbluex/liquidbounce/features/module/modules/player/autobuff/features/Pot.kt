@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
@@ -35,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -163,15 +161,14 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
                 // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
-                rotation = requires { inGame && isUsable(slot) }.use {
-                    ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                        ModuleAutoBuff.Rotations.toRotationTarget(
-                            pitch = rotation.pitch,
-                            considerInventory = true,
-                            tolerance = PITCH_TOLERANCE,
-                        )
-                    })
-                }
+                requires { isUsable(slot) }
+                rotation = ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+                    ModuleAutoBuff.Rotations.toRotationTarget(
+                        pitch = rotation.pitch,
+                        considerInventory = true,
+                        tolerance = PITCH_TOLERANCE,
+                    )
+                })
             }
 
             ON_TICK -> {
@@ -204,8 +201,9 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             else -> {}
         }
 
-        // Wait at least 1 tick to make sure, we do not continue with something else too early
-        waitTicks(if (midAir) MidAir.delay.random() else 1)
+        // The next buff waits at least a tick so we do not continue with something else too early, mid-air throws
+        // follow each other after MidAir's delay
+        ModuleAutoBuff.waitBeforeNextBuff(if (midAir) MidAir.delay.random() else 1)
     }
 
     /**

@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -65,7 +64,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     /** Aims at the placement of [currentPlan] this tick. */
     private var aim: RotationTarget? = null
 
-    private var timeout = false
+    /** Ticks of [delay] left after the last placement, planning nothing meanwhile. */
+    private var cooldownLeft = 0
 
     private var pendingCombatWaitTicks = 0
 
@@ -79,7 +79,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     }
 
     private fun resetState() {
-        timeout = false
+        cooldownLeft = 0
         aim = null
         currentPlan = null
         pendingCombatWaitTicks = 0
@@ -89,7 +89,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         aim = null
-        if (timeout) {
+        if (cooldownLeft > 0) {
             return@handler
         }
 
@@ -126,20 +126,22 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     @Suppress("unused")
     private val placementHandler = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
         aim ?: return@tickHandler
-        // Guards the aim only, not the delay after the placement
-        val (raycast, rotation) = requires {
-            aim.takeIf { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
-        }.use { plan ->
-            requires { currentPlan }.use { intent ->
-                lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { plan.value }) { going ->
-                    traceFromPlayer(going).takeIf { intent.value.validate(it) }?.let { hit -> hit to going }
-                }
-            }
+        val target by requires { aim }
+        val intent by requires { currentPlan }
+        requires { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
+
+        val (raycast, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { target }) { going ->
+            traceFromPlayer(going).takeIf { intent.validate(it) }?.let { hit -> hit to going }
         }
 
         val plan = currentPlan ?: return@tickHandler
@@ -174,13 +176,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@tickHandler
         }
 
-        timeout = true
+        cooldownLeft = delay
         pendingCombatWaitTicks = 0
-        try {
-            waitTicks(delay)
-        } finally {
-            timeout = false
-        }
     }
 
     /**
