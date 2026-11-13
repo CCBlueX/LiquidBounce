@@ -287,6 +287,7 @@ tasks.processResources {
     }
 
     val modVersion = providers.gradleProperty("mod_version")
+    val modEdition = providers.gradleProperty("mod_edition")
     val minecraftVersion = providers.gradleProperty("mod_mc_version")
     val fabricVersion = libs.versions.fabric.api
     val loaderVersion = libs.versions.fabric.loader
@@ -310,6 +311,7 @@ tasks.processResources {
     val contributors = provider { contributorsJson }
 
     inputs.property("version", modVersion)
+    inputs.property("edition", modEdition)
     inputs.property("minecraft_version", minecraftVersion)
     inputs.property("fabric_version", fabricVersion)
     inputs.property("loader_version", loaderVersion)
@@ -322,6 +324,7 @@ tasks.processResources {
         expand(
             mapOf(
                 "version" to modVersion.get(),
+                "edition" to modEdition.get(),
                 "minecraft_version" to minecraftVersion.get(),
                 "fabric_version" to fabricVersion.get(),
                 "loader_version" to loaderVersion.get(),

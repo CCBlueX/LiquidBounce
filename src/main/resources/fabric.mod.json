@@ -20,6 +20,9 @@
     "main": []
   },
   "custom": {
+    "liquidbounce": {
+      "edition": "${edition}"
+    },
     "modmenu": {
       "links": {
         "liquidbounce.generic.forum": "https://forums.ccbluex.net/"

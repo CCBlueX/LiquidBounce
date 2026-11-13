@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.api.core
 
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.fabricmc.loader.api.FabricLoader
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -65,10 +66,11 @@ class ApiConfig(
         const val AUTH_CLIENT_ID = "J2hzqzCxch8hfOPRFNINOZV5Ma4X4BFdZpMjAVEW"
 
         /**
-         * This makes sense because we want forks to be able to use this API and not only the official client.
-         * It also allows us to use API endpoints for legacy on other branches.
+         * Build, marketplace and changelog channel the client asks the API for, `mod_edition` in
+         * gradle.properties. Forks keep it to use the official API.
          */
-        const val API_BRANCH = "nextgen"
+        val API_EDITION: String = FabricLoader.getInstance().getModContainer("liquidbounce").orElseThrow()
+            .metadata.getCustomValue("liquidbounce").asObject.get("edition").asString
 
         private const val AVATAR_BASE_URL = "https://avatar.liquidbounce.net/avatar"
         private const val AVATAR_UUID_URL = "$AVATAR_BASE_URL/%s/100"
