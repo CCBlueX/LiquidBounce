@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
@@ -35,15 +35,13 @@ object ScaffoldTowerPulldown : ScaffoldTower("Pulldown") {
             return@sequenceHandler
         }
 
-        guarded {
-            same { player }
+        same { player }
 
-            // Wait until we can proceed with our tower
-            tickUntil { player.deltaMovement.y < triggerMotion && !player.onGround() }
-            if (!isBlockBelow) return@guarded
+        // Wait until we can proceed with our tower
+        tickUntil { player.deltaMovement.y < triggerMotion && !player.onGround() }
+        if (!isBlockBelow) return@sequenceHandler
 
-            player.deltaMovement.y = -1.0
-        }
+        player.deltaMovement.y = -1.0
     }
 
 }

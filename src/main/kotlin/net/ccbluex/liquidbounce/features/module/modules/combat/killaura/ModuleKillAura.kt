@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -180,13 +180,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     private suspend fun fightWithAim() {
-        guarded {
-            val planned by tracked { aim }
-            // Resumes on the next rotation going out, whatever it hits
-            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { planned }) { it }
+        val planned by tracked { aim }
+        // Resumes on the next rotation going out, whatever it hits
+        val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { planned }) { it }
 
-            fight(aimed = true, aimedHit = planned.entity?.let { attackHit(it, going) })
-        }
+        fight(aimed = true, aimedHit = planned.entity?.let { attackHit(it, going) })
     }
 
     /**

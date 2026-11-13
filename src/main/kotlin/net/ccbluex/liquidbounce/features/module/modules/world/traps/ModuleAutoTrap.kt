@@ -19,10 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -132,15 +131,16 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         }
 
         aim ?: return@tickHandler
-        val (raycast, rotation) = guarded({
-            ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*>
-        }) {
-            val plan by tracked { aim }
-            val intent by tracked { currentPlan }
-            lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { plan }) { going ->
-                traceFromPlayer(going).takeIf { intent.validate(it) }?.let { hit -> hit to going }
+        // Guards the aim only, not the delay after the placement
+        val (raycast, rotation) = tracked {
+            aim.takeIf { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
+        }.use { plan ->
+            tracked { currentPlan }.use { intent ->
+                lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { plan.value }) { going ->
+                    traceFromPlayer(going).takeIf { intent.value.validate(it) }?.let { hit -> hit to going }
+                }
             }
-        }.getOrNull() ?: return@tickHandler
+        }
 
         val plan = currentPlan ?: return@tickHandler
         if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {

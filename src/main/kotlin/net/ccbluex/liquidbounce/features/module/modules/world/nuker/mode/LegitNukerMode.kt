@@ -22,9 +22,10 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
@@ -121,19 +122,18 @@ object LegitNukerMode : Mode("Legit") {
             return@tickHandler
         }
 
-        guarded({ currentTarget == target }) {
-            val plan by tracked { aim }
+        guard { currentTarget == target }
+        val plan by tracked { aim }
 
-            // Keeps aiming while the switch delay passes
-            val switching = wasTarget != null && target != wasTarget
-            val delayEnd = player.tickCount + switchDelay
-            val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
-                if (switching && player.tickCount < delayEnd) null else hitOn(target, going)
-            }
-
-            doBreak(rayTraceResult, forceImmediateBreak)
-            wasTarget = target
+        // Keeps aiming while the switch delay passes
+        val switching = wasTarget != null && target != wasTarget
+        val delayEnd = player.tickCount + switchDelay
+        val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
+            if (switching && player.tickCount < delayEnd) null else hitOn(target, going)
         }
+
+        doBreak(rayTraceResult, forceImmediateBreak)
+        wasTarget = target
     }
 
     @Suppress("unused")

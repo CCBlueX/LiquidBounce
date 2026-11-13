@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 import it.unimi.dsi.fastutil.ints.IntCollection
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -199,29 +199,27 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
     private suspend fun place(pos: BlockPos, side: Direction) {
         val surface = Surface.of(pos, side, throughWalls = wallsRange > 0f)
-        guarded {
-            val current by tracked { placement?.takeIf { it.pos == pos && it.side == side } }
-            val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
-                raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
-                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
-            } ?: return@guarded
+        val current by tracked { placement?.takeIf { it.pos == pos && it.side == side } }
+        val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
+            raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+        } ?: return
 
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                return@guarded
-            }
-
-            player.clickBlockWithSlot(
-                hit.withDirection(side),
-                getSlot() ?: return@guarded,
-                swingMode,
-                switchMode,
-                sequenced
-            )
-
-            SubmoduleIdPredict.run(pos)
-
-            chronometer.reset()
+        if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            return
         }
+
+        player.clickBlockWithSlot(
+            hit.withDirection(side),
+            getSlot() ?: return,
+            swingMode,
+            switchMode,
+            sequenced
+        )
+
+        SubmoduleIdPredict.run(pos)
+
+        chronometer.reset()
     }
 
     private fun updatePrevious(rotation: RotationWithVector) {

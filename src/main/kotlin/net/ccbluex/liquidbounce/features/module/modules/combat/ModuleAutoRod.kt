@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.tickConditional
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -181,18 +181,18 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     }
 
     private suspend fun useRod() {
-        val aimed = guarded({ requirementsMet }) {
-            val target by tracked { targetTracker.target }
-            val slot by tracked { availableRodSlot }
-            val planned by tracked { throwing }
-
+        // Only while aiming: the pull must go on when the target leaves the range or the plan
+        val (target, slot) = tracked {
+            throwing?.takeIf { requirementsMet && targetTracker.target != null && availableRodSlot != null }
+        }.use { planned ->
             lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
-                rotations.toRotationTarget(planned.first, considerInventory = false, surface = planned.second)
-            }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
+                val (rotation, surface) = planned.value
+                rotations.toRotationTarget(rotation, considerInventory = false, surface = surface)
+            }) { going -> going.takeIf { it.directionAngleTo(planned.value.first) <= aimOffThreshold } }
 
-            target to slot
-        }.getOrNull() ?: return
-        val (target, slot) = aimed
+            // Checked with the plan right before the look resumed
+            checkNotNull(targetTracker.target) to checkNotNull(availableRodSlot)
+        }
 
         // If the player used rod manually, skip use
         if (fishingBobberEntity == null) {
@@ -214,10 +214,9 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
-        guarded {
-            same { mc.level }
-            guard { slot.itemStack.`is`(Items.FISHING_ROD) }
-
+        // Up to the pull, not over the cooldown after it
+        val level = mc.level
+        guard { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
             // 3. timeout / hit entity / no movement / out of range
             tickConditional(hitTimeout) {
                 fishingBobberEntity?.hookedIn != null ||

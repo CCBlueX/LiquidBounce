@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
@@ -61,7 +61,7 @@ internal object VelocityGrim2344MC117 : VelocityMode("Grim-2.3.44-MC1.17", alias
 
         if (packet.isLocalPlayerVelocity() && canCancel) {
             event.cancelEvent()
-            guarded {
+            try {
                 same { mc.level }
                 waitTicks(1)
                 repeat(if (alternativeBypass) 4 else 1) {
@@ -79,8 +79,9 @@ internal object VelocityGrim2344MC117 : VelocityMode("Grim-2.3.44-MC1.17", alias
                         player.direction.opposite
                     )
                 )
+            } finally {
+                canCancel = false
             }
-            canCancel = false
         }
     }
 

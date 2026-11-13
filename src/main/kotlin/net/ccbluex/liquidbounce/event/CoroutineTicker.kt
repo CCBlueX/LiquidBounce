@@ -133,8 +133,8 @@ object CoroutineTicker : Ticker {
  *
  * Exceptions thrown by [stopAt] are delivered to the waiting coroutine.
  *
- * Inside a [guarded] scope the conditions are checked each tick before [stopAt] and once more before
- * returning; when one fails, [stopAt] is not called again and the scope ends here.
+ * The [guard]s of the run are checked each tick before [stopAt] and once more before returning; when one fails,
+ * [stopAt] is not called again and the run ends here.
  *
  * @param stopAt the callback of elapsed ticks. Will be called on game tick.
  * @return the times of [stopAt] to be executed (equals to elapsed ticks)
@@ -143,17 +143,17 @@ suspend fun tickUntil(
     stopAt: IntPredicate,
 ): Int {
     val context = currentCoroutineContext()
-    val guard = context[GuardScope]
+    val guards = context.activeGuards()
     val elapsedTicks = suspendCancellableCoroutine { continuation ->
-        context.ticker.register(TickUntilCallback(continuation, guard, stopAt))
+        context.ticker.register(TickUntilCallback(continuation, guards, stopAt))
     }
-    guard?.ensure()
+    guards?.ensure()
     return elapsedTicks
 }
 
 private class TickUntilCallback(
     private val continuation: CancellableContinuation<Int>,
-    private val guard: GuardScope?,
+    private val guards: Guards?,
     private val stopAt: IntPredicate,
 ) : BooleanSupplier {
     private var elapsedTicks = 0
@@ -164,7 +164,7 @@ private class TickUntilCallback(
         }
 
         val finished = try {
-            val broken = guard?.broken()
+            val broken = guards?.broken()
             if (broken != null) {
                 continuation.resumeWithException(broken)
                 return true
@@ -223,10 +223,10 @@ suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 /**
  * Waits [duration] of wall-clock time, for pauses shorter than a tick.
  *
- * Inside a [guarded] scope the conditions are checked once the time is up, on the thread that continues.
- * Unlike [kotlinx.coroutines.delay] alone, nothing after this runs when one of them failed meanwhile.
+ * The [guard]s of the run are checked once the time is up, on the thread that continues. Unlike
+ * [kotlinx.coroutines.delay] alone, nothing after this runs when one of them failed meanwhile.
  */
 suspend fun waitFor(duration: Duration) {
     delay(duration)
-    currentCoroutineContext()[GuardScope]?.ensure()
+    currentCoroutineContext().activeGuards()?.ensure()
 }

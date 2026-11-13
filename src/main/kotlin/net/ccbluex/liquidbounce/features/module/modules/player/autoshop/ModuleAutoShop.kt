@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitFor
@@ -97,7 +97,9 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             startMilliseconds = System.currentTimeMillis()
         }
 
-        guarded({ isShopOpen() }) {
+        try {
+            guard { isShopOpen() }
+
             // wait after opening a shop (before the first click)
             if (!waitedBeforeTheFirstClick) {
                 waitTicks(startDelay.random())
@@ -118,8 +120,9 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             if (autoClose && canAutoClose) {
                 player.closeContainer()
             }
+        } finally {
+            reset()
         }
-        reset()
     }
 
     private suspend fun doClicks(remainingElements: List<ShopElement>) {

@@ -26,9 +26,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.isInterrupted
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -107,6 +106,7 @@ object InventoryManager : EventListener {
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
         debugParameter("Cursor Stack") { player.containerMenu.carried }
+        guard { inGame }
 
         var maximumCloseDelay = 0
 
@@ -183,9 +183,8 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    // The chain is checked before the action and while waiting for it,
-                    // the click delay after it runs either way
-                    val performed = guarded({ inGame }, { chained.canPerformAction() }) {
+                    // The chain has to stay possible while waiting for its action, not over the click delay after it
+                    val performed = guard { chained.canPerformAction() }.use {
                         // Check if this is the first action in the chain, which allows us to simulate a miss click
                         // This is only possible for container-type slots and also does not make much sense when
                         // the action is a throw action (you cannot miss-click really when throwing)
@@ -208,13 +207,7 @@ object InventoryManager : EventListener {
                         action.performAction()
                     }
 
-                    // This should usually not happen, but we have to check it
-                    if (performed.isInterrupted()) {
-                        logger.warn("Cannot perform action $action because it is not possible")
-                        break
-                    }
-
-                    if (performed.value && action !is InventoryAction.CloseScreen) {
+                    if (performed && action !is InventoryAction.CloseScreen) {
                         waitTicks(constraints.clickDelay.random())
                         cycles = 0
                     }
@@ -224,10 +217,8 @@ object InventoryManager : EventListener {
 
         // When all scheduled actions are done, we can close the inventory
         if (isInventoryOpen && canCloseMainInventory) {
-            guarded({ inGame }) {
-                waitTicks(maximumCloseDelay)
-                network.sendCloseInventory()
-            }
+            waitTicks(maximumCloseDelay)
+            network.sendCloseInventory()
         }
 
         lastClickedSlot = -1

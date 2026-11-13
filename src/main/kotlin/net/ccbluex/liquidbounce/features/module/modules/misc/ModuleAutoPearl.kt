@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.onInterrupted
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -140,15 +140,15 @@ object ModuleAutoPearl : ClientModule(
             return
         }
 
-        guarded {
+        // Leaves the queue once thrown, and as well when the throw gives up
+        try {
             val itemSlot by tracked { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
 
             if (!Rotate.enabled) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
-                queue.removeFirst()
                 val (yaw, pitch) = rotation.normalize()
                 useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
-                return@guarded
+                return
             }
 
             val until = player.tickCount + AIM_TICKS
@@ -156,9 +156,10 @@ object ModuleAutoPearl : ClientModule(
             val (yaw, pitch) = lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
                 Rotate.rotations.toRotationTarget(rotation, tolerance = AIM_TOLERANCE)
             })
-            queue.removeFirstOrNull()
             useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
-        }.onInterrupted { queue.removeFirstOrNull() }
+        } finally {
+            queue.removeFirstOrNull()
+        }
     }
 
     private fun proceedPearl(

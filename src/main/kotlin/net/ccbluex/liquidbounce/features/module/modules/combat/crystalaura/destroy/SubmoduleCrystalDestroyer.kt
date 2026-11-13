@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.dest
 
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
@@ -125,27 +125,25 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
 
     private suspend fun destroy(target: EndCrystal) {
         val surface = Surface(target.boundingBox, throughWalls = wallsRange > 0f)
-        guarded {
-            val current by tracked { attack?.takeIf { it.target === target } }
-            ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
-                isLookingAtEntity(
-                    toEntity = target,
-                    rotation = view,
-                    range = range.toDouble(),
-                    throughWallsRange = wallsRange.toDouble()
-                )
-            } ?: return@guarded
+        val current by tracked { attack?.takeIf { it.target === target } }
+        ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
+            isLookingAtEntity(
+                toEntity = target,
+                rotation = view,
+                range = range.toDouble(),
+                throughWallsRange = wallsRange.toDouble()
+            )
+        } ?: return
 
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                return@guarded
-            }
-
-            val crystal = CrystalAuraDestroyTargetFactory.currentTarget ?: return@guarded
-
-            attackEntity(crystal, swingMode)
-            postAttackHandlers.forEach { it.attacked(crystal.id) }
-            chronometer.reset()
+        if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            return
         }
+
+        val crystal = CrystalAuraDestroyTargetFactory.currentTarget ?: return
+
+        attackEntity(crystal, swingMode)
+        postAttackHandlers.forEach { it.attacked(crystal.id) }
+        chronometer.reset()
     }
 
     fun getMaxRange() = max(range, wallsRange)

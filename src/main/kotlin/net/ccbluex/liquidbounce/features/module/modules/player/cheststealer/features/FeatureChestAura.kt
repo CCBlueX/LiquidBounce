@@ -23,11 +23,10 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -185,15 +184,17 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
 
         currentTarget ?: return@tickHandler
-        val rayTraceResult = guarded({ mc.gui.screen() !is AbstractContainerScreen<*> }) {
-            val target by tracked { currentTarget }
-            lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
-                val (pos, _) = target
+        // Guards the aim only, not the waits for the container and the delay
+        val rayTraceResult = tracked {
+            currentTarget.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> }
+        }.use { target ->
+            lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->
+                val (pos, _) = target.value
                 val state = pos.state ?: return@lookAt null
                 raytraceBlock(interactionRange.toDouble(), going, pos, state)
                     ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
             }
-        }.getOrNull() ?: return@tickHandler
+        }
         val targetBlockPos = rayTraceResult.blockPos
 
         // Attempt to interact with the block

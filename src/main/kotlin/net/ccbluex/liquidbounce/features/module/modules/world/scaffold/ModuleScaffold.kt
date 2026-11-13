@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -466,25 +466,23 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      * clicks it.
      */
     private suspend fun placeOnHit() {
-        guarded {
-            val rotation by tracked { planned }
-            val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
-                ScaffoldRotationValueGroup.toRotationTarget(
-                    rotation,
-                    considerInventory = considerInventory,
-                    surface = currentTarget?.let(::surface),
-                )
-            }) { going ->
-                val target = currentTarget
-                if (target == null || cooldown > 0) {
-                    null
-                } else {
-                    click(target, going)?.let { hit -> Triple(target, hit, going.normalize()) }
-                }
+        val rotation by tracked { planned }
+        val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            ScaffoldRotationValueGroup.toRotationTarget(
+                rotation,
+                considerInventory = considerInventory,
+                surface = currentTarget?.let(::surface),
+            )
+        }) { going ->
+            val target = currentTarget
+            if (target == null || cooldown > 0) {
+                null
+            } else {
+                click(target, going)?.let { hit -> Triple(target, hit, going.normalize()) }
             }
-
-            place(target, hit, going)
         }
+
+        place(target, hit, going)
     }
 
     private fun click(target: BlockPlacementTarget?, rotation: Rotation) =

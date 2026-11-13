@@ -23,10 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -243,12 +242,14 @@ object ModuleFucker : ClientModule(
             return@tickHandler
         }
 
-        val rayTraceResult = guarded({ currentTarget == destroyerTarget && !ModuleBlink.running }) {
-            val plan by tracked { aim }
+        // Guards the aim only, not the delay after a use
+        val rayTraceResult = tracked {
+            aim.takeIf { currentTarget == destroyerTarget && !ModuleBlink.running }
+        }.use { plan ->
             val priority =
                 if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1
-            lookAt(priority, { plan }) { going -> hitOn(destroyerTarget.pos, going) }
-        }.getOrNull() ?: return@tickHandler
+            lookAt(priority, { plan.value }) { going -> hitOn(destroyerTarget.pos, going) }
+        }
         if (rayTraceResult.blockPos.state?.isNotBreakable(rayTraceResult.blockPos) != false) {
             return@tickHandler
         }

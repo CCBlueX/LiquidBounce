@@ -24,8 +24,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.Guarded
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.GuardInterruption
+import net.ccbluex.liquidbounce.event.Guards
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import kotlin.test.Test
@@ -108,18 +109,18 @@ class LookTest {
         var alive = true
         var plans = 0
         var acted = false
-        val result = async(looks) {
-            guarded({ alive }) {
-                module.lookAt(Priority.NORMAL, { plans++; yawTarget(90f) }) { going -> near(going) }
-                acted = true
-            }
-        }
+        var ended: Throwable? = null
+        launch(looks + Guards()) {
+            guard { alive }
+            module.lookAt(Priority.NORMAL, { plans++; yawTarget(90f) }) { going -> near(going) }
+            acted = true
+        }.invokeOnCompletion { ended = it }
 
         tick(Rotation(0f, 0f))
         alive = false
         tick(Rotation(90f, 0f))
 
-        assertTrue(result.await() is Guarded.Interrupted)
+        assertTrue(ended is GuardInterruption, "The run ended with $ended")
         assertEquals(1, plans)
         assertTrue(submitted.isEmpty())
         assertFalse(acted)
@@ -130,20 +131,20 @@ class LookTest {
     fun `a guard that fails on the tick the target is met stops before acting`() = runTest(UnconfinedTestDispatcher()) {
         var alive = true
         var acted = false
-        val result = async(looks) {
-            guarded({ alive }) {
-                module.lookAt(Priority.NORMAL, { yawTarget(90f) }) { going ->
-                    // The target dies while the update runs, after the guard was checked for this tick
-                    alive = false
-                    near(going)
-                }
-                acted = true
+        var ended: Throwable? = null
+        launch(looks + Guards()) {
+            guard { alive }
+            module.lookAt(Priority.NORMAL, { yawTarget(90f) }) { going ->
+                // The target dies while the update runs, after the guard was checked for this tick
+                alive = false
+                near(going)
             }
-        }
+            acted = true
+        }.invokeOnCompletion { ended = it }
 
         tick(Rotation(90f, 0f))
 
-        assertTrue(result.await() is Guarded.Interrupted)
+        assertTrue(ended is GuardInterruption, "The run ended with $ended")
         assertFalse(acted)
     }
 
