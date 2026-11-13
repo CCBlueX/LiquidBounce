@@ -72,16 +72,16 @@ object ClientVertexFormats {
      * Vertex format for gradient circle shader.
      *
      * - UV0: Quad-local UV (0..1). Shader remaps this to [-1,1] to evaluate circle SDF.
-     * - OuterColor: Packed outer ring RG/BA channels in UV1.x/UV1.y.
-     * - InnerColor: Packed inner ring RG/BA channels in UV2.x/UV2.y.
-     * - InnerRatio: Inner radius ratio in [0,1] (innerRadius / outerRadius).
+     * - Color: Outer ring color.
+     * - UV1: Packed inner ring RG/BA channels in UV1.x/UV1.y.
+     * - LineWidth: Inner radius ratio in [0,1] (innerRadius / outerRadius).
      */
     @JvmField
     val GRADIENT_CIRCLE: VertexFormat = VertexFormat.builder(0)
         .addAttribute(POSITION_SEMANTIC_NAME, POSITION_FORMAT)
         .addAttribute(UV0_SEMANTIC_NAME, UV0_FORMAT)
+        .addAttribute(COLOR_SEMANTIC_NAME, COLOR_FORMAT)
         .addAttribute(UV1_SEMANTIC_NAME, UV1_FORMAT)
-        .addAttribute(UV2_SEMANTIC_NAME, UV2_FORMAT)
         .addAttribute(LINE_WIDTH_SEMANTIC_NAME, LINE_WIDTH_FORMAT)
         .build()
 }

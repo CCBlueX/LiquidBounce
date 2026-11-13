@@ -624,31 +624,30 @@ private fun WorldRenderEnvironment.drawGradientCircleQuad(
     fun packColorBA(color: Color4b): Int =
         ((color.b and 0xFF) shl 8) or (color.a and 0xFF)
 
-    val outerRg = packColorRG(outerColor)
-    val outerBa = packColorBA(outerColor)
+    val outerArgb = outerColor.argb
     val innerRg = packColorRG(innerColor)
     val innerBa = packColorBA(innerColor)
 
     drawCustomMesh(ClientRenderPipelines.gradientCircle(noDepthTest)) { matrix ->
         addVertex(matrix, -radius, 0f, -radius)
             .setUv(0f, 0f)
-            .setUv1(outerRg, outerBa)
-            .setUv2(innerRg, innerBa)
+            .setColor(outerArgb)
+            .setUv1(innerRg, innerBa)
             .setLineWidth(innerRatio)
         addVertex(matrix, -radius, 0f, radius)
             .setUv(0f, 1f)
-            .setUv1(outerRg, outerBa)
-            .setUv2(innerRg, innerBa)
+            .setColor(outerArgb)
+            .setUv1(innerRg, innerBa)
             .setLineWidth(innerRatio)
         addVertex(matrix, radius, 0f, radius)
             .setUv(1f, 1f)
-            .setUv1(outerRg, outerBa)
-            .setUv2(innerRg, innerBa)
+            .setColor(outerArgb)
+            .setUv1(innerRg, innerBa)
             .setLineWidth(innerRatio)
         addVertex(matrix, radius, 0f, -radius)
             .setUv(1f, 0f)
-            .setUv1(outerRg, outerBa)
-            .setUv2(innerRg, innerBa)
+            .setColor(outerArgb)
+            .setUv1(innerRg, innerBa)
             .setLineWidth(innerRatio)
     }
 }
