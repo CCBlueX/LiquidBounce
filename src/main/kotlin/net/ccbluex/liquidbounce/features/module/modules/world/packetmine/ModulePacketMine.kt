@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
@@ -200,12 +201,11 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         }
 
         // Goes on with the rotation going out on the next tick, whether it hits or not
-        guarded({ currentTarget === mineTarget && !mineTarget.isInvalidOrOutOfRange() }) {
-            val plan by tracked { aim }
-            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
-            mineTarget.updateBlockState()
-            handleBreaking(mineTarget, hitOn(mineTarget, going))
-        }
+        guard { currentTarget === mineTarget && !mineTarget.isInvalidOrOutOfRange() }
+        val plan by tracked { aim }
+        val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
+        mineTarget.updateBlockState()
+        handleBreaking(mineTarget, hitOn(mineTarget, going))
     }
 
     private fun rotate(mineTarget: MineTarget) {

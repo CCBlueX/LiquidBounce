@@ -23,8 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -96,38 +97,37 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
      * the block it clicks.
      */
     private suspend fun placeOnHit() {
-        guarded({ running }) {
-            val placement by tracked { planned }
-            val (clicked, going) = placer.parent.lookAt(placer.priority, {
-                rotations.toRotationTarget(
-                    placement.target.rotation,
-                    considerInventory = !placer.ignoreOpenInventory,
-                    surface = placement.target.surface(
-                        throughWalls = placer.wallRange > 0f || placer.constructFailResult
-                    ),
-                )
-            }) { going ->
-                val interactedBlockPos = placement.target.interactedBlockPos
-                raytraceBlock(
-                    max(placer.range, placer.wallRange).toDouble(),
-                    going,
-                    interactedBlockPos,
-                    interactedBlockPos.stateOrEmpty
-                )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == interactedBlockPos }
-                    ?.let { placement to going }
-            }
-
-            if (postMove) {
-                placer.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
-            }
-
-            if (placer.ticksToWait > 0) {
-                return@guarded
-            }
-
-            placer.doPlacement(clicked.isSupport, clicked.pos, clicked.target, going)
-            placer.ranAction = true
+        guard { running }
+        val placement by tracked { planned }
+        val (clicked, going) = placer.parent.lookAt(placer.priority, {
+            rotations.toRotationTarget(
+                placement.target.rotation,
+                considerInventory = !placer.ignoreOpenInventory,
+                surface = placement.target.surface(
+                    throughWalls = placer.wallRange > 0f || placer.constructFailResult
+                ),
+            )
+        }) { going ->
+            val interactedBlockPos = placement.target.interactedBlockPos
+            raytraceBlock(
+                max(placer.range, placer.wallRange).toDouble(),
+                going,
+                interactedBlockPos,
+                interactedBlockPos.stateOrEmpty
+            )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == interactedBlockPos }
+                ?.let { placement to going }
         }
+
+        if (postMove) {
+            placer.waitMatches<PlayerNetworkMovementTickEvent>(FIRST_PRIORITY) { it.state == EventState.POST }
+        }
+
+        if (placer.ticksToWait > 0) {
+            return
+        }
+
+        placer.doPlacement(clicked.isSupport, clicked.pos, clicked.target, going)
+        placer.ranAction = true
     }
 
 }

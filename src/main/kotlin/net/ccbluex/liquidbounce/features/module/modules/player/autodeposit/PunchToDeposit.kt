@@ -21,10 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autodeposit
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.isInterrupted
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -137,22 +136,23 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
         if (rotateToTarget) {
             currentTarget ?: return@tickHandler
-            val punched = guarded({ rotateToTarget && mc.gui.screen() !is AbstractContainerScreen<*> }) {
-                val slot by tracked(::depositSlot)
-                val target by tracked { currentTarget }
-                val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
-                    val (pos, _) = target
-                    val state = pos.state ?: return@lookAt null
-                    raytraceBlock(interactionRange.toDouble(), going, pos, state)
-                        ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+            depositSlot() ?: return@tickHandler
+
+            // Guards the aim only, not the delay after the deposit
+            tracked(::depositSlot).use { slot ->
+                tracked {
+                    currentTarget.takeIf { rotateToTarget && mc.gui.screen() !is AbstractContainerScreen<*> }
+                }.use { target ->
+                    val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->
+                        val (pos, _) = target.value
+                        val state = pos.state ?: return@lookAt null
+                        raytraceBlock(interactionRange.toDouble(), going, pos, state)
+                            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+                    }
+
+                    deposit(slot.value, hit)
+                    currentTarget = null
                 }
-
-                deposit(slot, hit)
-                currentTarget = null
-            }
-
-            if (punched.isInterrupted()) {
-                return@tickHandler
             }
         } else {
             val slot = depositSlot() ?: return@tickHandler

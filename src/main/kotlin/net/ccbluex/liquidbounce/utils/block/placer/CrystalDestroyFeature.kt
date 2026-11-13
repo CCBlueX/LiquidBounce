@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.utils.block.placer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.getOrNull
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
@@ -98,26 +98,25 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
         }
 
         val surface = Surface(target.boundingBox, throughWalls = wallRange > 0f)
-        guarded({ currentTarget === target }) {
-            // The best spot; stops once no spot is in reach
-            val spot by tracked {
-                raytraceBox(
-                    player.eyePosition,
-                    target.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = wallRange.toDouble(),
-                )
-            }
+        guard { currentTarget === target }
+        // The best spot; stops once no spot is in reach
+        val spot by tracked {
+            raytraceBox(
+                player.eyePosition,
+                target.boundingBox,
+                range = range.toDouble(),
+                wallsRange = wallRange.toDouble(),
+            )
+        }
 
-            rotationMode.activeMode.look({ spot.rotation }, surface) { view ->
-                isLookingAtEntity(
-                    toEntity = target,
-                    rotation = view,
-                    range = range.toDouble(),
-                    throughWallsRange = wallRange.toDouble()
-                )
-            }
-        }.getOrNull() ?: return@tickHandler
+        rotationMode.activeMode.look({ spot.rotation }, surface) { view ->
+            isLookingAtEntity(
+                toEntity = target,
+                rotation = view,
+                range = range.toDouble(),
+                throughWallsRange = wallRange.toDouble()
+            )
+        } ?: return@tickHandler
 
         if (!chronometer.hasElapsed(delay.toLong())) {
             return@tickHandler

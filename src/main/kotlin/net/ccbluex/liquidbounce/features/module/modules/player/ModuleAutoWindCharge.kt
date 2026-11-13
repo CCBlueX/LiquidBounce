@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.guarded
+import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -125,24 +126,23 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         }
 
         // Turned down before landing, the rotation going out this tick may already be the one to throw with
-        val going = RotationManager.currentRotation?.takeIf { target(yaw, pitch).isMetBy(it) }
-        if (going != null) {
-            throwCharge(slot, going)
+        val ready = RotationManager.currentRotation?.takeIf { target(yaw, pitch).isMetBy(it) }
+        if (ready != null) {
+            throwCharge(slot, ready)
             return@tickHandler
         }
 
-        guarded({ isBoosting && player.onGround() }) {
-            val charge by tracked(::chargeSlot)
-            // Stays on the ground while turning down, until it gives up and jumps without a charge
+        guard { isBoosting && player.onGround() }
+        val charge by tracked(::chargeSlot)
+        // Stays on the ground while turning down, until it gives up and jumps without a charge
+        holdJump = aimTicks++ < MAX_AIM_TICKS
+        val going = lookAt(Priority.IMPORTANT_FOR_USAGE_3) {
             holdJump = aimTicks++ < MAX_AIM_TICKS
-            val going = lookAt(Priority.IMPORTANT_FOR_USAGE_3) {
-                holdJump = aimTicks++ < MAX_AIM_TICKS
-                CombatManager.pauseCombatForAtLeast(combatPauseTime)
-                val (nextYaw, nextPitch) = throwAngles()
-                target(nextYaw, nextPitch)
-            }
-            throwCharge(charge, going)
+            CombatManager.pauseCombatForAtLeast(combatPauseTime)
+            val (nextYaw, nextPitch) = throwAngles()
+            target(nextYaw, nextPitch)
         }
+        throwCharge(charge, going)
     }
 
     private val isBoosting

@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.guarded
-import net.ccbluex.liquidbounce.event.isInterrupted
+import net.ccbluex.liquidbounce.event.guard
+import net.ccbluex.liquidbounce.event.same
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
@@ -164,23 +164,20 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
 
             val headSlot = Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot ?: return
 
-            val used = guarded({ !inMatch && Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }) {
-                same { mc.level }
+            // Guards the use only, not the wait after it
+            guard { !inMatch && Slots.Hotbar.findSlot(Items.PLAYER_HEAD)?.inventorySlot == headSlot }.use {
+                same { mc.level }.use {
+                    if (headSlot != player.inventory.selectedSlot) {
+                        SilentHotbar.selectSlotSilently(this@AutoQueueGommeDuels, headSlot, 20)
+                    }
 
-                if (headSlot != player.inventory.selectedSlot) {
-                    SilentHotbar.selectSlotSilently(this@AutoQueueGommeDuels, headSlot, 20)
+                    waitTicks(5)
+
+                    // Use head
+                    interaction.startPrediction(world) { sequence ->
+                        ServerboundUseItemPacket(InteractionHand.MAIN_HAND, sequence, player.yRot, player.xRot)
+                    }
                 }
-
-                waitTicks(5)
-
-                // Use head
-                interaction.startPrediction(world) { sequence ->
-                    ServerboundUseItemPacket(InteractionHand.MAIN_HAND, sequence, player.yRot, player.xRot)
-                }
-            }
-
-            if (used.isInterrupted()) {
-                return
             }
 
             waitTicks(20)

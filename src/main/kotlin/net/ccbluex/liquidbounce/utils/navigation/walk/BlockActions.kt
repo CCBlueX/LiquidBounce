@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.guarded
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -159,18 +159,16 @@ class BlockActions(
     private val tickHandler = tickHandler {
         target ?: return@tickHandler
 
-        guarded {
-            val planned by tracked { target }
-            val current by tracked { action }
-            val (worked, hit) = owner.lookAt(Priority.IMPORTANT_FOR_USAGE_1, { planned }) { going ->
-                hitOn(current, going)?.let { current to it }
-            }
+        val planned by tracked { target }
+        val current by tracked { action }
+        val (worked, hit) = owner.lookAt(Priority.IMPORTANT_FOR_USAGE_1, { planned }) { going ->
+            hitOn(current, going)?.let { current to it }
+        }
 
-            when (worked) {
-                is Action.Mine -> breakTick(worked.pos, hit)
-                is Action.Open -> openTick(worked.pos, hit)
-                is Action.Place -> worked.plan?.takeIf { worked.ready }?.let { placeTick(it, hit) }
-            }
+        when (worked) {
+            is Action.Mine -> breakTick(worked.pos, hit)
+            is Action.Open -> openTick(worked.pos, hit)
+            is Action.Place -> worked.plan?.takeIf { worked.ready }?.let { placeTick(it, hit) }
         }
     }
 
