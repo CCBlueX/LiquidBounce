@@ -18,110 +18,91 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.action.screenshot
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.render.effect.PostStyle
 import net.ccbluex.liquidbounce.render.effect.StyleChain
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.gui.Hud
 import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.world.level.levelgen.Heightmap
+
+private val MOBS = listOf(
+    Triple("creeper", -3.5, 7.5),
+    Triple("husk", -1.0, 6.5),
+    Triple("witch", 1.5, 8.0),
+    Triple("spider", 4.0, 7.5),
+)
+
+private const val SETTLE_TICKS = 40
+private const val STYLE_TICKS = 10
 
 /**
  * Every glow style of [ModuleESP] has to compile and draw, and the shader styles must stay out of the game's pipeline
  * and post effect lists, where resource packs and servers could find them. Leaves a screenshot of every style in front
  * of a few mobs, some behind a wall.
  */
-class EspGlowGameTest : LocalGameTest() {
-
-    override fun test(context: ClientGameTestContext) {
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleESP) }
-
+class EspGlowGameTest : LiquidBounceGameTest({
+    context.restoring(ModuleESP) {
         try {
-            context.worldBuilder().create().use { world ->
-                val y = world.server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 0, 0)
-                }
-                buildStage(world.server, y)
-                context.waitTicks(SETTLE_TICKS)
+            buildStage(origin.y)
+            ticks(SETTLE_TICKS)
 
-                context.onClient { client ->
-                    client.gui.hud.setHidden(true)
-                    ModuleESP.enabled = true
-                    ModuleESP.modes.setByString(EspGlowMode.tag)
-                }
-
-                for (style in context.fromClient { EspGlowMode.styles.modes.toList() }) {
-                    context.onClient { EspGlowMode.styles.setByString(style.tag) }
-                    context.waitTicks(STYLE_TICKS)
-                    context.takeScreenshot("esp-glow-${style.tag.lowercase()}")
-
-                    if (style is PostStyle) {
-                        check(context.fromClient { StyleChain.compiles(style) }) { "${style.tag} did not compile" }
-                    }
-                }
-
-                val registered = context.fromClient { client ->
-                    val ours = EspGlowMode.styles.modes.filterIsInstance<PostStyle>().map { it.pipeline } +
-                        StyleChain.FieldRows + StyleChain.FieldColumns
-                    val pipelines = (RenderPipelines.requiredPipelines() + RenderPipelines.optionalPipelines())
-                        .filter { it in ours }
-                        .map { it.location }
-                    val namespace = LiquidBounce.CLIENT_NAME.lowercase()
-                    pipelines + client.shaderManager.availablePostEffects.toList().filter { it.namespace == namespace }
-                }
-                check(registered.isEmpty()) { "glow shaders in the game's lists: $registered" }
+            client { client ->
+                client.gui.hud.setHidden(true)
+                ModuleESP.enabled = true
+                ModuleESP.modes.setByString(EspGlowMode.tag)
             }
+
+            for (style in client { EspGlowMode.styles.modes.toList() }) {
+                client { EspGlowMode.styles.setByString(style.tag) }
+                ticks(STYLE_TICKS)
+                screenshot("esp-glow-${style.tag.lowercase()}")
+
+                if (style is PostStyle) {
+                    check(client { StyleChain.compiles(style) }) { "${style.tag} did not compile" }
+                }
+            }
+
+            val registered = client { client ->
+                val ours = EspGlowMode.styles.modes.filterIsInstance<PostStyle>().map { it.pipeline } +
+                    StyleChain.FieldRows + StyleChain.FieldColumns
+                val pipelines = (RenderPipelines.requiredPipelines() + RenderPipelines.optionalPipelines())
+                    .filter { it in ours }
+                    .map { it.location }
+                val namespace = LiquidBounce.CLIENT_NAME.lowercase()
+                pipelines + client.shaderManager.availablePostEffects.toList().filter { it.namespace == namespace }
+            }
+            check(registered.isEmpty()) { "glow shaders in the game's lists: $registered" }
         } finally {
-            context.onClient { client ->
-                client.gui.hud.setHidden(false)
-                ModuleESP.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleESP, saved)
-            }
+            client { it.gui.hud.setHidden(false) }
         }
     }
+}) {
+    override val integrated = true
+}
 
-    private fun Hud.setHidden(hidden: Boolean) {
-        if (isHidden != hidden) {
-            toggle()
-        }
+private fun Hud.setHidden(hidden: Boolean) {
+    if (isHidden != hidden) {
+        toggle()
+    }
+}
+
+/**
+ * Mobs in front of the player at 0 [y] 0 looking south, the two on the right behind a stone wall.
+ */
+private fun GameTestScope.buildStage(y: Int) {
+    run("time set noon")
+    run("weather clear")
+    run("difficulty easy")
+    run("gamemode creative $playerName")
+
+    run("fill 1 $y 4 5 ${y + 1} 4 stone")
+    for ((type, x, z) in MOBS) {
+        run("summon $type $x $y $z {NoAI:1b,Silent:1b,PersistenceRequired:1b,Rotation:[180f,0f]}")
     }
 
-    /**
-     * Mobs in front of the player at 0 [y] 0 looking south, the two on the right behind a stone wall.
-     */
-    private fun buildStage(server: TestServerContext, y: Int) {
-        server.runCommand("gamerule advance_time false")
-        server.runCommand("gamerule spawn_mobs false")
-        server.runCommand("time set noon")
-        server.runCommand("weather clear")
-        server.runCommand("difficulty easy")
-        server.runCommand("gamemode creative @a")
-
-        server.runCommand("fill 1 $y 4 5 ${y + 1} 4 stone")
-        for ((type, x, z) in MOBS) {
-            server.runCommand(
-                "summon $type $x $y $z {NoAI:1b,Silent:1b,PersistenceRequired:1b,Rotation:[180f,0f]}"
-            )
-        }
-
-        server.runCommand("tp @a 0.5 $y 0.5 0 12")
-    }
-
-    private companion object {
-        val MOBS = listOf(
-            Triple("creeper", -3.5, 7.5),
-            Triple("husk", -1.0, 6.5),
-            Triple("witch", 1.5, 8.0),
-            Triple("spider", 4.0, 7.5),
-        )
-
-        const val SETTLE_TICKS = 40
-        const val STYLE_TICKS = 10
-    }
-
+    run("tp $playerName 0.5 $y 0.5 0 12")
 }

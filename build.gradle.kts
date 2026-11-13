@@ -107,7 +107,8 @@ loom {
 //
 // `LiquidBounceGameTest`s play on the game test server (https://github.com/CCBlueX/gametest) with GAMETEST_API_TOKEN,
 // or on a server of one's own at GAMETEST_SERVER_ADDRESS. GAMETEST_SERVER_ANTICHEAT picks the anticheat;
-// `LocalGameTest`s, and server tests that set `integrated`, run on the integrated server only without it.
+// server tests that set `integrated` play on the integrated server, and `LocalGameTest`s need no world; both run
+// only without it.
 // `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
 fabricApi {
     configureTests {

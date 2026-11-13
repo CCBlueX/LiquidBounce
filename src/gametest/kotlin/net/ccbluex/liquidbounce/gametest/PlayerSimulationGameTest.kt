@@ -18,19 +18,18 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.player.LocalPlayer
@@ -40,6 +39,17 @@ import net.minecraft.world.level.block.RedStoneOreBlock
 import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 
+private const val LANE_Z = 20
+private const val LANE_START = 16
+private const val LANE_END = 60
+private const val LANE_HEIGHT = 12
+
+private const val TOLERANCE = 1.0E-9
+
+private const val SETTLE_TIMEOUT_TICKS = 200
+private const val ARM_TIMEOUT_TICKS = 200
+private const val ORE_WALK_TICKS = 40
+
 /**
  * [SimulatedPlayer] and [FallingPlayer] have to predict where vanilla moves the player, tick for tick.
  *
@@ -47,362 +57,344 @@ import kotlin.jvm.optionals.getOrNull
  * went through. A simulation is made both before the player's tick and during it, where the client makes most of its
  * own.
  */
-class PlayerSimulationGameTest : LocalGameTest() {
+class PlayerSimulationGameTest : LiquidBounceGameTest({
+    run("gamemode survival $playerName")
+    run("attribute $playerName minecraft:fall_damage_multiplier base set 0")
+    awaitClient("the player on the ground", SETTLE_TIMEOUT_TICKS) { it.player?.onGround() == true }
 
-    override fun test(context: ClientGameTestContext) {
-        context.worldBuilder().create().use { world ->
-            world.server.runCommand("gamemode survival @a")
-            world.server.runCommand("attribute @p minecraft:fall_damage_multiplier base set 0")
-            context.waitFor({ client -> client.player?.onGround() == true }, SETTLE_TIMEOUT_TICKS)
+    val ground = origin.y
+    val failures = scenarios.flatMap { scenario -> play(scenario, ground) }
 
-            val ground = world.server.groundY()
-            val failures = scenarios.flatMap { scenario -> run(context, world, scenario, ground) }
+    check(failures.isEmpty()) { "simulated movement differs:\n" + failures.joinToString("\n") }
+    assertLevelStaysUntouched(ground)
+}) {
+    override val integrated = true
+}
 
-            check(failures.isEmpty()) { "simulated movement differs:\n" + failures.joinToString("\n") }
-            assertLevelStaysUntouched(context, world, ground)
+/**
+ * Redstone ore lights up under whoever walks over it, on the client as well.
+ */
+private fun GameTestScope.assertLevelStaysUntouched(ground: Int) {
+    val lane = Lane(this, ground)
+    lane.fill(LANE_START - 2, 0, LANE_END, LANE_HEIGHT, "air", halfWidth = 3)
+    lane.floor(LANE_START, 20)
+    lane.floor(21, LANE_END, "redstone_ore")
+    run("tp $playerName 18.5 ${ground + 1} $LANE_Z.5 -90 0")
+    ticks(10)
+
+    val (reached, lit) = client { client ->
+        val simulation = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayerInput(DirectionalInput.FORWARDS, jumping = false, sprinting = true, sneaking = false)
+        )
+        repeat(ORE_WALK_TICKS) { simulation.tick() }
+
+        val level = checkNotNull(client.level)
+        simulation.blockX to (21..LANE_END).count { x ->
+            level.getBlockState(BlockPos(x, ground, LANE_Z)).getValue(RedStoneOreBlock.LIT)
         }
     }
 
-    /**
-     * Redstone ore lights up under whoever walks over it, on the client as well.
-     */
-    private fun assertLevelStaysUntouched(context: ClientGameTestContext, world: TestSingleplayerContext, ground: Int) {
-        val lane = Lane(world, ground)
-        lane.fill(LANE_START - 2, 0, LANE_END, LANE_HEIGHT, "air", halfWidth = 3)
-        lane.floor(LANE_START, 20)
-        lane.floor(21, LANE_END, "redstone_ore")
-        world.server.runCommand("tp @p 18.5 ${ground + 1} $LANE_Z.5 -90 0")
-        context.waitTicks(10)
+    check(reached > 21) { "the simulation only walked to x=$reached and never stepped on the ore" }
+    check(lit == 0) { "a simulation walking over redstone ore lit $lit blocks of it" }
+}
 
-        val (reached, lit) = context.fromClient { client ->
-            val simulation = SimulatedPlayer.fromClientPlayer(
-                SimulatedPlayerInput(DirectionalInput.FORWARDS, jumping = false, sprinting = true, sneaking = false)
-            )
-            repeat(ORE_WALK_TICKS) { simulation.tick() }
+private fun GameTestScope.play(scenario: Scenario, ground: Int): List<String> {
+    val lane = Lane(this, ground)
+    lane.fill(LANE_START - 2, 0, LANE_END, LANE_HEIGHT, "air", halfWidth = 3)
+    scenario.build(lane)
+    ticks(scenario.buildTicks)
 
-            val level = checkNotNull(client.level)
-            simulation.blockX to (21..LANE_END).count { x ->
-                level.getBlockState(BlockPos(x, ground, LANE_Z)).getValue(RedStoneOreBlock.LIT)
-            }
-        }
+    val (x, height) = scenario.start
+    run("tp $playerName $x ${ground + height} $LANE_Z.5 -90 ${scenario.pitch}")
+    ticks(scenario.settleTicks)
+    scenario.prepare(this)
 
-        check(reached > 21) { "the simulation only walked to x=$reached and never stepped on the ore" }
-        check(lit == 0) { "a simulation walking over redstone ore lit $lit blocks of it" }
+    client { client ->
+        scenario.keys.forEach { key -> key.mapping(client).isDown = true }
+        Recorder.pending = scenario
     }
-
-    private fun run(
-        context: ClientGameTestContext,
-        world: TestSingleplayerContext,
-        scenario: Scenario,
-        ground: Int,
-    ): List<String> {
-        val lane = Lane(world, ground)
-        lane.fill(LANE_START - 2, 0, LANE_END, LANE_HEIGHT, "air", halfWidth = 3)
-        scenario.build(lane)
-        context.waitTicks(scenario.buildTicks)
-
-        val (x, height) = scenario.start
-        world.server.runCommand("tp @p $x ${ground + height} $LANE_Z.5 -90 ${scenario.pitch}")
-        context.waitTicks(scenario.settleTicks)
-        scenario.prepare(context)
-
-        context.onClient { client ->
-            scenario.keys.forEach { key -> key.mapping(client).isDown = true }
-            Recorder.pending = scenario
-        }
-        context.waitFor({ Recorder.recording?.isComplete == true }, ARM_TIMEOUT_TICKS + scenario.ticks)
-
-        val recording = checkNotNull(Recorder.recording)
-        context.onClient { client ->
+    val recording = try {
+        awaitClient(scenario.name, ARM_TIMEOUT_TICKS + scenario.ticks) { Recorder.recording?.isComplete == true }
+        checkNotNull(Recorder.recording)
+    } finally {
+        // A failed attempt is played again, which must not start with the keys held
+        client { client ->
             Key.entries.forEach { key -> key.mapping(client).isDown = false }
+            Recorder.pending = null
             Recorder.recording = null
         }
-        scenario.cleanUp(world)
-
-        return recording.failures()
     }
+    scenario.cleanUp(this)
 
-    private class Lane(private val world: TestSingleplayerContext, private val ground: Int) {
+    return recording.failures()
+}
 
-        /**
-         * Fills the lane from [fromX] to [toX], with heights counted from the first free block above the ground.
-         */
-        fun fill(fromX: Int, fromHeight: Int, toX: Int, toHeight: Int, block: String, halfWidth: Int = 1) {
-            world.server.runCommand(
-                "fill $fromX ${ground + fromHeight} ${LANE_Z - halfWidth} " +
-                    "$toX ${ground + toHeight} ${LANE_Z + halfWidth} $block"
-            )
-        }
-
-        fun command(command: String) {
-            world.server.runCommand(command)
-        }
-
-        fun floor(fromX: Int, toX: Int, block: String = "stone") = fill(fromX, 0, toX, 0, block)
-
-        /**
-         * A glass basin with its water surface at [depth].
-         */
-        fun pool(fromX: Int, toX: Int, depth: Int) {
-            fill(fromX - 1, 0, toX + 1, depth, "glass", halfWidth = 2)
-            fill(fromX, 0, toX, depth, "water")
-        }
-    }
-
-    private enum class Key(val mapping: (Minecraft) -> KeyMapping) {
-        FORWARD({ it.options.keyUp }),
-        LEFT({ it.options.keyLeft }),
-        JUMP({ it.options.keyJump }),
-        SNEAK({ it.options.keyShift }),
-        SPRINT({ it.options.keySprint }),
-    }
+private class Lane(private val scope: GameTestScope, private val ground: Int) {
 
     /**
-     * @param start x and height above the ground the player is teleported to, looking down the lane
-     * @param armWhen the tick the comparison starts at, with [keys] held since [prepare]
-     * @param landing also checks that [FallingPlayer] finds the tick and block the player lands on
+     * Fills the lane from [fromX] to [toX], with heights counted from the first free block above the ground.
      */
-    private class Scenario(
-        val name: String,
-        val keys: Set<Key>,
-        val ticks: Int,
-        val start: Pair<Double, Int> = 18.5 to 1,
-        val pitch: Float = 0.0f,
-        val buildTicks: Int = 2,
-        val settleTicks: Int = 10,
-        val landing: Boolean = false,
-        val armWhen: (LocalPlayer) -> Boolean = { true },
-        val prepare: (ClientGameTestContext) -> Unit = {},
-        val cleanUp: (TestSingleplayerContext) -> Unit = {},
-        val build: (Lane) -> Unit,
-    ) {
-        fun input() = SimulatedPlayerInput(
-            DirectionalInput(forwards = Key.FORWARD in keys, backwards = false, left = Key.LEFT in keys, right = false),
-            jumping = Key.JUMP in keys,
-            sprinting = Key.SPRINT in keys,
-            sneaking = Key.SNEAK in keys,
+    fun fill(fromX: Int, fromHeight: Int, toX: Int, toHeight: Int, block: String, halfWidth: Int = 1) {
+        scope.run(
+            "fill $fromX ${ground + fromHeight} ${LANE_Z - halfWidth} " +
+                "$toX ${ground + toHeight} ${LANE_Z + halfWidth} $block"
         )
     }
 
-    private data class Step(val pos: Vec3, val onGround: Boolean) {
-        constructor(player: Player) : this(player.position(), player.onGround())
+    fun command(command: String) {
+        scope.run(command)
     }
 
-    private class Recording(val scenario: Scenario) {
-        var beforeTick: List<Step>? = null
-        var duringTick: List<Step>? = null
-        var landing: FallingPlayer.CollisionResult? = null
+    fun floor(fromX: Int, toX: Int, block: String = "stone") = fill(fromX, 0, toX, 0, block)
 
-        val steps = ArrayList<Step>()
-        val supports = ArrayList<BlockPos?>()
-
-        val isComplete get() = steps.size >= scenario.ticks
-
-        fun predict(): List<Step> {
-            val simulation = SimulatedPlayer.fromClientPlayer(scenario.input())
-            return List(scenario.ticks) {
-                simulation.tick()
-                Step(simulation)
-            }
-        }
-
-        fun failures(): List<String> = listOfNotNull(
-            difference("before the tick", checkNotNull(beforeTick)),
-            difference("during the tick", checkNotNull(duringTick)),
-            landingDifference().takeIf { scenario.landing },
-        ).map { "${scenario.name}, $it" }
-
-        private fun difference(made: String, predicted: List<Step>): String? {
-            val tick = steps.indices.firstOrNull { tick ->
-                val real = steps[tick]
-                val simulated = predicted[tick]
-                real.onGround != simulated.onGround || real.pos.distanceTo(simulated.pos) > TOLERANCE
-            } ?: return null
-
-            return "simulation made $made: tick $tick is ${predicted[tick]}, the player was ${steps[tick]}"
-        }
-
-        private fun landingDifference(): String? {
-            val tick = steps.indexOfFirst { it.onGround }
-            val found = landing
-
-            return if (tick == -1 || found == null || found.tick != tick || found.pos != supports[tick]) {
-                "landing: found tick ${found?.tick} on ${found?.pos}, " +
-                    "the player landed in tick $tick on ${supports.getOrNull(tick)}"
-            } else {
-                null
-            }
-        }
+    /**
+     * A glass basin with its water surface at [depth].
+     */
+    fun pool(fromX: Int, toX: Int, depth: Int) {
+        fill(fromX - 1, 0, toX + 1, depth, "glass", halfWidth = 2)
+        fill(fromX, 0, toX, depth, "water")
     }
-
-    private object Recorder : EventListener {
-        @Volatile
-        var pending: Scenario? = null
-
-        @Volatile
-        var recording: Recording? = null
-
-        @Suppress("unused")
-        private val tickHandler = handler<GameTickEvent> {
-            val scenario = pending ?: return@handler
-            val player = Minecraft.getInstance().player ?: return@handler
-            if (!scenario.armWhen(player)) {
-                return@handler
-            }
-
-            pending = null
-            recording = Recording(scenario).apply { beforeTick = predict() }
-        }
-
-        @Suppress("unused")
-        private val inputHandler = handler<MovementInputEvent>(priority = READ_FINAL_STATE) {
-            val recording = recording?.takeIf { it.duringTick == null } ?: return@handler
-            val player = Minecraft.getInstance().player ?: return@handler
-
-            recording.duringTick = recording.predict()
-            if (recording.scenario.landing) {
-                recording.landing = FallingPlayer.fromPlayer(player).findCollision(recording.scenario.ticks)
-            }
-        }
-
-        @Suppress("unused")
-        private val postTickHandler = handler<PlayerPostTickEvent> {
-            val recording = recording?.takeIf { it.duringTick != null && !it.isComplete } ?: return@handler
-            val player = Minecraft.getInstance().player ?: return@handler
-
-            recording.steps += Step(player)
-            recording.supports += player.mainSupportingBlockPos.getOrNull()
-        }
-    }
-
-    private companion object {
-        const val LANE_Z = 20
-        const val LANE_START = 16
-        const val LANE_END = 60
-        const val LANE_HEIGHT = 12
-
-        const val TOLERANCE = 1.0E-9
-
-        const val SETTLE_TIMEOUT_TICKS = 200
-        const val ARM_TIMEOUT_TICKS = 200
-        const val ORE_WALK_TICKS = 40
-
-        val walk = setOf(Key.FORWARD)
-        val sprint = setOf(Key.FORWARD, Key.SPRINT)
-        val sprintJump = setOf(Key.FORWARD, Key.SPRINT, Key.JUMP)
-        val effects = listOf("speed", "jump_boost", "slow_falling")
-
-        val scenarios = listOf(
-            Scenario("sprint jumping from a standstill", sprintJump, ticks = 50) { lane ->
-                lane.floor(LANE_START, LANE_END)
-            },
-            Scenario("strafing while walking", setOf(Key.FORWARD, Key.LEFT), ticks = 20) { lane ->
-                lane.fill(LANE_START, 0, LANE_END, 0, "stone", halfWidth = 3)
-            },
-            Scenario("sneaking up to a ledge", setOf(Key.FORWARD, Key.SNEAK), ticks = 60, start = 18.5 to 3) { lane ->
-                lane.fill(LANE_START, 0, 20, 2, "stone")
-            },
-            Scenario("walking off a ledge", walk, ticks = 50, start = 18.5 to 8) { lane ->
-                lane.fill(LANE_START, 0, 20, 7, "stone")
-            },
-            Scenario("stepping up slabs and running into a wall", sprint, ticks = 100) { lane ->
-                lane.floor(LANE_START, LANE_END)
-                lane.fill(24, 1, 26, 1, "stone_slab")
-                lane.fill(27, 1, 29, 1, "stone")
-                lane.fill(36, 1, 36, 3, "stone")
-            },
-            Scenario("jumping into a pool and swimming", setOf(Key.FORWARD, Key.JUMP), ticks = 80, start = 18.5 to 4) {
-                    lane ->
-                lane.fill(LANE_START, 0, 21, 3, "stone", halfWidth = 2)
-                lane.pool(22, 30, depth = 3)
-            },
-            Scenario(
-                "sprint swimming under water",
-                sprint,
-                ticks = 40,
-                start = 23.5 to 3,
-                pitch = 5.0f,
-            ) { lane ->
-                lane.pool(22, 32, depth = 5)
-            },
-            Scenario("drifting in flowing water", emptySet(), ticks = 40, start = 19.5 to 1, buildTicks = 100) { lane ->
-                lane.floor(LANE_START, LANE_END)
-                lane.fill(LANE_START, 1, 40, 2, "glass")
-                lane.fill(17, 1, 39, 2, "air", halfWidth = 0)
-                lane.fill(17, 1, 17, 1, "water", halfWidth = 0)
-            },
-            Scenario("climbing a ladder and dropping behind it", walk, ticks = 90, start = 20.5 to 1) { lane ->
-                lane.floor(LANE_START, LANE_END)
-                lane.fill(24, 1, 24, 8, "stone")
-                lane.fill(23, 1, 23, 8, "ladder[facing=west]", halfWidth = 0)
-            },
-            Scenario("sprint jumping over soul sand, ice, slime, honey and into cobwebs", sprintJump, ticks = 160) {
-                    lane ->
-                lane.floor(LANE_START, LANE_END)
-                lane.floor(21, 24, "soul_sand")
-                lane.floor(25, 28, "packed_ice")
-                lane.floor(29, 32, "slime_block")
-                lane.floor(33, 36, "honey_block")
-                lane.fill(39, 1, 39, 2, "cobweb")
-            },
-            Scenario(
-                "bouncing on slime",
-                emptySet(),
-                ticks = 80,
-                start = 18.5 to 10,
-                settleTicks = 3,
-                landing = true,
-                armWhen = { player -> player.fallDistance > 0.3 },
-            ) { lane ->
-                lane.floor(LANE_START, 22, "slime_block")
-            },
-            Scenario(
-                "falling onto the edge of a slab",
-                walk,
-                ticks = 40,
-                start = 18.5 to 8,
-                landing = true,
-                armWhen = { player -> player.fallDistance > 0.3 },
-            ) { lane ->
-                lane.fill(LANE_START, 0, 20, 7, "stone")
-                lane.floor(21, 22)
-                lane.fill(23, 1, 24, 1, "stone_slab")
-            },
-            Scenario(
-                "sprint jumping with speed, jump boost and slow falling",
-                sprintJump,
-                ticks = 80,
-                prepare = { context ->
-                    context.waitFor({ client ->
-                        checkNotNull(client.player).activeEffects.size == effects.size
-                    }, SETTLE_TIMEOUT_TICKS)
-                },
-                cleanUp = { world -> world.server.runCommand("effect clear @p") },
-            ) { lane ->
-                lane.floor(LANE_START, LANE_END)
-                effects.forEach { effect -> lane.command("effect give @p minecraft:$effect 600 1 true") }
-            },
-            Scenario(
-                "gliding with an elytra",
-                walk,
-                ticks = 60,
-                start = 18.5 to 70,
-                pitch = 15.0f,
-                settleTicks = 3,
-                armWhen = { player -> player.isFallFlying },
-                prepare = { context ->
-                    context.waitFor({ client ->
-                        checkNotNull(client.player).deltaMovement.y < -0.5
-                    }, SETTLE_TIMEOUT_TICKS)
-                    context.input.holdKey { options -> options.keyJump }
-                    context.waitTicks(2)
-                    context.input.releaseKey { options -> options.keyJump }
-                },
-                cleanUp = { world -> world.server.runCommand("item replace entity @p armor.chest with minecraft:air") },
-            ) { lane ->
-                lane.command("item replace entity @p armor.chest with minecraft:elytra")
-            },
-        )
-    }
-
 }
+
+private enum class Key(val mapping: (Minecraft) -> KeyMapping) {
+    FORWARD({ it.options.keyUp }),
+    LEFT({ it.options.keyLeft }),
+    JUMP({ it.options.keyJump }),
+    SNEAK({ it.options.keyShift }),
+    SPRINT({ it.options.keySprint }),
+}
+
+/**
+ * @param start x and height above the ground the player is teleported to, looking down the lane
+ * @param armWhen the tick the comparison starts at, with [keys] held since [prepare]
+ * @param landing also checks that [FallingPlayer] finds the tick and block the player lands on
+ */
+private class Scenario(
+    val name: String,
+    val keys: Set<Key>,
+    val ticks: Int,
+    val start: Pair<Double, Int> = 18.5 to 1,
+    val pitch: Float = 0.0f,
+    val buildTicks: Int = 2,
+    val settleTicks: Int = 10,
+    val landing: Boolean = false,
+    val armWhen: (LocalPlayer) -> Boolean = { true },
+    val prepare: GameTestScope.() -> Unit = {},
+    val cleanUp: GameTestScope.() -> Unit = {},
+    val build: (Lane) -> Unit,
+) {
+    fun input() = SimulatedPlayerInput(
+        DirectionalInput(forwards = Key.FORWARD in keys, backwards = false, left = Key.LEFT in keys, right = false),
+        jumping = Key.JUMP in keys,
+        sprinting = Key.SPRINT in keys,
+        sneaking = Key.SNEAK in keys,
+    )
+}
+
+private data class Step(val pos: Vec3, val onGround: Boolean) {
+    constructor(player: Player) : this(player.position(), player.onGround())
+}
+
+private class Recording(val scenario: Scenario) {
+    var beforeTick: List<Step>? = null
+    var duringTick: List<Step>? = null
+    var landing: FallingPlayer.CollisionResult? = null
+
+    val steps = ArrayList<Step>()
+    val supports = ArrayList<BlockPos?>()
+
+    val isComplete get() = steps.size >= scenario.ticks
+
+    fun predict(): List<Step> {
+        val simulation = SimulatedPlayer.fromClientPlayer(scenario.input())
+        return List(scenario.ticks) {
+            simulation.tick()
+            Step(simulation)
+        }
+    }
+
+    fun failures(): List<String> = listOfNotNull(
+        difference("before the tick", checkNotNull(beforeTick)),
+        difference("during the tick", checkNotNull(duringTick)),
+        landingDifference().takeIf { scenario.landing },
+    ).map { "${scenario.name}, $it" }
+
+    private fun difference(made: String, predicted: List<Step>): String? {
+        val tick = steps.indices.firstOrNull { tick ->
+            val real = steps[tick]
+            val simulated = predicted[tick]
+            real.onGround != simulated.onGround || real.pos.distanceTo(simulated.pos) > TOLERANCE
+        } ?: return null
+
+        return "simulation made $made: tick $tick is ${predicted[tick]}, the player was ${steps[tick]}"
+    }
+
+    private fun landingDifference(): String? {
+        val tick = steps.indexOfFirst { it.onGround }
+        val found = landing
+
+        return if (tick == -1 || found == null || found.tick != tick || found.pos != supports[tick]) {
+            "landing: found tick ${found?.tick} on ${found?.pos}, " +
+                "the player landed in tick $tick on ${supports.getOrNull(tick)}"
+        } else {
+            null
+        }
+    }
+}
+
+private object Recorder : EventListener {
+    @Volatile
+    var pending: Scenario? = null
+
+    @Volatile
+    var recording: Recording? = null
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        val scenario = pending ?: return@handler
+        val player = Minecraft.getInstance().player ?: return@handler
+        if (!scenario.armWhen(player)) {
+            return@handler
+        }
+
+        pending = null
+        recording = Recording(scenario).apply { beforeTick = predict() }
+    }
+
+    @Suppress("unused")
+    private val inputHandler = handler<MovementInputEvent>(priority = READ_FINAL_STATE) {
+        val recording = recording?.takeIf { it.duringTick == null } ?: return@handler
+        val player = Minecraft.getInstance().player ?: return@handler
+
+        recording.duringTick = recording.predict()
+        if (recording.scenario.landing) {
+            recording.landing = FallingPlayer.fromPlayer(player).findCollision(recording.scenario.ticks)
+        }
+    }
+
+    @Suppress("unused")
+    private val postTickHandler = handler<PlayerPostTickEvent> {
+        val recording = recording?.takeIf { it.duringTick != null && !it.isComplete } ?: return@handler
+        val player = Minecraft.getInstance().player ?: return@handler
+
+        recording.steps += Step(player)
+        recording.supports += player.mainSupportingBlockPos.getOrNull()
+    }
+}
+
+private val walk = setOf(Key.FORWARD)
+private val sprint = setOf(Key.FORWARD, Key.SPRINT)
+private val sprintJump = setOf(Key.FORWARD, Key.SPRINT, Key.JUMP)
+private val effects = listOf("speed", "jump_boost", "slow_falling")
+
+private val scenarios = listOf(
+    Scenario("sprint jumping from a standstill", sprintJump, ticks = 50) { lane ->
+        lane.floor(LANE_START, LANE_END)
+    },
+    Scenario("strafing while walking", setOf(Key.FORWARD, Key.LEFT), ticks = 20) { lane ->
+        lane.fill(LANE_START, 0, LANE_END, 0, "stone", halfWidth = 3)
+    },
+    Scenario("sneaking up to a ledge", setOf(Key.FORWARD, Key.SNEAK), ticks = 60, start = 18.5 to 3) { lane ->
+        lane.fill(LANE_START, 0, 20, 2, "stone")
+    },
+    Scenario("walking off a ledge", walk, ticks = 50, start = 18.5 to 8) { lane ->
+        lane.fill(LANE_START, 0, 20, 7, "stone")
+    },
+    Scenario("stepping up slabs and running into a wall", sprint, ticks = 100) { lane ->
+        lane.floor(LANE_START, LANE_END)
+        lane.fill(24, 1, 26, 1, "stone_slab")
+        lane.fill(27, 1, 29, 1, "stone")
+        lane.fill(36, 1, 36, 3, "stone")
+    },
+    Scenario("jumping into a pool and swimming", setOf(Key.FORWARD, Key.JUMP), ticks = 80, start = 18.5 to 4) {
+            lane ->
+        lane.fill(LANE_START, 0, 21, 3, "stone", halfWidth = 2)
+        lane.pool(22, 30, depth = 3)
+    },
+    Scenario(
+        "sprint swimming under water",
+        sprint,
+        ticks = 40,
+        start = 23.5 to 3,
+        pitch = 5.0f,
+    ) { lane ->
+        lane.pool(22, 32, depth = 5)
+    },
+    Scenario("drifting in flowing water", emptySet(), ticks = 40, start = 19.5 to 1, buildTicks = 100) { lane ->
+        lane.floor(LANE_START, LANE_END)
+        lane.fill(LANE_START, 1, 40, 2, "glass")
+        lane.fill(17, 1, 39, 2, "air", halfWidth = 0)
+        lane.fill(17, 1, 17, 1, "water", halfWidth = 0)
+    },
+    Scenario("climbing a ladder and dropping behind it", walk, ticks = 90, start = 20.5 to 1) { lane ->
+        lane.floor(LANE_START, LANE_END)
+        lane.fill(24, 1, 24, 8, "stone")
+        lane.fill(23, 1, 23, 8, "ladder[facing=west]", halfWidth = 0)
+    },
+    Scenario("sprint jumping over soul sand, ice, slime, honey and into cobwebs", sprintJump, ticks = 160) {
+            lane ->
+        lane.floor(LANE_START, LANE_END)
+        lane.floor(21, 24, "soul_sand")
+        lane.floor(25, 28, "packed_ice")
+        lane.floor(29, 32, "slime_block")
+        lane.floor(33, 36, "honey_block")
+        lane.fill(39, 1, 39, 2, "cobweb")
+    },
+    Scenario(
+        "bouncing on slime",
+        emptySet(),
+        ticks = 80,
+        start = 18.5 to 10,
+        settleTicks = 3,
+        landing = true,
+        armWhen = { player -> player.fallDistance > 0.3 },
+    ) { lane ->
+        lane.floor(LANE_START, 22, "slime_block")
+    },
+    Scenario(
+        "falling onto the edge of a slab",
+        walk,
+        ticks = 40,
+        start = 18.5 to 8,
+        landing = true,
+        armWhen = { player -> player.fallDistance > 0.3 },
+    ) { lane ->
+        lane.fill(LANE_START, 0, 20, 7, "stone")
+        lane.floor(21, 22)
+        lane.fill(23, 1, 24, 1, "stone_slab")
+    },
+    Scenario(
+        "sprint jumping with speed, jump boost and slow falling",
+        sprintJump,
+        ticks = 80,
+        prepare = {
+            awaitClient("the effects", SETTLE_TIMEOUT_TICKS) { client ->
+                checkNotNull(client.player).activeEffects.size == effects.size
+            }
+        },
+        cleanUp = { run("effect clear @p") },
+    ) { lane ->
+        lane.floor(LANE_START, LANE_END)
+        effects.forEach { effect -> lane.command("effect give @p minecraft:$effect 600 1 true") }
+    },
+    Scenario(
+        "gliding with an elytra",
+        walk,
+        ticks = 60,
+        start = 18.5 to 70,
+        pitch = 15.0f,
+        settleTicks = 3,
+        armWhen = { player -> player.isFallFlying },
+        prepare = {
+            awaitClient("the fall", SETTLE_TIMEOUT_TICKS) { client ->
+                checkNotNull(client.player).deltaMovement.y < -0.5
+            }
+            input.holdKey { options -> options.keyJump }
+            ticks(2)
+            input.releaseKey { options -> options.keyJump }
+        },
+        cleanUp = { run("item replace entity @p armor.chest with minecraft:air") },
+    ) { lane ->
+        lane.command("item replace entity @p armor.chest with minecraft:elytra")
+    },
+)

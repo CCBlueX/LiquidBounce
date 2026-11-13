@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.gametest
 
 import com.google.gson.JsonArray
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -27,119 +26,104 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
+private val requirements = ModuleAutoRod::class.java.getDeclaredMethod("getRequirementsMet")
+    .apply { isAccessible = true }
+private val blockers = listOf(ModuleBlink, ModuleScaffold, ModuleFreeze)
+
 /** Checks the real guard shared by rod targeting and use, with no nearby enemies. */
-class AutoRodRequirementsGameTest : LocalGameTest() {
+class AutoRodRequirementsGameTest : LiquidBounceGameTest({
+    context.restoring(ModuleAutoRod) {
+        run("gamemode creative $playerName")
+        awaitClient("creative mode") { it.player?.hasInfiniteMaterials() == true }
+        client {
+            ModuleAutoRod.settings.getValue("Requires").deserializeFrom(GSON_DEFAULT, JsonArray())
+            ModuleAutoRod.settings.getValue("Ignore").deserializeFrom(GSON_DEFAULT, JsonArray())
+            ModuleAutoRod.settings.getValue("MinHealth").setByString("10")
+            ModuleAutoRod.enabled = true
+            check(ModuleAutoRod.running)
 
-    private val requirements = ModuleAutoRod::class.java.getDeclaredMethod("getRequirementsMet")
-        .apply { isAccessible = true }
-    private val blockers = listOf(ModuleBlink, ModuleScaffold, ModuleFreeze)
+            // Exercise both the default cap and the unlimited setting.
+            for (limit in listOf(1, 0)) {
+                ModuleAutoRod.settings.getValue("MaxEnemiesNearby").setByString(limit.toString())
+                prepareInventory()
+                assertAllowed(true, "healthy player with a rod, limit $limit")
+                assertHealthGuard()
+                assertInventoryGuards()
+                assertConfiguredGuards()
+                assertModuleGuards()
+            }
+        }
+    }
+}) {
+    override val integrated = true
+}
 
-    override fun test(context: ClientGameTestContext) {
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoRod) }
-        val blockerStates = context.fromClient { blockers.map { it.enabled } }
+private fun prepareInventory() {
+    val player = checkNotNull(mc.player)
+    player.health = 20f
+    player.inventory.clearContent()
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
+    player.setItemInHand(InteractionHand.OFF_HAND, ItemStack(Items.FISHING_ROD))
+    EventManager.callEvent(GameTickEvent)
+}
 
+private fun assertHealthGuard() {
+    val player = checkNotNull(mc.player)
+    player.health = 8f
+    assertAllowed(false, "health below MinHealth")
+    player.health = 20f
+}
+
+private fun assertInventoryGuards() {
+    val player = checkNotNull(mc.player)
+    player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY)
+    EventManager.callEvent(GameTickEvent)
+    assertAllowed(false, "no fishing rod")
+    player.setItemInHand(InteractionHand.OFF_HAND, ItemStack(Items.FISHING_ROD))
+    EventManager.callEvent(GameTickEvent)
+
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.BOW))
+    assertAllowed(false, "holding an ignored item")
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
+}
+
+private fun assertConfiguredGuards() {
+    val player = checkNotNull(mc.player)
+    val requires = ModuleAutoRod.settings.getValue("Requires")
+    requires.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("Weapon") })
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.STONE))
+    assertAllowed(false, "the configured Weapon requirement")
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
+    requires.deserializeFrom(GSON_DEFAULT, JsonArray())
+
+    val ignores = ModuleAutoRod.settings.getValue("Ignore")
+    ignores.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("HoldingConsumable") })
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.APPLE))
+    assertAllowed(false, "the configured HoldingConsumable ignore")
+    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
+    ignores.deserializeFrom(GSON_DEFAULT, JsonArray())
+}
+
+private fun assertModuleGuards() {
+    for (module in blockers) {
+        module.enabled = true
         try {
-            context.worldBuilder().create().use { world ->
-                world.server.runCommand("gamemode creative @a")
-                context.waitFor({ client -> client.player?.hasInfiniteMaterials() == true }, 200)
-                context.onClient {
-                    blockers.forEach { it.enabled = false }
-                    ModuleAutoRod.settings.getValue("Requires").deserializeFrom(GSON_DEFAULT, JsonArray())
-                    ModuleAutoRod.settings.getValue("Ignore").deserializeFrom(GSON_DEFAULT, JsonArray())
-                    ModuleAutoRod.settings.getValue("MinHealth").setByString("10")
-                    ModuleAutoRod.enabled = true
-                    check(ModuleAutoRod.running)
-
-                    // Exercise both the default cap and the unlimited setting.
-                    for (limit in listOf(1, 0)) {
-                        ModuleAutoRod.settings.getValue("MaxEnemiesNearby").setByString(limit.toString())
-                        prepareInventory()
-                        assertAllowed(true, "healthy player with a rod, limit $limit")
-                        assertHealthGuard()
-                        assertInventoryGuards()
-                        assertConfiguredGuards()
-                        assertModuleGuards()
-                    }
-                }
-            }
+            check(module.running) { "${module.name} did not start" }
+            assertAllowed(false, "${module.name} is running")
         } finally {
-            context.onClient {
-                ModuleAutoRod.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleAutoRod, saved)
-                blockers.zip(blockerStates).forEach { (module, enabled) -> module.enabled = enabled }
-            }
+            module.enabled = false
         }
     }
+    assertAllowed(true, "all guards satisfied again")
+}
 
-    private fun prepareInventory() {
-        val player = checkNotNull(mc.player)
-        player.health = 20f
-        player.inventory.clearContent()
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-        player.setItemInHand(InteractionHand.OFF_HAND, ItemStack(Items.FISHING_ROD))
-        EventManager.callEvent(GameTickEvent)
-    }
-
-    private fun assertHealthGuard() {
-        val player = checkNotNull(mc.player)
-        player.health = 8f
-        assertAllowed(false, "health below MinHealth")
-        player.health = 20f
-    }
-
-    private fun assertInventoryGuards() {
-        val player = checkNotNull(mc.player)
-        player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY)
-        EventManager.callEvent(GameTickEvent)
-        assertAllowed(false, "no fishing rod")
-        player.setItemInHand(InteractionHand.OFF_HAND, ItemStack(Items.FISHING_ROD))
-        EventManager.callEvent(GameTickEvent)
-
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.BOW))
-        assertAllowed(false, "holding an ignored item")
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-    }
-
-    private fun assertConfiguredGuards() {
-        val player = checkNotNull(mc.player)
-        val requires = ModuleAutoRod.settings.getValue("Requires")
-        requires.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("Weapon") })
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.STONE))
-        assertAllowed(false, "the configured Weapon requirement")
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-        requires.deserializeFrom(GSON_DEFAULT, JsonArray())
-
-        val ignores = ModuleAutoRod.settings.getValue("Ignore")
-        ignores.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("HoldingConsumable") })
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.APPLE))
-        assertAllowed(false, "the configured HoldingConsumable ignore")
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-        ignores.deserializeFrom(GSON_DEFAULT, JsonArray())
-    }
-
-    private fun assertModuleGuards() {
-        for (module in blockers) {
-            module.enabled = true
-            try {
-                check(module.running) { "${module.name} did not start" }
-                assertAllowed(false, "${module.name} is running")
-            } finally {
-                module.enabled = false
-            }
-        }
-        assertAllowed(true, "all guards satisfied again")
-    }
-
-    private fun assertAllowed(expected: Boolean, case: String) {
-        val actual = requirements.invoke(ModuleAutoRod) as Boolean
-        check(actual == expected) { "$case: expected $expected, got $actual" }
-    }
-
+private fun assertAllowed(expected: Boolean, case: String) {
+    val actual = requirements.invoke(ModuleAutoRod) as Boolean
+    check(actual == expected) { "$case: expected $expected, got $actual" }
 }

@@ -26,8 +26,9 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.gui.screens.TitleScreen
 
 /**
- * A game test of the client alone (commands, configs, registries, simulations), on the integrated server if it needs
- * a world. It runs only when no anticheat is picked; `-PgameTestServerOnly` selects these too.
+ * A game test of the client alone that needs no world, such as commands, configs and registries; a test that does
+ * plays on the integrated server as a [LiquidBounceGameTest] with `integrated` set. It runs only when no anticheat is
+ * picked; `-PgameTestServerOnly` selects these too.
  */
 abstract class LocalGameTest : FabricClientGameTest {
 
