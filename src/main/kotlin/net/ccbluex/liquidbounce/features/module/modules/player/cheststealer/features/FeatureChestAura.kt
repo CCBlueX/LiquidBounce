@@ -25,9 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -126,6 +124,8 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         interactedBlocksSet.clear()
         interactionAttempts = 0
         currentTarget = null
+        awaitedContainer = null
+        cooldownLeft = 0
         super.onDisabled()
     }
 
@@ -175,65 +175,81 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
     }
 
+    // The storage block interacted with last, while waiting for its container to open
+    private var awaitedContainer: BlockPos? = null
+    private var awaitTicksLeft = 0
+
+    /** Ticks of [interactionDelay] left after the last interaction. */
+    private var cooldownLeft = 0
+
     // Task that repeats to interact with the target block
     @Suppress("unused")
     private val interactionRepeatableTask = tickHandler {
-        if (mc.gui.screen() is AbstractContainerScreen<*>) {
-            // Do not proceed if a screen is open which implies player might be in a GUI
+        val containerOpen = mc.gui.screen() is AbstractContainerScreen<*>
+
+        awaitedContainer?.let { pos ->
+            when {
+                // TODO: check if the inner type matches?
+                containerOpen -> finish(pos)
+                awaitTicksLeft > 0 -> {
+                    awaitTicksLeft--
+                    return@tickHandler
+                }
+                interactionAttempts >= AwaitContainerSettings.maxInteractionRetries -> finish(pos)
+                else -> {
+                    interactionAttempts++
+                    awaitedContainer = null
+                }
+            }
+        }
+
+        // Do not proceed if a screen is open which implies player might be in a GUI
+        if (containerOpen) {
+            return@tickHandler
+        }
+
+        if (cooldownLeft > 0) {
+            cooldownLeft--
             return@tickHandler
         }
 
         currentTarget ?: return@tickHandler
-        // Guards the aim only, not the waits for the container and the delay
-        val rayTraceResult = requires {
-            currentTarget.takeIf { mc.gui.screen() !is AbstractContainerScreen<*> }
-        }.use { target ->
-            lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.value.second }) { going ->
-                val (pos, _) = target.value
-                val state = pos.state ?: return@lookAt null
-                raytraceBlock(interactionRange.toDouble(), going, pos, state)
-                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
-            }
+        val target by requires { currentTarget }
+        requires { mc.gui.screen() !is AbstractContainerScreen<*> }
+
+        val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
+            val (pos, _) = target
+            val state = pos.state ?: return@lookAt null
+            raytraceBlock(interactionRange.toDouble(), going, pos, state)
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
         }
-        val targetBlockPos = rayTraceResult.blockPos
 
         // Attempt to interact with the block
         val useItemOnResult = interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult)
-        if (useItemOnResult is InteractionResult.Success) {
-            if (useItemOnResult.shouldSwingHand()) {
-                swingMode.interactSwing(InteractionHand.MAIN_HAND)
-            }
-
-            var wasInteractionSuccessful = false
-
-            if (AwaitContainerSettings.enabled) {
-                tickConditional(AwaitContainerSettings.retryTimeout) {
-                    val currentScreen = mc.gui.screen()
-                    if (currentScreen is AbstractContainerScreen<*>) { // TODO: check if the inner type matches?
-                        // Interaction was successful if the inventory screen is open
-                        wasInteractionSuccessful = true
-                        true
-                    } else {
-                        false
-                    }
-                }
-            } else {
-                track(targetBlockPos)
-                currentTarget = null
-                wasInteractionSuccessful = true
-
-                // Delay until next interaction
-                waitTicks(interactionDelay)
-            }
-
-            // Update interacted block set and reset target if successful or exceeded retries
-            if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
-                track(targetBlockPos)
-                currentTarget = null
-            } else {
-                interactionAttempts++
-            }
+        if (useItemOnResult !is InteractionResult.Success) {
+            return@tickHandler
         }
+
+        if (useItemOnResult.shouldSwingHand()) {
+            swingMode.interactSwing(InteractionHand.MAIN_HAND)
+        }
+
+        if (AwaitContainerSettings.enabled) {
+            awaitedContainer = rayTraceResult.blockPos
+            awaitTicksLeft = AwaitContainerSettings.retryTimeout
+        } else {
+            finish(rayTraceResult.blockPos)
+            cooldownLeft = interactionDelay
+        }
+    }
+
+    /**
+     * Done with the storage block at [pos], whether its container opened or it ran out of retries.
+     */
+    private fun finish(pos: BlockPos) {
+        track(pos)
+        currentTarget = null
+        awaitedContainer = null
     }
 
     private fun track(blockPos: BlockPos) {

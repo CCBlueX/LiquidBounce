@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -74,7 +73,6 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
 
         // Check if this is a regular velocity update
         if (packet.isLocalPlayerVelocity()) {
-            unchanged { mc.level }
             requires { !OnlyFacing.enabled || shouldStrafe }
 
             // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged

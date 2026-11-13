@@ -200,7 +200,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         }
 
         // Goes on with the rotation going out on the next tick, whether it hits or not
-        requires { currentTarget === mineTarget && !mineTarget.isInvalidOrOutOfRange() }
+        requires { currentTarget === mineTarget }
+        requires { !mineTarget.isInvalidOrOutOfRange() }
         val plan by requires { aim }
         val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
         mineTarget.updateBlockState()

@@ -131,7 +131,8 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
             return@tickHandler
         }
 
-        requires { isBoosting && player.onGround() }
+        requires { isBoosting }
+        requires { player.onGround() }
         val charge by requires { chargeSlot() }
         // Stays on the ground while turning down, until it gives up and jumps without a charge
         holdJump = aimTicks++ < MAX_AIM_TICKS
