@@ -99,12 +99,11 @@ abstract class Buff(
                 waitTicks(AutoSwap.delayIn.random())
                 execute(slot)
             } finally {
-                // DelayOut outlives the run, however it ended: the hotbar goes back after it, the next buff waits
-                val delayOut = AutoSwap.delayOut.random()
+                // DelayOut outlives the run, however it ended: the next buff waits for it, the hotbar goes back after it
+                ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
                 if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
-                    SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, delayOut)
+                    SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
                 }
-                ModuleAutoBuff.ticksUntilNextBuff = delayOut
             }
             return true
         } else {

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
@@ -143,8 +142,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             else -> {}
         }
 
-        // Wait at least 1 tick to make sure, we do not continue with something else too early
-        waitTicks(1)
+        // The next buff waits at least a tick, so we do not continue with something else too early
+        ModuleAutoBuff.waitBeforeNextBuff(1)
     }
 
     /**

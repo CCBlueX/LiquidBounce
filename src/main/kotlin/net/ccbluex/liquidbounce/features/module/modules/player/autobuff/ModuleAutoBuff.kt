@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
@@ -113,13 +115,27 @@ object ModuleAutoBuff : ClientModule(
     internal val activeFeatures
         get() = features.filter { it.enabled }
 
-    /** Ticks of AutoSwap's DelayOut left after the last buff, before the next one may start. */
+    /** Ticks before the next buff may start, the waits after the last one's use. */
     internal var ticksUntilNextBuff = 0
+        private set
+
+    /**
+     * Holds off the next buff for [ticks] more, so waits after a use outlive the run that used it.
+     */
+    internal fun waitBeforeNextBuff(ticks: Int) {
+        ticksUntilNextBuff += ticks
+    }
+
+    @Suppress("unused")
+    private val cooldownHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        if (ticksUntilNextBuff > 0) {
+            ticksUntilNextBuff--
+        }
+    }
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
         if (ticksUntilNextBuff > 0) {
-            ticksUntilNextBuff--
             return@tickHandler
         }
 
