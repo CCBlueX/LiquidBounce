@@ -61,8 +61,13 @@ suspend fun guard(condition: Condition): AutoCloseable {
  * ```kotlin
  * val target by tracked { targetTracker.target?.takeIf { it.isAlive } }
  * ```
+ *
+ * Close it, e.g. with `use`, to stop guarding it before the run ends.
  */
-suspend fun <T : Any> tracked(read: () -> T?): Tracked<T> = Tracked(read).also { currentGuards().add(it) }
+suspend fun <T : Any> tracked(read: () -> T?): Tracked<T> {
+    val guards = currentGuards()
+    return Tracked(read, guards).also(guards::add)
+}
 
 /**
  * Guards that [read] returns the same instance it returns now, for example the world or the open menu.
@@ -72,7 +77,10 @@ suspend fun same(read: () -> Any?): AutoCloseable {
     return guard { read() === initial }
 }
 
-class Tracked<T : Any> internal constructor(private val read: () -> T?) : Condition, ReadOnlyProperty<Any?, T> {
+class Tracked<T : Any> internal constructor(
+    private val read: () -> T?,
+    private val guards: Guards,
+) : Condition, ReadOnlyProperty<Any?, T>, AutoCloseable {
 
     private var current: T? = null
 
@@ -85,6 +93,8 @@ class Tracked<T : Any> internal constructor(private val read: () -> T?) : Condit
     }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T = value
+
+    override fun close() = guards.remove(this)
 
 }
 
