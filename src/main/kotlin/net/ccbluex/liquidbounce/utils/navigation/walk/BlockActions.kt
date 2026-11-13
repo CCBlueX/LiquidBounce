@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -159,8 +159,8 @@ class BlockActions(
     private val tickHandler = tickHandler {
         target ?: return@tickHandler
 
-        val planned by tracked { target }
-        val current by tracked { action }
+        val planned by requires { target }
+        val current by requires { action }
         val (worked, hit) = owner.lookAt(Priority.IMPORTANT_FOR_USAGE_1, { planned }) { going ->
             hitOn(current, going)?.let { current to it }
         }

@@ -21,10 +21,9 @@ package net.ccbluex.liquidbounce.utils.block.placer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
@@ -98,9 +97,9 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
         }
 
         val surface = Surface(target.boundingBox, throughWalls = wallRange > 0f)
-        guard { currentTarget === target }
+        requires { currentTarget === target }
         // The best spot; stops once no spot is in reach
-        val spot by tracked {
+        val spot by requires {
             raytraceBox(
                 player.eyePosition,
                 target.boundingBox,

@@ -26,11 +26,10 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.guard
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -90,7 +89,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
-    private val requires by multiEnumChoice<KillAuraRequirements>(
+    private val requirements by multiEnumChoice<KillAuraRequirements>(
         "Requires",
         choices = enumSetOf(KillAuraRequirements.EMPTY_HAND).complement()
     )
@@ -117,7 +116,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = requirements.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
             && availableRodSlot != null
@@ -182,7 +181,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
     private suspend fun useRod() {
         // Only while aiming: the pull must go on when the target leaves the range or the plan
-        val (target, slot) = tracked {
+        val (target, slot) = requires {
             throwing?.takeIf { requirementsMet && targetTracker.target != null && availableRodSlot != null }
         }.use { planned ->
             lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
@@ -216,7 +215,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         // Up to the pull, not over the cooldown after it
         val level = mc.level
-        guard { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
+        requires { mc.level === level && slot.itemStack.`is`(Items.FISHING_ROD) }.use {
             // 3. timeout / hit entity / no movement / out of range
             tickConditional(hitTimeout) {
                 fishingBobberEntity?.hookedIn != null ||

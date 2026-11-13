@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.intListOf
-import net.ccbluex.liquidbounce.event.guard
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitFor
@@ -98,7 +98,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         try {
-            guard { isShopOpen() }
+            requires { isShopOpen() }
 
             // wait after opening a shop (before the first click)
             if (!waitedBeforeTheFirstClick) {

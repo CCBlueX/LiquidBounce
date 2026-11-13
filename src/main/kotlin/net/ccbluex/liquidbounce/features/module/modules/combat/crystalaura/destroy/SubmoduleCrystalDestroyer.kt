@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.dest
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
@@ -125,7 +125,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
 
     private suspend fun destroy(target: EndCrystal) {
         val surface = Surface(target.boundingBox, throughWalls = wallsRange > 0f)
-        val current by tracked { attack?.takeIf { it.target === target } }
+        val current by requires { attack?.takeIf { it.target === target } }
         ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
             isLookingAtEntity(
                 toEntity = target,

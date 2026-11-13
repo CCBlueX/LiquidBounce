@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -141,7 +141,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private val tickHandler = tickHandler {
         currentAction ?: return@tickHandler
 
-        val action by tracked { currentAction }
+        val action by requires { currentAction }
         val (resolvedHitResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
             rotations.toRotationTarget(action.rotation, considerInventory = true, surface = action.surface)
         }) { going ->

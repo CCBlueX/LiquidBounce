@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tracked
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -95,10 +95,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val rotations = tree(KillAuraRotationsValueGroup)
     private val pointTracker = tree(PointTracker(this))
 
-    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+    private val requirements by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = requirements.all { it.asBoolean }
 
     // Bypass techniques
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -180,7 +180,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     private suspend fun fightWithAim() {
-        val planned by tracked { aim }
+        val planned by requires { aim }
         // Resumes on the next rotation going out, whatever it hits
         val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { planned }) { it }
 

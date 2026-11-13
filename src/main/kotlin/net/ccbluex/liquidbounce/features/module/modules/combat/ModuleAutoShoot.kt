@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -187,7 +187,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
      * Shoots once the rotation going out points within [aimOffThreshold] of the target.
      */
     private suspend fun shoot() {
-        val planned by tracked { throwing }
+        val planned by requires { throwing }
 
         // Set the rotation with the usage priority of 2.
         lookAt(Priority.IMPORTANT_FOR_USAGE_2, {

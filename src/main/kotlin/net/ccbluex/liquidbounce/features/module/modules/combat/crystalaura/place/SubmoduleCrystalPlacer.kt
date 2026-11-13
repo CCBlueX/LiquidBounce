@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.ints.IntCollection
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.launchSequence
-import net.ccbluex.liquidbounce.event.tracked
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -199,7 +199,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
     private suspend fun place(pos: BlockPos, side: Direction) {
         val surface = Surface.of(pos, side, throughWalls = wallsRange > 0f)
-        val current by tracked { placement?.takeIf { it.pos == pos && it.side == side } }
+        val current by requires { placement?.takeIf { it.pos == pos && it.side == side } }
         val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
             raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
                 ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }

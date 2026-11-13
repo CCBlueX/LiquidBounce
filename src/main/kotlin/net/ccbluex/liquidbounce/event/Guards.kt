@@ -31,75 +31,54 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 /**
- * Something a handler's work depends on, such as "the target is alive".
- */
-fun interface Condition {
-    fun holds(): Boolean
-}
-
-/**
- * Keeps [condition] for the rest of this run of the handler. Every suspension helper ([tickUntil], [waitTicks],
- * [tickConditional], [waitSeconds], [waitMatches]) checks it on each tick it waits and once more right before the
- * code after it runs, [waitFor] only the latter. Once it fails, the run ends there quietly: nothing after that
- * suspension runs, cleanup in `finally` and the handler's `onCancellation` still do, and the next run starts
- * without it.
+ * Requires what [read] returns for the rest of this run of the handler: `false` or `null` ends it. Every suspension
+ * helper ([tickUntil], [waitTicks], [tickConditional], [waitSeconds], [waitMatches]) reads it again on each tick it
+ * waits and once more right before the code after it runs, [waitFor] only the latter. Once it fails, the run ends there
+ * quietly: nothing after that suspension runs, cleanup in `finally` and the handler's `onCancellation` still do, and
+ * the next run starts without it. If it fails right now, the run ends here.
  *
- * If it does not hold right now, the run ends here. Close the result to stop guarding earlier, e.g. with `use`.
- *
- * Works in every coroutine LiquidBounce starts for a listener; a coroutine launched from one is a run of its own.
- */
-suspend fun guard(condition: Condition): AutoCloseable {
-    val guards = currentGuards()
-    guards.add(condition)
-    return AutoCloseable { guards.remove(condition) }
-}
-
-/**
- * A value read again on every check of this run, see [guard]. Reading `null` ends the run, so the value a delegated
- * property returns after a suspension is always the current one.
- *
+ * A condition and a value are written the same way; a delegated value is always the one read last:
  * ```kotlin
- * val target by tracked { targetTracker.target?.takeIf { it.isAlive } }
+ * requires { !InventoryManager.isHandledScreenOpen }
+ * val pearl by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
  * ```
  *
- * Close it, e.g. with `use`, to stop guarding it before the run ends.
+ * Close the result to stop requiring it earlier, e.g. with `use`. Works in every coroutine LiquidBounce starts for a
+ * listener; a coroutine launched from one is a run of its own.
  */
-suspend fun <T : Any> tracked(read: () -> T?): Tracked<T> {
+suspend fun <T : Any> requires(read: () -> T?): Required<T> {
     val guards = currentGuards()
-    return Tracked(read, guards).also(guards::add)
+    return Required(read, guards).also { guards.add(it.check) }
 }
 
 /**
- * Guards that [read] returns the same instance it returns now, for example the world or the open menu.
+ * Requires that [read] returns the same instance it returns now, for example the world or the open menu.
  */
-suspend fun same(read: () -> Any?): AutoCloseable {
+suspend fun unchanged(read: () -> Any?): AutoCloseable {
     val initial = read()
-    return guard { read() === initial }
+    return requires { read() === initial }
 }
 
-class Tracked<T : Any> internal constructor(
-    private val read: () -> T?,
+class Required<T : Any> internal constructor(
+    read: () -> T?,
     private val guards: Guards,
-) : Condition, ReadOnlyProperty<Any?, T>, AutoCloseable {
+) : ReadOnlyProperty<Any?, T>, AutoCloseable {
 
     private var current: T? = null
 
-    val value: T
-        get() = checkNotNull(current) { "Tracked value read before it was guarded" }
+    internal val check = { read().also { current = it }.let { it != null && it != false } }
 
-    override fun holds(): Boolean {
-        current = read()
-        return current != null
-    }
+    val value: T
+        get() = checkNotNull(current) { "Required value read before it was required" }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T = value
 
-    override fun close() = guards.remove(this)
+    override fun close() = guards.remove(check)
 
 }
 
 /**
- * The conditions of one run of a handler, carried in its coroutine context so that suspension helpers find them.
+ * What one run of a handler [requires], carried in its coroutine context so that suspension helpers find it.
  *
  * Every coroutine started on a listener's scope gets one of its own, since each launch copies it empty; `withContext`
  * keeps it, as the code it runs is still part of the run.
@@ -111,19 +90,19 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
     override val key: CoroutineContext.Key<*>
         get() = Key
 
-    private var conditions: ReferenceArrayList<Condition>? = null
+    private var conditions: ReferenceArrayList<() -> Boolean>? = null
 
     internal val isEmpty: Boolean
         get() = conditions.isNullOrEmpty()
 
-    internal fun add(condition: Condition) {
-        (conditions ?: ReferenceArrayList<Condition>(4).also { conditions = it }).add(condition)
-        if (!condition.holds()) {
+    internal fun add(condition: () -> Boolean) {
+        (conditions ?: ReferenceArrayList<() -> Boolean>(4).also { conditions = it }).add(condition)
+        if (!condition()) {
             throw GuardInterruption(condition)
         }
     }
 
-    internal fun remove(condition: Condition) {
+    internal fun remove(condition: () -> Boolean) {
         conditions?.remove(condition)
     }
 
@@ -138,7 +117,7 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
         val conditions = conditions ?: return null
         for (i in 0 until conditions.size) {
             val condition = conditions[i]
-            if (!condition.holds()) {
+            if (!condition()) {
                 return GuardInterruption(condition)
             }
         }
@@ -161,17 +140,17 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
 
 /**
  * The guards of the coroutine this suspends in, or null outside of a listener's coroutines. Empty ones are null too,
- * so waits without guards skip the checks.
+ * so waits that require nothing skip the checks.
  */
 internal fun CoroutineContext.activeGuards(): Guards? = this[Guards]?.takeUnless { it.isEmpty }
 
 private suspend fun currentGuards() = checkNotNull(currentCoroutineContext()[Guards]) {
-    "Guards only work in coroutines started for a listener"
+    "requires only works in coroutines started for a listener"
 }
 
 /**
- * Runs [block] as a run of its own in a coroutine that handles one event after the other: it starts without guards,
- * and a failing guard ends only it.
+ * Runs [block] as a run of its own in a coroutine that handles one event after the other: it starts requiring
+ * nothing, and a failing requirement ends only it.
  */
 internal suspend inline fun asRun(block: () -> Unit) {
     val guards = currentCoroutineContext()[Guards]
@@ -187,7 +166,7 @@ internal suspend inline fun asRun(block: () -> Unit) {
  * Ends a run at the suspension where [condition] failed. Never reaches module code.
  */
 internal class GuardInterruption(
-    @JvmField val condition: Condition,
-) : CancellationException("Guard condition $condition no longer holds") {
+    @JvmField val condition: () -> Boolean,
+) : CancellationException("A requirement of the run no longer holds") {
     override fun fillInStackTrace(): Throwable = this
 }
