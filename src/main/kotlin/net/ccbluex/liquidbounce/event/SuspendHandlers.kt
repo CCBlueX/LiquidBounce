@@ -63,9 +63,12 @@ inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,
     onCancellation: Runnable? = null,
     crossinline eventHandler: suspend CoroutineScope.() -> Unit,
-) = suspendHandler<GameTickEvent>(
-    context = wrapContinuationInterceptor(dispatcher),
-    behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)
+) = ExclusiveHandler(
+    this,
+    GameTickEvent::class.java,
+    wrapContinuationInterceptor(dispatcher),
+    priority = 0,
+    onCancellation,
 ) {
     eventHandler()
 }

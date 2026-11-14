@@ -86,22 +86,14 @@ object AutoQueueCustom : Mode("Custom") {
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
     private var awaitsWorldChange = false
-    private var worldChanged = false
 
     override fun disable() {
         awaitsWorldChange = false
-        worldChanged = false
     }
 
-    @Suppress("unused")
     private val tickHandler = tickHandler(Dispatchers.Main) {
         if (ModuleAutoQueue.shouldPause || awaitsWorldChange) {
             return@tickHandler
-        }
-
-        if (worldChanged) {
-            worldChanged = false
-            waitTicks(20)
         }
 
         val trigger = triggers.activeMode
@@ -121,7 +113,7 @@ object AutoQueueCustom : Mode("Custom") {
     private val worldChange = handler<WorldChangeEvent> {
         if (awaitsWorldChange) {
             awaitsWorldChange = false
-            worldChanged = true
+            tickHandler.runInstead { waitTicks(20) }
         }
     }
 

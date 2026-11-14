@@ -443,6 +443,39 @@ class GuardsTest {
     }
 
     @Test
+    fun `runs instead of the handler cancel its run and go one after the other`() = runTest {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val listener = object : EventListener {}
+        val log = mutableListOf<String>()
+        val handler = ExclusiveHandler(listener, ProbeEvent::class.java, ticker + dispatcher, 0, null) { event ->
+            log += "start ${event.id}"
+            waitTicks(5)
+            log += "end ${event.id}"
+        }
+
+        try {
+            EventManager.callEvent(ProbeEvent(1))
+            handler.runInstead {
+                waitTicks(2)
+                log += "first"
+            }
+            handler.runInstead {
+                waitTicks(2)
+                log += "second"
+            }
+            EventManager.callEvent(ProbeEvent(2))
+            ticker.tick(6)
+
+            EventManager.callEvent(ProbeEvent(3))
+            ticker.tick(5)
+            assertEquals(listOf("start 1", "first", "second", "start 3", "end 3"), log)
+        } finally {
+            EventManager.unregisterEventHandler(listener)
+            listener.removeEventListenerScope()
+        }
+    }
+
+    @Test
     fun `disabling the listener cancels the run instead of ending it by a requirement`() = runTest {
         val listener = object : EventListener {
             override var running = true
