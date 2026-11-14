@@ -239,6 +239,11 @@ dependencies {
     include(libs.liquidbounce.cef)
     localRuntime(libs.liquidbounce.cef) { isTransitive = false }
 
+    // Minecraft Agent: player simulation and navigation. Its types are part of the client's API, so add-ons get it
+    // through the POM.
+    api(libs.bundles.minecraft.agent)
+    include(libs.bundles.minecraft.agent)
+
     // Ktor Server
     jij(libs.ktor.server.core)
     jij(libs.ktor.server.cio)
@@ -527,7 +532,7 @@ tasks.jar {
 }
 
 val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
-    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
+    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.asProvider().get()}"
     val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
 
     if (isRelease) base else "$base-SNAPSHOT"
