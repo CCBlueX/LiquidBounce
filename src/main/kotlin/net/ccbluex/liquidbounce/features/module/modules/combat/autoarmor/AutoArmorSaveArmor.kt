@@ -100,7 +100,7 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
         }
 
         val armorToEquipWithSlots = ArmorEvaluation
-            .findBestArmorPieces(durabilityThreshold = durabilityThreshold)
+            .findBestArmorPieces(slots = ModuleAutoArmor.candidateSlots, durabilityThreshold = durabilityThreshold)
             .values
             .filterNotNull()
             .filter { !it.isAlreadyEquipped && it.itemSlot.itemStack.isPlayerArmor }
