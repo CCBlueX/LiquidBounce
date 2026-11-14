@@ -58,14 +58,13 @@ object ClientRenderPipelines {
             }
     }
 
+    /**
+     * Built on the vanilla snippet so that resource packs replacing `core/position_tex_color`
+     * get the same uniforms (e.g. `Globals`) as in vanilla's GUI pipelines.
+     */
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
-        withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
-        withBindGroupLayout(BindGroupLayouts.PROJECTION)
-        withVertexShader("core/position_tex_color")
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
-        withBindGroupLayout(BindGroupLayouts.SAMPLER0)
-        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-        withPrimitiveTopology(PrimitiveTopology.QUADS)
     }
 
     inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
