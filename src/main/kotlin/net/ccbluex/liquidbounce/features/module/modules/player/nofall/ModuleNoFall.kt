@@ -22,12 +22,9 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlocksMC20250719
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallCancel
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallForceJump
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallGrim2371MC19
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel20240713
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel20240806
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallMLG
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallPacket
@@ -67,9 +64,6 @@ object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
             NoFallForceJump,
             NoFallCancel,
             NoFallBlink,
-            NoFallHypixel20240806,
-            NoFallHypixel20240713,
-            NoFallBlocksMC20250719,
             NoFallGrim2371MC19
         )
     ).apply(::tagBy)

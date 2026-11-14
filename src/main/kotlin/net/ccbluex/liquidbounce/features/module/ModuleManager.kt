@@ -73,7 +73,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleOldRegen
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleResetVL
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleSleepWalker
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleVehicleOneHit
@@ -487,7 +486,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAntiHunger,
             ModuleClip,
             ModuleExtendedFirework,
-            ModuleResetVL,
             ModuleDamage,
             ModuleDisabler,
             ModuleGhostHand,

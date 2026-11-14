@@ -33,15 +33,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVa
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2373
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2359
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121Flat
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraft20240515
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240310
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240420
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20251226
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240127
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartanPhase524
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyBlocksMC20240309
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Flat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
@@ -88,13 +84,7 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
             FlyCubeCraft20251226,
 
             FlyVerusB3896Damage,
-            FlyVerusB3896Flat,
-            FlyBlocksMC20240309,
-
-            FlyHypixel20250121,
-            FlyHypixel20250121Flat,
-
-            FlyHycraft20240515
+            FlyVerusB3896Flat
         )
     ).apply { tagBy(this) }
 

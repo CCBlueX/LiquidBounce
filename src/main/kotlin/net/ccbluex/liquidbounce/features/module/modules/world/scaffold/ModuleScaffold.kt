@@ -172,22 +172,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         FALLING("Falling", { blockPos ->
             (if (player.deltaMovement.y < 0.2) ON else OFF).getTargetedBlockPos(blockPos)
         }),
-
-        /**
-         * Similar to FALLING, but only when a certain velocity is triggered and after
-         * 2 jumps
-         */
-        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
-        HYPIXEL("Hypixel", { blockPos ->
-            if (player.deltaMovement.y == -0.15233518685055708 && jumps >= 2) {
-                jumps = 0
-
-                blockPos.copy(y = startY)
-            } else {
-                blockPos.copy(y = startY - 1)
-            }
-        })
-
     }
 
     /**
@@ -295,8 +279,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     private var placementY = 0
     private var forceSneak = 0
-    private var startY = 0
-    private var jumps = 0
 
     private var nextBlock: Block? = null
 
@@ -343,8 +325,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     override fun onEnabled() {
         // Placement Y is the Y coordinate of the block below the player
         placementY = player.blockPosition().y - 1
-        startY = player.blockPosition().y
-        jumps = 2
 
         ScaffoldMovementPlanner.reset()
 
@@ -515,13 +495,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         if (player.onGround()) {
             // Placement Y is the Y coordinate of the block below the player
             placementY = player.blockPosition().y - 1
-            jumps++
             wasTowering = false
-        }
-
-        if (mc.options.keyJump.isDown) {
-            startY = player.blockPosition().y
-            jumps = 2
         }
 
         debugParameter("IsTowering") { isTowering }
