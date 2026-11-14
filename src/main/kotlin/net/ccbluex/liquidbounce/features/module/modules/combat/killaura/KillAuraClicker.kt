@@ -36,13 +36,13 @@ import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
-import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 
 object KillAuraClicker : Clicker<ModuleKillAura>(
@@ -80,9 +80,9 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 return false
             }
 
-            val futurePos = PositionExtrapolation.getBestForEntity(player)
+            val futurePos = PlayerSimulationCache.extrapolate(player)
                 .getPositionInTicks(ticks)
-            val futureTargetPos = PositionExtrapolation.getBestForEntity(target)
+            val futureTargetPos = PlayerSimulationCache.extrapolate(target)
                 .getPositionInTicks(ticks)
 
             val ownEyePos = futurePos.add(0.0, player.getEyeHeight(player.pose).toDouble(), 0.0)

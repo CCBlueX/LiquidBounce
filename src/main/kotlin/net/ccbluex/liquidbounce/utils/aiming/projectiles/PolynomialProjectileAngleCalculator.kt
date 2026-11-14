@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
+import net.ccbluex.agent.simulation.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.toDegrees
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityDimensions

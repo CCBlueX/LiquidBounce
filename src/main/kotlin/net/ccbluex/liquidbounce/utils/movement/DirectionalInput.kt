@@ -67,6 +67,9 @@ data class DirectionalInput(
         )
     }
 
+    fun toInput(jump: Boolean = false, sneak: Boolean = false, sprint: Boolean = false) =
+        Input(forwards, backwards, left, right, jump, sneak, sprint)
+
     val isMoving: Boolean
         get() = forwards != backwards || left != right
 

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
+import net.ccbluex.agent.simulation.PositionExtrapolation
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLin
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.math.findFunctionMinimumByBisect
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo

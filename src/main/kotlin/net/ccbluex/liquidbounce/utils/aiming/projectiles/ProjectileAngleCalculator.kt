@@ -19,9 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
+import net.ccbluex.agent.simulation.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.LivingEntity
@@ -55,7 +56,7 @@ fun interface ProjectileAngleCalculator {
         return this.calculateAngleFor(
             projectileInfo,
             sourcePos = player.eyePosition,
-            targetPosFunction = PositionExtrapolation.getBestForEntity(entity),
+            targetPosFunction = PlayerSimulationCache.extrapolate(entity),
             targetShape = entity.dimensions
         )
     }

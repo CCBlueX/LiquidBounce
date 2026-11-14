@@ -19,13 +19,14 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.gametest.harness.SingleplayerGameTest
+import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.ccbluex.agent.simulation.MotionTraits
 import net.ccbluex.agent.simulation.PlayerMotion
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.gametest.harness.SingleplayerGameTest
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
 
@@ -77,7 +78,7 @@ private class Course(
         val motion = PlayerMotion(Terrain.live(player.level()), MotionTraits.capture(player))
         motion.reset(player)
         val game = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayerInput(DirectionalInput(forward.toFloat(), strafe.toFloat()), jump, sprint, sneak)
+            SimulatedInput(DirectionalInput(forward.toFloat(), strafe.toFloat()).toInput(jump, sneak, sprint))
         )
 
         repeat(ticks) { tick ->

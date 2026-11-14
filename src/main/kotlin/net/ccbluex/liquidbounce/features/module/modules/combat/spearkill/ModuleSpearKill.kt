@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -91,7 +91,7 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         val ticks = ceil(distance / maxAllowedSpeed).toInt().coerceAtLeast(1)
         val velocity = distance / ticks
 
-        val direction = PositionExtrapolation.getBestForEntity(target)
+        val direction = PlayerSimulationCache.extrapolate(target)
             .getPositionInTicks(ticks.toDouble())
             .subtract(player.eyePosition)
             .normalize()

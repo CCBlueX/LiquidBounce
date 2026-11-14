@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.Vec3
 
 object SpeedPreventDeadlyJump : MinecraftShortcuts {
@@ -47,21 +50,13 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
             return true
         }
 
-        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
-            DirectionalInput.NONE, jumping = false,
-            sprinting = false, sneaking = false
-        )
+        simulatedPlayer.input = SimulatedInput(Input.EMPTY)
 
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
     private fun createSimulatedPlayer(player: LocalPlayer): SimulatedPlayer {
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-            DirectionalInput(player.input),
-            jumping = false,
-            sprinting = true,
-            sneaking = false
-        )
+        val input = SimulatedInput(DirectionalInput(player.input).toInput(sprint = true))
 
         return SimulatedPlayer.fromClientPlayer(input)
     }
@@ -88,12 +83,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
         }
 
         if (groundPos != null) {
-            simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
-                DirectionalInput.NONE,
-                jumping = false,
-                sprinting = false,
-                sneaking = false
-            )
+            simulatedPlayer.input = SimulatedInput(Input.EMPTY)
 
             for (ignored in 0..40) {
                 simulatedPlayer.tick()

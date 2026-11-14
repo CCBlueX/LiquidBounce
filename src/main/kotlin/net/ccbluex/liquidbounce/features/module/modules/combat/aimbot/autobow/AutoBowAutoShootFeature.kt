@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
+import net.ccbluex.agent.simulation.Forecast
+import net.ccbluex.agent.simulation.SimulatedArrow
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -27,8 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAuto
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
@@ -211,7 +211,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private fun projectileEntityHitMargin(tickCount: Int) =
         ((tickCount - 2) / 20.0F).coerceIn(0.0F, 0.3F)
 
-    private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
+    private fun findAndBuildSimulatedEntities(): List<Pair<Entity, Forecast?>> {
         return world.entitiesForRendering().filter { entity ->
             entity.shouldBeAttacked() &&
                 Line(player.eyePosition, player.rotation.directionVector)

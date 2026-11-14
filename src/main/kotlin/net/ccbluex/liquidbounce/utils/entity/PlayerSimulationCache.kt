@@ -19,8 +19,11 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import net.ccbluex.agent.simulation.Forecast
+import net.ccbluex.agent.simulation.Forecasts
+import net.ccbluex.agent.simulation.PositionExtrapolation
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -32,16 +35,16 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.phys.Vec3
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
+/** The [Forecast]s of this tick: the local player's with its current keys, and those of the other players. */
 object PlayerSimulationCache: EventListener {
-    private val otherPlayerCache = ConcurrentHashMap<Player, SimulatedPlayerCache>()
-    private var localPlayerCache: SimulatedPlayerCache? = null
+
+    /** The other players' forecasts, cleared every tick. */
+    val otherPlayers = Forecasts()
+
+    private var localPlayerCache: Forecast? = null
 
     /**
      * The local player is between the start of its movement tick and the end of its tick.
@@ -52,7 +55,7 @@ object PlayerSimulationCache: EventListener {
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        this.otherPlayerCache.clear()
+        this.otherPlayers.clear()
         this.isLocalPlayerMoving = false
     }
 
@@ -95,139 +98,21 @@ object PlayerSimulationCache: EventListener {
      */
     private fun updatePlayerCache(directionalInput: DirectionalInput, verify: Boolean = false) {
         // Check if we even need to update the cache
-        if (verify && localPlayerCache?.simulatedPlayer?.input?.directionalInput == directionalInput) {
+        if (verify && localPlayerCache?.input?.keys?.let(::DirectionalInput) == directionalInput) {
             return
         }
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
-        )
-
-        localPlayerCache = SimulatedPlayerCache(simulatedPlayer)
+        localPlayerCache = localForecast(directionalInput)
     }
 
-    fun getSimulationForOtherPlayers(player: Player): SimulatedPlayerCache {
-        return otherPlayerCache.computeIfAbsent(player) {
-            val simulatedPlayer = SimulatedPlayer.fromOtherPlayer(
-                it,
-                SimulatedPlayer.SimulatedPlayerInput.guessInput(it)
-            )
+    fun getSimulationForOtherPlayers(player: Player): Forecast = otherPlayers.of(player)
 
-            SimulatedPlayerCache(simulatedPlayer)
-        }
-    }
+    /** Where [target] will be: by its forecast for players, else in a straight line. */
+    fun extrapolate(target: Entity): PositionExtrapolation = PositionExtrapolation.of(target, otherPlayers)
 
-    fun getSimulationForLocalPlayer(): SimulatedPlayerCache {
-        val cached = localPlayerCache
+    fun getSimulationForLocalPlayer(): Forecast =
+        localPlayerCache ?: localForecast(DirectionalInput(player.input)).also { localPlayerCache = it }
 
-        if (cached != null) {
-            return cached
-        }
-
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
-        )
-
-        val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
-
-        localPlayerCache = simulatedPlayerCache
-
-        return simulatedPlayerCache
-    }
-}
-
-class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
-    private var currentSimulationStep = 0
-    private val simulationSteps = ObjectArrayList<SimulatedPlayerSnapshot>().apply {
-        add(SimulatedPlayerSnapshot(simulatedPlayer))
-    }
-    private val lock = ReentrantReadWriteLock()
-
-    fun simulateUntil(ticks: Int) {
-        check(ticks >= 0) { "ticks may not be negative" }
-
-        if (currentSimulationStep >= ticks) {
-            return
-        }
-
-        lock.write {
-            while (currentSimulationStep < ticks) {
-                simulatedPlayer.tick()
-                simulationSteps.add(SimulatedPlayerSnapshot(simulatedPlayer))
-
-                this.currentSimulationStep++
-            }
-        }
-    }
-
-    fun getSnapshotAt(ticks: Int): SimulatedPlayerSnapshot {
-        simulateUntil(ticks)
-
-        lock.read {
-            return simulationSteps[ticks]
-        }
-    }
-
-    fun simulate(): Sequence<SimulatedPlayerSnapshot> = sequence {
-        var idx = 0
-
-        while (true) {
-            yield(getSnapshotAt(idx))
-
-            idx++
-        }
-    }
-
-    fun getSnapshotsBetween(tickRange: IntRange): List<SimulatedPlayerSnapshot> {
-        check(tickRange.last < 60 * 20) { "tried to simulate a player for more than a minute!" }
-
-        simulateUntil(tickRange.last + 1)
-
-        return lock.read {
-            ObjectImmutableList(simulationSteps.subList(tickRange.first, tickRange.last + 1))
-        }
-    }
-
-    fun simulateBetween(tickRange: IntRange): Sequence<SimulatedPlayerSnapshot> {
-        check(tickRange.last < 60 * 20) { "tried to simulate a player for more than a minute!" }
-
-        simulateUntil(tickRange.last + 1)
-
-        return sequence {
-            for (i in tickRange) {
-                yield(getSnapshotAt(i))
-            }
-        }
-    }
-
-}
-
-data class SimulatedPlayerSnapshot(
-    val pos: Vec3,
-    val fallDistance: Double,
-    val velocity: Vec3,
-    val onGround: Boolean,
-    val clipLedged: Boolean
-) {
-    constructor(s: SimulatedPlayer): this(
-        s.pos,
-        s.fallDistance,
-        s.deltaMovement,
-        s.onGround(),
-        s.clipLedged
-    )
-}
-
-/**
- * Yes, this name sucks as [SimulatedPlayerCache] already exists, but I don't know a better name :/
- */
-class CachedPlayerSimulation(val simulatedPlayer: SimulatedPlayerCache): PlayerSimulation {
-    override val pos: Vec3
-        get() = this.simulatedPlayer.getSnapshotAt(this.ticks).pos
-
-    private var ticks = 0
-
-    override fun tick() {
-        this.ticks++
-    }
+    private fun localForecast(directionalInput: DirectionalInput) =
+        Forecast(SimulatedPlayer.fromClientPlayer(SimulatedInput.fromClientPlayer(directionalInput)))
 }

@@ -19,6 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.agent.navigation.walk.AssistedJump
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.walk.Abilities
+import net.ccbluex.agent.pathfinder.walk.JumpTargets
+import net.ccbluex.agent.pathfinder.walk.Jumps
+import net.ccbluex.agent.pathfinder.walk.LeapInput
+import net.ccbluex.agent.simulation.MotionTraits
+import net.ccbluex.agent.simulation.PlayerMotion
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -29,20 +39,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.agent.simulation.MotionTraits
-import net.ccbluex.agent.simulation.PlayerMotion
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
-import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.pathfinder.walk.Abilities
-import net.ccbluex.agent.navigation.walk.AssistedJump
-import net.ccbluex.agent.pathfinder.walk.JumpTargets
-import net.ccbluex.agent.pathfinder.walk.Jumps
-import net.ccbluex.agent.pathfinder.walk.LeapInput
 import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
 
 /**
@@ -155,7 +156,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         // The shared simulation of the player is renewed at this priority too, so it may still be the last tick's.
-        val input = SimulatedPlayerInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
+        val input = SimulatedInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
         val simulation = SimulatedPlayer.fromClientPlayer(input)
         simulation.tick()
         if (!simulation.onGround()) {
