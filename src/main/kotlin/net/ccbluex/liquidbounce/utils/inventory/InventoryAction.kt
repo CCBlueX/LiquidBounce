@@ -128,7 +128,7 @@ sealed interface InventoryAction {
 
             // Screen is null, which means we are targeting the player inventory
             if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
-                !interaction.isServerControlledInventory && !InventoryManager.isContainerOpenPending
+                !interaction.isServerControlledInventory
             ) {
                 return true
             }

@@ -31,11 +31,8 @@ import net.minecraft.world.item.ItemUseAnimation
 
 object InteractionTracker : EventListener {
 
-    // The server can replace the held item without a slot change, e.g. a sword with a menu compass on death
     val isBlocking: Boolean
-        get() = currentInteraction?.let {
-            it.action == ItemUseAnimation.BLOCK && player.getItemInHand(it.hand).useAnimation == ItemUseAnimation.BLOCK
-        } == true
+        get() = currentInteraction?.action == ItemUseAnimation.BLOCK
     val isMainHand: Boolean
         get() = currentInteraction?.hand == InteractionHand.MAIN_HAND
     val blockingHand: InteractionHand?

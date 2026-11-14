@@ -77,11 +77,8 @@ public abstract class MixinPacketWrapper {
             InventoryManager.INSTANCE.setInventoryOpenServerSide(true);
         }
 
-        /*
-          Up to 1.16.4 the server compares the clicked item with the result of its own click and resyncs the whole
-          container on a mismatch, ignoring further clicks until the client confirms. Its click returns nothing for
-          SWAP, CLONE and PICKUP_ALL, but ViaFabricPlus sends the slot item for them.
-         */
+        // Up to 1.16.4, the server's click returns an empty stack for SWAP, CLONE and PICKUP_ALL,
+        // while ViaFabricPlus sends the slot item, triggering a container resync on non-empty slots.
         if (packetType == ServerboundPackets1_16_2.CONTAINER_CLICK) {
             int mode = this.get(Types.VAR_INT, 0);
             if (mode == ContainerInput.SWAP.ordinal() || mode == ContainerInput.CLONE.ordinal()
