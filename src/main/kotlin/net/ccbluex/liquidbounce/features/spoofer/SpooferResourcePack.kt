@@ -21,10 +21,12 @@ package net.ccbluex.liquidbounce.features.spoofer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.minecraft.network.Connection
 import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.ACCEPTED
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.DECLINED
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.DOWNLOADED
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.FAILED_DOWNLOAD
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.SUCCESSFULLY_LOADED
 
@@ -35,17 +37,22 @@ import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Actio
  */
 object SpooferResourcePack : ToggleableValueGroup(name = "ResourceSpoofer", enabled = false) {
 
+    /**
+     * Answers [packet] like vanilla does after a successful download, without downloading anything.
+     * Called from MixinCommonNetworkHandler, which then skips vanilla's handling.
+     */
+    fun spoof(connection: Connection, packet: ClientboundResourcePackPushPacket) {
+        val id = packet.id
+        connection.send(ServerboundResourcePackPacket(id, ACCEPTED))
+        connection.send(ServerboundResourcePackPacket(id, DOWNLOADED))
+        connection.send(ServerboundResourcePackPacket(id, SUCCESSFULLY_LOADED))
+    }
+
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        val network = mc.connection ?: return@handler
 
-        if (packet is ClientboundResourcePackPushPacket) {
-            val id = packet.id
-            network.send(ServerboundResourcePackPacket(id, ACCEPTED))
-            network.send(ServerboundResourcePackPacket(id, SUCCESSFULLY_LOADED))
-            event.cancelEvent()
-        } else if (packet is ServerboundResourcePackPacket && (packet.action == DECLINED ||
+        if (packet is ServerboundResourcePackPacket && (packet.action == DECLINED ||
                 packet.action == FAILED_DOWNLOAD)) {
             event.cancelEvent()
         }
