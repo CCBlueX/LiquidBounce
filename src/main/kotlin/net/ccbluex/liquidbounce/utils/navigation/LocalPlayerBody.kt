@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_13_2
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
@@ -87,10 +88,12 @@ class LocalPlayerBody(
         if (purpose == LookPurpose.VIEW || rotations == null) {
             return super.look(rotation, purpose)
         }
+        // From the rotation the player has now: the sent one lags a tick behind, which would halve the turn speed
         val paced = if (purpose == LookPurpose.STEER && player.isFallFlying) {
             rotation
         } else {
-            pace(sentRotation, rotation, purpose)
+            val current = RotationManager.currentRotation ?: player.rotation
+            pace(Rotation(current.yaw, current.pitch), rotation, purpose)
         }
         val target = rotations.toRotationTarget(ClientRotation(paced.yaw, paced.pitch))
         ownTarget = target

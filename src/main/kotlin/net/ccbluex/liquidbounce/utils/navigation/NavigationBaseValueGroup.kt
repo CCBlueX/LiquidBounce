@@ -47,6 +47,9 @@ abstract class NavigationBaseValueGroup<T>(
     val isActing: Boolean
         get() = navigator.isActing
 
+    val isSafeWalking: Boolean
+        get() = navigator.isSafeWalking
+
     protected abstract fun createNavigationContext(): T
 
     /** Where to walk, or null to stand still. */

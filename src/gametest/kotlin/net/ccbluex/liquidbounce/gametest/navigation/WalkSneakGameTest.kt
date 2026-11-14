@@ -30,7 +30,13 @@ import net.minecraft.world.phys.Vec3
 
 private const val GOAL_RADIUS = 0.8
 
-/** A survival player sneaks through a low tunnel and along narrow bridges high over the ground, unhurt. */
+/** Any lower below the bridge's top, the player has stepped off it. */
+private const val BRIDGE_TOLERANCE = 0.5
+
+/**
+ * A survival player sneaks through a low tunnel, and runs along narrow bridges high over the ground with safe walk,
+ * which holds it at the edges by sneaking there; unhurt and without falling off.
+ */
 class WalkSneakGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     context.onClient {
@@ -44,13 +50,13 @@ class WalkSneakGameTest : ServerGameTest({
         walker.start(context)
 
         moveTo(Vec3(6.5, y.toDouble(), 0.5))
-        walk(walker, Vec3(17.5, y.toDouble(), 0.5), 600, "through the low tunnel")
+        sneak(walker, Vec3(17.5, y.toDouble(), 0.5), 600, "through the low tunnel")
 
         moveTo(Vec3(31.5, y + 21.0, 0.5))
-        walk(walker, Vec3(42.5, y + 21.0, 10.5), 1200, "along the bridge")
+        crossBridge(walker, Vec3(42.5, y + 21.0, 10.5), 1200, "along the bridge")
 
         moveTo(Vec3(31.5, y + 21.0, -9.5))
-        walk(walker, Vec3(45.5, y + 21.0, -9.5), 1200, "along the straight bridge")
+        crossBridge(walker, Vec3(45.5, y + 21.0, -9.5), 1200, "along the straight bridge")
     } finally {
         walker.stop(context)
     }
@@ -79,7 +85,7 @@ private fun GameTestScope.buildCourse(y: Int) {
     awaitServer("block 45 ${y + 20} -10 minecraft:stone")
 }
 
-private fun GameTestScope.walk(walker: TestWalker, goal: Vec3, ticks: Int, what: String) {
+private fun GameTestScope.sneak(walker: TestWalker, goal: Vec3, ticks: Int, what: String) {
     var sneaked = false
     unhurt("Walking $what") {
         walker.walk(context, goal, ticks, "Walking $what", "Did not walk $what") {
@@ -87,4 +93,18 @@ private fun GameTestScope.walk(walker: TestWalker, goal: Vec3, ticks: Int, what:
         }
     }
     check(sneaked) { "Walked $what without sneaking" }
+}
+
+/** Walks to [goal] on a bridge level with it: with safe walk on the way, and never below the bridge's top. */
+private fun GameTestScope.crossBridge(walker: TestWalker, goal: Vec3, ticks: Int, what: String) {
+    var safeWalked = false
+    var lowest = Double.MAX_VALUE
+    unhurt("Walking $what") {
+        walker.walk(context, goal, ticks, "Walking $what", "Did not walk $what") {
+            safeWalked = safeWalked || walker.isSafeWalking
+            lowest = minOf(lowest, it.y)
+        }
+    }
+    check(safeWalked) { "Walked $what without safe walk" }
+    check(lowest > goal.y - BRIDGE_TOLERANCE) { "Fell off the bridge walking $what, down to y $lowest" }
 }

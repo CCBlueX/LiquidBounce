@@ -67,6 +67,10 @@ class Navigator(
     val isActing: Boolean
         get() = navigator.isActing
 
+    /** Whether the walk holds the player at ledges now, by sneaking there. */
+    val isSafeWalking: Boolean
+        get() = body.safeWalk
+
     /** Where the walk heads: the aim of a block action, else the way to the next point, else the movement input. */
     fun movementRotation(): Rotation = navigator.movementRotation().let { Rotation(it.yaw, it.pitch) }
 
