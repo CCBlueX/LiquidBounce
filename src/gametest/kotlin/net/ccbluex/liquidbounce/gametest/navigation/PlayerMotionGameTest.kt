@@ -20,12 +20,12 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.SingleplayerGameTest
-import net.ccbluex.liquidbounce.utils.entity.MotionTraits
-import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.agent.simulation.MotionTraits
+import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
 
@@ -74,7 +74,7 @@ private class Course(
 ) {
     /** The first tick the two are apart at, if any. */
     fun difference(player: LocalPlayer): String? {
-        val motion = PlayerMotion(Terrain.live(), MotionTraits.capture(player))
+        val motion = PlayerMotion(Terrain.live(player.level()), MotionTraits.capture(player))
         motion.reset(player)
         val game = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayerInput(DirectionalInput(forward.toFloat(), strafe.toFloat()), jump, sprint, sneak)

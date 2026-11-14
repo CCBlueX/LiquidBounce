@@ -29,20 +29,20 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.MotionTraits
-import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
+import net.ccbluex.agent.simulation.MotionTraits
+import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
-import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
-import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.walk.Abilities
+import net.ccbluex.agent.navigation.walk.AssistedJump
+import net.ccbluex.agent.pathfinder.walk.JumpTargets
+import net.ccbluex.agent.pathfinder.walk.Jumps
+import net.ccbluex.agent.pathfinder.walk.LeapInput
 import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
 
 /**
@@ -68,7 +68,6 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     private var aimYaw = Float.NaN
     private var sprint = false
-
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         assisted.target ?: return@handler
@@ -126,7 +125,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     /** The keys the assist presses this tick, or null when there is nothing to assist. */
     private fun assist(event: MovementInputEvent): LeapInput? {
-        val terrain = Terrain.live()
+        val terrain = Terrain.live(world)
         val abilities = abilities()
         val state = PlayerMotion(terrain, abilities.motion)
         state.reset(player)

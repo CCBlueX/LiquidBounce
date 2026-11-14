@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.navigation.Navigator
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
@@ -160,7 +160,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
         // The locate button picks the ground to stand on.
         private fun feetAt(pos: BlockPos): BlockPos {
-            val terrain = Terrain.live()
+            val terrain = Terrain.live(world)
             val above = pos.above()
             return if (!terrain.isStandable(pos) && terrain.isStandable(above)) above else pos
         }

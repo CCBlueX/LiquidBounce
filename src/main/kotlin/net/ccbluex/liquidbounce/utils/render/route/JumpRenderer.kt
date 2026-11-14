@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
+import net.ccbluex.agent.navigation.walk.AssistedJump
 import net.minecraft.world.entity.Avatar.DEFAULT_EYE_HEIGHT
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3

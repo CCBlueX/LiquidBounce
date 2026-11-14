@@ -104,7 +104,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
-import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -291,7 +290,6 @@ object LiquidBounce : EventListener {
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
         TeleportManager
-        SectionCache
         InteractionTracker
         CombatManager
         TotemPopTracker
