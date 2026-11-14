@@ -19,6 +19,16 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.agent.navigation.teleport.Options
+import net.ccbluex.agent.navigation.teleport.Teleport
+import net.ccbluex.agent.pathfinder.route.BlockGoal
+import net.ccbluex.agent.pathfinder.route.Failure
+import net.ccbluex.agent.pathfinder.route.Limits
+import net.ccbluex.agent.pathfinder.route.Outcome
+import net.ccbluex.agent.pathfinder.teleport.Route
+import net.ccbluex.agent.pathfinder.teleport.WaypointSearch
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.world.SectionCache
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
@@ -33,18 +43,8 @@ import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.gametest.serverPosition
-import net.ccbluex.agent.pathfinder.route.BlockGoal
-import net.ccbluex.agent.pathfinder.route.Failure
-import net.ccbluex.agent.pathfinder.route.Limits
-import net.ccbluex.agent.pathfinder.route.Outcome
-import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
-import net.ccbluex.agent.navigation.teleport.Teleport
-import net.ccbluex.agent.navigation.teleport.Options
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
-import net.ccbluex.agent.pathfinder.teleport.WaypointSearch
-import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.pathfinder.world.SectionCache
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.monster.zombie.Husk

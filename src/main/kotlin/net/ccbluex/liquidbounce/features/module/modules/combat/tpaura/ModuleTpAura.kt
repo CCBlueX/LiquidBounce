@@ -19,6 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
+import net.ccbluex.agent.navigation.teleport.Teleport
+import net.ccbluex.agent.pathfinder.route.Outcome
+import net.ccbluex.agent.pathfinder.teleport.Route
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.terrain.reachPositions
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -38,15 +43,10 @@ import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.agent.pathfinder.route.Outcome
-import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
-import net.ccbluex.agent.navigation.teleport.Teleport
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
-import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
-import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.pathfinder.terrain.reachPositions
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity

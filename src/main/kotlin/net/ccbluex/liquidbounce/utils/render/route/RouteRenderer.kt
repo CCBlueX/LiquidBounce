@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.render.route
 
+import net.ccbluex.agent.navigation.RouteState
+import net.ccbluex.agent.navigation.RouteView
+import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -35,9 +38,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.agent.navigation.RouteState
-import net.ccbluex.agent.navigation.RouteView
-import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
