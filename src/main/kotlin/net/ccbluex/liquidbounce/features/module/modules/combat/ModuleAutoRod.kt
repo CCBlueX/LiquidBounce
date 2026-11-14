@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -85,7 +86,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
-    private val requires by multiEnumChoice<KillAuraRequirements>(
+    private val requirements by multiEnumChoice<KillAuraRequirements>(
         "Requires",
         choices = enumSetOf(KillAuraRequirements.EMPTY_HAND).complement()
     )
@@ -112,7 +113,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = requirements.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
             && availableRodSlot != null
@@ -199,6 +200,8 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
+        requires { slot.itemStack.`is`(Items.FISHING_ROD) }
+
         // 3. timeout / hit entity / no movement / out of range
         tickConditional(hitTimeout) {
             fishingBobberEntity?.hookedIn != null ||
@@ -209,7 +212,6 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         // 4. pull
         // 5. reset slot (this ticksUntilReset will override prev action)
         useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
-
         waitTicks(cooldown.random())
     }
 

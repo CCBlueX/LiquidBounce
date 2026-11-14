@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.ON_TICK
@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -107,9 +106,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                tickUntil {
-                    !inGame || (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1
-                }
+                requires { isUsable(slot) }
+                tickUntil { (currentRotation ?: player.rotation).pitch >= rotation.pitch - 1 }
 
                 rotation = rotation.normalize()
             }
@@ -126,8 +124,6 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 rotation = rotation.normalize()
             }
         }
-
-        if (!inGame) return // TODO: I think we should edit the continuation interceptor here
 
         useHotbarSlotOrOffhand(
             slot,
@@ -146,8 +142,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             else -> {}
         }
 
-        // Wait at least 1 tick to make sure, we do not continue with something else too early
-        waitTicks(1)
+        // The next buff waits at least a tick, so we do not continue with something else too early
+        ModuleAutoBuff.waitBeforeNextBuff(1)
     }
 
     /**

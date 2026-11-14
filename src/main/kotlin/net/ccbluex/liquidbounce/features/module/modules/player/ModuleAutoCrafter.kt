@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.unchanged
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -71,10 +72,9 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
         val context = SlotDisplayContext.fromLevel(mc.level ?: return@tickHandler)
         val collections = player.recipeBook.getCollection(menuType.searchCategory)
 
-        for ((index, targetItem) in itemsToCraft.withIndex()) {
-            val currentMenu = player.containerMenu
-            if (currentMenu !== menu) break
+        unchanged { mc.player?.containerMenu }
 
+        for ((index, targetItem) in itemsToCraft.withIndex()) {
             val remainingItems = itemsToCraft.subList(index + 1, itemsToCraft.size)
 
             val recipe = collections.firstNotNullOfOrNull { collection ->

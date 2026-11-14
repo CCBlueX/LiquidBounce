@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
@@ -67,6 +68,11 @@ abstract class Buff(
     }
 
     /**
+     * Whether [slot] still has an item this buff can use, for waits between finding the slot and using it.
+     */
+    protected fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
+
+    /**
      * Try to run feature if possible, otherwise return false
      */
     internal suspend fun runIfPossible(): Boolean {
@@ -87,10 +93,18 @@ abstract class Buff(
             // Check if we should auto swap
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
-            waitTicks(AutoSwap.delayIn.random())
-            execute(slot)
-            waitTicks(AutoSwap.delayOut.random())
-            SilentHotbar.resetSlot(ModuleAutoBuff)
+            try {
+                requires { passesRequirements }
+                requires { isUsable(slot) }
+                waitTicks(AutoSwap.delayIn.random())
+                execute(slot)
+            } finally {
+                // DelayOut outlives the run, however it ended: the next buff waits, then the hotbar goes back
+                ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
+                if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
+                    SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
+                }
+            }
             return true
         } else {
             return false

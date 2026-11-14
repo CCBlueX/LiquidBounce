@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.event
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
@@ -53,6 +54,7 @@ sealed interface SuspendHandlerBehavior {
             handler: SuspendableEventHandler<T>
         ): EventHook<T> = handler(eventClass, priority) { event ->
             eventListenerScope.launch(wrappedContext, start) {
+                beginRun()
                 handler(event)
             }.onCancellation(onCancellation)
         }
@@ -82,7 +84,7 @@ sealed interface SuspendHandlerBehavior {
                         onBufferOverflow = BufferOverflow.SUSPEND,
                     ).also { channel ->
                         eventListenerScope.launch {
-                            channel.consumeEach { handler(it) }
+                            channel.consumeEach { asRun { handler(it) } }
                         }.invokeOnCompletion {
                             channelRef.getAndSet(null)?.close(it)
                         }
@@ -109,6 +111,7 @@ sealed interface SuspendHandlerBehavior {
             val jobRef = atomic<Job?>(null)
             return handler(eventClass, priority) { event ->
                 jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
+                    beginRun()
                     handler(event)
                 })?.cancel()
             }
@@ -125,36 +128,80 @@ sealed interface SuspendHandlerBehavior {
             wrappedContext: CoroutineContext,
             priority: Short,
             handler: SuspendableEventHandler<T>
-        ): EventHook<T> {
-            val jobRef = atomic<Job?>(null)
-            return handler(eventClass, priority) { event ->
-                var newJob: Job? = null
-
-                while (true) {
-                    val currentJob = jobRef.value
-                    if (currentJob?.isActive == true) break
-
-                    if (newJob == null) {
-                        newJob = eventListenerScope.launch(wrappedContext, start = CoroutineStart.LAZY) {
-                            handler(event)
-                        }.onCancellation(onCancellation)
-                    }
-
-                    if (jobRef.compareAndSet(currentJob, newJob)) {
-                        newJob.start()
-                        break
-                    } else {
-                        newJob.cancel()
-                    }
-                }
-            }
-        }
+        ): EventHook<T> = ExclusiveHandler(this, eventClass, wrappedContext, priority, onCancellation, handler).hook
 
         companion object {
             @JvmField
             val Default = DiscardLatest(null)
         }
     }
+}
+
+/**
+ * Handles one event at a time: events arriving while a run is active are dropped.
+ */
+class ExclusiveHandler<T : Event>(
+    private val listener: EventListener,
+    eventClass: Class<T>,
+    private val context: CoroutineContext,
+    priority: Short,
+    private val onCancellation: Runnable?,
+    handler: SuspendableEventHandler<T>,
+) {
+
+    private val jobRef = atomic<Job?>(null)
+
+    val hook: EventHook<T> = listener.handler(eventClass, priority) { event ->
+        var newJob: Job? = null
+
+        while (true) {
+            val currentJob = jobRef.value
+            if (currentJob?.isActive == true) break
+
+            if (newJob == null) {
+                newJob = newRun { handler(event) }
+            }
+
+            if (jobRef.compareAndSet(currentJob, newJob)) {
+                newJob.start()
+                break
+            } else {
+                newJob.cancel()
+            }
+        }
+    }
+
+    /** The last run queued with [runInstead]. */
+    private var queued: Job? = null
+
+    /**
+     * Runs [block] once in place of the handler: the active handler run is cancelled, runs queued here before go
+     * first. Events are dropped until the queue is empty.
+     */
+    @Synchronized
+    fun runInstead(block: suspend CoroutineScope.() -> Unit) {
+        val previous = queued?.takeIf { it.isActive }
+        val job = newRun {
+            if (previous != null) {
+                previous.join()
+                beginRun()
+            }
+            block()
+        }
+        queued = job
+        val replaced = jobRef.getAndSet(job)
+        if (previous == null) {
+            replaced?.cancel()
+        }
+        job.start()
+    }
+
+    private fun newRun(block: suspend CoroutineScope.() -> Unit) =
+        listener.eventListenerScope.launch(context, start = CoroutineStart.LAZY) {
+            beginRun()
+            block()
+        }.onCancellation(onCancellation)
+
 }
 
 private fun Job.onCancellation(runnable: Runnable?) = apply {

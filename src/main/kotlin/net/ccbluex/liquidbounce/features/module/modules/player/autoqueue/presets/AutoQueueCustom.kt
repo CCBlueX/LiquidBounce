@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -86,11 +85,14 @@ object AutoQueueCustom : Mode("Custom") {
     }
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
-    private var worldChangeOccurred = false
+    private var awaitsWorldChange = false
 
-    @Suppress("unused")
+    override fun disable() {
+        awaitsWorldChange = false
+    }
+
     private val tickHandler = tickHandler(Dispatchers.Main) {
-        if (ModuleAutoQueue.shouldPause) {
+        if (ModuleAutoQueue.shouldPause || awaitsWorldChange) {
             return@tickHandler
         }
 
@@ -98,13 +100,9 @@ object AutoQueueCustom : Mode("Custom") {
 
         if (trigger.isTriggered) {
             AutoQueueControl.wasInQueue = true
-
+            // Set before the action, as the world it brings ends this run
+            awaitsWorldChange = waitUntilWorldChange
             actions.activeMode.execute()
-
-            if (waitUntilWorldChange) {
-                tickUntil { worldChangeOccurred }
-                worldChangeOccurred = false
-            }
             waitTicks(20)
         } else if (AutoQueueControl.enabled && AutoQueueControl.wasInQueue) {
             AutoQueueControl.wasInQueue = false
@@ -112,8 +110,11 @@ object AutoQueueCustom : Mode("Custom") {
     }
 
     @Suppress("unused")
-    private val worldChange = handler<WorldChangeEvent> { event ->
-        worldChangeOccurred = true
+    private val worldChange = handler<WorldChangeEvent> {
+        if (awaitsWorldChange) {
+            awaitsWorldChange = false
+            tickHandler.runInstead { waitTicks(20) }
+        }
     }
 
 }

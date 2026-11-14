@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.Required
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -153,20 +155,23 @@ object ModuleFastExp : ClientModule(
             return@tickHandler
         }
 
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE)
-        if (slot == null || player.isDeadOrDying) {
+        if (Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) == null || player.isDeadOrDying) {
             bottlesUsed = 0
             bottlesRequired = 0
             repairing = false
             return@tickHandler
         }
 
+        requires { !InventoryManager.isHandledScreenOpen }
+        requires { !player.isDeadOrDying }
+        val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
+
         if (!NoWaste.enabled) {
             action(slot)
             return@tickHandler
         }
 
-        val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot)
+        val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot.value)
 
         if (bottlesRequiredCurrently < 1) {
             bottlesUsed = 0
@@ -209,7 +214,7 @@ object ModuleFastExp : ClientModule(
         }
     }
 
-    private suspend fun action(slot: HotbarItemSlot) {
+    private suspend fun action(slot: Required<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
         if (Rotate.enabled) {
@@ -231,7 +236,7 @@ object ModuleFastExp : ClientModule(
         val pitch = if (Rotate.enabled) RotationManager.serverRotation.pitch else 90f
         repeat(times) {
             useHotbarSlotOrOffhand(
-                slot,
+                slot.value,
                 slotResetDelay.random(),
                 xRot = pitch
             )
