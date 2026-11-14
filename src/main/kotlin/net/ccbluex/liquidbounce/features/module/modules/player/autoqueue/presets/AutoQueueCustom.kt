@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
@@ -85,13 +86,11 @@ object AutoQueueCustom : Mode("Custom") {
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
     private var awaitsWorldChange = false
-
-    /** Ticks left before the next trigger, counted from the action or, with [waitUntilWorldChange], the new world. */
-    private var cooldownLeft = 0
+    private var worldChanged = false
 
     override fun disable() {
         awaitsWorldChange = false
-        cooldownLeft = 0
+        worldChanged = false
     }
 
     @Suppress("unused")
@@ -100,9 +99,9 @@ object AutoQueueCustom : Mode("Custom") {
             return@tickHandler
         }
 
-        if (cooldownLeft > 0) {
-            cooldownLeft--
-            return@tickHandler
+        if (worldChanged) {
+            worldChanged = false
+            waitTicks(20)
         }
 
         val trigger = triggers.activeMode
@@ -111,8 +110,8 @@ object AutoQueueCustom : Mode("Custom") {
             AutoQueueControl.wasInQueue = true
             // Set before the action, as the world it brings ends this run
             awaitsWorldChange = waitUntilWorldChange
-            cooldownLeft = COOLDOWN_TICKS
             actions.activeMode.execute()
+            waitTicks(20)
         } else if (AutoQueueControl.enabled && AutoQueueControl.wasInQueue) {
             AutoQueueControl.wasInQueue = false
         }
@@ -122,10 +121,8 @@ object AutoQueueCustom : Mode("Custom") {
     private val worldChange = handler<WorldChangeEvent> {
         if (awaitsWorldChange) {
             awaitsWorldChange = false
-            cooldownLeft = COOLDOWN_TICKS
+            worldChanged = true
         }
     }
-
-    private const val COOLDOWN_TICKS = 20
 
 }
