@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.setPipeline
@@ -120,6 +121,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             .createRenderPass({ "GUI blur overlay blit pass" })
             .use { pass ->
                 pass.setPipeline(ClientRenderPipelines.GuiBlurBlit)
+                pass.bindGlobalsUniform()
                 pass.setUniform("InSampler", overlayTexture, overlaySampler)
                 pass.draw(3, 1, 0, 0)
             }

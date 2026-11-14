@@ -512,6 +512,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         screenQuadSnippet()
         withFragmentShader("core/blit_screen")
         withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
@@ -552,6 +553,7 @@ object ClientRenderPipelines {
      */
     @JvmField
     val GuiBlurBlit = newPipeline("blur_blit") {
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         screenQuadSnippet()
         withFragmentShader("core/blit_screen")
         withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
