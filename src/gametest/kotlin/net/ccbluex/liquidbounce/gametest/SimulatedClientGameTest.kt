@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.network
@@ -41,6 +41,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -51,9 +52,17 @@ import net.minecraft.world.phys.Vec3
  * runs off a raised platform with it; a prediction made a few blocks before the edge has to follow the jump tick for
  * tick, where one without modules runs off the edge instead.
  */
-class SimulatedClientGameTest : LocalGameTest() {
+private fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
+    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
+}
 
-    override fun test(context: ClientGameTestContext) {
+class SimulatedClientGameTest : ClientGameTest({ context ->
+    SimulatedClientTestRunner.test(context)
+})
+
+private object SimulatedClientTestRunner {
+
+    fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             world.server.runCommand("gamemode survival @a")
             world.server.runCommand("attribute @p minecraft:fall_damage_multiplier base set 0")
@@ -259,34 +268,32 @@ class SimulatedClientGameTest : LocalGameTest() {
         }
     }
 
-    private companion object {
-        const val LANE_Z = 20
-        const val LANE_START = 16
-        const val EDGE_X = 26
-        const val START_X = 18.5
-        const val ARM_X = 21.0
+    private const val LANE_Z = 20
+    private const val LANE_START = 16
+    private const val EDGE_X = 26
+    private const val START_X = 18.5
+    private const val ARM_X = 21.0
 
-        const val JUMP_RISE = 0.5
-        const val SENTINEL_YAW = 123f
+    private const val JUMP_RISE = 0.5
+    private const val SENTINEL_YAW = 123f
 
-        const val PREDICTED_TICKS = 30
-        const val TOLERANCE = 1.0E-6
-        const val MISS = 0.1
+    private const val PREDICTED_TICKS = 30
+    private const val TOLERANCE = 1.0E-6
+    private const val MISS = 0.1
 
-        const val SEND_TICKS = 5
-        const val SENT_SLOT = 5
+    private const val SEND_TICKS = 5
+    private const val SENT_SLOT = 5
 
-        const val MEASURED_TICKS = 20
-        const val MEASURE_WARMUP = 200
-        const val MEASURE_RUNS = 1000
-        const val NANOS_PER_MICRO = 1000.0
+    private const val MEASURED_TICKS = 20
+    private const val MEASURE_WARMUP = 200
+    private const val MEASURE_RUNS = 1000
+    private const val NANOS_PER_MICRO = 1000.0
 
-        const val SETTLE_TICKS = 10
-        const val SETTLE_TIMEOUT_TICKS = 200
-        const val RUN_TIMEOUT_TICKS = 400
+    private const val SETTLE_TICKS = 10
+    private const val SETTLE_TIMEOUT_TICKS = 200
+    private const val RUN_TIMEOUT_TICKS = 400
 
-        fun walkInput() =
-            SimulatedPlayerInput(DirectionalInput.FORWARDS, jumping = false, sprinting = true, sneaking = false)
-    }
+    private fun walkInput() =
+        SimulatedPlayerInput(DirectionalInput.FORWARDS, jumping = false, sprinting = true, sneaking = false)
 
 }

@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.features.client.ClientOverview
 import net.ccbluex.liquidbounce.features.client.ClientSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.server.MinecraftServer
+import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import java.io.ByteArrayInputStream
 import java.net.URI
@@ -64,9 +66,13 @@ private const val STOOD_DISTANCE = 0.1
  * modules, the window goes from one to the other, and none of them loses its connection over it. A client in the
  * background shows what it sees, and the ClickGUI edits its modules over the interop server.
  */
-class MultiClientGameTest : LocalGameTest() {
+class MultiClientGameTest : ClientGameTest({ context ->
+    MultiClientTestRunner.test(context)
+})
 
-    override fun test(context: ClientGameTestContext) {
+private object MultiClientTestRunner {
+
+    fun test(context: ClientGameTestContext) {
         context.createServer().use { server ->
             server.connect().use { connection ->
                 connection.waitForChunksDownload()
@@ -317,6 +323,10 @@ private fun ClientGameTestContext.sprint(client: Client) = fromClient {
 private fun ModuleSprint.mode() = containedValues.first { it.name == "Mode" }
 
 private fun ClientGameTestContext.name(client: Client): String = fromClient { client.user.name }
+
+private fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
+    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
+}
 
 private fun <T> TestDedicatedServerContext.fromServer(block: (MinecraftServer) -> T): T =
     computeOnServer<T, RuntimeException> { block(it) }
