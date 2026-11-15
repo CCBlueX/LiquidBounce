@@ -34,6 +34,8 @@
     "minecraft.client.MixinKeyMapping",
     "minecraft.client.MixinLevel",
     "minecraft.client.MixinLevelInvoker",
+    "minecraft.client.MixinLevelLoadTracker",
+    "minecraft.client.MixinLevelLoadTrackerWaitingForPlayerChunk",
     "minecraft.client.MixinMinecraft",
     "minecraft.client.MixinMouseHandler",
     "minecraft.client.MixinMouseHandlerAccessor",
