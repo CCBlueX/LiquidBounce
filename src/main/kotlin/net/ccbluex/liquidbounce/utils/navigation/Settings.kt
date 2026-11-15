@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.agent.navigation.Options
 import net.ccbluex.agent.navigation.PlaceableBlocks
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 
 /** What a walking navigator may do on its way, as settings of [values]. */
@@ -41,20 +42,26 @@ class Settings(
     private val allowElytra by values.boolean("AllowElytra", true)
     private val elytraRockets by values.boolean("ElytraRockets", true)
 
-    fun options() = Options(
-        canBreak = allowBreak,
-        canPlace = allowPlace,
-        canParkour = allowParkour,
-        riskyJumps = riskyJumps,
-        maxFall = maxFall,
-        pathRange = pathRange,
-        canFly = allowFly,
-        canElytra = allowElytra,
-        elytraRockets = elytraRockets,
-        // The camera stays the user's; the walk turns the player through the rotation manager
-        lookAhead = false,
-        placeableBlocks = SCAFFOLD_BLOCKS,
-    )
+    fun options(): Options {
+        // Scaffold places the floors, so the walk bridges even without AllowPlace and only runs across them
+        val scaffold = ModuleScaffold.enabled
+        return Options(
+            canBreak = allowBreak,
+            canPlace = allowPlace || scaffold,
+            canParkour = allowParkour,
+            riskyJumps = riskyJumps,
+            maxFall = maxFall,
+            pathRange = pathRange,
+            canFly = allowFly,
+            canElytra = allowElytra,
+            elytraRockets = elytraRockets,
+            // The camera stays the user's; the walk turns the player through the rotation manager
+            lookAhead = false,
+            fastBridges = scaffold,
+            placesBridgeFloors = scaffold,
+            placeableBlocks = SCAFFOLD_BLOCKS,
+        )
+    }
 
     private companion object {
         val SCAFFOLD_BLOCKS = PlaceableBlocks { ScaffoldBlockItemSelection.isValidBlock(it) }
