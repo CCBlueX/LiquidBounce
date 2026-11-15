@@ -24,6 +24,7 @@ import net.ccbluex.agent.navigation.BodyTraits
 import net.ccbluex.agent.navigation.FlightControl
 import net.ccbluex.agent.navigation.LookPurpose
 import net.ccbluex.agent.navigation.Teleporter
+import net.ccbluex.agent.navigation.Turning
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
@@ -46,12 +47,13 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * The local player as LiquidBounce moves it: keys through [MovementInputEvent] ([applyKeys]), rotations through
- * [RotationManager] with [rotations] on behalf of [owner], teleports with silent position packets.
+ * [RotationManager] with [rotations] on behalf of [owner], teleports with silent position packets. Turns are taken at
+ * once, since the rotation manager paces them.
  */
 class LocalPlayerBody(
     private val owner: EventListener,
     private val rotations: RotationsValueGroup? = null,
-) : ClientBody() {
+) : ClientBody(Turning.instant()) {
 
     private var pressed: Input? = null
     private var pressedExact = false
@@ -94,7 +96,7 @@ class LocalPlayerBody(
         if (purpose == LookPurpose.VIEW || rotations == null) {
             return super.look(rotation, purpose)
         }
-        // From the rotation the player has now: the sent one lags a tick behind, which would halve the turn speed
+        // Whole mouse steps from the rotation the player has now; the sent one lags a tick behind
         val paced = if (purpose == LookPurpose.STEER && player.isFallFlying) {
             rotation
         } else {
