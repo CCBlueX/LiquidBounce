@@ -171,9 +171,6 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
          */
         private val disabledUntil = Int2LongOpenHashMap()
 
-        private const val DISABLE_TICKS = 100
-        private const val SOUND_RANGE_SQ = 2.25
-
         fun stateOf(entity: LivingEntity): ShieldState {
             val disabled = if (entity is LocalPlayer) {
                 entity.handItems.any { it.has(DataComponents.BLOCKS_ATTACKS) && entity.cooldowns.isOnCooldown(it) }
@@ -229,9 +226,9 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
                 val holder = level.players()
                     .filter { it !== mc.player }
                     .minByOrNull { it.distanceToSqr(packet.x, packet.y, packet.z) }
-                    ?.takeIf { it.distanceToSqr(packet.x, packet.y, packet.z) < SOUND_RANGE_SQ }
+                    ?.takeIf { it.distanceToSqr(packet.x, packet.y, packet.z) < 1.5 * 1.5 }
                     ?: return@execute
-                disabledUntil.put(holder.id, level.gameTime + DISABLE_TICKS)
+                disabledUntil.put(holder.id, level.gameTime + 100) // an axe disables a shield for 5 seconds
             }
         }
 
