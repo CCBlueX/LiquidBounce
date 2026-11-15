@@ -42,14 +42,14 @@ class Settings(
     private val elytraRockets by values.boolean("ElytraRockets", true)
 
     fun options() = Options(
-        allowBreak = allowBreak,
-        allowPlace = allowPlace,
-        allowParkour = allowParkour,
+        canBreak = allowBreak,
+        canPlace = allowPlace,
+        canParkour = allowParkour,
         riskyJumps = riskyJumps,
         maxFall = maxFall,
         pathRange = pathRange,
-        allowFly = allowFly,
-        allowElytra = allowElytra,
+        canFly = allowFly,
+        canElytra = allowElytra,
         elytraRockets = elytraRockets,
         // The camera stays the user's; the walk turns the player through the rotation manager
         lookAhead = false,

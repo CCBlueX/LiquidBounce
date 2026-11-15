@@ -96,7 +96,8 @@ gametest-harness = { group = "net.ccbluex", name = "gametest-harness", version.r
 minecraft-agent-simulation = { group = "net.ccbluex", name = "minecraft-agent-simulation", version.ref = "minecraft-agent" }
 minecraft-agent-pathfinder = { group = "net.ccbluex", name = "minecraft-agent-pathfinder", version.ref = "minecraft-agent" }
 minecraft-agent-navigation = { group = "net.ccbluex", name = "minecraft-agent-navigation", version.ref = "minecraft-agent" }
-minecraft-agent-fabric = { group = "net.ccbluex", name = "minecraft-agent-fabric", version.ref = "minecraft-agent" }
+minecraft-agent-client-common = { group = "net.ccbluex", name = "minecraft-agent-client-common", version.ref = "minecraft-agent" }
+minecraft-agent-client-fabric = { group = "net.ccbluex", name = "minecraft-agent-client-fabric", version.ref = "minecraft-agent" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
@@ -145,5 +146,6 @@ minecraft-agent = [
     "minecraft-agent-simulation",
     "minecraft-agent-pathfinder",
     "minecraft-agent-navigation",
-    "minecraft-agent-fabric",
+    "minecraft-agent-client-common",
+    "minecraft-agent-client-fabric",
 ]

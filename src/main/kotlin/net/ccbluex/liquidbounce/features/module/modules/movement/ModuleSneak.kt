@@ -171,7 +171,7 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
         val simulatedInput = SimulatedInput.fromClientPlayer(directionalInput, jump = false)
 
         // Doesn't keep the player stuck at the edge of a magma block while sneaking
-        simulatedInput.ignoreClippingAtLedge = true
+        simulatedInput.ignoresEdgeBackOff = true
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
         simulatedPlayer.setPos(player.position())

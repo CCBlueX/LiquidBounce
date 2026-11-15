@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.agent.navigation.teleport.Options
 import net.ccbluex.agent.navigation.teleport.Teleport
-import net.ccbluex.agent.pathfinder.route.BlockGoal
+import net.ccbluex.agent.pathfinder.level.SectionCache
+import net.ccbluex.agent.pathfinder.route.BlockDestination
 import net.ccbluex.agent.pathfinder.route.Failure
 import net.ccbluex.agent.pathfinder.route.Limits
 import net.ccbluex.agent.pathfinder.route.Outcome
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.agent.pathfinder.teleport.WaypointSearch
 import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.pathfinder.world.SectionCache
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
@@ -208,7 +208,7 @@ private fun ClientGameTestContext.route(
 ): Outcome<Route> = fromClient { mc ->
     val level = checkNotNull(mc.level)
     val start = checkNotNull(mc.player).position()
-    val region = BlockGoal(listOf(goal)).region(start, maxLength, maxLength.toInt())
+    val region = BlockDestination(listOf(goal)).region(start, maxLength, maxLength.toInt())
     val search = WaypointSearch(
         Terrain(SectionCache.capture(level, region)),
         start,

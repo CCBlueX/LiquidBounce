@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.agent.navigation.walk.AssistedJump
 import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.pathfinder.walk.Abilities
 import net.ccbluex.agent.pathfinder.walk.JumpTargets
 import net.ccbluex.agent.pathfinder.walk.Jumps
 import net.ccbluex.agent.pathfinder.walk.LeapInput
+import net.ccbluex.agent.pathfinder.walk.WalkAbilities
 import net.ccbluex.agent.simulation.MotionTraits
 import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.agent.simulation.SimulatedInput
@@ -72,7 +72,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         assisted.target ?: return@handler
-        val yaw = assisted.aimYaw(player.position(), player.deltaMovement, player.onGround())
+        val yaw = assisted.aimYRot(player.position(), player.deltaMovement, player.onGround())
         if (!yaw.isNaN()) {
             aimYaw = yaw
         }
@@ -120,7 +120,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
         event.directionalInput = getDirectionalInputForMovementYaw(keys.forward, keys.strafe, player.yRot)
         event.jump = keys.jump
-        event.sneak = keys.sneak
+        event.sneak = keys.shift
         sprint = keys.sprint
     }
 
@@ -140,7 +140,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
         val heading = getMovementDirectionOfInput(player.yRot, input)
         val yaw = RotationManager.movementYaw
-        val jumps = Jumps(terrain, abilities, holdsYaw = true)
+        val jumps = Jumps(terrain, abilities, holdsYRot = true)
         val targets = JumpTargets(terrain, abilities.motion)
         val assist = assisted.tick(state, yaw, heading, keys, Assist.maxAngle, jumps, targets)
         if (Assist.render.enabled) {
@@ -169,7 +169,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         aimYaw = Float.NaN
     }
 
-    private fun abilities() = Abilities(
+    private fun abilities() = WalkAbilities(
         canBreak = false,
         canPlace = false,
         placeableBlocks = 0,

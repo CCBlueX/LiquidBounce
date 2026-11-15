@@ -72,7 +72,7 @@ class Navigator(
         get() = body.safeWalk
 
     /** Where the walk heads: the aim of a block action, else the way to the next point, else the movement input. */
-    fun movementRotation(): Rotation = navigator.movementRotation().let { Rotation(it.yaw, it.pitch) }
+    fun movementRotation(): Rotation = navigator.movementRotation().let { Rotation(it.yRot, it.xRot) }
 
     /**
      * Moves one tick towards [goal], within [radius]; true if the movement is a plain walk other features may add
@@ -94,7 +94,7 @@ class Navigator(
     }
 
     fun reset() {
-        navigator.reset()
+        navigator.stop()
         body.release()
         exactKeys = false
     }
@@ -133,7 +133,7 @@ class Navigator(
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        navigator.worldChanged()
+        navigator.levelChanged()
         body.release()
     }
 

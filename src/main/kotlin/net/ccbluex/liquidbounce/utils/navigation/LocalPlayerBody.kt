@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation
 
-import net.ccbluex.agent.fabric.ClientBody
-import net.ccbluex.agent.math.Rotation
+import net.ccbluex.agent.client.ClientBody
+import net.ccbluex.agent.math.ViewRotation
 import net.ccbluex.agent.navigation.BodyTraits
 import net.ccbluex.agent.navigation.FlightControl
 import net.ccbluex.agent.navigation.LookPurpose
@@ -32,17 +32,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVa
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_13_2
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.inputFrameYaw
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.Vec3
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation as ClientRotation
-import net.ccbluex.liquidbounce.utils.movement.inputFrameYaw as clientInputFrameYaw
 
 /**
  * The local player as LiquidBounce moves it: keys through [MovementInputEvent] ([applyKeys]), rotations through
@@ -71,24 +71,24 @@ class LocalPlayerBody(
     override val teleporter: Teleporter
         get() = PacketTeleporter
 
-    override val sentRotation: Rotation
-        get() = RotationManager.serverRotation.let { Rotation(it.yaw, it.pitch) }
+    override val sentRotation: ViewRotation
+        get() = RotationManager.serverRotation.let { ViewRotation(it.yaw, it.pitch) }
 
-    override val movementYaw: Float
+    override val movementYRot: Float
         get() = RotationManager.movementYaw
 
-    override val inputFrameYaw: Float
-        get() = clientInputFrameYaw()
+    override val inputYRot: Float
+        get() = inputFrameYaw()
 
-    override val isRotationOwnedElsewhere: Boolean
+    override val isRotationOverridden: Boolean
         get() = RotationManager.activeRotationTarget.let { it != null && it !== ownTarget }
 
     override fun press(input: Input, exact: Boolean) {
-        pressed = sneakAtLedge(input)
+        pressed = stayOnGroundSurface(input)
         pressedExact = exact
     }
 
-    override fun look(rotation: Rotation, purpose: LookPurpose) {
+    override fun look(rotation: ViewRotation, purpose: LookPurpose) {
         val rotations = rotations
         if (purpose == LookPurpose.VIEW || rotations == null) {
             return super.look(rotation, purpose)
@@ -98,9 +98,9 @@ class LocalPlayerBody(
             rotation
         } else {
             val current = RotationManager.currentRotation ?: player.rotation
-            pace(Rotation(current.yaw, current.pitch), rotation, purpose)
+            pace(ViewRotation(current.yaw, current.pitch), rotation, purpose)
         }
-        val target = rotations.toRotationTarget(ClientRotation(paced.yaw, paced.pitch))
+        val target = rotations.toRotationTarget(Rotation(paced.yRot, paced.xRot))
         ownTarget = target
         val priority = if (purpose == LookPurpose.MOVEMENT) Priority.NOT_IMPORTANT else Priority.IMPORTANT_FOR_USAGE_2
         RotationManager.setRotationTarget(target, priority, owner)

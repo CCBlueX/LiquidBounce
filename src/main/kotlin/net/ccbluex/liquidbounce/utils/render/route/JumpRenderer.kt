@@ -77,7 +77,7 @@ internal class JumpRenderer(
 
     /** The top of the block landed on, and the spot inside it the feet come down on. */
     private fun WorldRenderEnvironment.drawLanding(
-        target: AssistedJump.Target,
+        target: AssistedJump.Landing,
         touchdown: Vec3?,
         noDepthTest: Boolean,
     ) {

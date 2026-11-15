@@ -63,7 +63,7 @@ fun SimulatedInput.Companion.fromClientPlayer(
     sneaking: Boolean = player.isShiftKeyDown,
 ) = SimulatedInput(
     directionalInput.toInput(jump = jump, sneak = sneaking, sprint = sprinting),
-    forceSafeWalk = callEvent(PlayerSafeWalkEvent()).isSafeWalk,
+    forceStayOnGroundSurface = callEvent(PlayerSafeWalkEvent()).isSafeWalk,
 )
 
 /** Follows the player with its current keys until it lands, moving facing [movementYaw] from [motion] on. */

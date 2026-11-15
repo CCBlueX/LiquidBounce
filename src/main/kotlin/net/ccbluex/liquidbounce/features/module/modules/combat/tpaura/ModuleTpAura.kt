@@ -146,7 +146,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val engagement = engagement ?: return@handler
         val feet = when (phase) {
             Phase.READY, Phase.APPROACH -> engagement.route?.destination
-            Phase.ATTACK -> trip.feet
+            Phase.ATTACK -> trip.position
             else -> null
         } ?: return@handler
 
@@ -167,7 +167,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return
         }
 
-        val origin = trip.feet
+        val origin = trip.position
         val target = targetSelector.targets().firstOrNull { unreachable.getOrDefault(it.id, 0) <= ticks }
         engagement = target?.let(::Engagement)
         if (target == null) {
@@ -261,7 +261,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val engagement = liveEngagement?.takeUnless { it.attacked && afterAttack == AfterAttack.RETURN }
             ?: return leave()
         val target = engagement.target
-        val feet = trip.feet
+        val feet = trip.position
         if (!isInReach(feet, target)) {
             return if (engagement.retries++ < MAX_RETRIES) replan() else leave()
         }
@@ -285,7 +285,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     /** Routes again from where the server has the player, because the target moved. */
     private fun replan() {
         val target = engagement?.target ?: return leave()
-        val origin = trip.feet
+        val origin = trip.position
         val goals = attackPositions(target, origin)
         if (goals.isEmpty()) {
             return leave()

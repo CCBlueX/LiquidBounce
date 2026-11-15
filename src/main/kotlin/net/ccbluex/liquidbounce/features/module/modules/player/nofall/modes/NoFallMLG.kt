@@ -332,7 +332,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return false
         }
 
-        return player.fallingPlayer(RotationManager.movementYaw).willStartTickInBlockBeforeCollision(
+        return player.fallingPlayer(RotationManager.movementYaw).canReachBeforeLanding(
             targetPos,
             ticks = 20,
             forceDescending = true,

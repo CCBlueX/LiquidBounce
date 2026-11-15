@@ -126,7 +126,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
             simulatedPlayer.tick()
 
             simulatedArrows.forEachIndexed { arrowIndex, arrow ->
-                if (arrow.inGround) {
+                if (arrow.isInGround) {
                     return@forEachIndexed
                 }
 
@@ -141,7 +141,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
                 val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
 
                 raycastResult.orElse(null)?.let { hitPos ->
-                    return HitInfo(i, arrows[arrowIndex], hitPos, lastPos, arrow.velocity)
+                    return HitInfo(i, arrows[arrowIndex], hitPos, lastPos, arrow.deltaMovement)
                 }
             }
         }
