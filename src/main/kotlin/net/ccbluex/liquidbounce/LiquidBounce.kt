@@ -95,6 +95,7 @@ import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.combat.TotemPopTracker
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
@@ -295,6 +296,7 @@ object LiquidBounce : EventListener {
         SectionCache
         InteractionTracker
         CombatManager
+        TotemPopTracker
         FriendManager
         InventoryManager
         EnderChestInventoryTracker

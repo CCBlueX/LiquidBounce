@@ -22,9 +22,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.function.FailableConsumer
 import org.apache.commons.lang3.function.FailableFunction
@@ -60,7 +58,3 @@ inline fun ClientGameTestContext.restoring(vararg modules: ClientModule, block: 
 }
 
 fun ClientGameTestContext.playerPosition(): Vec3 = fromClient { checkNotNull(it.player).position() }
-
-fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
-    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-}

@@ -123,6 +123,7 @@ enum class ItemType(
     BUCKET(false),
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    TOTEM(false),
     POTION(false),
     BLOCK(false),
     NONE(false);
@@ -303,6 +304,7 @@ class ItemCategorization(
                 }
 
                 is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemType.PEARL.defaultCategory))
+                Items.TOTEM_OF_UNDYING -> add(PrimitiveItemFacet(slot, ItemType.TOTEM.defaultCategory))
 
                 Items.GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))

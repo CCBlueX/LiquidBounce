@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.give
 import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.gametest.fillArea
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.matchingBlocks
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -40,7 +40,7 @@ private const val GOAL_RADIUS = 0.8
  * A survival player walks through a course with the walking navigation, unhurt: around a wall, into a closed room,
  * across a gap, up a cliff, over soul sand and ice and through a door and a fence gate.
  */
-class WalkNavigationGameTest : LiquidBounceGameTest({
+class WalkNavigationGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     lateinit var builder: TestWalker
     context.onClient {

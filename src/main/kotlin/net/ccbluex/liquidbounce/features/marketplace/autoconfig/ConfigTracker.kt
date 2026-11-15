@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_EDITION
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.util.obj
-import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -62,7 +61,6 @@ import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
-import java.io.Reader
 import kotlin.io.path.writeBytes
 
 /**
@@ -212,9 +210,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     /**
      * Applies a config that does not come from the marketplace. It stops tracking but keeps the backup.
      */
-    suspend fun loadExternal(source: CharSequence, modules: Collection<ValueGroup> = emptyList()) {
-        val config = publicGson.newJsonReader(Reader.of(source)).use { it.parseTree().asJsonObject }
-
+    suspend fun loadExternal(config: JsonObject, modules: Collection<ValueGroup> = emptyList()) {
         withContext(Dispatchers.Main) {
             apply(listOf(config), modules)
 
@@ -412,7 +408,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             name,
             MarketplaceItemType.CONFIG,
             description,
-            details.copy(branch = API_BRANCH)
+            details.copy(branch = API_EDITION)
         )
 
         val revision = try {
@@ -493,7 +489,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     private suspend fun readConfig(itemId: Int, revisionId: Int): JsonObject {
         val file = revisionFile(itemId, revisionId)
         return withContext(Dispatchers.IO) {
-            publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
+            AutoConfig.readAutoConfig(file.bufferedReader())
         }
     }
 
