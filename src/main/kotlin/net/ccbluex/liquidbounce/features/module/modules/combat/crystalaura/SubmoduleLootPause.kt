@@ -31,8 +31,6 @@ import net.minecraft.world.phys.Vec3
  */
 object SubmoduleLootPause : ToggleableValueGroup(ModuleCrystalAura, "LootPause", false) {
 
-    private const val LOOT_SPAWN_GRACE_MS = 1000L
-
     private val radius by float("Radius", 6f, 1f..12f)
     private val timeout by int("Timeout", 10, 1..60, "s")
 
@@ -67,7 +65,7 @@ object SubmoduleLootPause : ToggleableValueGroup(ModuleCrystalAura, "LootPause",
         val area = AABB.ofSize(pos, radius * 2.0, radius * 2.0, radius * 2.0)
         val lies = world.getEntitiesOfClass(ItemEntity::class.java, area) { it.isAlive }.isNotEmpty()
         // the drops can arrive a few ticks after the death
-        if (!lies && sinceDeath.hasElapsed(LOOT_SPAWN_GRACE_MS)) {
+        if (!lies && sinceDeath.hasElapsed(1000L)) {
             deathPos = null
         }
 
