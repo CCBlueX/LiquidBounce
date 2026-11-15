@@ -22,8 +22,19 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 
 class StepsValueGroup : ValueGroup("Steps") {
 
-    private val length by float("Length", DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks")
-    val packetsPerTick by int("PerTick", DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets")
+    private val length by float(
+        "StepLength", DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks", aliases = listOf("Length"),
+    )
+    val packetsPerTick by int(
+        "PacketsPerTick", DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets",
+        aliases = listOf("PerTick"),
+    )
+
+    /**
+     * Reports every descending step as standing, so the server never banks a fall over the height the
+     * route drops: it settles zero damage instead of the whole difference when the route lands again.
+     */
+    val spoofOnGround by boolean("SpoofOnGround", false)
 
     val stepLength: Double
         get() = length.toDouble()

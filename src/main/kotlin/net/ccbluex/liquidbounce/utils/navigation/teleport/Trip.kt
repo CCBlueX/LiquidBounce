@@ -43,6 +43,9 @@ class Trip(private val owner: EventListener, private val steps: StepsValueGroup)
     var run: Teleport? = null
         private set
 
+    /** The search of the last request, to seed a new one from the same origin. */
+    private var lastSearch: WaypointSearch? = null
+
     val isAvailable: Boolean
         get() = TeleportManager.isAvailable(owner)
 
@@ -61,14 +64,30 @@ class Trip(private val owner: EventListener, private val steps: StepsValueGroup)
         goals: List<BlockPos>,
         maxLength: Double,
         destination: Vec3 = Vec3.atBottomCenterOf(goals.first()),
+        reuseScores: Boolean = false,
+        goalFeet: Map<BlockPos, Vec3> = emptyMap(),
     ) {
         val limits = RouteLimits(maxLength)
         val goal = BlockGoal(goals)
         val stepLength = steps.stepLength
+        // A seed is only valid for the same origin over the same ground; the start check stands in for the terrain,
+        // which [BackgroundSearch] keeps fresh. An invalid seed costs a wrong route at most, never a wrong arrival:
+        // [Route.plan] sweeps every segment again before the steps go out.
+        val seed = if (reuseScores) {
+            lastSearch?.takeIf { it.start.distanceToSqr(origin) <= Route.SAME_POSITION_SQ }?.scores()
+        } else {
+            null
+        }
         search.request(goal, goal.region(origin, maxLength, maxLength.toInt())) { terrain ->
-            WaypointSearch(terrain, origin, goals, limits, stepLength)
+            WaypointSearch(terrain, origin, goals, limits, stepLength, seed, goalFeet).also { lastSearch = it }
         }
         view.pending(origin, destination)
+    }
+
+    /** Points the running search at [goals] without losing its progress; false when none is running. */
+    fun retarget(goals: List<BlockPos>, goalFeet: Map<BlockPos, Vec3> = emptyMap()): Boolean {
+        val goal = BlockGoal(goals)
+        return search.retarget(goal) { (it as? WaypointSearch)?.retarget(goals, goalFeet) == true }
     }
 
     /** Advances the search by a tick; it ends with the first result that is not [RouteResult.Searching]. */
@@ -88,8 +107,13 @@ class Trip(private val owner: EventListener, private val steps: StepsValueGroup)
         view.pending(start, destination, search.preview)
     }
 
-    fun dispatch(route: Route, finish: Teleport.Finish): Teleport? =
-        TeleportManager.dispatch(owner, route, finish, steps)?.also {
+    fun dispatch(
+        route: Route,
+        finish: Teleport.Finish,
+        flight: Teleport.FlightMode = Teleport.FlightMode.PACED,
+        maxDrift: Double = TeleportManager.MAX_DRIFT,
+    ): Teleport? =
+        TeleportManager.dispatch(owner, route, finish, steps, flight, maxDrift)?.also {
             run = it
             view.active(it.route.path, it)
         }
@@ -116,6 +140,7 @@ class Trip(private val owner: EventListener, private val steps: StepsValueGroup)
     fun reset() {
         search.cancel()
         run = null
+        lastSearch = null
     }
 
 }

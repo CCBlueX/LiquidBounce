@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
@@ -57,6 +58,18 @@ class Teleport internal constructor(
 
         /** The route ends where the client is. */
         RESYNC,
+    }
+
+    /** How the steps of a route reach the server. */
+    enum class FlightMode(override val tag: String) : Tagged {
+        /** One batch of position packets per tick, sized to the server's setback allowance. */
+        PACED("Paced"),
+
+        /** Every step in one tick — the fast, old-client style teleport. */
+        BURST("Burst"),
+
+        /** A single position packet to the destination: there in one tick, with no intermediate steps. */
+        INSTANT("Instant"),
     }
 
     var state = State.ACTIVE

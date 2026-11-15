@@ -61,6 +61,8 @@ object TeleportManager : EventListener {
     private val trail = ArrayList<Vec3>()
     private var stepLength = StepsValueGroup.DEFAULT_STEP_LENGTH
     private var packetsPerTick = StepsValueGroup.DEFAULT_PACKETS_PER_TICK
+    private var flightMode = Teleport.FlightMode.PACED
+    private var spoofOnGround = false
 
     val serverPosition: Vec3?
         get() = lastSent?.position
@@ -69,6 +71,19 @@ object TeleportManager : EventListener {
         get() = run?.isMoving == true
 
     fun holds(owner: EventListener) = holder === owner
+
+    /** Notes a position the server accepted outside of a run, so the way back starts from there too. */
+    fun notePosition(position: Vec3, onGround: Boolean) {
+        lastSent = Route.Step(position, onGround, 0)
+        pinTtl = MAX_PIN_TICKS
+    }
+
+    /** Drops a tracked position that no run owns, so the client's own movement is sent again. */
+    fun releasePosition() {
+        if (holder == null) {
+            release()
+        }
+    }
 
     /** Where the server has the player for [owner] between the last tick and this one, null if with the client. */
     fun serverPosition(owner: EventListener, partialTicks: Float): Vec3? =
@@ -83,6 +98,8 @@ object TeleportManager : EventListener {
         route: Route,
         finish: Teleport.Finish,
         settings: StepsValueGroup,
+        flight: Teleport.FlightMode = Teleport.FlightMode.PACED,
+        maxDrift: Double = MAX_DRIFT,
     ): Teleport? {
         if (!isAvailable(owner) || player.isPassenger) {
             return null
@@ -92,7 +109,7 @@ object TeleportManager : EventListener {
         val current = held ?: player.position()
         val drift = route.start.distanceToSqr(current)
         val linked = when {
-            drift > MAX_DRIFT_SQ -> return null
+            drift > maxDrift * maxDrift -> return null
             drift <= Route.SAME_POSITION_SQ -> route
             else -> route.startingAt(current, Terrain.live(), settings.stepLength) ?: return null
         }
@@ -104,6 +121,8 @@ object TeleportManager : EventListener {
 
         stepLength = settings.stepLength
         packetsPerTick = settings.packetsPerTick
+        spoofOnGround = settings.spoofOnGround
+        flightMode = flight
         return start(owner, linked, finish)
     }
 
@@ -122,12 +141,24 @@ object TeleportManager : EventListener {
         start(owner, route, Teleport.Finish.RESYNC)
     }
 
-    private fun start(owner: EventListener, route: Route, finish: Teleport.Finish) =
-        Teleport(owner, route, route.batches(packetsPerTick), finish).also {
+    private fun start(owner: EventListener, route: Route, finish: Teleport.Finish): Teleport {
+        val (flying, batches) = when (flightMode) {
+            Teleport.FlightMode.PACED -> route to route.batches(packetsPerTick)
+            // Every step in one tick, like a client that knows no per-tick packet limit.
+            Teleport.FlightMode.BURST -> route to intArrayOf(route.steps.size)
+            // One packet to the destination: there is no intermediate position to check.
+            Teleport.FlightMode.INSTANT -> {
+                val last = route.steps.last()
+                val jump = Route(route.points, listOf(Route.Step(route.destination, last.onGround, last.segment)))
+                jump to intArrayOf(1)
+            }
+        }
+        return Teleport(owner, flying, batches, finish).also {
             run = it
             holder = owner
             setback = false
         }
+    }
 
     private fun send(run: Teleport) {
         if (!run.isSent) {
@@ -136,7 +167,13 @@ object TeleportManager : EventListener {
                     return
                 }
 
-                sendPacketSilently(ServerboundMovePlayerPacket.Pos(step.position, step.onGround, false))
+                // A drop over the height difference would be banked as a fall and settled when the
+                // route lands; reported as standing, each descent settles nothing and banks nothing.
+                val previous = lastSent?.position ?: run.route.start
+                val descending = step.position.y < previous.y
+                val onGround = step.onGround || (spoofOnGround && descending)
+
+                sendPacketSilently(ServerboundMovePlayerPacket.Pos(step.position, onGround, false))
                 lastSent = step
 
                 val reached = run.route.points[step.segment + 1]
@@ -181,9 +218,19 @@ object TeleportManager : EventListener {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
-        val run = run ?: return@handler
+        // A position noted without a run has no owner to clear it: a spray that ends outside an excursion
+        // would leave the server standing there while the player walks away. Expire it instead.
+        if (holder == null && lastSent != null && --pinTtl <= 0) {
+            releasePosition()
+        }
+
+        var run = run ?: return@handler
         if (mc.player == null) {
             return@handler
+        }
+
+        if (run.finish == Teleport.Finish.RESYNC && run.isMoving && redirectsToClient(run)) {
+            run = this.run ?: return@handler
         }
 
         val holder = holder
@@ -197,6 +244,17 @@ object TeleportManager : EventListener {
             }
             else -> send(run)
         }
+    }
+
+    /** The client walked on while the route brings the server back, so the route ends where it is now. */
+    private fun redirectsToClient(run: Teleport): Boolean {
+        if (player.position().distanceToSqr(run.route.destination) <= REDIRECT_SQ) {
+            return false
+        }
+
+        run.end(Teleport.State.CANCELLED)
+        undo(run.owner)
+        return true
     }
 
     @Suppress("unused")
@@ -240,17 +298,40 @@ object TeleportManager : EventListener {
         reset(Teleport.State.CANCELLED)
     }
 
-    private const val MAX_DRIFT_SQ = 2.0 * 2.0
+    /** How far the player may walk off the route start before the route must be re-linked from here. */
+    /** How far the player may have walked off a route before it counts as stale; callers may widen it. */
+    const val MAX_DRIFT = 2.0
+
+    /** Ticks a noted position may live without a run owning it. */
+    private const val MAX_PIN_TICKS = 20
+
+    /** Ticks left until an unowned tracked position is dropped. */
+    private var pinTtl = 0
+
+    /** How far the client may walk on before the return route follows it. */
+    private const val REDIRECT_SQ = 1.0 * 1.0
 
 }
 
-/** The way from [position] back along [trail], without the points the server is already at. */
+/** The way from [position] back along [trail] to where the client is now, without the points the server is already at. */
 private fun wayBack(position: Vec3, trail: List<Vec3>): List<Vec3>? {
+    val client = player.position()
     val points = arrayListOf(position)
+
+    // Only the trail points the server has not passed yet: walking the whole trail again from a
+    // position in the middle would send it back out to the end and make it run the path twice.
+    val budget = position.distanceToSqr(client)
     for (point in trail.asReversed()) {
+        if (point.distanceToSqr(client) >= budget - Route.SAME_POSITION_SQ) {
+            continue
+        }
         if (point.distanceToSqr(points.last()) > Route.SAME_POSITION_SQ) {
             points += point
         }
+    }
+
+    if (client.distanceToSqr(points.last()) > Route.SAME_POSITION_SQ) {
+        points += client
     }
     return points.takeIf { it.size >= 2 }
 }
