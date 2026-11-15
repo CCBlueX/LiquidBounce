@@ -42,8 +42,6 @@ object NametagHealthBar : ToggleableValueGroup(ModuleNametags, "HealthBar", fals
     private val TRACK_COLOR = Color4b(0, 0, 0, 120)
     private val ABSORPTION_COLOR = ChatFormatting.GOLD.toColor()
 
-    private const val SETTLED = 0.01f
-
     private val healths = Reference2ObjectOpenHashMap<LivingEntity, SmoothedHealth>()
 
     /**
@@ -131,7 +129,7 @@ object NametagHealthBar : ToggleableValueGroup(ModuleNametags, "HealthBar", fals
 
     private fun Float.approach(target: Float, speed: Float): Float {
         val next = this + (target - this) * speed
-        return if (abs(target - next) < SETTLED) target else next
+        return if (abs(target - next) < 0.01f) target else next
     }
 
 }
