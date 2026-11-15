@@ -203,7 +203,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
                 action(
                     mark,
                     (mark.pos.x - cameraPos.x).toFloat(),
-                    (mark.pos.y - cameraPos.y).toFloat() + GROUND_OFFSET,
+                    (mark.pos.y - cameraPos.y).toFloat() + 0.01f, // lift off the ground to avoid z-fighting
                     (mark.pos.z - cameraPos.z).toFloat(),
                     ARGB.color((color.a * alpha).toInt(), color.r, color.g, color.b),
                 )
@@ -225,10 +225,10 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val sideX = -forwardZ * mark.side
         val sideZ = forwardX * mark.side
 
-        val centerX = x + sideX * size * FOOT_SPREAD
-        val centerZ = z + sideZ * size * FOOT_SPREAD
+        val centerX = x + sideX * size * 0.25f
+        val centerZ = z + sideZ * size * 0.25f
         val halfLength = size * 0.5f
-        val halfWidth = size * FOOT_WIDTH * 0.5f
+        val halfWidth = size * 0.2f
 
         addVertex(pose, centerX + forwardX * halfLength + sideX * halfWidth, y,
             centerZ + forwardZ * halfLength + sideZ * halfWidth).setColor(argb)
@@ -248,7 +248,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         argb: Int,
     ) {
         val outer = size * 0.5f
-        val inner = outer * (1f - RING_WIDTH)
+        val inner = outer * 0.8f
         val points = UnitCircle.POINTS
 
         repeat(UnitCircle.CIRCLE_RES) {
@@ -449,10 +449,5 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         RINGS("Rings", 0.8f),
         PARTICLES("Particles", 0.5f),
     }
-
-    private const val GROUND_OFFSET = 0.01f
-    private const val FOOT_SPREAD = 0.25f
-    private const val FOOT_WIDTH = 0.4f
-    private const val RING_WIDTH = 0.2f
 
 }
