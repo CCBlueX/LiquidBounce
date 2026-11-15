@@ -31,9 +31,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant.player
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.HumanoidArm
+import net.minecraft.world.item.ItemUseAnimation
 import org.joml.Quaternionf
 import kotlin.math.roundToInt
 
@@ -109,13 +112,11 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
 
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
-     * of a sword. This choice is only used when the [ModuleSwordBlock] module is enabled.
+     * of a sword. None keeps the block pose of the game.
      */
-    val blockAnimationChoice = modes(
-        this,
-        "BlockingAnimation",
-        OneSevenAnimation,
+    val blockAnimationChoice = modes(this, "BlockingAnimation", { it.indexOf(OneSevenAnimation) }) {
         arrayOf(
+            NoneMode(it),
             OneSevenAnimation,
             PushdownAnimation,
             SigmaAnimation,
@@ -123,7 +124,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
             AvatarAnimation,
             DortwareAnimation
         )
-    )
+    }
 
     object EquipOffset : ToggleableValueGroup(this, "EquipOffset", true) {
         private val ignore by multiEnumChoice<Ignores>("Ignore")
@@ -139,6 +140,19 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
             PLACE("Place"),
             AMOUNT("Amount")
         }
+    }
+
+    /**
+     * Whether using the item in [hand] skips lowering and raising it again. A sword that can block is used again after
+     * every hit and would drop out of the block pose each time.
+     */
+    fun keepsItemUpOnUse(hand: InteractionHand): Boolean {
+        if (running && EquipOffset.ignorePlace) {
+            return true
+        }
+
+        val itemStack = player.getItemInHand(hand)
+        return itemStack.isSword && itemStack.useAnimation == ItemUseAnimation.BLOCK
     }
 
     /**

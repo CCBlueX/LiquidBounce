@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
@@ -28,21 +28,17 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
  * to tell a modified client from a vanilla one. They must be resolvable after the client loaded and removable by
  * [HitFXRegistry.unregisterSounds].
  */
-class HitFXSoundRegistryGameTest : LocalGameTest() {
-
-    override fun test(context: ClientGameTestContext) {
-        check(context.clientSounds().isNotEmpty()) {
-            "HitFX sounds are missing from the client sound registry"
-        }
-
-        context.onClient { HitFXRegistry.unregisterSounds() }
-
-        val remaining = context.clientSounds()
-        check(remaining.isEmpty()) { "sounds survived unregisterSounds: $remaining" }
+class HitFXSoundRegistryGameTest : ClientGameTest({ context ->
+    check(context.clientSounds().isNotEmpty()) {
+        "HitFX sounds are missing from the client sound registry"
     }
 
-    private fun ClientGameTestContext.clientSounds() = fromClient { mc ->
-        mc.soundManager.registry.keys.filter { it.namespace == CLIENT_NAME.lowercase() }
-    }
+    context.onClient { HitFXRegistry.unregisterSounds() }
 
+    val remaining = context.clientSounds()
+    check(remaining.isEmpty()) { "sounds survived unregisterSounds: $remaining" }
+})
+
+private fun ClientGameTestContext.clientSounds() = fromClient { mc ->
+    mc.soundManager.registry.keys.filter { it.namespace == CLIENT_NAME.lowercase() }
 }

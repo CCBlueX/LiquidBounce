@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest.server
 import com.google.gson.JsonArray
 import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.summon
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.harness.setting
@@ -58,7 +58,7 @@ private const val MIN_HITS = 60
  * watches the player may object, and enough hits have to land. Where an anticheat checks aim (Intave, MX), the
  * Constant aim has to be caught first, or a clean run would prove nothing.
  */
-class KillAuraAimGameTest : LiquidBounceGameTest({
+class KillAuraAimGameTest : ServerGameTest({
     val saved = client { ConfigSystem.serializeValueGroup(ModuleKillAura) to
         ConfigSystem.serializeValueGroup(GlobalSettingsTarget) }
     val attacks = client { Attacks() }

@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -41,7 +41,7 @@ private const val REPEATS = 5
  * has to handle that packet too. It also has to keep the old rotation in sync with the restored one, otherwise
  * the camera still snaps to the server-side angle.
  */
-class NoRotateSetGameTest : LiquidBounceGameTest({
+class NoRotateSetGameTest : SingleplayerGameTest({
     val rotations = AtomicInteger()
     val listener = object : EventListener {}
     context.restoring(ModuleNoRotateSet) {

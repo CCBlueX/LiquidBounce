@@ -18,9 +18,7 @@
  */
 package net.ccbluex.liquidbounce.gametest.harness
 
-import net.ccbluex.gametest.harness.GameTestScope
-import net.ccbluex.gametest.harness.ServerGameTest
-import net.ccbluex.gametest.harness.TestWorld
+import net.ccbluex.gametest.harness.GameTestSetup
 import net.ccbluex.gametest.harness.verdict.ClientErrors
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -29,29 +27,34 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.isBrowserSkipped
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.minecraft.client.gui.screens.TitleScreen
 
 /**
- * A game test of LiquidBounce or an add-on on the game test server. It runs with no module but the HUD, as AutoConfig
- * would load a config on join, and turns the modules that ran before back on afterwards.
+ * LiquidBounce's part of every game test. A test runs with no module but the HUD, as AutoConfig would load a config
+ * on join, and the modules that ran before are turned back on afterwards.
  */
-abstract class LiquidBounceGameTest(world: TestWorld, body: GameTestScope.() -> Unit) : ServerGameTest(world, body) {
+object LiquidBounceSetup : GameTestSetup {
 
-    constructor(body: GameTestScope.() -> Unit) : this(TestWorld.FLAT, body)
+    private const val STARTUP_TIMEOUT = 20 * 60 * 5
 
     private var running = emptyList<ClientModule>()
 
+    init {
+        // What a test machine without a LiquidBounce account or a GPU logs anyway
+        ClientErrors.ignore(
+            "CoroutineScope of ModuleClickGUI", "LiquidChat", "Unable to receive update information",
+            "[LiquidBounce/Chromium]", "The render process of", "https://api.liquidbounce.net/",
+        )
+    }
+
+    // Aborting the browser's first page load by joining a server is fatal to it
     override fun awaitClient(context: ClientGameTestContext) {
-        // LiquidBounce holds a progress screen until its startup tasks are done, and aborting the browser's
-        // first page load by joining a server is fatal to it
-        context.waitFor({ it.gui.screen() is TitleScreen }, STARTUP_TIMEOUT)
         context.waitFor(
             { LiquidBounce.isInitialized && (ScreenManager.mainBrowser != null || isBrowserSkipped) },
             STARTUP_TIMEOUT,
         )
     }
 
-    override fun beforeJoin(context: ClientGameTestContext) = context.runOnClient<RuntimeException> {
+    override fun beforeTest(context: ClientGameTestContext) = context.runOnClient<RuntimeException> {
         running = runningModules()
         running.forEach { it.enabled = false }
     }
@@ -61,18 +64,6 @@ abstract class LiquidBounceGameTest(world: TestWorld, body: GameTestScope.() -> 
         running.forEach { it.enabled = true }
     }
 
-    private companion object {
-        const val STARTUP_TIMEOUT = 20 * 60 * 5
-
-        init {
-            // What a test machine without a LiquidBounce account or a GPU logs anyway
-            ClientErrors.ignore(
-                "CoroutineScope of ModuleClickGUI", "LiquidChat", "Unable to receive update information",
-                "[LiquidBounce/Chromium]", "The render process of", "https://api.liquidbounce.net/",
-            )
-        }
-
-        fun runningModules() = ModuleManager.filter { it.enabled && it !== ModuleHud }
-    }
+    private fun runningModules() = ModuleManager.filter { it.enabled && it !== ModuleHud }
 
 }

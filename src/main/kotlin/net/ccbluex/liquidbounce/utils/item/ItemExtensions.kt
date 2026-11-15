@@ -39,6 +39,7 @@ import net.minecraft.core.Holder
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.resources.ResourceKey
@@ -160,9 +161,20 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
     return this.isMergeable(other) && this.count + other.count <= this.maxStackSize
 }
 
+/**
+ * Through ViaVersion, items from a 1.8 server keep their old tag, `Damage` included, in [DataComponents.CUSTOM_DATA],
+ * whatever protocol the client speaks, so every durability update would otherwise play the swap animation.
+ */
+fun ItemStack.matchesIgnoringLegacyDamage(other: ItemStack): Boolean =
+    ItemStack.matchesIgnoringComponents(this, other) {
+        it.ignoreSwapAnimation() || it === DataComponents.CUSTOM_DATA
+    } && legacyTagWithoutDamage() == other.legacyTagWithoutDamage()
+
+private fun ItemStack.legacyTagWithoutDamage() = get(DataComponents.CUSTOM_DATA)?.update { it.remove("Damage") }
+
 val ItemInstance.attackDamage: Double
     get() {
-        val baseDamage = getAttributeValue(
+        val baseDamage = legacyAttackDamage ?: getAttributeValue(
             Attributes.ATTACK_DAMAGE,
             EquipmentSlot.MAINHAND,
             player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
@@ -178,6 +190,30 @@ val ItemInstance.attackDamage: Double
          * else -> 1.25 * level
          */
         return baseDamage + getSharpnessDamage()
+    }
+
+private val ItemInstance.legacyAttackDamage: Double?
+    get() {
+        if (!isOlderThanOrEqual1_8) {
+            return null
+        }
+
+        val hand = player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+        val tool = when {
+            isSword -> 4.0
+            isAxe -> 3.0
+            isPickaxe -> 2.0
+            isShovel -> 1.0
+            else -> return hand
+        }
+        val material = BuiltInRegistries.ITEM.getKey(typeHolder().value()).path.substringBefore('_')
+        val bonus = when (material) {
+            "stone" -> 1.0
+            "iron" -> 2.0
+            "diamond", "netherite" -> 3.0
+            else -> 0.0
+        }
+        return hand + tool + bonus
     }
 
 @JvmOverloads

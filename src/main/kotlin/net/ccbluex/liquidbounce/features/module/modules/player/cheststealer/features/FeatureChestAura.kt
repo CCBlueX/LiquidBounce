@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -121,12 +122,21 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         get() = super.running && pauseOn.none { it.asBoolean }
 
     override fun onDisabled() {
+        forget()
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        forget()
+    }
+
+    private fun forget() {
         interactedBlocksSet.clear()
         interactionAttempts = 0
         currentTarget = null
         awaitedContainer = null
         cooldownLeft = 0
-        super.onDisabled()
     }
 
     // Event handler responsible for updating the target block
