@@ -142,16 +142,11 @@ public abstract class MixinFirstPersonHandsAndItems {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", ordinal = 0, shift = At.Shift.AFTER))
     private void transformBlockAnimation(
         PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        if (ItemCategorizationsKt.isSword(itemStack) && liquid_bounce$getEntity(playerState) instanceof Player player) {
+        if (GlobalSettingsViewModel.INSTANCE.getRunning()
+            && GlobalSettingsViewModel.INSTANCE.getBlockAnimationChoice().getActiveMode() instanceof GlobalSettingsViewModel.AnimationMode animation
+            && ItemCategorizationsKt.isSword(itemStack) && liquid_bounce$getEntity(playerState) instanceof Player player) {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
-
-            if (GlobalSettingsViewModel.INSTANCE.getRunning()) {
-                var activeChoice = GlobalSettingsViewModel.INSTANCE.getBlockAnimationChoice().getActiveMode();
-                activeChoice.transform(poseStack, arm, inverseArmHeight, attack);
-            } else {
-                // Default animation
-                GlobalSettingsViewModel.OneSevenAnimation.INSTANCE.transform(poseStack, arm, inverseArmHeight, attack);
-            }
+            animation.transform(poseStack, arm, inverseArmHeight, attack);
         }
     }
 

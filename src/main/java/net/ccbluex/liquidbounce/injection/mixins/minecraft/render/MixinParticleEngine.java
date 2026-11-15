@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.client.ClientContext;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,6 +47,13 @@ public abstract class MixinParticleEngine {
     }, at = @At("HEAD"), cancellable = true)
     private void skipBackgroundClient(CallbackInfo ci) {
         if (ClientContext.isBackground()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "add", at = @At("HEAD"), cancellable = true)
+    private void hookNoParticles(Particle particle, CallbackInfo ci) {
+        if (ModuleAntiBlind.INSTANCE.shouldHideParticles()) {
             ci.cancel();
         }
     }

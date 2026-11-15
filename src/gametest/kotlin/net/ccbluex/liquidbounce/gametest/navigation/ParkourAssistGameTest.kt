@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -88,7 +88,7 @@ private const val WALL_OFFSET = 40
  * without it, also when sprinting along a wall with the Sprint module and looking a little off the next block. With
  * Parkour, a drop onto slime or a bed bounces up to the next block too, and a pot in the way is jumped past.
  */
-class ParkourAssistGameTest : LiquidBounceGameTest({
+class ParkourAssistGameTest : ServerGameTest({
     try {
         val ground = origin.y
         val start = BlockPos(0, ground + HEIGHT, 0)

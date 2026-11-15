@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -154,7 +155,10 @@ object ModuleClickGui :
         // Standalone Screen Cache
         if (useStandaloneScreen) {
             if (standaloneScreen == null) {
-                standaloneScreen = CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI)
+                // Nothing to cache while the browser is loading or skipped
+                if (BrowserBackendManager.isInitialized) {
+                    standaloneScreen = CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI)
+                }
             } else {
                 // Used in [worldChangeHandler] to determine if we need to sync.
                 return true

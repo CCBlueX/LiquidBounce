@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest.server
 
-import net.ccbluex.gametest.harness.Anticheat
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.query
 import net.ccbluex.gametest.harness.action.setBlock
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -33,7 +32,7 @@ private val SCORE = Regex("""has (\d+) """)
  * The harness itself: the session has its world, refuses commands beyond it and waits for a player who reconnects,
  * and a client claiming to be where it cannot be is caught, without which no clean verdict means anything.
  */
-class HarnessGameTest : LiquidBounceGameTest({
+class HarnessGameTest : ServerGameTest({
     awaitServer("block 0 -61 0 minecraft:grass_block")
     val (x, y, z) = query("data get entity $playerName Pos", POSITION).destructured
     check(x == "0.5" && y == "-60.0" && z == "0.5") { "the server has the player at $x $y $z" }
@@ -59,7 +58,7 @@ class HarnessGameTest : LiquidBounceGameTest({
 
     // An anticheat catches a jump five blocks up; Paper alone only a move too fast for anything but a teleport. Some
     // anticheats check only a player that moves, and one standing still sends no positions for a while.
-    val height = if (anticheats.singleOrNull() == Anticheat.VANILLA) 20 else 5
+    val height = if (paperOnly) 20 else 5
     input.holdKey { options -> options.keyUp }
     ticks(10)
     expectViolation("the server to catch a move $height blocks up") {

@@ -49,7 +49,7 @@ public final class GitInfo {
   }
 
   public static String branch() {
-    return getOrDefault("git.branch", "nextgen");
+    return getOrDefault("git.branch", "main");
   }
 
   public static @Nullable String get(String key) {

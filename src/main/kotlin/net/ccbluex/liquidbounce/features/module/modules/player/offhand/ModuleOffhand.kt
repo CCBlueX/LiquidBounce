@@ -53,6 +53,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import java.util.function.Predicate
+import kotlin.random.Random
 
 /**
  * Offhand module
@@ -68,7 +69,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         "SwitchMode",
         default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
     )
-    private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
+    private val switchDelay by intRange("SwitchDelay", 0..0, 0..500, "ms")
     private val cycleSlots by key("Cycle", InputConstants.KEY_H)
 
     private object Gapple : ToggleableValueGroup(this, "Gapple", true) {
@@ -113,6 +114,11 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
     private val INVENTORY_HOTBAR_PRIORITY = Slots.Hotbar + Slots.Inventory
     private val chronometer by clientState { Chronometer() }
+
+    /**
+     * Where in the delay range the delay until the next switch lies.
+     */
+    private var delayRoll by clientState { 0f }
     private var activeMode: Mode by clientState { Mode.NONE }
     private var lastMode: Mode? by clientState { null }
     private var lastTagMode: Mode by clientState { Mode.NONE }
@@ -190,7 +196,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
         Totem.switchBackStarted = false
 
-        if (!chronometer.hasElapsed(activeMode.getDelay().toLong())) {
+        if (!chronometer.hasElapsed(delayOf(activeMode))) {
             return@handler
         }
 
@@ -208,7 +214,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
         val actions = switchMode.performSwitch(slot)
         if (actions.isEmpty()) {
-            chronometer.reset()
+            resetDelay()
             return@handler
         }
 
@@ -216,7 +222,19 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             it.schedule(inventoryConstraints, actions)
         }
 
+        resetDelay()
+    }
+
+    private fun delayOf(mode: Mode): Long {
+        val range = mode.getDelay()
+        val delay = range.first + (range.last - range.first) * delayRoll
+        val factor = if (mode == Mode.TOTEM) Totem.Urgency.delayFactor() else 1f
+        return (delay * factor).toLong()
+    }
+
+    private fun resetDelay() {
         chronometer.reset()
+        delayRoll = Random.nextFloat()
     }
 
     private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {

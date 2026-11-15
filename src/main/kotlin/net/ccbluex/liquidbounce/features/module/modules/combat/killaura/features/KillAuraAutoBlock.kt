@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
@@ -165,17 +164,17 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val enforcedBlockingHandState = clientState<InteractionHand?> { null }
 
     /**
-     * Visual blocking shows a blocking state, while not actually blocking.
-     * This is useful to make the blocking animation become much smoother.
-     *
-     * @see ItemInHandRenderer.renderPlayerArm
+     * Set while AutoBlock blocks or fakes blocking, and kept between unblocking and blocking again around a hit.
      */
-    var blockVisual: Boolean
-        get() = blockVisualState.get() && running &&
-            (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
-        set(value) = blockVisualState.set(value)
+    private var wantsBlockPose by clientState { false }
 
-    private val blockVisualState = clientState { false }
+    /**
+     * Whether the sword is drawn in the block pose, blocking or not: a sword that can block by itself, or one that
+     * SwordBlock draws for the shield it blocks with.
+     */
+    val showsBlockPose: Boolean
+        get() = wantsBlockPose && running &&
+            (player.mainHandItem.useAnimation == ItemUseAnimation.BLOCK || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -221,7 +220,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return
         }
 
-        blockVisual = true
+        wantsBlockPose = true
     }
 
     /**
@@ -254,13 +253,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         when (blockMode) {
             BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
                 reblockTicks = reblockTicksRange.random()
-                blockVisual = true
+                wantsBlockPose = true
                 enforcedBlockingHand = blockHand
                 hasBlockedSinceAttack = true
                 return true
             }
             BlockMode.FAKE -> {
-                blockVisual = true
+                wantsBlockPose = true
                 return false
             }
             else -> { }
@@ -273,7 +272,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             hasBlockedSinceAttack = true
         }
 
-        blockVisual = true
+        wantsBlockPose = true
         return true
     }
 
@@ -315,7 +314,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
         when {
             // Not blocking
-            !blockVisual -> flush("Not blocking")
+            !showsBlockPose -> flush("Not blocking")
 
             // Start blocking
             enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("Start blocking")
@@ -330,7 +329,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     fun stopBlocking(pauses: Boolean = false): Boolean {
         if (!pauses) {
-            blockVisual = false
+            wantsBlockPose = false
 
             if (mc.options.keyUse.isPressedOnAny) {
                 return false
@@ -393,7 +392,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             (packet is ServerboundPlayerActionPacket &&
             packet.action === ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND)
         ) {
-            blockVisual = false
+            wantsBlockPose = false
             enforcedBlockingHand = null
         }
     }
