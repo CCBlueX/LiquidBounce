@@ -36,8 +36,6 @@ import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
  */
 internal object BackgroundGame {
 
-    private const val MISS_TIME_IN_SCREEN = 10000
-
     fun tick() {
         CoroutineTicker.beginMinecraftTick()
         TickLoopTaskExecutor.onTickLoopStart()
@@ -69,7 +67,7 @@ internal object BackgroundGame {
         tickScreen()
 
         if (mc.gui.screen() != null) {
-            mc.missTime = MISS_TIME_IN_SCREEN
+            mc.missTime = 10000
         } else if (mc.player != null) {
             mc.handleKeybinds()
             if (mc.missTime > 0) {

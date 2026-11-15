@@ -350,9 +350,9 @@ class SimulatedPlayer private constructor(
 
         val move = tickInput.moveVector
         return if (isUnderWater) {
-            abs(move.y) > MIN_IMPULSE || abs(move.x) > MIN_IMPULSE
+            abs(move.y) > 1.0E-5f || abs(move.x) > 1.0E-5f
         } else {
-            abs(move.y) >= WALKING_IMPULSE || abs(move.x) >= WALKING_IMPULSE
+            abs(move.y) >= 0.8f || abs(move.x) >= 0.8f
         }
     }
 
@@ -571,8 +571,6 @@ class SimulatedPlayer private constructor(
         private const val FLAG_FALL_FLYING = 7
         private const val MINOR_COLLISION_MIN_LENGTH_SQR = 1.0E-5f
         private const val MINOR_COLLISION_ANGLE = 0.13962634f
-        private const val MIN_IMPULSE = 1.0E-5f
-        private const val WALKING_IMPULSE = 0.8f
 
         /**
          * The local player the simulated client of the current thread simulates.

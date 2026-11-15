@@ -154,7 +154,7 @@ class LevelView private constructor(private val frames: Frames) : AutoCloseable 
      */
     private fun fit() {
         val window = mc.window
-        val height = HEIGHT
+        val height = 270
         val width = (height * window.width.toFloat() / window.height.coerceAtLeast(1)).roundToInt() and 1.inv()
         if (width == this.width && height == this.height && target != null) {
             return
@@ -285,8 +285,6 @@ class LevelView private constructor(private val frames: Frames) : AutoCloseable 
 
         companion object {
 
-            private const val QUALITY = 0.75f
-
             private val encoder = Executors.newSingleThreadExecutor {
                 Thread(it, "Client view encoder").apply { isDaemon = true }
             }
@@ -295,7 +293,7 @@ class LevelView private constructor(private val frames: Frames) : AutoCloseable 
             private val writer = ImageIO.getImageWritersByFormatName("jpeg").next()
             private val parameters = writer.defaultWriteParam.apply {
                 compressionMode = ImageWriteParam.MODE_EXPLICIT
-                compressionQuality = QUALITY
+                compressionQuality = 0.75f
             }
             private val output = ByteArrayOutputStream()
 
@@ -314,22 +312,9 @@ class LevelView private constructor(private val frames: Frames) : AutoCloseable 
 
     companion object {
 
-        private const val HEIGHT = 270
         private const val RENDER_DISTANCE = 4
         private const val READBACKS = 2
         private val CLEAR_COLOR = Vector4f(0f, 0f, 0f, 1f)
-
-        private const val FRAME_INTERVAL_NANOS = 100_000_000L
-
-        /**
-         * How long one request keeps a view drawn.
-         */
-        private const val WATCHED_NANOS = 1_000_000_000L
-
-        /**
-         * A view outlives its last request a little, so that a page reload does not compile the chunks again.
-         */
-        private const val IDLE_NANOS = 5_000_000_000L
 
         private val watched = ConcurrentHashMap<Client, Frames>()
 
@@ -359,17 +344,19 @@ class LevelView private constructor(private val frames: Frames) : AutoCloseable 
             var nextAt = Long.MAX_VALUE
             for ((client, frames) in watched) {
                 val asked = now - frames.askedAt
-                if (asked >= IDLE_NANOS) {
+                // A view outlives its last request a little, so that a page reload does not compile the chunks again
+                if (asked >= 5_000_000_000L) {
                     watched.remove(client, frames)
                     drop(client)
                     continue
                 }
-                if (asked >= WATCHED_NANOS || client.isActive) {
+                // One request keeps a view drawn for a second
+                if (asked >= 1_000_000_000L || client.isActive) {
                     continue
                 }
 
                 val renderedAt = views[client]?.renderedAt ?: 0L
-                if (now - renderedAt >= FRAME_INTERVAL_NANOS && renderedAt < nextAt) {
+                if (now - renderedAt >= 100_000_000L && renderedAt < nextAt) {
                     next = client
                     nextAt = renderedAt
                 }

@@ -50,16 +50,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import javax.imageio.ImageIO
 
 private const val JOIN_TIMEOUT_TICKS = 30 * 20
-private const val WALK_TICKS = 60
-private const val SWITCHES = 20
-private const val SOAK_TICKS = 200
 private const val VIEW_TIMEOUT_TICKS = 60 * 20
-private const val FRAME_INTERVAL_MILLIS = 100L
 private const val ANSWER_TIMEOUT_TICKS = 10 * 20
-private const val QUIET_TICKS = 40
-
-private const val WALKED_DISTANCE = 2.0
-private const val STOOD_DISTANCE = 0.1
 
 /**
  * Three accounts play on one server from one client. Each is a client with its own connection and its own
@@ -130,7 +122,7 @@ private object MultiClientTestRunner {
     ) {
         val start = server.positions()
         context.onClient { ClientContext.within(walking) { ModuleAutoWalk.enabled = true } }
-        context.waitTicks(WALK_TICKS)
+        context.waitTicks(60)
 
         val snapshot = context.fromClient { ClientOverview.snapshot(walking) }
         check("AutoWalk" in snapshot.modules && snapshot.activity == ClientSnapshot.Activity.MOVING) {
@@ -142,16 +134,16 @@ private object MultiClientTestRunner {
         for ((name, position) in server.positions()) {
             val moved = position.distanceTo(start.getValue(name))
             if (name == walker) {
-                check(moved > WALKED_DISTANCE) { "$name only walked $moved blocks" }
+                check(moved > 2.0) { "$name only walked $moved blocks" }
             } else {
-                check(moved < STOOD_DISTANCE) { "$name moved $moved blocks although only $walker walks" }
+                check(moved < 0.1) { "$name moved $moved blocks although only $walker walks" }
             }
         }
     }
 
     private fun checkSwitching(context: ClientGameTestContext, clients: List<Client>) {
         // Ends on the main client, which is the one the test framework disconnects
-        for (switch in SWITCHES downTo 0) {
+        for (switch in 20 downTo 0) {
             val client = clients[switch % clients.size]
             context.onClient { ClientManager.activate(client) }
             context.waitFor { it.player != null && it.player === client.player }
@@ -261,7 +253,7 @@ private object MultiClientTestRunner {
                 activeOnly.has("moduleToggle", main.id, background = false)
         }, ANSWER_TIMEOUT_TICKS)
         interop.request("POST", "/modules/toggle", """{"name":"Sprint"}""")
-        context.waitTicks(QUIET_TICKS)
+        context.waitTicks(40)
 
         check(activeOnly.messages.none { it["client"]?.asInt == background.id || it.has("background") }) {
             "A socket that only follows the active client heard of another: ${activeOnly.messages}"
@@ -273,7 +265,7 @@ private object MultiClientTestRunner {
         server: TestDedicatedServerContext,
         clients: List<Client>,
     ) {
-        context.waitTicks(SOAK_TICKS)
+        context.waitTicks(200)
         check(server.positions().size == clients.size && context.fromClient { clients.all { it.inGame } }) {
             "Not every client is still playing: ${server.positions().keys}"
         }
@@ -372,7 +364,7 @@ private class FrameStream(id: Int) : AutoCloseable {
                     204 -> Unit
                     else -> error("The view answered ${response.statusCode()}")
                 }
-                Thread.sleep(FRAME_INTERVAL_MILLIS)
+                Thread.sleep(100L)
             }
         }, "View reader").apply { isDaemon = true }.start()
     }

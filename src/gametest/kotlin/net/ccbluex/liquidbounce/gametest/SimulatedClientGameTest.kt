@@ -78,10 +78,10 @@ private object SimulatedClientTestRunner {
     private fun predictsParkourJump(context: ClientGameTestContext, world: TestSingleplayerContext, ground: Int) {
         world.server.runCommand("fill 10 ${ground + 1} ${LANE_Z - 3} 60 ${ground + 12} ${LANE_Z + 3} air")
         world.server.runCommand(
-            "fill $LANE_START ${ground + 1} ${LANE_Z - 1} $EDGE_X ${ground + 7} ${LANE_Z + 1} stone"
+            "fill $LANE_START ${ground + 1} ${LANE_Z - 1} 26 ${ground + 7} ${LANE_Z + 1} stone"
         )
         world.server.runCommand("tp @p $START_X ${ground + 8} $LANE_Z.5 -90 0")
-        context.waitTicks(SETTLE_TICKS)
+        context.waitTicks(10)
 
         context.onClient { client ->
             ModuleParkour.enabled = true
@@ -99,19 +99,19 @@ private object SimulatedClientTestRunner {
             Recorder.recording = null
         }
 
-        val jumped = recording.steps.any { it.y > ground + 8 + JUMP_RISE }
+        val jumped = recording.steps.any { it.y > ground + 8 + 0.5 }
         check(jumped) { "the player never jumped at the edge, Parkour did not act: ${recording.steps}" }
 
         val withModules = checkNotNull(recording.withModules)
         val withoutModules = checkNotNull(recording.withoutModules)
         val differs = recording.steps.indices.firstOrNull { tick ->
-            recording.steps[tick].distanceTo(withModules[tick]) > TOLERANCE
+            recording.steps[tick].distanceTo(withModules[tick]) > 1.0E-6
         }
         check(differs == null) {
             "the simulation with modules differs in tick $differs: ${withModules[differs!!]}, " +
                 "the player was at ${recording.steps[differs]}"
         }
-        check(recording.steps.indices.any { tick -> recording.steps[tick].distanceTo(withoutModules[tick]) > MISS }) {
+        check(recording.steps.indices.any { tick -> recording.steps[tick].distanceTo(withoutModules[tick]) > 0.1 }) {
             "a simulation without modules foresaw the Parkour jump as well"
         }
         check(recording.aimYawAfter == SENTINEL_YAW) {
@@ -129,24 +129,24 @@ private object SimulatedClientTestRunner {
         world.server.runCommand("fill 10 ${ground + 1} ${LANE_Z - 3} 60 ${ground + 12} ${LANE_Z + 3} air")
         world.server.runCommand("fill $LANE_START $ground ${LANE_Z - 1} 40 $ground ${LANE_Z + 1} stone")
         world.server.runCommand("tp @p $START_X ${ground + 1} $LANE_Z.5 -90 0")
-        context.waitTicks(SETTLE_TICKS)
+        context.waitTicks(10)
         val slot = world.server.selectedSlot()
 
         val sentInFork = context.fromClient {
             Sender.slot = SENT_SLOT
             val simulation = SimulatedPlayer.fromClientPlayer(walkInput())
-            repeat(SEND_TICKS) { simulation.tick() }
+            repeat(5) { simulation.tick() }
             Sender.slot = null
             Sender.sent.also { Sender.sent = 0 }
         }
-        context.waitTicks(SETTLE_TICKS)
+        context.waitTicks(10)
 
         check(sentInFork > 0) { "the simulation never asked the module to send" }
         val slotAfter = world.server.selectedSlot()
         check(slotAfter == slot) { "a packet sent $sentInFork times from a simulated client reached the server" }
 
         context.onClient { network.send(ServerboundSetCarriedItemPacket(SENT_SLOT)) }
-        context.waitTicks(SETTLE_TICKS)
+        context.waitTicks(10)
         val slotFromRealClient = world.server.selectedSlot()
         context.onClient { network.send(ServerboundSetCarriedItemPacket(slot)) }
         check(slotFromRealClient == SENT_SLOT) { "the same packet from the real client did not arrive either" }
@@ -161,7 +161,7 @@ private object SimulatedClientTestRunner {
      */
     private fun measure(context: ClientGameTestContext, world: TestSingleplayerContext, ground: Int) {
         world.server.runCommand("tp @p $START_X ${ground + 1} $LANE_Z.5 -90 0")
-        context.waitTicks(SETTLE_TICKS)
+        context.waitTicks(10)
 
         val modules = listOf(ModuleSprint, ModuleSpeed, ModuleScaffold, ModuleParkour)
         val (withModules, withoutModules) = context.fromClient {
@@ -181,11 +181,11 @@ private object SimulatedClientTestRunner {
     }
 
     private fun micros(withModules: Boolean): Double {
-        repeat(MEASURE_WARMUP) { simulate(withModules) }
+        repeat(200) { simulate(withModules) }
 
         val start = System.nanoTime()
         repeat(MEASURE_RUNS) { simulate(withModules) }
-        return (System.nanoTime() - start) / MEASURE_RUNS / NANOS_PER_MICRO
+        return (System.nanoTime() - start) / MEASURE_RUNS / 1000.0
     }
 
     private fun simulate(withModules: Boolean) {
@@ -220,7 +220,7 @@ private object SimulatedClientTestRunner {
                 recording.forkedAimYaws += aimYaw.get()
                 return@handler
             }
-            if (recording.isArmed || player.x < ARM_X) {
+            if (recording.isArmed || player.x < 21.0) {
                 return@handler
             }
 
@@ -270,26 +270,17 @@ private object SimulatedClientTestRunner {
 
     private const val LANE_Z = 20
     private const val LANE_START = 16
-    private const val EDGE_X = 26
     private const val START_X = 18.5
-    private const val ARM_X = 21.0
 
-    private const val JUMP_RISE = 0.5
     private const val SENTINEL_YAW = 123f
 
     private const val PREDICTED_TICKS = 30
-    private const val TOLERANCE = 1.0E-6
-    private const val MISS = 0.1
 
-    private const val SEND_TICKS = 5
     private const val SENT_SLOT = 5
 
     private const val MEASURED_TICKS = 20
-    private const val MEASURE_WARMUP = 200
     private const val MEASURE_RUNS = 1000
-    private const val NANOS_PER_MICRO = 1000.0
 
-    private const val SETTLE_TICKS = 10
     private const val SETTLE_TIMEOUT_TICKS = 200
     private const val RUN_TIMEOUT_TICKS = 400
 

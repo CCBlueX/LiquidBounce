@@ -38,9 +38,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.chat.Component
 
-private const val ANNOUNCE_INTERVAL_NANOS = 250_000_000L
-private const val MOVING_SPEED_SQR = 1.0E-4
-
 /**
  * Describes what the clients are doing, which is all the user sees of the ones in the background.
  */
@@ -71,7 +68,7 @@ object ClientOverview : EventListener {
         }
 
         val now = System.nanoTime()
-        if (several && now - announcedAt < ANNOUNCE_INTERVAL_NANOS) {
+        if (several && now - announcedAt < 250_000_000L) {
             return
         }
 
@@ -138,7 +135,7 @@ object ClientOverview : EventListener {
         player.isPassenger -> ClientSnapshot.Activity.RIDING
         player.isFallFlying -> ClientSnapshot.Activity.GLIDING
         player.isSwimming -> ClientSnapshot.Activity.SWIMMING
-        player.deltaMovement.horizontalDistanceSqr() > MOVING_SPEED_SQR -> ClientSnapshot.Activity.MOVING
+        player.deltaMovement.horizontalDistanceSqr() > 1.0E-4 -> ClientSnapshot.Activity.MOVING
         else -> ClientSnapshot.Activity.IDLE
     }
 

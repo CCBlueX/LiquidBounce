@@ -167,14 +167,14 @@ class Client internal constructor(
     internal fun dueTicks(): Int {
         val now = System.nanoTime()
         val tickRate = level?.tickRateManager()?.takeIf { it.runsNormally() }
-        val millisPerTick = tickRate?.millisecondsPerTick()?.coerceAtLeast(1f) ?: DEFAULT_MILLIS_PER_TICK
+        val millisPerTick = tickRate?.millisecondsPerTick()?.coerceAtLeast(1f) ?: 50f
 
-        partialTicks += (now - lastTickAt) / NANOS_PER_MILLI / millisPerTick
+        partialTicks += (now - lastTickAt) / 1_000_000f / millisPerTick
         lastTickAt = now
 
         val ticks = partialTicks.toInt()
         partialTicks -= ticks
-        return min(ticks, MAX_TICKS_PER_FRAME)
+        return min(ticks, 10)
     }
 
     internal fun restartClock() {
@@ -187,10 +187,6 @@ class Client internal constructor(
 
     companion object {
         const val MAIN_ID = 0
-
-        private const val DEFAULT_MILLIS_PER_TICK = 50f
-        private const val NANOS_PER_MILLI = 1_000_000f
-        private const val MAX_TICKS_PER_FRAME = 10
     }
 
 }
