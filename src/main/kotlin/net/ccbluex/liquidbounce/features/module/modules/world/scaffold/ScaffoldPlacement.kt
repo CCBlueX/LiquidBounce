@@ -85,23 +85,11 @@ private const val GOD_BRIDGE_PITCH = 75.5f
 /** Blocks a predicted click has to land inside the edges of its face, see [ScaffoldPlacement.placesInTime]. */
 private const val FACE_MARGIN = 0.03
 
-/** Degrees past halfway to the next 45 degree step the movement has to turn before the GodBridge look follows. */
-private const val GOD_BRIDGE_STEP_HOLD = 10f
-
-/**
- * Blocks the player has to stand off the middle of the row before the GodBridge look changes sides. Until then the
- * look still meets the face, and StabilizeMovement's pull towards the middle may overshoot it a little.
- */
-private const val GOD_BRIDGE_SIDE_HOLD = 0.15
-
 /** Ticks ahead a kept look may still place the next block, see [ScaffoldPlacement.findTarget]. */
 private const val HOLD_TICKS = 3
 
 /** Ticks a GodBridge look may leave the player standing at an edge before scaffold aims at the face instead. */
 private const val STALL_TICKS = 3
-
-/** Blocks per tick below which the player counts as standing. */
-private const val STALL_SPEED = 0.01
 
 /**
  * Where scaffold puts the next block while it bridges, and where on it [ModuleScaffold.aimMode] recommends to look.
@@ -189,7 +177,8 @@ internal object ScaffoldPlacement {
             ?.takeIf { isValidCrosshairTarget(it.blockHitResult) }
         // The velocity keeps the input's push while an edge holds the player back, the position does not move
         val moved = hypot(player.x - player.xo, player.z - player.zo)
-        stalledTicks = if (now == null && player.onGround() && moved < STALL_SPEED) {
+        // Below 0.01 blocks a tick the player counts as standing
+        stalledTicks = if (now == null && player.onGround() && moved < 0.01) {
             stalledTicks + 1
         } else {
             0
@@ -343,7 +332,8 @@ internal object ScaffoldPlacement {
         if (input != DirectionalInput.NONE) {
             val movement = player.getMovementDirectionOfInput(input)
             val held = godBridgeMovement
-            if (held == null || abs(angleDifference(movement, held)) > 45f / 2 + GOD_BRIDGE_STEP_HOLD) {
+            // The movement has to turn 10 degrees past halfway to the next 45 degree step before the look follows
+            if (held == null || abs(angleDifference(movement, held)) > 45f / 2 + 10f) {
                 godBridgeMovement = round(movement / 45f) * 45f
             }
         }
@@ -357,7 +347,8 @@ internal object ScaffoldPlacement {
         val radians = Math.toRadians(movement.toDouble())
         val right = -(position.x - floor(position.x) - 0.5) * cos(radians) -
             (position.z - floor(position.z) - 0.5) * sin(radians)
-        if (abs(right) > GOD_BRIDGE_SIDE_HOLD) {
+        // Until 0.15 blocks off the middle the look still meets the face, and StabilizeMovement may overshoot a little
+        if (abs(right) > 0.15) {
             godBridgeSide = sign(right).toFloat()
         }
         // Looking back, the middle of a player standing right of it is on the right, where yaw grows

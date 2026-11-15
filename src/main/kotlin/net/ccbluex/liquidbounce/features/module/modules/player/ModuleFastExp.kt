@@ -213,14 +213,12 @@ object ModuleFastExp : ClientModule(
         }
     }
 
-    private const val PITCH_TOLERANCE = 5f
-
     private suspend fun action(slot: Required<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
         val pitch = if (Rotate.enabled) {
             lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
-                Rotate.rotations.toRotationTarget(pitch = 90f, tolerance = PITCH_TOLERANCE)
+                Rotate.rotations.toRotationTarget(pitch = 90f, tolerance = 5f)
             }).pitch
         } else {
             90f

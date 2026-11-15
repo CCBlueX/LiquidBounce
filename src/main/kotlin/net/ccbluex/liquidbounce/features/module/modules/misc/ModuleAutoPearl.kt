@@ -55,18 +55,11 @@ import net.minecraft.world.phys.Vec3
 
 private const val MAX_SIMULATED_TICKS = 240
 private const val REFINE_STEPS = 10
-private const val REFINE_STEP = 0.1f
 
 /**
  * How close an arc has to land to the enemy's pearl to be preferred for its shorter flight.
  */
 private const val LANDING_TOLERANCE = 1.0
-
-/** Degrees the throw may be off the simulated rotation. */
-private const val AIM_TOLERANCE = 1f
-
-/** Ticks the throw waits for the rotation before giving up. */
-private const val AIM_TICKS = 20
 
 /**
  * Auto pearl module
@@ -150,10 +143,11 @@ object ModuleAutoPearl : ClientModule(
                 return
             }
 
-            val until = player.tickCount + AIM_TICKS
+            // Gives up when the rotation is not there after 20 ticks
+            val until = player.tickCount + 20
             requires { player.tickCount <= until }
             val (yaw, pitch) = lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
-                Rotate.rotations.toRotationTarget(rotation, tolerance = AIM_TOLERANCE)
+                Rotate.rotations.toRotationTarget(rotation, tolerance = 1f)
             })
             useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
         } finally {
@@ -245,7 +239,7 @@ object ModuleAutoPearl : ClientModule(
             }
 
             (-REFINE_STEPS..REFINE_STEPS)
-                .mapNotNull { step -> simulate(current.rotation.pitch + step * REFINE_STEP) }
+                .mapNotNull { step -> simulate(current.rotation.pitch + step * 0.1f) }
                 .minByOrNull { it.error }
         }
 

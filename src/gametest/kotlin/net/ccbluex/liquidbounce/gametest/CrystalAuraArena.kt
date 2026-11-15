@@ -122,7 +122,7 @@ class CrystalAuraArena(val context: ClientGameTestContext, private val server: T
                 clearTicks = 0
                 cmd("execute as @e[type=end_crystal] run tp @s ~ -200 ~")
             }
-            clearTicks >= CLEAR_TICKS
+            clearTicks >= 3
         }
         cmd("data merge entity @e[type=husk,limit=1] {Health:1024f}")
     }
@@ -153,11 +153,7 @@ class CrystalAuraArena(val context: ClientGameTestContext, private val server: T
 
     companion object {
         const val TIMEOUT = 60
-        const val SHORT_TIMEOUT = 20
-        const val LONG_TIMEOUT = 160
-        const val PAUSE_TICKS = 30
         const val YAW_TOLERANCE = 0.5f
-        private const val CLEAR_TICKS = 3
     }
 
 }

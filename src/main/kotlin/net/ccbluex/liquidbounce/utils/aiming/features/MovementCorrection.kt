@@ -67,8 +67,6 @@ enum class MovementCorrection(override val tag: String) : Tagged {
  */
 object SilentMovementKeys {
 
-    private const val HYSTERESIS = 10f
-
     private var lastInput: DirectionalInput? = null
     private var lastTurned: DirectionalInput? = null
 
@@ -98,7 +96,7 @@ object SilentMovementKeys {
         }
 
         val angle = atan2(turnedX, turnedZ) * Mth.RAD_TO_DEG
-        return if (offBy(angle, last) < offBy(angle, fresh) + HYSTERESIS) last else fresh
+        return if (offBy(angle, last) < offBy(angle, fresh) + 10f) last else fresh
     }
 
     private fun impulse(positive: Boolean, negative: Boolean) = (if (positive) 1f else 0f) - (if (negative) 1f else 0f)

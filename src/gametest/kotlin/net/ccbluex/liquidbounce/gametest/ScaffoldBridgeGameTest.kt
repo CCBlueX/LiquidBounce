@@ -30,13 +30,11 @@ import net.minecraft.world.item.Items
 private const val BRIDGE_Y = 120
 private const val BLOCKS = 40
 private const val STACK = 64
-private const val ATTEMPTS = 3
 private const val TIMEOUT_TICKS = 600
 private const val SETTLE_TICKS = 10
 
 private const val SETTLE_TIMEOUT_TICKS = 200
 private const val TICKS_PER_SECOND = 20.0
-private const val FALL_MARGIN = 0.01
 
 /** Half the width of the area cleared before every bridge, more than one bridge reaches. */
 private const val CLEARANCE = 48
@@ -80,7 +78,7 @@ private object ScaffoldBridge {
             context.restoring(ModuleScaffold) {
                 for (aim in listOf("Constant", "Human")) {
                     for (course in Course.entries) {
-                        repeat(ATTEMPTS) { runs += bridge(context, world, Run(aim, course)) }
+                        repeat(3) { runs += bridge(context, world, Run(aim, course)) }
                     }
                 }
             }
@@ -163,7 +161,7 @@ private object ScaffoldBridge {
             run.sneaks++
         }
 
-        if (player.y < BRIDGE_Y - FALL_MARGIN) {
+        if (player.y < BRIDGE_Y - 0.01) {
             run.fellAt = player.position().toString()
             return true
         }
