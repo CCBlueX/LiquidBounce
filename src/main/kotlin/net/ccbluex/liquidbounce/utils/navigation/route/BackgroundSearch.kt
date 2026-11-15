@@ -53,6 +53,7 @@ class BackgroundSearch<T>(
         get() = job == null
 
     /** The best route of the running search so far, see [RouteSearch.preview]. */
+    @Volatile
     var preview: List<Vec3>? = null
         private set
 
@@ -66,7 +67,18 @@ class BackgroundSearch<T>(
         job = start(key, region, newSearch)
     }
 
-    /** Collects the last slice and starts the next one. Call once per tick from the game thread. */
+    /** Points the running search at [key] through [mutate], keeping its progress; false when none is running. */
+    fun retarget(key: Any, mutate: (RouteSearch<T>) -> Boolean): Boolean {
+        val job = job ?: return false
+        if (job.result != RouteResult.Searching || !mutate(job.search)) {
+            return false
+        }
+
+        job.key = key
+        return true
+    }
+
+    /** Collects the last search and starts the next one. Call once per tick from the game thread. */
     fun poll(): RouteResult<T> {
         var job = job ?: return RouteResult.Searching
         job.polls++
@@ -77,9 +89,6 @@ class BackgroundSearch<T>(
             }
             job.result = slice.join()
             job.slice = null
-            if (job.result == RouteResult.Searching) {
-                job.search.preview()?.let { preview = it }
-            }
         }
 
         // Blocks changing all the time, like a command block running every tick, would restart the search forever.
@@ -92,13 +101,29 @@ class BackgroundSearch<T>(
         }
 
         if (job.result == RouteResult.Searching) {
-            job.slice = CompletableFuture.supplyAsync(job.search::advance, Dispatchers.Default.asExecutor())
+            job.slice = CompletableFuture.supplyAsync({
+                runSlices(job)
+            }, Dispatchers.Default.asExecutor())
                 .exceptionally { throwable ->
                     logger.error("Route search failed", throwable)
                     RouteResult.Failed(RouteFailure.NO_PATH)
                 }
         }
         return job.result
+    }
+
+    /**
+     * Advances the search back to back instead of one slice per tick, so its compute budget of
+     * [RouteLimits.maxComputeNanos] pays off within a few ticks instead of as many as it has slices.
+     */
+    private fun runSlices(job: Job<T>): RouteResult<T> {
+        while (true) {
+            val result = job.search.advance()
+            if (result != RouteResult.Searching) {
+                return result
+            }
+            job.search.preview()?.let { preview = it }
+        }
     }
 
     fun cancel() {
@@ -160,7 +185,7 @@ class BackgroundSearch<T>(
     override fun parent() = owner
 
     private class Job<T>(
-        val key: Any,
+        var key: Any,
         val region: BlockRegion,
         val newSearch: (Terrain) -> RouteSearch<T>,
         val terrain: Terrain,

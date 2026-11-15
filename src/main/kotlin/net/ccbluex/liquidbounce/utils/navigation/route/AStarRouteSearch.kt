@@ -58,13 +58,18 @@ abstract class AStarRouteSearch<N, T>(protected val limits: RouteLimits) : Route
     /** The first slice: a result known without the A*, or [searchFrom] the start node. */
     protected abstract fun begin(): RouteResult<T>
 
-    protected fun searchFrom(start: N, maxCost: Double = Double.POSITIVE_INFINITY): RouteResult<T> {
+    protected fun searchFrom(
+        start: N,
+        maxCost: Double = Double.POSITIVE_INFINITY,
+        seed: AStarSearch<N>? = null,
+    ): RouteResult<T> {
         search = AStarSearch(
             start = start,
             isGoal = ::isGoal,
             neighbors = ::neighbors,
             heuristic = ::heuristic,
             maxCost = maxCost,
+            seed = seed,
         )
         return RouteResult.Searching
     }

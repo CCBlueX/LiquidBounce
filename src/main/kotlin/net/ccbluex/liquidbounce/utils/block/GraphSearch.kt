@@ -59,22 +59,59 @@ fun <T> aStarShortestPath(
     return AStarSearch(start, isGoal, neighbors, heuristic, maxCost).advance(maxIterations)
 }
 
-/** An A* search that is advanced in slices, so it can be spread over several calls. Not thread-safe. */
+/**
+ * An A* search that is advanced in slices, so it can be spread over several calls. Not thread-safe.
+ *
+ * A [seed] from a previous search over the same nodes and edges keeps its g-scores, so a search toward new
+ * goals does not expand the same ground again.
+ */
 class AStarSearch<T>(
     private val start: T,
     private val isGoal: Predicate<T>,
     private val neighbors: Function<T, Iterable<WeightedEdge<T>>>,
     private val heuristic: ToDoubleFunction<T>,
     private val maxCost: Double = Double.POSITIVE_INFINITY,
+    seed: AStarSearch<T>? = null,
 ) {
 
-    private val gScores = Object2DoubleOpenHashMap<T>().apply {
+    private val gScores: Object2DoubleOpenHashMap<T> = Object2DoubleOpenHashMap<T>().apply {
         defaultReturnValue(Double.POSITIVE_INFINITY)
-        put(start, 0.0)
+        if (seed == null) {
+            put(start, 0.0)
+        } else {
+            for (node in seed.gScores.keys) {
+                put(node, seed.gScores.getDouble(node))
+            }
+            put(start, 0.0)
+        }
     }
-    private val previous = Object2ObjectOpenHashMap<T, T>()
-    private val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore }).apply {
-        add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
+    private val previous: Object2ObjectOpenHashMap<T, T> = Object2ObjectOpenHashMap<T, T>().apply {
+        if (seed != null) {
+            putAll(seed.previous)
+        }
+    }
+
+    /** The g-score each node was expanded at, so a poll of an equal score does not expand it twice. */
+    private val expandedAt: Object2DoubleOpenHashMap<T> = Object2DoubleOpenHashMap<T>().apply {
+        defaultReturnValue(Double.POSITIVE_INFINITY)
+        if (seed != null) {
+            for (node in seed.expandedAt.keys) {
+                put(node, seed.expandedAt.getDouble(node))
+            }
+        }
+    }
+    private val queue: PriorityQueue<QueueEntry<T>> = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore }).apply {
+        if (seed == null) {
+            add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
+        } else {
+            // The frontier of the seeded search, plus its goal nodes in case they were expanded already.
+            for (node in gScores.keys) {
+                val g = gScores.getDouble(node)
+                if (g < expandedAt.getDouble(node) || isGoal.test(node)) {
+                    add(QueueEntry(node, g, g + heuristic.applyAsDouble(node)))
+                }
+            }
+        }
     }
 
     /** Nodes polled so far. */
@@ -84,8 +121,8 @@ class AStarSearch<T>(
     var result: ShortestPath<T>? = null
         private set
 
-    private var closest: QueueEntry<T>? = null
-    private var closestHeuristic = Double.POSITIVE_INFINITY
+    private var closest: QueueEntry<T>? = seed?.closest
+    private var closestHeuristic: Double = seed?.closestHeuristic ?: Double.POSITIVE_INFINITY
 
     val isFinished: Boolean
         get() = result != null || queue.isEmpty()
@@ -123,10 +160,16 @@ class AStarSearch<T>(
             closestHeuristic = currentHeuristic
         }
 
+        // Before the expanded check, so a seeded search still tests goals it expanded once.
         if (isGoal.test(current.node)) {
             result = ShortestPath(pathTo(current.node), current.gScore)
             return
         }
+
+        if (current.gScore >= expandedAt.getDouble(current.node)) {
+            return
+        }
+        expandedAt.put(current.node, current.gScore)
 
         for ((node, cost) in neighbors.apply(current.node)) {
             require(cost >= 0.0) { "Path search edge costs must be non-negative." }
