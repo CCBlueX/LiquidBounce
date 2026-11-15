@@ -59,7 +59,7 @@ class InventoryBench(val context: ClientGameTestContext, val server: TestServerC
         command("tp @a ${origin.x + 0.5} ${origin.y} ${origin.z + 0.5} 0 0")
         onServer { player ->
             player.health = player.maxHealth
-            player.foodData.foodLevel = FULL_FOOD
+            player.foodData.foodLevel = 20
             player.inventory.selectedSlot = 0
         }
         context.onClient { client ->
@@ -121,7 +121,6 @@ class InventoryBench(val context: ClientGameTestContext, val server: TestServerC
 
     private companion object {
         const val SETTLE_TICKS = 200
-        const val FULL_FOOD = 20
     }
 
 }

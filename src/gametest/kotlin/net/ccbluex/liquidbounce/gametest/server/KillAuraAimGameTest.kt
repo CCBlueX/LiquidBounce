@@ -45,13 +45,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 private const val FIGHT_TICKS = 1200
-private const val CONTROL_TICKS = 600
 private const val HAND_BACK_TICKS = 100
-private const val CAMERA_YAW = 17.32f
-private const val CAMERA_PITCH = 6.87f
-
-/** Hits in a minute against the opponent below a person who aims at all would land. */
-private const val MIN_HITS = 60
 
 /**
  * KillAura with the Human aim against an opponent that strafes and jumps around the player for a minute: nothing that
@@ -71,8 +65,8 @@ class KillAuraAimGameTest : ServerGameTest({
             // Someone who has looked around does not hold the camera at round angles. From exactly 0 the mouse grid
             // runs through the exact angle of a level target, which Intave reads as an aimbot when a turn ends on it
             val player = checkNotNull(it.player)
-            player.yRot = CAMERA_YAW
-            player.xRot = CAMERA_PITCH
+            player.yRot = 17.32f
+            player.xRot = 6.87f
         }
         ticks(5)
         val opponent = Opponent(this)
@@ -83,7 +77,8 @@ class KillAuraAimGameTest : ServerGameTest({
         opponent.fight(FIGHT_TICKS)
         disable(ModuleKillAura)
         val hits = attacks.count
-        check(hits >= MIN_HITS) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
+        // Fewer hits in a minute than a person who aims at all would land
+        check(hits >= 60) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
 
         // The view turns back to the camera and is handed over where the camera looks, without a jump
         awaitClient("the view to be handed back", HAND_BACK_TICKS) { RotationManager.currentRotation == null }
@@ -96,7 +91,7 @@ class KillAuraAimGameTest : ServerGameTest({
             aim("Constant")
             expectViolation("the aim checks to catch the Constant aim") {
                 enable(ModuleKillAura)
-                opponent.fight(CONTROL_TICKS)
+                opponent.fight(600)
                 disable(ModuleKillAura)
             }
         }
@@ -128,7 +123,7 @@ private class Attacks : EventListener {
  */
 private class Opponent(private val scope: GameTestScope) {
     private val tag = scope.unique("opponent")
-    private val random = Random(SEED)
+    private val random = Random(26L)
     private var angle = 0.0
     private var distance = 3.0
     private var velocity = 0.0
@@ -155,14 +150,14 @@ private class Opponent(private val scope: GameTestScope) {
 
     private fun step() {
         if (--strafeIn <= 0) {
-            val stop = random.nextInt(STOP_CHANCE) == 0
+            val stop = random.nextInt(6) == 0
             val side = when {
                 velocity > 0.0 -> -1.0
                 velocity < 0.0 -> 1.0
                 random.nextBoolean() -> 1.0
                 else -> -1.0
             }
-            velocity = if (stop) 0.0 else side * (MIN_SPEED + random.nextDouble() * (MAX_SPEED - MIN_SPEED))
+            velocity = if (stop) 0.0 else side * (0.15 + random.nextDouble() * (0.28 - 0.15))
             strafeIn = if (stop) 3 + random.nextInt(6) else 8 + random.nextInt(25)
             approach = (random.nextDouble() - 0.5) * 0.08
         }
@@ -170,26 +165,16 @@ private class Opponent(private val scope: GameTestScope) {
         distance = (distance + approach).coerceIn(2.2, 3.0)
 
         if (--jumpIn <= 0 && height == 0.0) {
-            lift = JUMP
+            lift = 0.42
             jumpIn = 15 + random.nextInt(40)
         }
         if (height > 0.0 || lift > 0.0) {
             height += lift
-            lift = (lift - GRAVITY) * DRAG
+            lift = (lift - 0.08) * 0.98
             if (height <= 0.0) {
                 height = 0.0
                 lift = 0.0
             }
         }
-    }
-
-    private companion object {
-        const val SEED = 26L
-        const val MIN_SPEED = 0.15
-        const val MAX_SPEED = 0.28
-        const val STOP_CHANCE = 6
-        const val JUMP = 0.42
-        const val GRAVITY = 0.08
-        const val DRAG = 0.98
     }
 }

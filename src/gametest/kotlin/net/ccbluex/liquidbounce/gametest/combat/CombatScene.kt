@@ -61,7 +61,7 @@ class CombatScene(val context: ClientGameTestContext, val world: TestSingleplaye
         world.server.runCommand("tp @a ${origin.x} ${origin.y} ${origin.z} 0 0")
         onServer { server -> serverPlayer(server).health = serverPlayer(server).maxHealth }
         context.onClient { client -> checkNotNull(client.player).inventory.selectedSlot = 0 }
-        context.waitTicks(RESET_TICKS)
+        context.waitTicks(4)
     }
 
     fun <T> onServer(block: (MinecraftServer) -> T): T = world.server.computeOnServer<T, RuntimeException> { block(it) }
@@ -72,7 +72,6 @@ class CombatScene(val context: ClientGameTestContext, val world: TestSingleplaye
 
     companion object {
         const val SETTLE_TIMEOUT_TICKS = 200
-        const val RESET_TICKS = 4
     }
 
 }

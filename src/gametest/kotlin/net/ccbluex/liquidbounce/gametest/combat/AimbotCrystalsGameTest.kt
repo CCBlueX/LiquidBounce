@@ -32,7 +32,6 @@ private const val CRYSTAL_YAW = -10f
 
 /** Looks past the husk, on the side away from the crystal. */
 private const val AWAY_YAW = 20f
-private const val ANGLE_TOLERANCE = 0.5f
 
 /**
  * With a husk straight ahead and a crystal to the left of it, the aimbot turns to the crystal first, to the husk
@@ -86,7 +85,7 @@ private object AimbotCrystals {
         }
         context.waitTicks(MEASURE_TICKS / 2)
         val yaw = context.fromClient { checkNotNull(it.player).yRot }
-        check(abs(yaw - AWAY_YAW) < ANGLE_TOLERANCE) { "Turned from $AWAY_YAW to $yaw with only crystals to aim at" }
+        check(abs(yaw - AWAY_YAW) < 0.5f) { "Turned from $AWAY_YAW to $yaw with only crystals to aim at" }
     }
 
     private fun lookAway(context: ClientGameTestContext, server: TestServerContext, y: Int) {

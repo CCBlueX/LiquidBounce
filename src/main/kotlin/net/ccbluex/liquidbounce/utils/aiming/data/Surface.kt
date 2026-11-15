@@ -28,9 +28,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-/** How far short of a surface its line of sight is checked, so a block's own face is not in the way. */
-private const val SIGHT_MARGIN = 1e-3
-
 /**
  * What a view has to meet for its target to count as hit: a ray from the eyes into [box], entering through [face] if
  * one is given, with no block in the way unless [throughWalls].
@@ -54,7 +51,8 @@ class Surface @JvmOverloads constructor(
         if (face != null && hit.direction != face) {
             return false
         }
-        return throughWalls || hasLineOfSight(eyes, hit.location.fma(-SIGHT_MARGIN, direction))
+        // Checked 1e-3 short of the surface, so a block's own face is not in the way
+        return throughWalls || hasLineOfSight(eyes, hit.location.fma(-1e-3, direction))
     }
 
     /** The corners of what has to be hit: [face] of [box], or all of it. */

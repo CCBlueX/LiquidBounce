@@ -29,7 +29,6 @@ import kotlin.math.hypot
 
 private const val FLIGHT_TIMEOUT_TICKS = 200
 private const val THROW_TIMEOUT_TICKS = 30
-private const val LANDING_TOLERANCE = 2.0
 
 /**
  * AutoPearl: the simulated pitch lands next to the enemy's pearl, and a blocked low arc falls back to a high one.
@@ -63,7 +62,7 @@ private fun CombatScene.flightAfterPearlFrom(from: Vec3): Flight {
     context.waitTicks(PEARL_TICKS)
 
     val (ours, theirs) = followPearl(from)
-    check(ours != null && theirs != null && ours.landing.distanceTo(theirs.landing) <= LANDING_TOLERANCE) {
+    check(ours != null && theirs != null && ours.landing.distanceTo(theirs.landing) <= 2.0) {
         "AutoPearl: landed at ${ours?.landing}, the enemy pearl at ${theirs?.landing}"
     }
     return ours

@@ -78,7 +78,7 @@ private fun InventoryBench.checkPitch() {
             horizontalSpeed > 0.0
         }
         // Straight down leaves 0.17 blocks a tick sideways, a level throw 0.47
-        check(horizontalSpeed > LEVEL_THROW_SPEED) { "the potion flew $horizontalSpeed blocks a tick sideways" }
+        check(horizontalSpeed > 0.35) { "the potion flew $horizontalSpeed blocks a tick sideways" }
         check(yawTurned < 1e-3f) { "AutoBuff turned the yaw by $yawTurned degrees" }
     }
 }
@@ -90,14 +90,14 @@ private fun InventoryBench.checkMidAir() {
         ModuleAutoBuff.set("Rotations/RotationTiming", "OnUse")
     }) {
         // Far above TillGroundDistance, so the potions would otherwise wait for the landing
-        command("execute as @a at @s run tp @s ~ ~$FALL_HEIGHT ~")
+        command("execute as @a at @s run tp @s ~ ~10 ~")
         command("item replace entity @a hotbar.0 with ${splash("swiftness")}")
         command("item replace entity @a hotbar.1 with ${splash("strength")}")
         waitUntil(THROW_TICKS, { "speed and strength were not thrown" }) {
             count(Items.SPLASH_POTION) == 0
         }
         val height = onServer { it.y } - origin.y
-        check(height > MID_AIR_HEIGHT) { "the potions were thrown only $height blocks above the ground" }
+        check(height > 5.0) { "the potions were thrown only $height blocks above the ground" }
     }
 }
 
@@ -120,14 +120,9 @@ private fun InventoryBench.checkHealingOnlyRefill() {
         waitUntil(THROW_TICKS, { "the healing potion was not moved into the hotbar" }) {
             (0..8).any { slot -> stackAt(slot).isPotion(Potions.HEALING) }
         }
-        context.waitTicks(GROUND_TICKS)
+        context.waitTicks(20)
         check(stackAt(10).isPotion(Potions.SWIFTNESS)) { "the swiftness potion left the inventory" }
     }
 }
 
 private fun ItemStack.isPotion(potion: Holder<Potion>) = get(DataComponents.POTION_CONTENTS)?.`is`(potion) == true
-
-private const val LEVEL_THROW_SPEED = 0.35
-private const val FALL_HEIGHT = 10
-private const val MID_AIR_HEIGHT = 5.0
-private const val GROUND_TICKS = 20

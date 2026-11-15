@@ -69,7 +69,6 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      * How long we stay on the ground while turning down, before jumping without a charge.
      */
     private const val MAX_AIM_TICKS = 10
-    private const val AIM_TOLERANCE = 1f
 
     private var holdJump = false
     private var aimTicks = 0
@@ -152,7 +151,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE)?.takeUnless { player.cooldowns.isOnCooldown(it.itemStack) }
 
     private fun target(yaw: Float?, pitch: Float) =
-        rotations.toRotationTarget(yaw = yaw, pitch = pitch, tolerance = AIM_TOLERANCE)
+        rotations.toRotationTarget(yaw = yaw, pitch = pitch, tolerance = 1f)
 
     private suspend fun throwCharge(slot: HotbarItemSlot, rotation: Rotation) {
         aimTicks = 0
