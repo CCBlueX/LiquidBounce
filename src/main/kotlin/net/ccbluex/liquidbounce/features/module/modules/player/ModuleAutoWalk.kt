@@ -145,7 +145,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }
             }
 
-            if (!player.rootVehicle.position().closerThan(goal, radius)) {
+            // The navigator stops walking at the radius itself, so arriving there counts too
+            if (player.rootVehicle.position().distanceToSqr(goal) > radius * radius) {
                 return goal
             }
 
