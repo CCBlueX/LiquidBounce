@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
+import net.ccbluex.agent.navigation.Listener
 import net.ccbluex.agent.navigation.teleport.Owner
 import net.ccbluex.agent.navigation.teleport.Teleports
 import net.ccbluex.agent.navigation.teleport.Trip
@@ -48,9 +49,9 @@ object TeleportManager : EventListener {
     /** The trips made with [trip], told about block changes. */
     private val trips = ArrayList<Trip>()
 
-    /** A trip for [owner], which runs while it does. */
-    fun trip(owner: EventListener, steps: StepsValueGroup) =
-        Trip(owner(owner), body, teleports, steps.options()).also(trips::add)
+    /** A trip for [owner], which runs while it does, reporting its route to [listener]. */
+    fun trip(owner: EventListener, steps: StepsValueGroup, listener: Listener = Listener.NONE) =
+        Trip(owner(owner), body, teleports, steps.options(), listener).also(trips::add)
 
     /** The identity [owner] has towards [teleports]. */
     fun owner(owner: EventListener): Owner = owners.getOrPut(owner) { Owner { owner.running } }

@@ -46,7 +46,9 @@ import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
 import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -70,8 +72,12 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
     private val steps = tree(StepsValueGroup())
 
-    private val trip = TeleportManager.trip(this, steps)
-    private val view = trip.view
+    private val view = RouteView().apply {
+        ghost = { partialTicks ->
+            TeleportManager.teleports.serverPosition(TeleportManager.owner(this@ModuleTpAura), partialTicks)
+        }
+    }
+    private val trip = TeleportManager.trip(this, steps, RouteEvents(view))
 
     init {
         tree(RouteRenderer(this, view))
@@ -301,6 +307,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return
         }
 
+        view.engaged = false
         phase = if (trip.comeBack()) Phase.RETURN else Phase.IDLE
         engagement = null
     }

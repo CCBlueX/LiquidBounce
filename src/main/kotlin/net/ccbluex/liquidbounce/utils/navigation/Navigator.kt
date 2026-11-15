@@ -32,7 +32,9 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
 import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.agent.navigation.Navigator as AgentNavigator
@@ -55,10 +57,11 @@ class Navigator(
 
     private val settings = Settings(values, allowBreak, allowPlace, allowParkour)
     private val body = LocalPlayerBody(owner, rotations ?: values.tree(RotationsValueGroup(owner)))
-    private val navigator = AgentNavigator(body, settings.options())
+    private val view = RouteView()
+    private val navigator = AgentNavigator(body, settings.options(), RouteEvents(view))
 
     init {
-        values.tree(RouteRenderer(owner, navigator.view, showRoute))
+        values.tree(RouteRenderer(owner, view, showRoute))
     }
 
     /** Whether this tick's keys must reach the player as they are. */
