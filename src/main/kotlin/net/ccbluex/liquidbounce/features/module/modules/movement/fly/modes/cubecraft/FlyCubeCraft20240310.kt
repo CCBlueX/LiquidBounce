@@ -52,6 +52,11 @@ internal object FlyCubeCraft20240310 : Mode("CubeCraft-2024-03-10", aliases = li
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
+        // Every hop climbs a little, so sneaking in the air skips them to sink
+        if (player.isShiftKeyDown && !player.onGround()) {
+            return@tickHandler
+        }
+
         player.deltaMovement.y = jumpHeight.toDouble()
         player.deltaMovement = player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble())
         spoofOnGround = true
