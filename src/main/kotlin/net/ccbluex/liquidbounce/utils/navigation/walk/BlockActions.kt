@@ -262,7 +262,7 @@ class BlockActions(
     }
 
     /** Twice the round trip and some ticks for the server to get to it. */
-    private fun verdictTicks() = VERDICT_TICKS + player.ping / MILLIS_PER_TICK * 2
+    private fun verdictTicks() = 10 + player.ping / 50 * 2
 
     @Suppress("unused")
     private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
@@ -293,8 +293,6 @@ class BlockActions(
     private companion object {
         const val SLOT_RESET_TICKS = 2
         const val USE_COOLDOWN_TICKS = 10
-        const val VERDICT_TICKS = 10
-        const val MILLIS_PER_TICK = 50
     }
 
 }

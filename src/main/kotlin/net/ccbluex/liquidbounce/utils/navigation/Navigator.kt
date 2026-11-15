@@ -151,8 +151,8 @@ class Navigator(
         get() {
             val goal = lastGoal ?: return null
             return when {
-                player.position().closerThan(goal, APPROACH_DISTANCE) -> "approach"
-                follower.path != null && follower.turnAhead(TURN_LOOK) > SHARP_TURN -> "turn"
+                player.position().closerThan(goal, 4.0) -> "approach"
+                follower.path != null && follower.turnAhead(4.0) > 45f -> "turn"
                 else -> null
             }
         }
@@ -623,11 +623,6 @@ class Navigator(
         /** How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind. */
         const val LOOK_DISTANCE = 0.75
         const val QUARTER_TURN = 90f
-
-        /** Turns of the path sharper than this within [TURN_LOOK] blocks, and the goal this close, slow down. */
-        const val SHARP_TURN = 45f
-        const val TURN_LOOK = 4.0
-        const val APPROACH_DISTANCE = 4.0
         const val VERTICAL_MARGIN = 16
         const val SETTLE_TICKS = 100
         const val JOIN_POINTS = 8

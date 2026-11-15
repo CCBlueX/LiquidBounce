@@ -186,7 +186,7 @@ class Follower(
         bridgeLine = null
 
         // A server that keeps refusing the blocks will not hold a bridge here.
-        if (step.places.isNotEmpty() && actions.rejectedInRow >= MAX_REJECTIONS) {
+        if (step.places.isNotEmpty() && actions.rejectedInRow >= 3) {
             actions.forgetRejections()
             actions.idle()
             standStill(event)
@@ -322,7 +322,7 @@ class Follower(
         }
 
         // A new search that ends the run about where it did keeps the line, so the heading does not jump.
-        val line = bridgeLine?.takeIf { it.to.horizontalDistanceTo(target) <= LINE_KEEP }
+        val line = bridgeLine?.takeIf { it.to.horizontalDistanceTo(target) <= 1.5 }
             ?: BridgeLine(position, target).also { bridgeLine = it }
         event.directionalInput = getDirectionalInputTowards(line.aimFrom(position).subtract(position), frameYaw)
         event.jump = false
@@ -340,7 +340,7 @@ class Follower(
         return end
     }
 
-    /** A straight bridge crossing; the walk aims [PURSUIT_AHEAD] along it, which pulls a drift back gently. */
+    /** A straight bridge crossing; the walk aims 2 blocks along it, which pulls a drift back gently. */
     private class BridgeLine(val from: Vec3, val to: Vec3) {
         private val length = from.horizontalDistanceTo(to)
         private val dx = if (length > 0.0) (to.x - from.x) / length else 0.0
@@ -351,7 +351,7 @@ class Follower(
 
         fun aimFrom(position: Vec3): Vec3 {
             val along = (position.x - from.x) * dx + (position.z - from.z) * dz
-            val ahead = (along + PURSUIT_AHEAD).coerceIn(0.0, length)
+            val ahead = (along + 2.0).coerceIn(0.0, length)
             return Vec3(from.x + dx * ahead, to.y, from.z + dz * ahead)
         }
     }
@@ -403,7 +403,8 @@ class Follower(
         val feet = BlockPos.containing(position)
         val cell = if (terrain.isClimbable(feet.x, feet.y, feet.z)) feet else step.from
         val side = terrain.climbSide(cell.x, cell.y, cell.z)
-        val aim = if (side == null) step.feet else step.feet.add(side.stepX * GRIP_REACH, 0.0, side.stepZ * GRIP_REACH)
+        // Past the middle of a ladder or vine, into the block it hangs on.
+        val aim = if (side == null) step.feet else step.feet.add(side.stepX * 1.0, 0.0, side.stepZ * 1.0)
 
         event.directionalInput = centerInput(position, aim, frameYaw)
         event.jump = true
@@ -642,23 +643,24 @@ class Follower(
         val dx = step.feet.x - from.x
         val dz = step.feet.z - from.z
         val length = sqrt(dx * dx + dz * dz)
-        if (length == 0.0 || abs(position.y - step.feet.y) >= PASS_VERTICAL) {
+        if (length == 0.0 || abs(position.y - step.feet.y) >= 1.25) {
             return false
         }
         val along = ((position.x - from.x) * dx + (position.z - from.z) * dz) / length
         val beside = abs((position.x - from.x) * dz - (position.z - from.z) * dx) / length
-        return along >= length && beside <= PASS_BESIDE
+        return along >= length && beside <= 0.6
     }
 
     /**
      * [aim], unless it lies behind the way the player moves fast: then the point ahead on the path the player
-     * covers in [STEER_TICKS], and in the air no aim at all rather than one back, which only turns in an arc.
+     * covers in 3 ticks, and in the air no aim at all rather than one back, which only turns in an arc.
      */
     private fun forwardAim(position: Vec3, aim: Vec3, step: Step): Vec3 {
         val motion = player.deltaMovement
         val speed = motion.horizontalDistance()
         val ahead = (aim.x - position.x) * motion.x + (aim.z - position.z) * motion.z
-        val reverses = speed > FAST_SPEED && ahead < 0.0
+        // Blocks per tick, about Speed's pace.
+        val reverses = speed > 0.3 && ahead < 0.0
         if (reverses && !reversing) {
             overshoots++
         }
@@ -667,7 +669,7 @@ class Follower(
             return aim
         }
 
-        val point = pointAhead(position, max(speed * STEER_TICKS, MIN_STEER))
+        val point = pointAhead(position, max(speed * 3.0, 1.0))
         val pointAhead = point != null &&
             (point.x - position.x) * motion.x + (point.z - position.z) * motion.z >= 0.0
         return when {
@@ -687,7 +689,7 @@ class Follower(
         for (i in index + 1 until points.size) {
             val to = points[i]
             val length = from.horizontalDistanceTo(to)
-            if (length > MIN_SEGMENT) {
+            if (length > 0.3) {
                 val yaw = to.subtract(from).yaw
                 if (!heading.isNaN()) {
                     sharpest = max(sharpest, abs(Mth.wrapDegrees(yaw - heading)))
@@ -784,8 +786,6 @@ class Follower(
         const val RISE_MARGIN = 0.01
         const val JUMP_REACH = 1.5
 
-        /** How far past the middle of a ladder or vine the climb pushes, into the block it hangs on. */
-        const val GRIP_REACH = 1.0
         const val OFF_PATH = 1.5
 
         /** A block down from the path counts as off it. */
@@ -797,7 +797,6 @@ class Follower(
         const val PREDICT_INTERVAL = 5
         const val PREDICT_TICKS = 20
         const val ACTION_TICKS = 60
-        const val MAX_REJECTIONS = 3
 
         /** Walking back to the run-up included. */
         const val JUMP_TICKS = 120
@@ -809,24 +808,6 @@ class Follower(
         const val AIR_SEARCH = 4
 
         const val SHORTCUT_STEPS = 8
-
-        /** How far along the bridge line the walk aims ahead of the player. */
-        const val PURSUIT_AHEAD = 2.0
-
-        /** How far the end of a newly searched bridge may lie from the old one for the line to stay. */
-        const val LINE_KEEP = 1.5
-
-        /** A plain step counts as passed this close beside its way and level with it. */
-        const val PASS_BESIDE = 0.6
-        const val PASS_VERTICAL = 1.25
-
-        /** Blocks per tick from which an aim behind counts as overshooting, about Speed's pace. */
-        const val FAST_SPEED = 0.3
-
-        /** Ticks of travel the aim lies ahead on the path after an overshoot, and at least this far. */
-        const val STEER_TICKS = 3.0
-        const val MIN_STEER = 1.0
-        const val MIN_SEGMENT = 0.3
         const val SHORTCUT_STOP = 0.25
         const val LOOK_STEPS = 4
 

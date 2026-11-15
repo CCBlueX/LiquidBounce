@@ -78,7 +78,7 @@ class LookAhead(owner: EventListener) : ToggleableValueGroup(owner, "LookAhead",
     @Suppress("unused")
     private val mouseHandler = handler<MouseRotationEvent> { event ->
         if (event.cursorDeltaX != 0.0 || event.cursorDeltaY != 0.0) {
-            mouseHold = MOUSE_HOLD_TICKS
+            mouseHold = 40
         }
     }
 
@@ -121,7 +121,7 @@ class LookAhead(owner: EventListener) : ToggleableValueGroup(owner, "LookAhead",
         }
 
         val motion = player.rootVehicle.deltaMovement
-        return if (motion.horizontalDistanceSqr() >= MIN_MOTION * MIN_MOTION) motion.yaw else Float.NaN
+        return if (motion.horizontalDistanceSqr() >= 0.05 * 0.05) motion.yaw else Float.NaN
     }
 
     /** Towards the horizon, tilted by part of the route's slope up to the point; steep up or down a ladder. */
@@ -138,7 +138,7 @@ class LookAhead(owner: EventListener) : ToggleableValueGroup(owner, "LookAhead",
         }
 
         val slope = atan2(rise, max(horizontal, MIN_POINT_DISTANCE)).toDegrees().toFloat()
-        return (pitch - slope * SLOPE_FOLLOW).coerceIn(MIN_PITCH, MAX_PITCH)
+        return (pitch - slope * 0.5f).coerceIn(-30f, 60f)
     }
 
     /**
@@ -146,15 +146,15 @@ class LookAhead(owner: EventListener) : ToggleableValueGroup(owner, "LookAhead",
      * actual speed changes by a limited amount per tick so turns start and end softly.
      */
     private fun turn(yawDelta: Float, pitchDelta: Float) {
-        val maxChange = turnSpeed * ACCELERATION
-        yawSpeed = approach(yawSpeed, (yawDelta * EASING).coerceIn(-turnSpeed, turnSpeed), maxChange)
-        val maxPitchSpeed = turnSpeed * PITCH_SHARE
-        pitchSpeed = approach(pitchSpeed, (pitchDelta * EASING).coerceIn(-maxPitchSpeed, maxPitchSpeed), maxChange)
+        val maxChange = turnSpeed * 0.3f
+        yawSpeed = approach(yawSpeed, (yawDelta * 0.2f).coerceIn(-turnSpeed, turnSpeed), maxChange)
+        val maxPitchSpeed = turnSpeed * 0.5f
+        pitchSpeed = approach(pitchSpeed, (pitchDelta * 0.2f).coerceIn(-maxPitchSpeed, maxPitchSpeed), maxChange)
 
-        if (abs(yawSpeed) < REST_SPEED && abs(yawDelta) < REST_SPEED) {
+        if (abs(yawSpeed) < 0.05f && abs(yawDelta) < 0.05f) {
             yawSpeed = 0f
         }
-        if (abs(pitchSpeed) < REST_SPEED && abs(pitchDelta) < REST_SPEED) {
+        if (abs(pitchSpeed) < 0.05f && abs(pitchDelta) < 0.05f) {
             pitchSpeed = 0f
         }
 
@@ -173,16 +173,7 @@ class LookAhead(owner: EventListener) : ToggleableValueGroup(owner, "LookAhead",
         current + (wanted - current).coerceIn(-maxChange, maxChange)
 
     private companion object {
-        const val EASING = 0.2f
-        const val ACCELERATION = 0.3f
-        const val PITCH_SHARE = 0.5f
-        const val SLOPE_FOLLOW = 0.5f
-        const val MIN_PITCH = -30f
-        const val MAX_PITCH = 60f
-        const val REST_SPEED = 0.05f
         const val MIN_POINT_DISTANCE = 1.0
-        const val MIN_MOTION = 0.05
-        const val MOUSE_HOLD_TICKS = 40
     }
 
 }
