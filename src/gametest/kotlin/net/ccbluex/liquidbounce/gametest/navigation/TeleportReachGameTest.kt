@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest.navigation
 
 import com.google.gson.JsonPrimitive
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.aim
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
@@ -57,7 +57,7 @@ private const val HOLD_OPEN_TICKS = 40
  * breaks a block, right click places a block and opens a chest that stays open, and every action comes back
  * unhurt. Configs saved under the old ClickTp name still load.
  */
-class TeleportReachGameTest : LiquidBounceGameTest({
+class TeleportReachGameTest : ServerGameTest({
     context.restoring(ModuleTeleportReach) {
         checkOldNameLoads(context)
 

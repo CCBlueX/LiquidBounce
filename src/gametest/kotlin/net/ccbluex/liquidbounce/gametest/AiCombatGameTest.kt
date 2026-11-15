@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.gametest
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatPackets
 import net.ccbluex.liquidbounce.event.EventListener
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -50,10 +50,12 @@ import kotlin.math.sin
  * Fights a scripted opponent that circles the player with KillAura's AI aiming on, using the bundled models, so the
  * whole path from packets to decisions to rotations and attacks runs in a real client.
  */
-class AiCombatGameTest : LocalGameTest() {
+class AiCombatGameTest : ClientGameTest(AiCombat::test)
+
+private object AiCombat {
     private val logger = LogManager.getLogger("AiCombatGameTest")
 
-    override fun test(context: ClientGameTestContext) {
+    fun test(context: ClientGameTestContext) {
         check(context.fromClient { DeepLearningEngine.isInitialized }) { "The deep learning engine did not load" }
         context.worldBuilder().setUseConsistentSettings(true).create().use { world ->
             world.connection.waitForChunksRender()
@@ -140,11 +142,9 @@ class AiCombatGameTest : LocalGameTest() {
         fun close() = unregister()
     }
 
-    private companion object {
-        const val NAME = "Opponent"
-        const val OPPONENT_ID = -3001
-        const val TICKS = 300
-        const val RADIUS = 2.5
-        const val STEP = 6f
-    }
+    private const val NAME = "Opponent"
+    private const val OPPONENT_ID = -3001
+    private const val TICKS = 300
+    private const val RADIUS = 2.5
+    private const val STEP = 6f
 }

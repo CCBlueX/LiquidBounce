@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.gametest.CrystalAuraArena.Companion.TIMEOUT
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 
@@ -30,9 +29,8 @@ import net.minecraft.world.phys.Vec3
  * Looking at an obsidian block beside the husk, the CrystalAura Crosshair rotation mode places and breaks a crystal
  * there without rotating, although the block in front of the husk would deal more damage.
  */
-class CrystalAuraCrosshairGameTest : LocalGameTest() {
-
-    override fun test(context: ClientGameTestContext) = context.inCrystalAuraArena {
+class CrystalAuraCrosshairGameTest : ClientGameTest({ context ->
+    context.inCrystalAuraArena {
         cmd("setblock ${pos(right)} obsidian")
         context.waitFor({ client -> client.level!!.getBlockState(right).`is`(Blocks.OBSIDIAN) }, TIMEOUT)
 
@@ -59,5 +57,4 @@ class CrystalAuraCrosshairGameTest : LocalGameTest() {
 
         check(first != null && broken) { "Crosshair mode placed=${first != null} broken=$broken on that block" }
     }
-
-}
+})

@@ -63,6 +63,13 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
 
+    private val noParticles by boolean("NoParticles", false)
+
+    /**
+     * Closes the terrain loading screen once the server sent the world, without waiting for the chunks to be built.
+     */
+    private val skipTerrainLoading by boolean("SkipTerrainLoading", false)
+
     @JvmStatic
     fun canRender(choice: DoRender) = !running || choice in render
 
@@ -72,6 +79,12 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
         } else {
             1.0f
         }
+
+    @get:JvmName("shouldHideParticles")
+    val shouldHideParticles get() = running && noParticles
+
+    @get:JvmName("shouldSkipTerrainLoading")
+    val shouldSkipTerrainLoading get() = running && skipTerrainLoading
 }
 
 enum class DoRender(override val tag: String) : Tagged {

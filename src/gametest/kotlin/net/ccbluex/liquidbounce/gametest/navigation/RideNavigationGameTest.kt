@@ -20,12 +20,12 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.animal.equine.Horse
@@ -41,7 +41,7 @@ private const val ARRIVAL = 1.1
  * `.goto` rides an oak boat around an island across a lake, gets off at the shore and walks onto the destination,
  * and rides a saddled horse up a step, around a fenced wall and up a ledge it jumps, staying on the horse.
  */
-class RideNavigationGameTest : LiquidBounceGameTest({
+class RideNavigationGameTest : ServerGameTest({
     context.restoring(ModuleAutoWalk) {
         val y = origin.y
         buildLake(y)

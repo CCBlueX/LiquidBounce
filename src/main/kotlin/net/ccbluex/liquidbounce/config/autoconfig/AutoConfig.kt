@@ -83,14 +83,46 @@ object AutoConfig {
     }
 
     /**
+     * Configs longer than this many characters are rejected unread. Exported configs are below 1 MiB.
+     */
+    const val MAX_CONFIG_CHARS = 8 shl 20
+
+    /**
+     * Configs nesting objects and arrays deeper than this are rejected while parsing. Exported configs stay below 30.
+     */
+    const val MAX_CONFIG_DEPTH = 64
+
+    /**
      * Deserialize module configurable from a reader
      */
     fun loadAutoConfig(
         reader: Reader,
         modules: Collection<ValueGroup> = []
     ) {
-        publicGson.newJsonReader(reader).use { reader ->
-            loadAutoConfig(reader.parseTree().asJsonObject, modules)
+        loadAutoConfig(readAutoConfig(reader), modules)
+    }
+
+    /**
+     * Reads an auto config from [reader] and closes it. Fails when it is longer than [MAX_CONFIG_CHARS] characters
+     * or nests deeper than [MAX_CONFIG_DEPTH] levels.
+     */
+    fun readAutoConfig(reader: Reader): JsonObject {
+        val text = reader.use { it.readLimited() }
+        return publicGson.newJsonReader(Reader.of(text)).use {
+            it.nestingLimit = MAX_CONFIG_DEPTH
+            it.parseTree().asJsonObject
+        }
+    }
+
+    private fun Reader.readLimited() = buildString {
+        val buffer = CharArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = read(buffer)
+            if (read == -1) {
+                break
+            }
+            appendRange(buffer, 0, read)
+            require(length <= MAX_CONFIG_CHARS) { "Config is larger than ${MAX_CONFIG_CHARS shr 20} MiB" }
         }
     }
 

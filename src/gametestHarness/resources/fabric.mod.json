@@ -13,8 +13,17 @@
   },
   "license": "GNU General Public License v3.0",
   "environment": "client",
+  "entrypoints": {
+    "gametest-setup": [
+      {
+        "adapter": "kotlin",
+        "value": "net.ccbluex.liquidbounce.gametest.harness.LiquidBounceSetup"
+      }
+    ]
+  },
   "depends": {
     "liquidbounce": "*",
-    "gametest-harness": "*"
+    "gametest-harness": "*",
+    "fabric-language-kotlin": "*"
   }
 }

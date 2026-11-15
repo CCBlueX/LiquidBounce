@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportRe
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.suggest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -43,7 +43,7 @@ private const val EPSILON = 1.0E-3
 private const val ARRIVAL_TICKS = 20
 
 /** The teleport commands work without the retired Teleport module, and old configs still load. */
-class TeleportCommandGameTest : LiquidBounceGameTest({
+class TeleportCommandGameTest : ServerGameTest({
     check(context.fromClient { ModuleManager["Teleport"] == null }) { "The Teleport module is still registered" }
 
     val savedTeleport = context.fromClient { ConfigSystem.serializeValueGroup(GlobalSettingsTeleport) }
