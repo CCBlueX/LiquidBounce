@@ -93,7 +93,7 @@ open class Clicker<T>(
     }
 
     private val passesMissCooldown
-        get() = !(missCooldown?.get() == true && mc.missTime > 0)
+        get() = !(missCooldown?.get() == true && isMissCooldownActive)
 
     private val human = HumanClickTiming()
 
@@ -228,3 +228,17 @@ open class Clicker<T>(
     override fun parent() = parent
 
 }
+
+/**
+ * `Minecraft.tick` parks [Minecraft.missTime] at this while any screen is open — a lock, not a miss:
+ * the real cooldown after a swing that hit nothing only ever sets 10.
+ */
+private const val SCREEN_MISS_LOCK = 10_000
+
+/**
+ * Whether the miss cooldown of a swing that hit nothing is running. The screen lock counts as none —
+ * nothing was missed, the GUI has merely opened, and while it is open the decrement never runs, so
+ * taking the lock for a miss would silence every attack until the screen closes.
+ */
+val isMissCooldownActive: Boolean
+    get() = mc.missTime in 1 until SCREEN_MISS_LOCK
