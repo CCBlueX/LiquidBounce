@@ -45,12 +45,6 @@ internal object TotemLegitRoutine : ToggleableValueGroup(Totem, "LegitRoutine", 
     private val reaction by intRange("Reaction", 100..200, 0..1000, "ms")
     private val moveTime by intRange("MoveTime", 150..300, 50..1000, "ms")
 
-    /**
-     * Gives up when the swap does not happen within this time after the cursor reached the totem, for example while
-     * the inventory constraints hold it back.
-     */
-    private const val SWAP_TIMEOUT_MS = 2000L
-
     private enum class Phase { IDLE, REACTING, MOVING, HOVERING, CLOSING }
 
     private var phase = Phase.IDLE
@@ -129,7 +123,9 @@ internal object TotemLegitRoutine : ToggleableValueGroup(Totem, "LegitRoutine", 
             return
         }
 
-        val timedOut = phase == Phase.HOVERING && timer.hasElapsed(SWAP_TIMEOUT_MS)
+        // Gives up when the swap does not happen after the cursor reached the totem, for example while the
+        // inventory constraints hold it back
+        val timedOut = phase == Phase.HOVERING && timer.hasElapsed(2000L)
         if (timedOut || target?.item?.has(DataComponents.DEATH_PROTECTION) != true && !pickTarget(screen)) {
             close()
             reset()
@@ -214,11 +210,8 @@ internal class LockedInventoryScreen(player: Player) : InventoryScreen(player) {
     fun cursorOn(slot: Slot): Vector2d {
         val window = minecraft.window
         val scale = window.screenWidth.toDouble() / window.guiScaledWidth
-        return Vector2d(leftPos + slot.x + SLOT_CENTER, topPos + slot.y + SLOT_CENTER).mul(scale)
-    }
-
-    private companion object {
-        const val SLOT_CENTER = 8.0
+        // 8 is half a slot
+        return Vector2d(leftPos + slot.x + 8.0, topPos + slot.y + 8.0).mul(scale)
     }
 
 }
@@ -236,12 +229,12 @@ private class CursorPath(private val start: Vector2dc, val end: Vector2dc) {
         val delta = end.sub(start, Vector2d())
         // unit vector to the side of the straight line
         val side = Vector2d(delta).perpendicular().div(delta.length().coerceAtLeast(1.0))
-        val bend = (delta.length() * BEND).coerceAtMost(MAX_BEND) * if (Random.nextBoolean()) 1.0 else -1.0
+        val bend = (delta.length() * 0.2).coerceAtMost(40.0) * if (Random.nextBoolean()) 1.0 else -1.0
 
-        first = start.fma(Random.nextDouble(FIRST_CONTROL_START, FIRST_CONTROL_END), delta, Vector2d())
-            .fma(bend * Random.nextDouble(MIN_FIRST_BEND, 1.0), side)
-        second = start.fma(Random.nextDouble(SECOND_CONTROL_START, SECOND_CONTROL_END), delta, Vector2d())
-            .fma(bend * Random.nextDouble(0.0, MAX_SECOND_BEND), side)
+        first = start.fma(Random.nextDouble(0.2, 0.4), delta, Vector2d())
+            .fma(bend * Random.nextDouble(0.3, 1.0), side)
+        second = start.fma(Random.nextDouble(0.6, 0.8), delta, Vector2d())
+            .fma(bend * Random.nextDouble(0.0, 0.4), side)
     }
 
     fun at(progress: Double): Vector2dc {
@@ -252,24 +245,12 @@ private class CursorPath(private val start: Vector2dc, val end: Vector2dc) {
         // minimum jerk profile of a reaching movement
         val t = progress * progress * progress * (progress * (progress * 6 - 15) + 10)
         val u = 1 - t
-        val shake = u * SHAKE
+        val shake = u * 1.5
         return Vector2d(start).mul(u * u * u)
             .fma(3 * u * u * t, first)
             .fma(3 * u * t * t, second)
             .fma(t * t * t, end)
             .add(Random.nextDouble(-shake, shake), Random.nextDouble(-shake, shake))
-    }
-
-    private companion object {
-        const val BEND = 0.2
-        const val MAX_BEND = 40.0
-        const val MIN_FIRST_BEND = 0.3
-        const val MAX_SECOND_BEND = 0.4
-        const val FIRST_CONTROL_START = 0.2
-        const val FIRST_CONTROL_END = 0.4
-        const val SECOND_CONTROL_START = 0.6
-        const val SECOND_CONTROL_END = 0.8
-        const val SHAKE = 1.5
     }
 
 }
