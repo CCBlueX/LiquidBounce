@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.world.entity.LivingEntity
 
 object Esp2DMode : EspMode.BoxBased("2D") {
 
@@ -222,7 +223,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
 
                     translate(-HealthBar.spacing / guiScaleFactor - outlineThickness, 0.0f)
 
-                    if (HealthBar.enabled) {
+                    if (HealthBar.enabled && entity is LivingEntity) {
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f, 1f)
