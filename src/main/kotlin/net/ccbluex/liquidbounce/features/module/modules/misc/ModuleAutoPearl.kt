@@ -54,13 +54,6 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 private const val MAX_SIMULATED_TICKS = 240
-private const val REFINE_STEPS = 10
-private const val REFINE_STEP = 0.1f
-
-/**
- * How close an arc has to land to the enemy's pearl to be preferred for its shorter flight.
- */
-private const val LANDING_TOLERANCE = 1.0
 
 /**
  * Auto pearl module
@@ -214,7 +207,7 @@ object ModuleAutoPearl : ClientModule(
 
     /**
      * Simulates every pitch towards [destination] and refines each arc that lands closest locally. Of the arcs
-     * landing within [LANDING_TOLERANCE], the one with the shortest flight wins, so a blocked low arc falls back
+     * landing within 1 block, the one with the shortest flight wins, so a blocked low arc falls back
      * to a high one. Without such an arc, the closest one is returned.
      */
     private fun aimAt(destination: Vec3): Throw? {
@@ -243,12 +236,13 @@ object ModuleAutoPearl : ClientModule(
                 return@mapNotNull null
             }
 
-            (-REFINE_STEPS..REFINE_STEPS)
-                .mapNotNull { step -> simulate(current.rotation.pitch + step * REFINE_STEP) }
+            // Tenth-degree steps across the one degree gap between coarse samples
+            (-10..10)
+                .mapNotNull { step -> simulate(current.rotation.pitch + step * 0.1f) }
                 .minByOrNull { it.error }
         }
 
-        return arcs.filter { it.error <= LANDING_TOLERANCE }.minByOrNull { it.ticks }
+        return arcs.filter { it.error <= 1.0 }.minByOrNull { it.ticks }
             ?: arcs.minByOrNull { it.error }
     }
 
