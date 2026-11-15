@@ -233,6 +233,7 @@ fun LocalPlayer.stopXZVelocity() {
  *
  * @see <a href="https://github.com/CCBlueX/LiquidBounce/blob/03bc91a3c34031d1ea7400ef3b67c00adf6a4c6e/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/speedmodes/ncp/NCPBHop.kt#L119-L126">LiquidBounce Legacy NCPBHop baseMoveSpeed</a>
  */
+@Suppress("MaxLineLength")
 fun ncpBaseMoveSpeed(base: Double = 0.2873): Double {
     val speed = player.effectLevel(MobEffects.SPEED)
     val slowness = player.effectLevel(MobEffects.SLOWNESS)
