@@ -144,7 +144,9 @@ private fun GameTestScope.checkSetback(y: Int) {
     awaitClient("the run to end", WAIT_TICKS) { run.state != Teleport.State.ACTIVE }
 
     check(run.state == Teleport.State.REJECTED) { "A setback ended the run as ${run.state}" }
-    check(context.fromClient { !TeleportManager.teleports.holds(owner) && TeleportManager.teleports.serverPosition == null })
+    check(context.fromClient {
+        !TeleportManager.teleports.holds(owner) && TeleportManager.teleports.serverPosition == null
+    })
     awaitClient("the client at the setback") { it.player?.position()?.near(setback) == true }
     ticks(SETTLE_TICKS)
     check(serverPosition().near(setback)) { "The rejected run kept moving the player" }

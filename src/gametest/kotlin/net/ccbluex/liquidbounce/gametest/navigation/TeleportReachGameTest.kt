@@ -178,7 +178,8 @@ private fun GameTestScope.click(y: Int, target: BlockPos, key: (Options) -> KeyM
 
 private fun GameTestScope.awaitReturn(y: Int) {
     awaitClient("the player back", WAIT_TICKS) {
-        !TeleportManager.teleports.holds(TeleportManager.owner(ModuleTeleportReach)) && !TeleportManager.teleports.isMoving
+        val teleports = TeleportManager.teleports
+        !teleports.holds(TeleportManager.owner(ModuleTeleportReach)) && !teleports.isMoving
     }
     awaitServerAt(origin(y), timeout = WAIT_TICKS)
 }
