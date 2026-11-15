@@ -19,6 +19,10 @@
 
 package net.ccbluex.liquidbounce.test
 
+import okio.Buffer
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import java.io.InputStream
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -28,4 +32,19 @@ fun <E> assertIn(collection: Collection<E>, element: E) {
 
 fun <E> assertNotIn(collection: Collection<E>, element: E) {
     assertFalse(collection.contains(element))
+}
+
+/** Builds a zip in memory; a `null` content marks a directory entry (name must end with `/`). */
+fun zip(vararg entries: Pair<String, String?>): InputStream {
+    val buffer = Buffer()
+    ZipArchiveOutputStream(buffer.outputStream()).use { aos ->
+        for ((name, content) in entries) {
+            aos.putArchiveEntry(ZipArchiveEntry(name))
+            if (content != null) {
+                aos.writeUtf8(content)
+            }
+            aos.closeArchiveEntry()
+        }
+    }
+    return buffer.inputStream()
 }

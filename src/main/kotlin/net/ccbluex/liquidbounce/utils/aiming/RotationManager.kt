@@ -338,22 +338,22 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         val surface = owner?.hitSurface
         if (surface != null) {
             val eyes = player.eyePosition
-            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view))
+            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view), owner.entity)
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
         val margin = max(tolerance, step / 2)
         val delta = view.rotationDeltaTo(goal)
         val reached = abs(delta.deltaYaw) < margin && abs(delta.deltaPitch) < margin
-        return AimGoal(goal, tolerance * 2, tolerance * 2, reached)
+        return AimGoal(goal, tolerance * 2, tolerance * 2, reached, owner?.entity)
     }
 
     /**
      * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
      */
-    private fun surfaceGoal(goal: Rotation, eyes: Vec3, surface: Surface, reached: Boolean): AimGoal {
+    private fun surfaceGoal(goal: Rotation, eyes: Vec3, surface: Surface, reached: Boolean, entity: Entity?): AimGoal {
         if (surface.box.contains(eyes)) {
-            return AimGoal(goal, 180f, 180f, reached)
+            return AimGoal(goal, 180f, 180f, reached, entity)
         }
 
         val corners = surface.corners
@@ -370,7 +370,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             minPitch = min(minPitch, rotation.pitch)
             maxPitch = max(maxPitch, rotation.pitch)
         }
-        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached)
+        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached, entity)
     }
 
     private fun release() {

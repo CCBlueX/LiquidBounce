@@ -30,7 +30,7 @@ import java.util.Random
 class HumanAim(parent: ModeValueGroup<*>) : Aim(
     "Human",
     parent,
-    listOf("Sigmoid", "Interpolation", "Acceleration", "AI", "Minarai"),
+    listOf("Sigmoid", "Interpolation", "Acceleration"),
 ) {
 
     private val speed by float("Speed", 1f, 0.3f..3f)
