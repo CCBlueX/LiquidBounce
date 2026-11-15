@@ -51,6 +51,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286Ground
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20231212
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20250125
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.rewound.SpeedRewound
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -99,7 +100,9 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
         SpeedBlocksMC20241123(modeValueGroup),
 
-        SpeedMatrix7(modeValueGroup)
+        SpeedMatrix7(modeValueGroup),
+
+        SpeedRewound(modeValueGroup)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
