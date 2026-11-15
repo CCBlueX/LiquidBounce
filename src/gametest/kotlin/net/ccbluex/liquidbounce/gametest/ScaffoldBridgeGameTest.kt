@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
@@ -30,9 +30,11 @@ import net.minecraft.world.item.Items
 private const val BRIDGE_Y = 120
 private const val BLOCKS = 40
 private const val STACK = 64
-private const val ATTEMPTS = 3
 private const val TIMEOUT_TICKS = 600
 private const val SETTLE_TICKS = 10
+
+private const val SETTLE_TIMEOUT_TICKS = 200
+private const val TICKS_PER_SECOND = 20.0
 
 /** Half the width of the area cleared before every bridge, more than one bridge reaches. */
 private const val CLEARANCE = 48
@@ -41,7 +43,9 @@ private const val CLEARANCE = 48
  * Scaffold with its default settings bridges over the void, straight and diagonally, with either aim. It must never
  * let the player fall. Blocks per second, and the ticks it needed a block but placed none, are logged for comparison.
  */
-class ScaffoldBridgeGameTest : LocalGameTest() {
+class ScaffoldBridgeGameTest : ClientGameTest(ScaffoldBridge::test)
+
+private object ScaffoldBridge {
 
     private enum class Course(val yaw: Float) {
         STRAIGHT(-90f),
@@ -64,7 +68,7 @@ class ScaffoldBridgeGameTest : LocalGameTest() {
                 .format(blocksPerSecond) + (fellAt?.let { ", fell at $it" } ?: "")
     }
 
-    override fun test(context: ClientGameTestContext) {
+    fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             world.server.runCommand("gamemode survival @a")
             world.server.runCommand("gamerule minecraft:fall_damage false")
@@ -74,7 +78,7 @@ class ScaffoldBridgeGameTest : LocalGameTest() {
             context.restoring(ModuleScaffold) {
                 for (aim in listOf("Constant", "Human")) {
                     for (course in Course.entries) {
-                        repeat(ATTEMPTS) { runs += bridge(context, world, Run(aim, course)) }
+                        repeat(3) { runs += bridge(context, world, Run(aim, course)) }
                     }
                 }
             }
@@ -157,7 +161,7 @@ class ScaffoldBridgeGameTest : LocalGameTest() {
             run.sneaks++
         }
 
-        if (player.y < BRIDGE_Y - FALL_MARGIN) {
+        if (player.y < BRIDGE_Y - 0.01) {
             run.fellAt = player.position().toString()
             return true
         }
@@ -166,11 +170,5 @@ class ScaffoldBridgeGameTest : LocalGameTest() {
     }
 
     private fun blocks(client: Minecraft) = checkNotNull(client.player).inventory.countItem(Items.STONE)
-
-    private companion object {
-        const val SETTLE_TIMEOUT_TICKS = 200
-        const val TICKS_PER_SECOND = 20.0
-        const val FALL_MARGIN = 0.01
-    }
 
 }

@@ -74,13 +74,8 @@ class NavigationGameTests : FabricClientGameTest {
         if (!navigationGameTests) {
             return
         }
-        // Server game tests report at the end of the run; a local one that fails must not keep the others from it
         val run = if (GameTestEnvironment.paperOnly) paperOnly + tests else tests
-        val failures = run.mapNotNull { test -> runCatching { test.runTest(context) }.exceptionOrNull() }
-        failures.firstOrNull()?.let { first ->
-            failures.drop(1).forEach(first::addSuppressed)
-            throw first
-        }
+        run.forEach { it.runTest(context) }
     }
 
 }

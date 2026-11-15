@@ -152,8 +152,6 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         }
     }
 
-    private const val PITCH_TOLERANCE = 3f
-
     override suspend fun execute(slot: HotbarItemSlot) {
         val midAir = isMidAir
         var rotation = if (midAir) Rotation(player.yRot, MidAir.pitch) else calculateSplashRotation()
@@ -166,7 +164,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                     ModuleAutoBuff.Rotations.toRotationTarget(
                         pitch = rotation.pitch,
                         considerInventory = true,
-                        tolerance = PITCH_TOLERANCE,
+                        tolerance = 3f,
                     )
                 })
             }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_EDITION
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -67,7 +67,7 @@ object MarketplaceConfigs {
         limit = limit,
         query = query,
         type = MarketplaceItemType.CONFIG,
-        branch = API_BRANCH,
+        branch = API_EDITION,
         filter = MarketplaceApi.Filter(
             name = name,
             author = author,
@@ -119,7 +119,7 @@ object MarketplaceConfigs {
         MarketplaceApi.getMarketplaceItems(
             limit = PAGE_LIMIT,
             type = type,
-            branch = API_BRANCH.takeIf { type == MarketplaceItemType.CONFIG },
+            branch = API_EDITION.takeIf { type == MarketplaceItemType.CONFIG },
             filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE),
             session = session,
         ).items

@@ -18,13 +18,9 @@
  */
 package net.ccbluex.liquidbounce.gametest.combat
 
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
-class AutoPearlSimulatedPitchGameTest : LocalGameTest() {
-
-    override fun test(context: ClientGameTestContext) =
-        context.runCombatChecks(listOf(ModuleAutoPearl), CombatScene::checkAutoPearlSimulatedPitch)
-
-}
+class AutoPearlSimulatedPitchGameTest : ClientGameTest({ context ->
+    context.runCombatChecks(listOf(ModuleAutoPearl), CombatScene::checkAutoPearlSimulatedPitch)
+})

@@ -105,9 +105,11 @@ loom {
 // `-PgameTestNavigation=false` skips the slow navigation tests. The client starts without the browser, theme, deep
 // learning, LiquidChat, Discord and API requests, which none of its tests need; `-PgameTestFull` starts them too.
 //
-// `LiquidBounceGameTest`s play on the game test server (https://github.com/CCBlueX/gametest) with GAMETEST_API_TOKEN,
-// or on a server of one's own at GAMETEST_SERVER_ADDRESS. GAMETEST_SERVER_ANTICHEAT picks the anticheat;
-// `LocalGameTest`s run only without it. `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
+// A test's class says where it plays. `ServerGameTest`s play on the game test server (https://github.com/CCBlueX/gametest)
+// with GAMETEST_API_TOKEN, or on a server of one's own at GAMETEST_SERVER_ADDRESS, against the anticheat in
+// GAMETEST_SERVER_ANTICHEAT. Without it, `SingleplayerGameTest`s play on the integrated server and `ClientGameTest`s
+// need no world.
+// `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -286,6 +288,7 @@ tasks.processResources {
     }
 
     val modVersion = providers.gradleProperty("mod_version")
+    val modEdition = providers.gradleProperty("mod_edition")
     val minecraftVersion = providers.gradleProperty("mod_mc_version")
     val fabricVersion = libs.versions.fabric.api
     val loaderVersion = libs.versions.fabric.loader
@@ -309,6 +312,7 @@ tasks.processResources {
     val contributors = provider { contributorsJson }
 
     inputs.property("version", modVersion)
+    inputs.property("edition", modEdition)
     inputs.property("minecraft_version", minecraftVersion)
     inputs.property("fabric_version", fabricVersion)
     inputs.property("loader_version", loaderVersion)
@@ -321,6 +325,7 @@ tasks.processResources {
         expand(
             mapOf(
                 "version" to modVersion.get(),
+                "edition" to modEdition.get(),
                 "minecraft_version" to minecraftVersion.get(),
                 "fabric_version" to fabricVersion.get(),
                 "loader_version" to loaderVersion.get(),

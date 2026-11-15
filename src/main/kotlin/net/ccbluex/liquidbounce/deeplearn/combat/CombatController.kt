@@ -114,9 +114,9 @@ class CombatController(private val parent: EventListener) : EventListener {
         }
         val tick = player.tickCount
         val candidates = world.players().filterTo(ArrayList<LivingEntity>()) {
-            it !== player && it.isAlive && it.distanceTo(player) <= CANDIDATE_RANGE
+            it !== player && it.isAlive && it.distanceTo(player) <= 8f
         }
-        target?.takeIf { it.isAlive && !it.isRemoved && it !in candidates && tick - targetTick <= TARGET_TICKS }
+        target?.takeIf { it.isAlive && !it.isRemoved && it !in candidates && tick - targetTick <= 20 }
             ?.let(candidates::add)
         histories.keys.retainAll(candidates.mapTo(HashSet()) { it.id })
         if (candidates.isEmpty()) {
@@ -150,10 +150,5 @@ class CombatController(private val parent: EventListener) : EventListener {
         if (!event.isCancelled) {
             attacked = true
         }
-    }
-
-    private companion object {
-        const val CANDIDATE_RANGE = 8f
-        const val TARGET_TICKS = 20
     }
 }

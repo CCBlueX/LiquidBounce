@@ -177,10 +177,7 @@ class CombatTimeline(
     var skill = CombatSkill.TARGET
 
     init {
-        require(self.ticks == target.ticks && self.ticks in 1..MAX_TICKS)
-    }
-
-    companion object {
-        const val MAX_TICKS = 6000
+        // five minutes
+        require(self.ticks == target.ticks && self.ticks in 1..6000)
     }
 }

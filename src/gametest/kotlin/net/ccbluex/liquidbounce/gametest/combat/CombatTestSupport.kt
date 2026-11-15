@@ -68,11 +68,11 @@ internal fun summonHusk(
     y: Int,
     x: Double,
     z: Double,
-    health: Int = HUSK_HEALTH,
+    health: Int = 1000,
     equipment: String = "{}",
 ) = summon(
     context, server, "husk $x $y $z", "NoAI:1b,PersistenceRequired:1b,Silent:1b,Health:${health}f," +
-        "attributes:[{id:\"minecraft:max_health\",base:${maxOf(health, MAX_HEALTH)}d}],equipment:$equipment"
+        "attributes:[{id:\"minecraft:max_health\",base:${maxOf(health, 20)}d}],equipment:$equipment"
 )
 
 internal fun summonCrystal(context: ClientGameTestContext, server: TestServerContext, y: Int, x: Double, z: Double) =
@@ -111,5 +111,3 @@ internal fun face(
 internal const val WAIT_TICKS = 100
 internal const val SETTLE_TICKS = 5
 internal const val MEASURE_TICKS = 30
-internal const val HUSK_HEALTH = 1000
-internal const val MAX_HEALTH = 20

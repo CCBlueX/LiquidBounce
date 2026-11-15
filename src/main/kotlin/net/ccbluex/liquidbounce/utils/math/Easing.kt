@@ -89,7 +89,7 @@ enum class Easing(override val tag: String) : Tagged {
     ELASTIC_IN("ElasticIn") {
         override fun transform(x: Float) = when (x) {
             0f, 1f -> x
-            else -> -2f.pow(10f * x - 10f) * sin((10f * x - 10.75f) * ELASTIC_PERIOD)
+            else -> -2f.pow(10f * x - 10f) * sin((10f * x - 10.75f) * (2 * PI / 3).toFloat())
         }
     },
     ELASTIC_OUT("ElasticOut") {
@@ -123,7 +123,6 @@ enum class Easing(override val tag: String) : Tagged {
 }
 
 private const val BACK_OVERSHOOT = 1.70158f
-private const val ELASTIC_PERIOD = (2 * PI / 3).toFloat()
 
 /**
  * CSS-style cubic bezier from (0, 0) over ([x1], [y1]) and ([x2], [y2]) to (1, 1), solved for [x].

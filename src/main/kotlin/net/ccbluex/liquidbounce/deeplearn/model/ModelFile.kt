@@ -57,8 +57,6 @@ class ModelFile(
         const val FORMAT = 1
         const val DESCRIPTION = "model.json"
         const val PARAMETERS = "parameters.bin"
-        private const val MAX_DESCRIPTION = 1 shl 20
-        private const val MAX_PARAMETERS = 16 shl 20
 
         fun read(path: Path): ModelFile = Files.newInputStream(path).use(::read)
 
@@ -70,9 +68,9 @@ class ModelFile(
                     val entry = zip.nextEntry ?: break
                     when (entry.name) {
                         DESCRIPTION -> description = JsonParser.parseString(
-                            zip.readLimited(MAX_DESCRIPTION).decodeToString()
+                            zip.readLimited(1 shl 20).decodeToString()
                         ).asJsonObject
-                        PARAMETERS -> parameters = zip.readLimited(MAX_PARAMETERS)
+                        PARAMETERS -> parameters = zip.readLimited(16 shl 20)
                     }
                 }
             }

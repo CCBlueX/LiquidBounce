@@ -50,7 +50,7 @@ class NetworkSpec(val hidden: List<Int>, val outputs: Int, val activation: Activ
 
 /** Standardizes inputs with the training set's statistics, clamped to [limit] standard deviations. */
 @UnstableAddonApi
-class InputNormalization(val mean: FloatArray, val scale: FloatArray, val limit: Float = DEFAULT_LIMIT) {
+class InputNormalization(val mean: FloatArray, val scale: FloatArray, val limit: Float = 8f) {
     init {
         require(mean.size == scale.size && mean.all(Float::isFinite)) { "Invalid normalization mean" }
         require(scale.all { it > 0f && it.isFinite() }) { "Invalid normalization scale" }
@@ -68,9 +68,5 @@ class InputNormalization(val mean: FloatArray, val scale: FloatArray, val limit:
             }
         }
         return clamped
-    }
-
-    companion object {
-        const val DEFAULT_LIMIT = 8f
     }
 }

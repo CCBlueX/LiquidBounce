@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.gametest.combat
 
+import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.set
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import kotlin.math.abs
@@ -32,15 +32,16 @@ private const val CRYSTAL_YAW = -10f
 
 /** Looks past the husk, on the side away from the crystal. */
 private const val AWAY_YAW = 20f
-private const val ANGLE_TOLERANCE = 0.5f
 
 /**
  * With a husk straight ahead and a crystal to the left of it, the aimbot turns to the crystal first, to the husk
  * while crystals wait for the use key, and to nothing when crystals are all it may aim at.
  */
-class AimbotCrystalsGameTest : LocalGameTest() {
+class AimbotCrystalsGameTest : ClientGameTest(AimbotCrystals::test)
 
-    override fun test(context: ClientGameTestContext) = context.combatTest(ModuleAimbot) { server, y ->
+private object AimbotCrystals {
+
+    fun test(context: ClientGameTestContext) = context.combatTest(ModuleAimbot) { server, y ->
         summonCrystal(context, server, y, 2.5, 3.5)
         summonHusk(context, server, y, 0.5, 3.0)
 
@@ -84,7 +85,7 @@ class AimbotCrystalsGameTest : LocalGameTest() {
         }
         context.waitTicks(MEASURE_TICKS / 2)
         val yaw = context.fromClient { checkNotNull(it.player).yRot }
-        check(abs(yaw - AWAY_YAW) < ANGLE_TOLERANCE) { "Turned from $AWAY_YAW to $yaw with only crystals to aim at" }
+        check(abs(yaw - AWAY_YAW) < 0.5f) { "Turned from $AWAY_YAW to $yaw with only crystals to aim at" }
     }
 
     private fun lookAway(context: ClientGameTestContext, server: TestServerContext, y: Int) {

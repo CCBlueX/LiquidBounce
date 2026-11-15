@@ -32,12 +32,14 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
 import net.minecraft.tags.ItemTags
@@ -75,6 +77,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         private val minimum by int("Minimum", 20, 0..120, "ticks")
 
         override fun isBot(entity: Player): Boolean = entity.tickCount < minimum
+    }
+
+    private object Moved : ToggleableValueGroup(ModuleAntiBot, "Moved", false) {
+        val minimum by int("Minimum", 160, 20..400, "ticks")
+    }
+
+    private object Metadata : ToggleableValueGroup(ModuleAntiBot, "Metadata", false) {
+        val maximum by int("Maximum", 3, 0..10, "entries")
     }
 
     private object Armor : ToggleableValueGroup(ModuleAntiBot, "Armor", false) {
@@ -224,6 +234,8 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
+        tree(Moved)
+        tree(Metadata)
         tree(Armor)
         tree(Name)
     }
@@ -231,6 +243,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
     private val flyingSet = Int2IntOpenHashMap()
     private val hitSet = IntOpenHashSet()
     private val notAlwaysInRadiusSet = IntOpenHashSet()
+    private val movedSet = IntOpenHashSet()
+    private val metadataSeenSet = IntOpenHashSet()
+    private val minimalMetadataSet = IntOpenHashSet()
 
     private val swungSet = IntOpenHashSet()
     private val crittedSet = IntOpenHashSet()
@@ -248,6 +263,10 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
             if (player.distanceToSqr(entity) > rangeSquared) {
                 notAlwaysInRadiusSet.add(entity.id)
+            }
+
+            if (entity.xo != entity.x || entity.yo != entity.y || entity.zo != entity.z) {
+                movedSet.add(entity.id)
             }
 
             if (Armor.enabled && !Armor.isValid(entity)) {
@@ -290,6 +309,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                 attributesSet.add(packet.entityId)
             }
 
+            is ClientboundSetEntityDataPacket -> mc.execute {
+                val id = packet.id
+                // Only the first metadata packet holds the full set sent on spawn
+                if (metadataSeenSet.add(id) && packet.packedItems.size <= Metadata.maximum) {
+                    minimalMetadataSet.add(id)
+                }
+            }
+
             is ClientboundAnimatePacket -> {
                 when (packet.action) {
                     ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> mc.execute {
@@ -310,6 +337,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                     swungSet.remove(entityId)
                     crittedSet.remove(entityId)
                     notAlwaysInRadiusSet.remove(entityId)
+                    movedSet.remove(entityId)
+                    metadataSeenSet.remove(entityId)
+                    minimalMetadataSet.remove(entityId)
                     armorSet.remove(entityId)
                 }
             }
@@ -326,6 +356,8 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
             Age.enabled && Age.isBot(entity) -> true
+            Moved.enabled && entity.tickCount >= Moved.minimum && !movedSet.contains(entityId) -> true
+            Metadata.enabled && minimalMetadataSet.contains(entityId) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
             Name.enabled && Name.isBot(entity) -> true
             else -> customConditions.any { it.isBot(entity) }
@@ -339,6 +371,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         swungSet.clear()
         crittedSet.clear()
         attributesSet.clear()
+        movedSet.clear()
+        metadataSeenSet.clear()
+        minimalMetadataSet.clear()
         armorSet.clear()
     }
 
@@ -352,6 +387,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }),
         NO_GAME_MODE("NoGameMode", { suspected ->
             network.getPlayerInfo(suspected.uuid)?.gameMode == null
+        }),
+        PING("Ping", { suspected ->
+            suspected.tickCount >= 20 && suspected.ping <= 0
         }),
         ILLEGAL_PITCH("IllegalPitch", { suspected ->
             abs(suspected.xRot) > 90

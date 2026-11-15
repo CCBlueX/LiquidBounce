@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import kotlinx.coroutines.Job
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.launchSequence
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -41,10 +43,13 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.ShulkerBullet
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge
 
 /**
  * ProjectilePuncher module
@@ -62,6 +67,13 @@ object ModuleProjectilePuncher : ClientModule(
     private val range by float("Range", 3f, 3f..6f)
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val projectiles by multiEnumChoice(
+        "Projectiles",
+        PunchedProjectile.FIREBALL,
+        PunchedProjectile.SHULKER_BULLET
+    )
+    private val onlyInAir by boolean("OnlyInAir", false)
+    private val fov by float("FOV", 180f, 0f..180f)
 
     /** The projectile to punch, picked once per tick. */
     private var projectile: Entity? = null
@@ -111,6 +123,10 @@ object ModuleProjectilePuncher : ClientModule(
     private fun updateTarget() {
         val rangeSquared = range * range
 
+        if (onlyInAir && player.onGround()) {
+            return
+        }
+
         for (entity in world.entitiesForRendering().sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
                 continue
@@ -122,6 +138,10 @@ object ModuleProjectilePuncher : ClientModule(
             val distanceSquared = entityBox.distanceToSqr(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
+                continue
+            }
+
+            if (fov < 180f && Mth.cos(fov.toDouble().toRadians()) > RotationUtil.crosshairCosToEntity(entity)) {
                 continue
             }
 
@@ -138,7 +158,7 @@ object ModuleProjectilePuncher : ClientModule(
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (!entity.isWithinWorldBorder || (entity !is LargeFireball && entity !is ShulkerBullet)) {
+        if (!entity.isWithinWorldBorder || projectiles.none { it.matches(entity) }) {
             return false
         }
 
@@ -169,6 +189,18 @@ object ModuleProjectilePuncher : ClientModule(
         // moving towards their feet. The moving towards player check would fail since the velocity line is not similar
         // enough to the vector to the player. This situation is covered by the second check.
         return isMovingTowardsPlayer || willHitPlayer
+    }
+
+    private enum class PunchedProjectile(override val tag: String) : Tagged {
+        FIREBALL("Fireball"),
+        SHULKER_BULLET("ShulkerBullet"),
+        WIND_CHARGE("WindCharge");
+
+        fun matches(entity: Entity) = when (this) {
+            FIREBALL -> entity is LargeFireball
+            SHULKER_BULLET -> entity is ShulkerBullet
+            WIND_CHARGE -> entity is AbstractWindCharge
+        }
     }
 
 }
