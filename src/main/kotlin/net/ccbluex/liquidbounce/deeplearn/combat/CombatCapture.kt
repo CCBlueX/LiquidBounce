@@ -199,7 +199,6 @@ object CombatSampler {
     /** As far as other fighters are measured. */
     const val NEARBY_RANGE = 16.0
     private const val PROBE_DISTANCE = 0.6
-    private const val NEAR_SWING = 4.0
 
     fun keys(input: Input) = 0
         .with(Key.FORWARD, input.forward())
@@ -301,7 +300,7 @@ object CombatSampler {
 
     fun othersSwingNear(self: CombatFrame, target: CombatFrame, frames: Collection<CombatFrame>) = frames.any {
         it.entityId != self.entityId && it.entityId != target.entityId && it.events and Event.SWING != 0 &&
-            it.position.distanceToSqr(self.position) < NEAR_SWING * NEAR_SWING
+            it.position.distanceToSqr(self.position) < 4.0 * 4.0
     }
 
     private fun attackDelay(entity: LivingEntity): Int {

@@ -43,9 +43,7 @@ object CombatFeatures {
     const val PER_TICK = 7
     const val SIZE = CURRENT + HISTORY * PER_TICK
     const val TURN_SCALE = 30f
-    private const val DEFAULT_ATTACK_DELAY = 12.5f
     private const val REACH_LIMIT = 8.0
-    private const val KEY_DISTURBANCE = 6
 
     /**
      * Writes the policy input for [tick]. Only ticks up to [tick] are read, from [timeline], the
@@ -74,7 +72,8 @@ object CombatFeatures {
             perception.x[tick] - perception.x[tick - 1], perception.z[tick] - perception.z[tick - 1])
         val ticksSinceAttack = ticksSince(tick) { attacks[it] }
         val sinceReset = min(ticksSinceAttack, ticksSince(tick) { self.hasEvent(it, Event.ITEM_SWITCH) })
-        val delay = self.attackDelayTicks(tick)?.takeIf { it > 0f } ?: DEFAULT_ATTACK_DELAY
+        // 12.5 ticks is the vanilla attack speed of 1.6 per second
+        val delay = self.attackDelayTicks(tick)?.takeIf { it > 0f } ?: 12.5f
         val facing = wrap(perception.yaw[tick] - bearingYaw(
             self.positionX(tick) - perception.x[tick], self.positionZ(tick) - perception.z[tick]
         ))
@@ -128,7 +127,7 @@ object CombatFeatures {
      */
     private fun keys(self: CombatTrack, tick: Int): FloatArray {
         val input = self.input[tick].toInt() and 0xFF
-        val pushed = (tick - KEY_DISTURBANCE..tick).any {
+        val pushed = (tick - 6..tick).any {
             it >= 0 && (self.hasEvent(it, Event.KNOCKBACK) || self.hasEvent(it, Event.HURT))
         }
         if (input == CombatTrack.UNKNOWN || pushed || self.has(tick - 1, State.IN_WATER)) {

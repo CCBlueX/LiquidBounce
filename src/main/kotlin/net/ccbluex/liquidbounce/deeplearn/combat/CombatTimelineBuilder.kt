@@ -92,9 +92,9 @@ class CombatTimelineBuilder(
         if (frames[tick].events and CombatTrack.Event.HURT == 0) {
             return false
         }
-        return (maxOf(0, tick - SWING_TICKS)..tick).any {
+        return (maxOf(0, tick - 3)..tick).any {
             opponents[it].events and CombatTrack.Event.SWING != 0 &&
-                opponents[it].position.distanceTo(frames[it].position) <= SWING_REACH
+                opponents[it].position.distanceTo(frames[it].position) <= 4.5
         }
     }
 
@@ -149,9 +149,4 @@ class CombatTimelineBuilder(
     }
 
     private fun size(blocks: Float) = (blocks * CombatTrack.SIZE_UNITS).roundToInt().coerceIn(0, 254).toUByte()
-
-    private companion object {
-        const val SWING_TICKS = 3
-        const val SWING_REACH = 4.5
-    }
 }
