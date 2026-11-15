@@ -111,13 +111,9 @@ object CombatManager : EventListener {
         return ((serverTicks + 0.5) / other.currentItemAttackStrengthDelay).toFloat()
     }
 
-    private const val MEMORY_MILLIS = 5000L
-    private const val MEMORY_RANGE = 15.0
-    private const val CRYSTAL_ENEMY_RANGE = 6.0
-
     /**
      * The enemy we attacked last, directly or by attacking an end crystal next to it.
-     * Forgotten after [MEMORY_MILLIS], when either of us dies or when it is further than [MEMORY_RANGE] away.
+     * Forgotten after 5 seconds, when either of us dies or when it is further than 15 blocks away.
      */
     var lastAttackedEnemy: LivingEntity? = null
         private set
@@ -163,8 +159,8 @@ object CombatManager : EventListener {
 
         val player = mc.player ?: return@handler
         lastAttackedEnemy?.let { enemy ->
-            if (player.isDeadOrDying || !enemy.isAlive || lastAttackChronometer.hasElapsed(MEMORY_MILLIS)
-                || enemy.distanceToSqr(player) > MEMORY_RANGE * MEMORY_RANGE) {
+            if (player.isDeadOrDying || !enemy.isAlive || lastAttackChronometer.hasElapsed(5000L)
+                || enemy.distanceToSqr(player) > 15.0 * 15.0) {
                 lastAttackedEnemy = null
             }
         }
@@ -178,7 +174,7 @@ object CombatManager : EventListener {
         val entity = event.entity
 
         if (entity is EndCrystal) {
-            world.getEntitiesBoxInRange(entity.position(), CRYSTAL_ENEMY_RANGE) {
+            world.getEntitiesBoxInRange(entity.position(), 6.0) {
                 it is LivingEntity && it.shouldBeAttacked()
             }.minByOrNull { it.distanceToSqr(entity) }?.let { enemy ->
                 lastAttackedEnemy = enemy as LivingEntity
