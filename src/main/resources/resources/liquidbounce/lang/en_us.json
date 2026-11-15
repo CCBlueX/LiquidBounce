@@ -819,6 +819,7 @@
   "liquidbounce.module.tntTimer.description": "Highlight the active TNTs.",
   "liquidbounce.module.totemEffect.description": "Renders an effect when players use a totem of undying.",
   "liquidbounce.module.tpAura.description": "Automatically teleports and attacks enemies around you.",
+  "liquidbounce.module.tpAuraPlus.description": "Like TpAura, but with faster pathfinding and a destination that follows the predicted position of moving targets.",
   "liquidbounce.module.tracers.description": "Draws a line to targets within a certain radius.",
   "liquidbounce.module.trajectories.description": "Allows you to see where projectiles will land.",
   "liquidbounce.module.translation.description": "Setting up an auto translator for a client.",

@@ -723,6 +723,7 @@
   "liquidbounce.module.tntTimer.description": "突出显示点燃的TNT，并显示爆炸剩余时间。",
   "liquidbounce.module.totemEffect.description": "当玩家使用图腾时渲染特效。",
   "liquidbounce.module.tpAura.description": "自动传送到敌人周围并攻击它们。",
+  "liquidbounce.module.tpAuraPlus.description": "与 TpAura 相同，但寻路更快，且目的地会跟随预测的目标位置实时更新。",
   "liquidbounce.module.tracers.description": "一条线连接你和你附近的目标。",
   "liquidbounce.module.trajectories.description": "允许你看到弹射物的预期轨迹和着陆点。",
   "liquidbounce.module.translation.description": "为客户端设置自动翻译器。",

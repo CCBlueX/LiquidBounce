@@ -462,26 +462,49 @@ private const val MAX_REACH_POSITIONS = 8
 private const val EYE_DEPTH = 2
 
 /** Standable feet positions whose eyes see [box] within [reach], closest to [from] first; [block] does not hide it. */
-fun Terrain.reachPositions(box: AABB, reach: Double, from: Vec3, block: BlockPos? = null): List<BlockPos> {
+fun Terrain.reachPositions(box: AABB, reach: Double, from: Vec3, block: BlockPos? = null): List<BlockPos> =
+    reachFeetPositions(box, reach, from, block).map { (position, _) -> position }
+
+/**
+ * Feet positions whose eyes see [box] within [reach], each with the block they are in. Standable ones rest at
+ * their support; with [allowAir], a position the player can merely stand in without a floor counts too, the
+ * feet at the block's bottom. Within [wallsRange] blocks the box counts through walls. [sortKey] orders the
+ * candidates, lower first; without it, the closest to [from] come first.
+ */
+fun Terrain.reachFeetPositions(
+    box: AABB,
+    reach: Double,
+    from: Vec3,
+    block: BlockPos? = null,
+    allowAir: Boolean = false,
+    wallsRange: Double = 0.0,
+    sortKey: ((standable: Boolean, feet: Vec3) -> Double)? = null,
+): List<Pair<BlockPos, Vec3>> {
     val center = BlockPos.containing(box.center)
     val radius = ceil(reach).toInt()
-    val positions = ArrayList<BlockPos>()
+    val positions = ArrayList<Pair<BlockPos, Vec3>>()
 
     for (dx in -radius..radius) {
         for (dz in -radius..radius) {
             for (dy in -radius - EYE_DEPTH..radius) {
                 val position = center.offset(dx, dy, dz)
-                val feet = this.feet(position) ?: continue
+                val feet = this.feet(position)
+                    ?: if (allowAir && hasRoom(position.x, position.y, position.z)) {
+                        Vec3(position.x + 0.5, position.y.toDouble(), position.z + 0.5)
+                    } else {
+                        continue
+                    }
                 val eyes = player.getEyePositionAt(feet)
                 if (!this.box(feet).intersects(box) && box.distanceToSqr(eyes) <= reach * reach &&
-                    canSeeBox(eyes, box, reach, 0.0, block)
+                    canSeeBox(eyes, box, reach, wallsRange, block)
                 ) {
-                    positions += position
+                    positions += position to feet
                 }
             }
         }
     }
 
-    positions.sortBy { this.feet(it)?.distanceToSqr(from) ?: Double.MAX_VALUE }
+    val key = sortKey ?: { _, feet -> feet.distanceToSqr(from) }
+    positions.sortBy { (position, feet) -> key(isStandable(position), feet) }
     return positions.take(MAX_REACH_POSITIONS)
 }
