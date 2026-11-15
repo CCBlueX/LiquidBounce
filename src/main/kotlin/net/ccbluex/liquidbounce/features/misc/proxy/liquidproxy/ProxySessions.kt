@@ -31,17 +31,13 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal object ProxySessions {
 
-    private const val LIMIT = 20
-    private val CLOSE_TIMEOUT = 5.seconds
-    private val CLOSE_CHECK_INTERVAL = 500.milliseconds
-
     private suspend fun oauthSession() = LiquidProxy.account?.takeSession()
         ?: throw LiquidProxyException("liquidbounce.liquidproxy.error.notLoggedIn")
 
     /**
      * The latest sessions, running ones first.
      */
-    suspend fun latest(): List<ProxySession> = LiquidProxyApi.getSessions(oauthSession(), LIMIT)
+    suspend fun latest(): List<ProxySession> = LiquidProxyApi.getSessions(oauthSession(), 20)
 
     suspend fun savedIps(): List<ProxySavedIp> = LiquidProxyApi.getSavedIps(oauthSession())
 
@@ -50,9 +46,9 @@ internal object ProxySessions {
      */
     suspend fun end(id: String) {
         LiquidProxyApi.closeSession(oauthSession(), id)
-        withTimeoutOrNull(CLOSE_TIMEOUT) {
+        withTimeoutOrNull(5.seconds) {
             while (LiquidProxyApi.getSession(oauthSession(), id).connected) {
-                delay(CLOSE_CHECK_INTERVAL)
+                delay(500.milliseconds)
             }
         }
     }

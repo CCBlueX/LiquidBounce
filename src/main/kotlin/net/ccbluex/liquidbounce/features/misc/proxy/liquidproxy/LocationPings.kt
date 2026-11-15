@@ -34,8 +34,6 @@ import java.net.Socket
  */
 internal object LocationPings {
 
-    private const val TIMEOUT_MS = 1000
-
     /**
      * @return milliseconds by location code, with no entry for a location that can't be reached
      */
@@ -53,7 +51,7 @@ internal object LocationPings {
             val address = InetSocketAddress(InetAddress.getByName(host), LiquidProxy.SOCKS_PORT)
             Socket().use { socket ->
                 val start = System.nanoTime()
-                socket.connect(address, TIMEOUT_MS)
+                socket.connect(address, 1000)
                 ((System.nanoTime() - start) / 1_000_000).toInt()
             }
         }
