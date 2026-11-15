@@ -161,6 +161,19 @@ object ClientRenderPipelines {
             withPrimitiveTopology(PrimitiveTopology.QUADS)
         }
 
+        /**
+         * Anti-aliased indicator arrow. [ClientVertexFormats.GUI_ROUNDED_RECT]'s slots carry its own parameters: UV0
+         * the local position, UV1 the size, LineWidth the tail notch.
+         */
+        @JvmField
+        val Arrow = newPipeline("gui/arrow") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexShader(ClientShaders.Vertex.GuiArrow)
+            withFragmentShader(ClientShaders.Fragment.GuiArrow)
+            withVertexBinding(0, ClientVertexFormats.GUI_ROUNDED_RECT)
+            withPrimitiveTopology(PrimitiveTopology.QUADS)
+        }
+
         private val Lines = newPipeline("gui/lines") {
             guiPosColorSnippet(PrimitiveTopology.DEBUG_LINES)
         }

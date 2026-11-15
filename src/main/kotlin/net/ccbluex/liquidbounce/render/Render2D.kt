@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
 import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.render.gui.element.ArrowGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LineGuiElementRenderState
@@ -343,6 +344,30 @@ fun GuiGraphicsExtractor.drawTriangle(
             bounds,
         )
     }
+}
+
+/**
+ * Fills the anti-aliased arrow whose base is centred on the local origin, whose tip is at `(0, [height])` and whose
+ * tail is notched [notch] deep along the local Y axis.
+ */
+fun GuiGraphicsExtractor.drawArrow(width: Float, height: Float, notch: Float, color: Color4b) {
+    // A notch reaching the tip leaves no area, and would give the shader a zero length edge.
+    if (width <= 0.0F || height <= 0.0F || notch >= height || color.isTransparent) {
+        return
+    }
+
+    val halfWidth = width * 0.5F
+    this.guiRenderState.addGuiElement(
+        ArrowGuiElementRenderState(
+            halfWidth,
+            height,
+            notch.coerceAtLeast(0.0F),
+            color.argb,
+            copyPosePooled(),
+            this.scissorStack.peek(),
+            getBounds(-halfWidth, 0.0F, halfWidth, height),
+        )
+    )
 }
 
 fun GuiGraphicsExtractor.drawTriangle(
