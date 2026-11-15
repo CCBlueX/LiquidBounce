@@ -21,12 +21,14 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.agent.fabric.ClientBody
 import net.ccbluex.agent.math.Rotation
 import net.ccbluex.agent.navigation.BodyTraits
+import net.ccbluex.agent.navigation.FlightControl
 import net.ccbluex.agent.navigation.LookPurpose
 import net.ccbluex.agent.navigation.Teleporter
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -62,6 +64,9 @@ class LocalPlayerBody(
 
     override val recastsElytra: Boolean
         get() = ModuleElytraRecast.running
+
+    override val flight: FlightControl?
+        get() = VanillaFlight.takeIf { FlyVanilla.running }
 
     override val teleporter: Teleporter
         get() = PacketTeleporter
@@ -138,4 +143,13 @@ object PacketTeleporter : Teleporter {
         player.resetFallDistance()
     }
 
+}
+
+/** The Vanilla mode of Fly, which moves at its base speeds whatever the player's abilities say. */
+private object VanillaFlight : FlightControl {
+    override val horizontalSpeed: Double
+        get() = FlyVanilla.BaseSpeed.horizontalSpeed.toDouble()
+
+    override val verticalSpeed: Double
+        get() = FlyVanilla.BaseSpeed.verticalSpeed.toDouble()
 }
