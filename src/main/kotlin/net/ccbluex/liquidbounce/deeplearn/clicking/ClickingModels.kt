@@ -38,8 +38,6 @@ object ClickingModels {
     const val TASK = "clicking"
     val INPUT = InputSchema(TASK, ClickingFeatures.VERSION, ClickingFeatures.SIZE)
 
-    private const val DEFAULT_INTERVAL = 100f
-
     private val input = FloatArray(ClickingFeatures.SIZE)
 
     private val slots = enumMapOf<ClickingStyle, ModelSlot> {
@@ -49,7 +47,7 @@ object ClickingModels {
     fun slot(style: ClickingStyle) = slots.getValue(style)
 
     /** The mean gap the model clicks at, in ms, to scale its rhythm to a configured CPS. */
-    fun meanInterval(file: ModelFile) = file.metadata["meanInterval"]?.let(ModelFile::float) ?: DEFAULT_INTERVAL
+    fun meanInterval(file: ModelFile) = file.metadata["meanInterval"]?.let(ModelFile::float) ?: 100f
 
     fun meanInterval(style: ClickingStyle) = ModelRegistry.file(slot(style))?.let(::meanInterval)
 
