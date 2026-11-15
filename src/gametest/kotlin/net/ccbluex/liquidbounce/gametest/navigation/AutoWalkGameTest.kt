@@ -154,6 +154,11 @@ private fun GameTestScope.checkGoto(y: Int) {
     val position = context.playerPosition()
     check(position.distanceTo(destination) <= 1.1) { "AutoWalk turned off at $position, not at $destination" }
 
+    // Exactly the radius away the navigator stops walking, so the walk has to end there too
+    moveTo(Vec3(30.5, y.toDouble(), 0.5))
+    context.command("goto 31 $y 0")
+    awaitPlayer(context, 20, "AutoWalk stayed on one block from its destination") { !ModuleAutoWalk.enabled }
+
     val loaded = context.fromClient {
         val json = ConfigSystem.serializeValueGroup(ModuleAutoWalk)
         val saved = checkNotNull(json.destination()) { "No Destination in the AutoWalk config" }
