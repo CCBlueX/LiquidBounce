@@ -38,8 +38,8 @@ import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Actio
 object SpooferResourcePack : ToggleableValueGroup(name = "ResourceSpoofer", enabled = false) {
 
     /**
-     * Answers [packet] like vanilla does after a successful download, without downloading anything.
-     * Called from MixinCommonNetworkHandler, which then skips vanilla's handling.
+     * Answers [packet] with the sequence vanilla sends after a successful download, without
+     * downloading anything.
      */
     fun spoof(connection: Connection, packet: ClientboundResourcePackPushPacket) {
         val id = packet.id
