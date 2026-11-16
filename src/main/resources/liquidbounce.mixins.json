@@ -156,6 +156,7 @@
     "minecraft.render.entity.MixinArmedEntityRenderState",
     "minecraft.render.entity.MixinAvatarRenderer",
     "minecraft.render.entity.MixinEndCrystalRenderer",
+    "minecraft.render.entity.MixinEntityRenderDispatcher",
     "minecraft.render.entity.MixinEntityRenderer",
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.MixinLivingEntityRenderer",
