@@ -103,8 +103,11 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
     private val followRangeValue = float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(targetSelector.maxRange)
     }
-    private val followRange get() = followRangeValue.get()
+    val followRange get() = followRangeValue.get()
     private val verticalRange by float("VerticalRange", 2f, 0f..8f)
+
+    /** Counts movement input other features give, such as a bot walking, like movement keys held. */
+    var inputFromFeatures = false
 
     private val requirements by multiEnumChoice<Requirements>("Requirements")
 
@@ -115,6 +118,21 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
     private val requirementsMet
         get() = requirements.all { it.meets() }
+
+    /** Whether strafing would start for a target in [followRange], given movement input. */
+    val isReady: Boolean
+        get() = running && requirementsMet
+
+    /** Whether [target] lies in the range sphere: within [followRange], and the height apart within the orbit. */
+    fun isInRange(target: LivingEntity): Boolean {
+        val heightDifference = abs(target.y - player.y)
+        return heightDifference <= verticalRange && heightDifference < targetSelector.maxRange &&
+            player.position().distanceTo(target.position()) <= followRange
+    }
+
+    /** Whether the last move followed a strafe plan, which line of sight or unsafe ground can stop. */
+    val isStrafing: Boolean
+        get() = renderState.target != null && renderState.nextPointValid
 
     init {
         range.onChanged { updatedRange ->
@@ -340,7 +358,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 return@handler
             }
 
-            if (!player.input.initial.anyHorizontal) {
+            val input = if (inputFromFeatures) player.input.untransformed else player.input.initial
+            if (!input.anyHorizontal) {
                 renderState.reset()
                 return@handler
             }
@@ -436,9 +455,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         val maxRange = targetSelector.maxRange
 
         // The range is a sphere around the target, the orbit its slice at the player's height
-        if (abs(heightDifference) > verticalRange || abs(heightDifference) >= maxRange ||
-            playerPos.distanceTo(targetPos) > followRange
-        ) {
+        if (!isInRange(target)) {
             renderState.reset()
             return null
         }
