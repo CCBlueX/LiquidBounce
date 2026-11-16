@@ -75,6 +75,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: extract-versions
+    permissions:
+      contents: read
+      id-token: write
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository and submodules
@@ -144,21 +147,29 @@ jobs:
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           
-          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
-            -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" \
-            -F "gh_id=${{ github.event.head_commit.id }}" \
-            -F "gh_ref=${{ github.ref }}" \
-            -F "gh_message=${COMMIT_MESSAGE}" \
-            -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" \
-            -F "lb_version=$LB_VERSION" \
-            -F "mc_version=$MINECRAFT_VERSION" \
+          RELEASE=false
+          if [[ "$COMMIT_MESSAGE" == release:* ]]; then
+            RELEASE=true
+          fi
+          OIDC_TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.liquidbounce.net" | jq -r .value)
+
+          curl --fail-with-body --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
+            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -F "edition=nextgen" \
+            -F "release=$RELEASE" \
+            -F "commitId=${{ github.event.head_commit.id }}" \
+            -F "gitBranch=${{ github.ref_name }}" \
+            --form-string "message=${COMMIT_MESSAGE}" \
+            -F "committedAt=${{ github.event.head_commit.timestamp }}" \
+            -F "lbVersion=$LB_VERSION" \
+            -F "mcVersion=$MINECRAFT_VERSION" \
             -F "subsystem=fabric" \
-            -F "jre_version=$JDK_VERSION" \
-            -F "fabric_loader_version=$LOADER_VERSION" \
-            -F "fabric_api_version=$FABRICAPI_VERSION" \
-            -F "kotlin_version=$KOTLIN_VERSION" \
-            -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" \
-            https://api.liquidbounce.net/api/v1/version/new
+            -F "jreVersion=$JDK_VERSION" \
+            -F "fabricLoaderVersion=$LOADER_VERSION" \
+            -F "fabricApiVersion=$FABRICAPI_VERSION" \
+            -F "kotlinVersion=$KOTLIN_VERSION" \
+            -F "kotlinModVersion=$FABRIC_KOTLIN_VERSION" \
+            https://api.liquidbounce.net/builds
 
   publish-release:
     runs-on: ubuntu-latest
