@@ -93,9 +93,11 @@ retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-
 retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 liquidbounce-cef = { group = "net.ccbluex", name = "liquidbounce-cef", version.ref = "liquidbounce-cef" }
 gametest-harness = { group = "net.ccbluex", name = "gametest-harness", version.ref = "gametest-harness" }
+minecraft-agent-world = { group = "net.ccbluex", name = "minecraft-agent-world", version.ref = "minecraft-agent" }
 minecraft-agent-simulation = { group = "net.ccbluex", name = "minecraft-agent-simulation", version.ref = "minecraft-agent" }
 minecraft-agent-pathfinder = { group = "net.ccbluex", name = "minecraft-agent-pathfinder", version.ref = "minecraft-agent" }
 minecraft-agent-navigation = { group = "net.ccbluex", name = "minecraft-agent-navigation", version.ref = "minecraft-agent" }
+minecraft-agent-vanilla = { group = "net.ccbluex", name = "minecraft-agent-vanilla", version.ref = "minecraft-agent" }
 minecraft-agent-client-common = { group = "net.ccbluex", name = "minecraft-agent-client-common", version.ref = "minecraft-agent" }
 minecraft-agent-client-fabric = { group = "net.ccbluex", name = "minecraft-agent-client-fabric", version.ref = "minecraft-agent" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
@@ -143,9 +145,11 @@ nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
 okhttp = ["okhttp", "okhttp-coroutines"]
 retrofit = ["retrofit", "retrofit-converter-gson", "retrofit-converter-scalars"]
 minecraft-agent = [
+    "minecraft-agent-world",
     "minecraft-agent-simulation",
     "minecraft-agent-pathfinder",
     "minecraft-agent-navigation",
+    "minecraft-agent-vanilla",
     "minecraft-agent-client-common",
     "minecraft-agent-client-fabric",
 ]

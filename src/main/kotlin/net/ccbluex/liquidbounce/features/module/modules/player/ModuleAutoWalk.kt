@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.vanilla.live
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -162,8 +164,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         // The locate button picks the ground to stand on.
         private fun feetAt(pos: BlockPos): BlockPos {
             val terrain = Terrain.live(world)
-            val above = pos.above()
-            return if (!terrain.isStandable(pos) && terrain.isStandable(above)) above else pos
+            val feet = pos.toAgent()
+            return if (!terrain.isStandable(feet) && terrain.isStandable(feet.above())) pos.above() else pos
         }
     }
 

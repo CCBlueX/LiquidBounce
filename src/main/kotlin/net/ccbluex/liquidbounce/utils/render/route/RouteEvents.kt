@@ -18,27 +18,28 @@
  */
 package net.ccbluex.liquidbounce.utils.render.route
 
+import net.ccbluex.agent.math.BlockPos
+import net.ccbluex.agent.math.Vec3
 import net.ccbluex.agent.navigation.Listener
 import net.ccbluex.agent.navigation.Progress
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.Vec3
+import net.ccbluex.agent.vanilla.toMinecraft
 
 /** Fills [view] from what a navigator or a trip reports, for [RouteRenderer]. */
 class RouteEvents(private val view: RouteView) : Listener {
 
     override fun routeSearching(start: Vec3, goal: Vec3, radius: Double, preview: List<Vec3>?) =
-        view.pending(start, goal, preview)
+        view.pending(start.toMinecraft(), goal.toMinecraft(), preview?.map { it.toMinecraft() })
 
     override fun routeFollowing(points: List<Vec3>, progress: Progress) =
-        view.active(points, object : RouteProgress {
+        view.active(points.map { it.toMinecraft() }, object : RouteProgress {
             override val isMoving get() = progress.isMoving
-            override fun head(partialTicks: Float) = progress.head(partialTicks)
-            override val ahead get() = progress.ahead
+            override fun head(partialTicks: Float) = progress.head(partialTicks).toMinecraft()
+            override val ahead get() = progress.ahead.map { it.toMinecraft() }
         })
 
     override fun blocksAhead(breaks: Collection<BlockPos>, places: Collection<BlockPos>) {
-        view.breaks = breaks
-        view.places = places
+        view.breaks = breaks.map { it.toMinecraft() }
+        view.places = places.map { it.toMinecraft() }
     }
 
     override fun routeDone() = view.done()

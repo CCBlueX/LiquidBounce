@@ -22,6 +22,7 @@ import net.ccbluex.agent.navigation.Listener
 import net.ccbluex.agent.navigation.teleport.Owner
 import net.ccbluex.agent.navigation.teleport.Teleports
 import net.ccbluex.agent.navigation.teleport.Trip
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent
@@ -85,15 +86,17 @@ object TeleportManager : EventListener {
 
     @Suppress("unused")
     private val blockChangeHandler = handler<BlockChangeEvent> { event ->
-        teleports.blockChanged(event.blockPos, event.newState)
-        trips.forEach { it.blockChanged(event.blockPos) }
+        val pos = event.blockPos.toAgent()
+        teleports.blockChanged(pos, event.newState.toAgent())
+        trips.forEach { it.blockChanged(pos) }
     }
 
     @Suppress("unused")
     private val chunkDeltaHandler = handler<ChunkDeltaUpdateEvent> { event ->
         event.packet.runUpdates { pos, state ->
-            teleports.blockChanged(pos, state)
-            trips.forEach { it.blockChanged(pos.immutable()) }
+            val agentPos = pos.toAgent()
+            teleports.blockChanged(agentPos, state.toAgent())
+            trips.forEach { it.blockChanged(agentPos) }
         }
     }
 

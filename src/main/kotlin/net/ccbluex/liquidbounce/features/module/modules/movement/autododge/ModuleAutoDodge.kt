@@ -20,8 +20,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.agent.math.AABB
 import net.ccbluex.agent.simulation.PlayerSimulation
 import net.ccbluex.agent.simulation.SimulatedArrow
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -44,7 +47,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.SpectralArrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
@@ -119,7 +121,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
         val simulatedArrows = arrows.mapToArray {
-            SimulatedArrow(it.level(), it.position(), it.deltaMovement, false)
+            SimulatedArrow(it.level().toAgent(), it.position().toAgent(), it.deltaMovement.toAgent(), false)
         }
 
         for (i in 0 until maxTicks) {
@@ -137,11 +139,17 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
                 val playerHitBox =
                     AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
                         .inflate(hitboxExpansion)
-                        .move(simulatedPlayer.pos)
+                        .move(simulatedPlayer.predictedPos)
                 val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
 
-                raycastResult.orElse(null)?.let { hitPos ->
-                    return HitInfo(i, arrows[arrowIndex], hitPos, lastPos, arrow.deltaMovement)
+                raycastResult?.let { hitPos ->
+                    return HitInfo(
+                        i,
+                        arrows[arrowIndex],
+                        hitPos.toMinecraft(),
+                        lastPos.toMinecraft(),
+                        arrow.deltaMovement.toMinecraft(),
+                    )
                 }
             }
         }
@@ -204,7 +212,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
     fun getInflictedHit(pos: Vec3): HitInfo? {
         val arrows = world.findFlyingArrows()
-        val playerSimulation = PlayerSimulation.Rigid(pos)
+        val playerSimulation = PlayerSimulation.Rigid(pos.toAgent())
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
     }

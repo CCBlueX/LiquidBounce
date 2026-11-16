@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.world.Input
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.Vec3
 
 object SpeedPreventDeadlyJump : MinecraftShortcuts {
@@ -40,7 +41,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.onGround()) {
-                groundPos = simulatedPlayer.pos
+                groundPos = simulatedPlayer.position()
 
                 break
             }
@@ -56,7 +57,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
     }
 
     private fun createSimulatedPlayer(player: LocalPlayer): SimulatedPlayer {
-        val input = SimulatedInput(DirectionalInput(player.input).toInput(sprint = true))
+        val input = SimulatedInput(DirectionalInput(player.input).toInput(sprint = true).toAgent())
 
         return SimulatedPlayer.fromClientPlayer(input)
     }
@@ -76,7 +77,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.onGround()) {
-                groundPos = simulatedPlayer.pos
+                groundPos = simulatedPlayer.position()
 
                 break
             }
@@ -89,7 +90,7 @@ object SpeedPreventDeadlyJump : MinecraftShortcuts {
                 simulatedPlayer.tick()
 
                 groundPos = if (simulatedPlayer.onGround()) {
-                    simulatedPlayer.pos
+                    simulatedPlayer.position()
                 } else {
                     null
                 }

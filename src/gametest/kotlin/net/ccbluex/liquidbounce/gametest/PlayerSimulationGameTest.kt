@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest
 import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener
@@ -84,7 +85,7 @@ private fun GameTestScope.assertLevelStaysUntouched(ground: Int) {
 
     val (reached, lit) = client { client ->
         val simulation = SimulatedPlayer.fromClientPlayer(
-            SimulatedInput(DirectionalInput.FORWARDS.toInput(sprint = true))
+            SimulatedInput(DirectionalInput.FORWARDS.toInput(sprint = true).toAgent())
         )
         repeat(ORE_WALK_TICKS) { simulation.tick() }
 
@@ -185,7 +186,7 @@ private class Scenario(
 ) {
     fun input() = SimulatedInput(
         DirectionalInput(forwards = Key.FORWARD in keys, backwards = false, left = Key.LEFT in keys, right = false)
-            .toInput(jump = Key.JUMP in keys, sneak = Key.SNEAK in keys, sprint = Key.SPRINT in keys),
+            .toInput(jump = Key.JUMP in keys, sneak = Key.SNEAK in keys, sprint = Key.SPRINT in keys).toAgent(),
     )
 }
 

@@ -162,7 +162,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
      * @see isLadderClimbState
      */
     private fun wouldEnterLadderClimbState(simulatedPlayer: SimulatedPlayer): Boolean {
-        return isLadderClimbStateAt(simulatedPlayer.pos.toBlockPos())
+        return isLadderClimbStateAt(simulatedPlayer.position().toBlockPos())
     }
 
     private fun isLadderClimbStateAt(pos: BlockPos): Boolean {

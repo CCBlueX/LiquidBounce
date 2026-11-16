@@ -302,7 +302,7 @@ fun LocalPlayer.isCloseToEdge(
         return true
     }
 
-    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.copy(y = 0.0))
+    val playerPosInTwoTicks = simulatedPlayer.position().add(nextVelocity.copy(y = 0.0))
 
     return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }

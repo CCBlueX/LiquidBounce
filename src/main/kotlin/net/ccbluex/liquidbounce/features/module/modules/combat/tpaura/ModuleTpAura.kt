@@ -19,11 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
+import net.ccbluex.agent.math.BlockPos
 import net.ccbluex.agent.navigation.teleport.Teleport
 import net.ccbluex.agent.pathfinder.route.Outcome
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.ccbluex.agent.pathfinder.terrain.reachPositions
+import net.ccbluex.agent.vanilla.live
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -49,10 +53,10 @@ import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
 import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
 import net.ccbluex.liquidbounce.utils.render.route.RouteView
-import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
+import net.ccbluex.agent.math.Vec3 as AgentVec3
 
 /**
  * TpAura
@@ -75,6 +79,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val view = RouteView().apply {
         ghost = { partialTicks ->
             TeleportManager.teleports.serverPosition(TeleportManager.owner(this@ModuleTpAura), partialTicks)
+                ?.toMinecraft()
         }
     }
     private val trip = TeleportManager.trip(this, steps, RouteEvents(view))
@@ -151,8 +156,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         val engagement = engagement ?: return@handler
         val feet = when (phase) {
-            Phase.READY, Phase.APPROACH -> engagement.route?.destination
-            Phase.ATTACK -> trip.position
+            Phase.READY, Phase.APPROACH -> engagement.route?.destination?.toMinecraft()
+            Phase.ATTACK -> trip.position.toMinecraft()
             else -> null
         } ?: return@handler
 
@@ -182,7 +187,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.target = target
-        if (isInReach(origin, target)) {
+        if (isInReach(origin.toMinecraft(), target)) {
             startAttack()
             return
         }
@@ -195,7 +200,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
     }
 
-    private fun requestRoute(origin: Vec3, goals: List<BlockPos>) {
+    private fun requestRoute(origin: AgentVec3, goals: List<BlockPos>) {
         trip.options = steps.options()
         trip.request(origin, goals, maxLength = range * ROUTE_DETOUR)
         phase = Phase.ROUTING
@@ -210,8 +215,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 val route = result.value
                 engagement.route = route
                 engagement.waited = 0
-                view.active(route.path)
-                view.attackPosition = route.destination
+                view.active(route.path.map { it.toMinecraft() })
+                view.attackPosition = route.destination.toMinecraft()
                 phase = Phase.READY
                 launch()
             }
@@ -223,7 +228,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private fun launch() {
         val engagement = liveEngagement ?: return leave()
         val route = engagement.route ?: return leave()
-        if (!isInReach(route.destination, engagement.target)) {
+        if (!isInReach(route.destination.toMinecraft(), engagement.target)) {
             return replan()
         }
 
@@ -267,7 +272,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val engagement = liveEngagement?.takeUnless { it.attacked && afterAttack == AfterAttack.RETURN }
             ?: return leave()
         val target = engagement.target
-        val feet = trip.position
+        val feet = trip.position.toMinecraft()
         if (!isInReach(feet, target)) {
             return if (engagement.retries++ < MAX_RETRIES) replan() else leave()
         }
@@ -351,8 +356,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     /** Standable positions around [target] that see it within reach, closest to [from] first. */
-    private fun attackPositions(target: LivingEntity, from: Vec3) =
-        Terrain.live(world).reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
+    private fun attackPositions(target: LivingEntity, from: AgentVec3) =
+        Terrain.live(world).reachPositions(target.boundingBox.toAgent(), reach - TARGET_MOVEMENT_MARGIN, from)
 
     private const val REACH_MARGIN = 0.1
     private const val TARGET_MOVEMENT_MARGIN = 0.4

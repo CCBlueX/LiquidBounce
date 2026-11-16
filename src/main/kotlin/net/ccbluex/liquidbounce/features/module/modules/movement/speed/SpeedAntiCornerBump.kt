@@ -69,7 +69,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
         // Times the player jumped. Starts at 1 because we already jump on the first tick() call.
         var jumpCount = 1
         // Holds the last position where the player was on ground. The player is on ground when the method starts.
-        var lastGroundPos = simulatedPlayer.pos
+        var lastGroundPos = simulatedPlayer.position()
 
         for (tickIdx in 0..65) {
             simulatedPlayer.tick()
@@ -80,7 +80,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                     break
                 }
 
-                lastGroundPos = simulatedPlayer.pos
+                lastGroundPos = simulatedPlayer.position()
             }
 
             if (simulatedPlayer.horizontalCollision) {
@@ -91,7 +91,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                 }
 
                 // Check if it makes sense to try to jump on the block
-                if (!canJumpOnBlock(simulatedPlayer.pos, lastGroundPos)) {
+                if (!canJumpOnBlock(simulatedPlayer.position(), lastGroundPos)) {
                     return null
                 }
 

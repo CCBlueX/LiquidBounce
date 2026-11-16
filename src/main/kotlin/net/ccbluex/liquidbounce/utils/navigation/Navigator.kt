@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation
 
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
@@ -83,7 +84,7 @@ class Navigator(
      */
     fun navigate(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         navigator.options = settings.options()
-        val plainWalk = navigator.navigate(goal, radius)
+        val plainWalk = navigator.navigate(goal.toAgent(), radius)
         body.applyKeys(event)
         exactKeys = body.keysExact
         return plainWalk
@@ -122,8 +123,9 @@ class Navigator(
     @Suppress("unused")
     private val blockChangeHandler = handler<BlockChangeEvent> { event ->
         mc.execute {
-            navigator.blockChanged(event.blockPos)
-            navigator.blockConfirmed(event.blockPos, event.newState)
+            val pos = event.blockPos.toAgent()
+            navigator.blockChanged(pos)
+            navigator.blockConfirmed(pos, event.newState.toAgent())
         }
     }
 

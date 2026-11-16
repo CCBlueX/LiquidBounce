@@ -29,6 +29,8 @@ import net.ccbluex.agent.pathfinder.route.Outcome
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.agent.pathfinder.teleport.WaypointSearch
 import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
@@ -104,7 +106,7 @@ private fun GameTestScope.checkDirectAndDetour(y: Int) {
     val detour = found(context.route(BlockPos(28, y, 0)))
     val points = detour.points
     check(points.size > 2) { "The route went through the wall: $points" }
-    val inWall = points.map(BlockPos::containing).filter { it.x == 20 && it.z in -8..8 }
+    val inWall = points.map { BlockPos.containing(it.toMinecraft()) }.filter { it.x == 20 && it.z in -8..8 }
     check(inWall.isEmpty()) { "A waypoint is in the wall: $points" }
     arrive(dispatch(detour, Teleport.Finish.LAND), Vec3(28.5, y.toDouble(), 0.5))
 }
@@ -118,7 +120,7 @@ private fun GameTestScope.checkClimbHoldAndUndo(y: Int) {
     check(hold.state == Teleport.State.DONE) { "The held run ended as ${hold.state}" }
     awaitServerAt(below, timeout = WAIT_TICKS)
     check(context.playerPosition().near(top)) { "The client moved with a held run" }
-    check(context.fromClient { TeleportManager.teleports.serverPosition?.near(below) == true })
+    check(context.fromClient { TeleportManager.teleports.serverPosition?.toMinecraft()?.near(below) == true })
 
     context.onClient { TeleportManager.teleports.undo(owner) }
     awaitClient("the undo", WAIT_TICKS) { !TeleportManager.teleports.holds(owner) }
@@ -207,12 +209,13 @@ private fun ClientGameTestContext.route(
     stepLength: Double = Options.DEFAULT_STEP_LENGTH,
 ): Outcome<Route> = fromClient { mc ->
     val level = checkNotNull(mc.level)
-    val start = checkNotNull(mc.player).position()
-    val region = BlockDestination(listOf(goal)).region(start, maxLength, maxLength.toInt())
+    val start = checkNotNull(mc.player).position().toAgent()
+    val agentGoal = goal.toAgent()
+    val region = BlockDestination(listOf(agentGoal)).region(start, maxLength, maxLength.toInt())
     val search = WaypointSearch(
         Terrain(SectionCache.capture(level, region)),
         start,
-        [goal],
+        [agentGoal],
         Limits(maxLength),
         stepLength,
     )

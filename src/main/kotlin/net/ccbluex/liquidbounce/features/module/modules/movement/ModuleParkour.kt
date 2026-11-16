@@ -29,6 +29,8 @@ import net.ccbluex.agent.simulation.MotionTraits
 import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.live
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -72,7 +74,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         assisted.target ?: return@handler
-        val yaw = assisted.aimYRot(player.position(), player.deltaMovement, player.onGround())
+        val yaw = assisted.aimYRot(player.position().toAgent(), player.deltaMovement.toAgent(), player.onGround())
         if (!yaw.isNaN()) {
             aimYaw = yaw
         }
@@ -129,7 +131,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         val terrain = Terrain.live(world)
         val abilities = abilities()
         val state = PlayerMotion(terrain, abilities.motion)
-        state.reset(player)
+        state.reset(player.toAgent())
 
         val input = event.directionalInput
         val keys = LeapInput(
@@ -180,7 +182,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         waterFall = WATER_FALL,
         breakTicks = { Double.POSITIVE_INFINITY },
         avoid = LongOpenHashSet(),
-        motion = MotionTraits.capture(player),
+        motion = MotionTraits.capture(player.toAgent()),
     )
 
     override fun onDisabled() {

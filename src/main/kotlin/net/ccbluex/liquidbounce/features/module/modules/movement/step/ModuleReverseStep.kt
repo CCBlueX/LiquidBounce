@@ -104,15 +104,15 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                             simulationQueue.forEach(network::send)
                         }
 
-                        player.setPos(simulatePlayer.pos)
+                        player.setPos(simulatePlayer.position())
                         break
                     }
 
                     simulatePlayer.tick()
                     if (simulateFalling) {
                         simulationQueue += ServerboundMovePlayerPacket.Pos(
-                            simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround(),
+                            simulatePlayer.position().x,
+                            simulatePlayer.position().y, simulatePlayer.position().z, simulatePlayer.onGround(),
                             simulatePlayer.horizontalCollision
                         )
                     }

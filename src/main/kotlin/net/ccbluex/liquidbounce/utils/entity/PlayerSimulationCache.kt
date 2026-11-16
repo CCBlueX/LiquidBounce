@@ -24,6 +24,7 @@ import net.ccbluex.agent.simulation.Forecasts
 import net.ccbluex.agent.simulation.PositionExtrapolation
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -98,7 +99,7 @@ object PlayerSimulationCache: EventListener {
      */
     private fun updatePlayerCache(directionalInput: DirectionalInput, verify: Boolean = false) {
         // Check if we even need to update the cache
-        if (verify && localPlayerCache?.input?.keys?.let(::DirectionalInput) == directionalInput) {
+        if (verify && localPlayerCache?.input?.keys?.toMinecraft()?.let(::DirectionalInput) == directionalInput) {
             return
         }
 

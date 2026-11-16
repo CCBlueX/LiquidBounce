@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.world.Input
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -34,7 +36,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.entity.player.Input
 
 /**
  * SpoofGround mode for the NoFall module.
@@ -84,7 +85,9 @@ internal object NoFallBlink : NoFallMode("Blink") {
 
         // Check if we fall off in the next 2 ticks
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedInput(event.directionalInput.toInput(jump = event.jump, sneak = true, sprint = player.isSprinting))
+            SimulatedInput(
+                event.directionalInput.toInput(jump = event.jump, sneak = true, sprint = player.isSprinting).toAgent()
+            )
         )
 
         repeat(PEEK_TICKS) {

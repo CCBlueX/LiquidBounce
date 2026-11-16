@@ -18,10 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.agent.math.Vec2
 import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.agent.simulation.SimulationHooks
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.world.entity.MoverType
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
@@ -31,9 +35,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNo
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.MoverType
-import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
+import net.ccbluex.agent.math.Vec3 as AgentVec3
 
 /** How the modules change the local player's movement, so its simulations move the same. */
 object LocalPlayerHooks : SimulationHooks {
@@ -45,7 +48,8 @@ object LocalPlayerHooks : SimulationHooks {
 
     override fun sneakingSpeed(speed: Double) = callEvent(PlayerSneakMultiplier(speed)).multiplier
 
-    override fun move(type: MoverType, movement: Vec3) = callEvent(PlayerMoveEvent(type, movement)).movement
+    override fun move(type: MoverType, movement: AgentVec3) =
+        callEvent(PlayerMoveEvent(type.toMinecraft(), movement.toMinecraft())).movement.toAgent()
 
     override fun slowedByItemUse() = !ModuleNoSlow.running
 
@@ -62,7 +66,7 @@ fun SimulatedInput.Companion.fromClientPlayer(
     sprinting: Boolean = player.isSprinting || player.input.keyPresses.sprint,
     sneaking: Boolean = player.isShiftKeyDown,
 ) = SimulatedInput(
-    directionalInput.toInput(jump = jump, sneak = sneaking, sprint = sprinting),
+    directionalInput.toInput(jump = jump, sneak = sneaking, sprint = sprinting).toAgent(),
     forceStayOnGroundSurface = callEvent(PlayerSafeWalkEvent()).isSafeWalk,
 )
 

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.render.route
 
 import net.ccbluex.agent.navigation.walk.AssistedJump
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -58,10 +59,10 @@ internal class JumpRenderer(
         val noDepthTest = !canBeCovered
 
         event.renderEnvironment {
-            drawAim(target.aim, noDepthTest)
+            drawAim(target.aim.toMinecraft(), noDepthTest)
             for (index in assisted.arcs.indices) {
                 val arc = assisted.arcs[index]
-                val path = arc.path
+                val path = arc.path.map { it.toMinecraft() }
                 drawLanding(arc.target, path.lastOrNull(), noDepthTest)
                 if (path.size < 2) {
                     continue

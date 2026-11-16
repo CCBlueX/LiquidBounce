@@ -24,6 +24,8 @@ import net.ccbluex.agent.simulation.MotionTraits
 import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.vanilla.live
+import net.ccbluex.agent.vanilla.toAgent
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -75,16 +77,17 @@ private class Course(
 ) {
     /** The first tick the two are apart at, if any. */
     fun difference(player: LocalPlayer): String? {
-        val motion = PlayerMotion(Terrain.live(player.level()), MotionTraits.capture(player))
-        motion.reset(player)
+        val agentPlayer = player.toAgent()
+        val motion = PlayerMotion(Terrain.live(player.level()), MotionTraits.capture(agentPlayer))
+        motion.reset(agentPlayer)
         val game = SimulatedPlayer.fromClientPlayer(
-            SimulatedInput(DirectionalInput(forward.toFloat(), strafe.toFloat()).toInput(jump, sneak, sprint))
+            SimulatedInput(DirectionalInput(forward.toFloat(), strafe.toFloat()).toInput(jump, sneak, sprint).toAgent())
         )
 
         repeat(ticks) { tick ->
             motion.tick(player.yRot, forward, strafe, jump, sprint, sneak)
             game.tick()
-            if (motion.position.distanceTo(game.position()) > TOLERANCE || motion.onGround != game.onGround()) {
+            if (motion.position.distanceTo(game.predictedPos) > TOLERANCE || motion.onGround != game.onGround()) {
                 return "$name: tick $tick is ${motion.position} on ground ${motion.onGround}, " +
                     "the game moves to ${game.position()} on ground ${game.onGround()}"
             }

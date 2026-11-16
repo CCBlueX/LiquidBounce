@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.agent.simulation.Forecast
 import net.ccbluex.agent.simulation.SimulatedArrow
+import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.vanilla.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -172,18 +174,19 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
             ?: return null
 
         val arrow = SimulatedArrow(
-            world,
-            player.eyePosition,
-            rotation.directionVector.scale(trajectoryInfo.initialVelocity),
+            world.toAgent(),
+            player.eyePosition.toAgent(),
+            rotation.directionVector.scale(trajectoryInfo.initialVelocity).toAgent(),
             collideEntities = false
         )
 
         val entities = findAndBuildSimulatedEntities()
 
         for (i in 0 until 40) {
-            val lastPos = arrow.pos
+            val lastPos = arrow.pos.toMinecraft()
 
             arrow.tick()
+            val pos = arrow.pos.toMinecraft()
 
             entities.forEach { (entity, simulatedPos) ->
                 val predictedPos = if (entity is AbstractClientPlayer && simulatedPos != null) {
@@ -196,7 +199,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                     .inflate(projectileEntityHitMargin(i).toDouble())
                     .move(predictedPos.subtract(entity.position()))
 
-                if (entityBox.clip(lastPos, arrow.pos).isPresent) {
+                if (entityBox.clip(lastPos, pos).isPresent) {
                     return entity
                 }
             }

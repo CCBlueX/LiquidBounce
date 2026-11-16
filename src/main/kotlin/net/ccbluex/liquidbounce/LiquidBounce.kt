@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import net.ccbluex.agent.vanilla.defineGameTypes
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -525,6 +526,9 @@ object LiquidBounce : EventListener {
 
             // Initialize event manager
             EventManager
+
+            // Minecraft Agent's blocks and items, from the frozen registries
+            defineGameTypes()
 
             // Register resource reloader
             val resourceManager = mc.resourceManager
