@@ -185,6 +185,8 @@ enum class AntiCheat(
 
     THEMIS("Themis", setOf("themis")),
 
+    TRUTHFUL("Truthful", setOf("truthful")),
+
     NEGATIVITY("Negativity", setOf("negativity"));
 
     private fun certainty(observation: Observation): Int? {
