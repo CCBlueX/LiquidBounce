@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
@@ -286,6 +287,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsBlit)
+                pass.bindGlobalsUniform()
                 pass.setUniform("InSampler", colorTexture, blitSampler)
                 pass.draw(3, 1, 0, 0)
             }
