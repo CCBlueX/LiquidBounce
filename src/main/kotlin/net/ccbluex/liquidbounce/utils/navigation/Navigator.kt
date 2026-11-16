@@ -39,6 +39,8 @@ import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.agent.navigation.Navigator as AgentNavigator
+import net.ccbluex.agent.skills.Agent
+import net.ccbluex.agent.skills.Skills
 
 /**
  * Walks the player to a goal given every tick with Minecraft Agent's navigator, moving it through a
@@ -95,6 +97,20 @@ class Navigator(
         navigator.halt()
         body.release()
         exactKeys = false
+    }
+
+    /** An agent on this navigator, for Minecraft Agent's skills; made once the player exists. */
+    val agent: Agent by lazy { Agent(body, navigator, Skills()) }
+
+    /**
+     * Ticks [agent], which drives the navigator itself, in place of [navigate]. Call from a [MovementInputEvent]
+     * handler at [CRITICAL_MODIFICATION], after ticking the scope its skills run on.
+     */
+    fun tick(event: MovementInputEvent) {
+        navigator.options = settings.options()
+        agent.tick()
+        body.applyKeys(event)
+        exactKeys = body.keysExact
     }
 
     fun reset() {
