@@ -124,6 +124,7 @@
     "minecraft.network.MixinServerboundUseItemOnPacket",
     "minecraft.network.MixinServerboundUseItemPacket",
     "minecraft.network.MixinServerNameResolver",
+    "minecraft.network.MixinServerStatusPinger",
     "minecraft.registry.MixinBuiltInRegistries",
     "minecraft.render.MixinBakedQuadMaterialInfo",
     "minecraft.render.MixinCamera",
