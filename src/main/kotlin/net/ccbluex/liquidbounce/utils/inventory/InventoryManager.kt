@@ -33,11 +33,14 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -45,10 +48,15 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
+import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.item.ItemStack
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -60,9 +68,6 @@ import kotlin.random.Random
  *  - Off-screen actions
  */
 object InventoryManager : EventListener {
-
-    override val running: Boolean
-        get() = super.running && inGame
 
     @AddonApi
     val isInventoryOpen
@@ -92,6 +97,71 @@ object InventoryManager : EventListener {
     private var requiresUpdate = false
 
     /**
+     * After interacting with a container block or an entity, the server may already have a container open
+     * that we do not know of yet. It silently drops clicks for another container id, so player inventory
+     * clicks sent in that window are only applied client-side.
+     */
+    private var containerOpenPendingUntil = 0L
+
+    val isContainerOpenPending
+        get() = System.currentTimeMillis() < containerOpenPendingUntil
+
+    /**
+     * Brief pause after hotbar [InventoryAction.UseItem] so silent slot reset and equip finish before clicking.
+     */
+    private var useItemCooldownUntil = 0L
+
+    val isUseItemPending
+        get() = System.currentTimeMillis() < useItemCooldownUntil
+
+    private class SentClick(
+        val containerId: Int,
+        val slotId: Int,
+        val actionType: ContainerInput,
+        val stack: ItemStack,
+        val time: Long,
+    )
+
+    private class Rejection(val stack: ItemStack, var count: Int = 0, var cooldownUntil: Long = 0L)
+
+    private val recentClicks = ArrayDeque<SentClick>()
+    private val rejections = ArrayList<Rejection>()
+    private var consecutiveReverts = 0
+    private var globalCooldownUntil = 0L
+
+    val isGlobalRevertCooldown
+        get() = System.currentTimeMillis() < globalCooldownUntil
+
+    val canClickPlayerInventory
+        get() = player.containerMenu.isPlayerInventory &&
+            !interaction.isServerControlledInventory &&
+            !isContainerOpenPending &&
+            !isUseItemPending &&
+            !isGlobalRevertCooldown
+
+    /**
+     * Items the server keeps putting back, such as lobby menu items. Moving them only loops.
+     */
+    private val serverLockedItems = ArrayList<ItemStack>()
+
+    val hasBlockedItems: Boolean
+        get() = serverLockedItems.isNotEmpty() || rejections.any { System.currentTimeMillis() < it.cooldownUntil }
+
+    fun isServerLocked(stack: ItemStack): Boolean =
+        !stack.isEmpty && serverLockedItems.any { ItemStack.isSameItemSameComponents(it, stack) }
+
+    fun isItemBlocked(stack: ItemStack): Boolean {
+        if (stack.isEmpty) {
+            return false
+        }
+        if (isServerLocked(stack)) {
+            return true
+        }
+        val now = System.currentTimeMillis()
+        return rejections.any { now < it.cooldownUntil && ItemStack.isSameItemSameComponents(it.stack, stack) }
+    }
+
+    /**
      * We keep running during the entire time
      * and schedule the inventory actions
      */
@@ -105,6 +175,20 @@ object InventoryManager : EventListener {
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
         debugParameter("Cursor Stack") { player.containerMenu.carried }
+
+        if (mc.gui.screen() == null && !player.containerMenu.carried.isEmpty && canClickPlayerInventory) {
+            val emptySlot = Slots.Inventory.findSlot { it.isEmpty }
+                ?: Slots.Hotbar.findSlot { it.isEmpty }
+            if (emptySlot != null) {
+                if (!isInventoryOpen) {
+                    network.send1_11_1OpenInventory()
+                    waitTicks(1)
+                }
+                if (InventoryAction.Click.performPickup(slot = emptySlot).performAction()) {
+                    waitTicks(1)
+                }
+            }
+        }
 
         var maximumCloseDelay = 0
 
@@ -181,14 +265,9 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    // The waits may outlive the chain, e.g. when its menu closes meanwhile
-                    fun isStillPossible() = chained.canPerformAction().also { possible ->
-                        if (!possible) {
-                            logger.warn("Cannot perform action $action because it is not possible")
-                        }
-                    }
-
-                    if (!isStillPossible()) {
+                    // This should usually not happen, but we have to check it
+                    if (!chained.canPerformAction()) {
+                        logger.warn("Cannot perform action $action because it is not possible")
                         break
                     }
 
@@ -211,14 +290,39 @@ object InventoryManager : EventListener {
                         waitTicks(constraints.closeDelay.random())
                         cycles = 0
                     }
-
-                    if (!isStillPossible()) {
-                        break
+                    val clickRecord = if (action is InventoryAction.Click && !action.slot.itemStack.isEmpty) {
+                        action.slot.getIdForServer(action.screen)?.let { slotId ->
+                            SentClick(
+                                action.screen.syncId,
+                                slotId,
+                                action.actionType,
+                                action.slot.itemStack.copy(),
+                                System.currentTimeMillis(),
+                            )
+                        }
+                    } else {
+                        null
                     }
-
-                    if (action.performAction() && action !is InventoryAction.CloseScreen) {
-                        waitTicks(constraints.clickDelay.random())
-                        cycles = 0
+                    if (action.performAction()) {
+                        if (clickRecord != null) {
+                            recentClicks.addLast(clickRecord)
+                        }
+                        when (action) {
+                            is InventoryAction.CloseScreen -> {
+                                waitTicks(1)
+                                requiresUpdate = true
+                                cycles = 0
+                            }
+                            is InventoryAction.UseItem -> {
+                                useItemCooldownUntil = System.currentTimeMillis() + player.ping + USE_ITEM_GRACE_MS
+                                waitTicks(max(constraints.clickDelay.random(), 2))
+                                cycles = 0
+                            }
+                            else -> {
+                                waitTicks(constraints.clickDelay.random())
+                                cycles = 0
+                            }
+                        }
                     }
                 }
             }
@@ -260,7 +364,7 @@ object InventoryManager : EventListener {
     private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
-        if (event.isCancelled) {
+        if (!inGame || event.isCancelled) {
             return@handler
         }
 
@@ -271,6 +375,31 @@ object InventoryManager : EventListener {
             if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
             }
+        }
+
+        val mayOpenContainer = when (packet) {
+            is ServerboundUseItemOnPacket -> {
+                val pos = packet.hitResult.blockPos
+                world.getBlockState(pos).getMenuProvider(world, pos) != null
+            }
+            is ServerboundInteractPacket -> true
+            else -> false
+        }
+
+        if (mayOpenContainer) {
+            containerOpenPendingUntil = System.currentTimeMillis() + player.ping + CONTAINER_OPEN_GRACE_MS
+        } else if (packet is ClientboundOpenScreenPacket) {
+            containerOpenPendingUntil = 0L
+        }
+
+        if (packet is ClientboundContainerSetContentPacket) {
+            val containerId = packet.containerId
+            val items = packet.items
+            mc.execute { onContainerResync(containerId, items) }
+        } else if (packet is ClientboundContainerSetSlotPacket && packet.containerId == 0 && !packet.item.isEmpty) {
+            val slot = packet.slot
+            val stack = packet.item
+            mc.execute { onSlotResync(slot, stack) }
         }
 
         if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket
@@ -294,7 +423,7 @@ object InventoryManager : EventListener {
 
         debugParameter("Screen") { screen?.title }
 
-        if (event.isCancelled) {
+        if (!inGame || event.isCancelled) {
             return@handler
         }
 
@@ -321,6 +450,90 @@ object InventoryManager : EventListener {
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
         isInventoryOpenServerSide = false
+        containerOpenPendingUntil = 0L
+        useItemCooldownUntil = 0L
+        consecutiveReverts = 0
+        globalCooldownUntil = 0L
+        recentClicks.clear()
+        rejections.clear()
+        serverLockedItems.clear()
+    }
+
+    private fun pruneRecentClicks(now: Long) {
+        val window = player.ping + RESYNC_GRACE_MS
+        while (recentClicks.firstOrNull()?.let { now - it.time > window } == true) {
+            recentClicks.removeFirst()
+            consecutiveReverts = 0
+        }
+    }
+
+    private fun isRevertibleAction(actionType: ContainerInput): Boolean =
+        actionType == ContainerInput.THROW ||
+            actionType == ContainerInput.SWAP ||
+            actionType == ContainerInput.QUICK_MOVE
+
+    private fun recordRevert(stack: ItemStack, now: Long) {
+        if (++consecutiveReverts >= GLOBAL_REVERT_THRESHOLD) {
+            val shift = (consecutiveReverts - GLOBAL_REVERT_THRESHOLD).coerceAtMost(2)
+            globalCooldownUntil = now + player.ping + (GLOBAL_REVERT_COOLDOWN_MS shl shift)
+        }
+
+        if (isServerLocked(stack)) {
+            return
+        }
+
+        val rejection = rejections.find { ItemStack.isSameItemSameComponents(it.stack, stack) }
+            ?: Rejection(stack).also(rejections::add)
+
+        // Cooldown prevents re-sending the same SWAP before an in-flight click's response arrives.
+        rejection.cooldownUntil = now + player.ping + RESYNC_COOLDOWN_MS
+        if (++rejection.count >= LOCK_AFTER_REJECTIONS) {
+            serverLockedItems += stack
+        }
+    }
+
+    private fun onContainerResync(containerId: Int, items: List<ItemStack>) {
+        val now = System.currentTimeMillis()
+        pruneRecentClicks(now)
+
+        val iterator = recentClicks.iterator()
+        while (iterator.hasNext()) {
+            val click = iterator.next()
+            if (click.containerId != containerId) {
+                continue
+            }
+            iterator.remove()
+
+            if (!isRevertibleAction(click.actionType)) {
+                continue
+            }
+            val slotStack = items.getOrNull(click.slotId) ?: continue
+            if (ItemStack.isSameItemSameComponents(slotStack, click.stack) &&
+                slotStack.count >= click.stack.count
+            ) {
+                recordRevert(click.stack, now)
+            } else {
+                consecutiveReverts = 0
+            }
+        }
+    }
+
+    private fun onSlotResync(slot: Int, stack: ItemStack) {
+        val now = System.currentTimeMillis()
+        pruneRecentClicks(now)
+
+        val iterator = recentClicks.iterator()
+        while (iterator.hasNext()) {
+            val click = iterator.next()
+            if (click.containerId != 0 || click.slotId != slot || !isRevertibleAction(click.actionType)) {
+                continue
+            }
+            if (ItemStack.isSameItemSameComponents(stack, click.stack) && stack.count >= click.stack.count) {
+                iterator.remove()
+                recordRevert(click.stack, now)
+                break
+            }
+        }
     }
 
     private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryAction.Chain> =
@@ -330,4 +543,11 @@ object InventoryManager : EventListener {
             it.priority
         }
 
+    private const val CONTAINER_OPEN_GRACE_MS = 150L
+    private const val USE_ITEM_GRACE_MS = 100L
+    private const val RESYNC_GRACE_MS = 300L
+    private const val RESYNC_COOLDOWN_MS = 200L
+    private const val LOCK_AFTER_REJECTIONS = 3
+    private const val GLOBAL_REVERT_THRESHOLD = 2
+    private const val GLOBAL_REVERT_COOLDOWN_MS = 400L
 }

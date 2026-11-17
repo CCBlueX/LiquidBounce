@@ -119,6 +119,11 @@ sealed interface InventoryAction {
                 return false
             }
 
+            val requiresEmptyCursor = actionType != ContainerInput.PICKUP && actionType != ContainerInput.PICKUP_ALL
+            if (requiresEmptyCursor && !player.containerMenu.carried.isEmpty) {
+                return false
+            }
+
             if (actionType == ContainerInput.SWAP &&
                 button == Inventory.SLOT_OFFHAND &&
                 !HotbarItemSlot.OFFHAND.canBeSwapTarget
@@ -127,9 +132,7 @@ sealed interface InventoryAction {
             }
 
             // Screen is null, which means we are targeting the player inventory
-            if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
-                !interaction.isServerControlledInventory
-            ) {
+            if (requiresPlayerInventoryOpen() && InventoryManager.canClickPlayerInventory) {
                 return true
             }
 
@@ -224,7 +227,9 @@ sealed interface InventoryAction {
 
             // Screen is null, which means we are targeting the player inventory
             if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
-                !interaction.isServerControlledInventory
+                !interaction.isServerControlledInventory &&
+                !InventoryManager.isContainerOpenPending &&
+                !InventoryManager.isUseItemPending
             ) {
                 return true
             }
