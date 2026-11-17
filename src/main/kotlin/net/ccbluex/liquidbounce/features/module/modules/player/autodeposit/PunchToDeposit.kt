@@ -155,7 +155,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
             hit
         }
 
-        SilentHotbar.selectSlotSilently(this, slot, 1)
+        SilentHotbar.selectSlotSilently(this@PunchToDeposit, slot, 1)
         clickStorage(rayTraceResult)
         swingMode.attackSwing()
 

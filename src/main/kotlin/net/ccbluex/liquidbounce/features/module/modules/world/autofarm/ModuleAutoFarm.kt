@@ -202,7 +202,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         } else if (AutoUseBoneMeal.enabled && AutoUseBoneMeal.isReady && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot { it.item is BoneMealItem } ?: return@tickHandler
 
-            SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
+            SilentHotbar.selectSlotSilently(this@ModuleAutoFarm, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
             doPlacement(rayTraceResult, rotation, hand = boneMealSlot.useHand)
             AutoUseBoneMeal.reset()
             waitTicks(interactDelay.random())
@@ -226,7 +226,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                     }
                 } ?: return@tickHandler
 
-                SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
+                SilentHotbar.selectSlotSilently(this@ModuleAutoFarm, slot, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult, rotation, hand = slot.useHand)
 
                 waitTicks(interactDelay.random())
