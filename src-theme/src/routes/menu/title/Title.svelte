@@ -18,6 +18,7 @@
     import {notification} from "../common/header/notification_store";
     import {isAnniversary} from "../../../util/utils";
     import {escapeLayer} from "../../../integration/escape";
+    import {prefetchServers} from "../multiplayer/server_store";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -63,6 +64,7 @@
                             on:click={() => openScreen("singleplayer")}/>
 
                 <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
+                            on:mouseenter={prefetchServers}
                             on:click={() => openScreen("multiplayer")} index={1}>
                     <ChildButton title="Realms" icon="realms" {parentHovered}
                                  on:click={() => openScreen("multiplayer_realms")}/>
