@@ -31,7 +31,7 @@
             class="clickgui"
             class:grid={$showGrid}
             style="background-size: {$gridSize}px {$gridSize}px;"
-            transition:fade|global={{duration: 200}}
+            transition:fade|global={{duration: 140}}
     >
         <Description/>
         <Search modules={structuredClone($state.snapshot(modules))}/>

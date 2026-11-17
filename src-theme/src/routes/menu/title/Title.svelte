@@ -40,14 +40,10 @@
     function toggleButtons() {
         if (clientButtonsShown) {
             clientButtonsShown = false;
-            setTimeout(() => {
-                regularButtonsShown = true;
-            }, 750);
+            regularButtonsShown = true;
         } else {
             regularButtonsShown = false;
-            setTimeout(() => {
-                clientButtonsShown = true;
-            }, 750);
+            clientButtonsShown = true;
         }
     }
 
@@ -82,7 +78,7 @@
             {/if}
         </div>
 
-        <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="additional-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
                 <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
@@ -90,7 +86,7 @@
             </ButtonContainer>
         </div>
 
-        <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="social-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
                 <IconButton title="Forum" icon="nodebb" on:click={() => openLink("MAINTAINER_FORUM")}/>
                 <IconButton title="GitHub" icon="github" on:click={() => openLink("MAINTAINER_GITHUB")}/>

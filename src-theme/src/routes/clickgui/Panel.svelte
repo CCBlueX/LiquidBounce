@@ -5,7 +5,6 @@
     import Module from "./Module.svelte";
     import type {KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {fade} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
     import {
         gridSize,
         highlightModuleName,
@@ -186,10 +185,7 @@
             return;
         }
 
-        modulesElement.scrollTo({
-            top: panelConfig.scrollTop,
-            behavior: "smooth"
-        });
+        modulesElement.scrollTop = panelConfig.scrollTop;
     });
 
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
@@ -211,7 +207,7 @@
         class="panel"
         style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {panelConfig.zIndex};"
         bind:this={panelElement}
-        transition:fade|global={{duration: 200, easing: quintOut}}
+        transition:fade|global={{duration: 150}}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
@@ -279,7 +275,7 @@
   }
 
   .modules {
-    transition: max-height 300ms ease;
+    transition: max-height 180ms cubic-bezier(0.23, 1, 0.32, 1);
     scroll-behavior: smooth;
     max-height: 0;
     overflow-y: auto;
@@ -314,7 +310,7 @@
         content: "";
         position: absolute;
         background-color: var(--clickgui-panel-toggle-icon-color);
-        transition: transform 0.4s ease-out;
+        transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
         top: 0;
         left: 50%;
         width: 2px;
@@ -326,7 +322,7 @@
         content: "";
         position: absolute;
         background-color: var(--clickgui-panel-toggle-icon-color);
-        transition: transform 0.4s ease-out;
+        transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
         top: 50%;
         left: 0;
         width: 100%;

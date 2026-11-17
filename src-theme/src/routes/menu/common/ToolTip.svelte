@@ -59,7 +59,7 @@
 
 <div bind:this={element}>
     {#if shown}
-        <div transition:fly="{{ y: -10, duration: 200 }}" class="tooltip"
+        <div transition:fly={{ y: -8, duration: 140 }} class="tooltip"
              style="background-color: {color}; left: {x}px; top: {y}px;" use:portal>{text}</div>
     {/if}
 </div>

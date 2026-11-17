@@ -29,8 +29,8 @@
 </script>
 
 {#if count !== undefined}
-    <div class="counter" style="color: {mapToColor(count)}; flex-direction: {FLEX_DIRECTION[cSettings.iconPosition]}" in:fly={{ y: -5, duration: 200 }}
-         out:fly={{ y: -5, duration: 200 }}>
+    <div class="counter" style="color: {mapToColor(count)}; flex-direction: {FLEX_DIRECTION[cSettings.iconPosition]}" in:fly={{ y: -5, duration: 150 }}
+         out:fly={{ y: -5, duration: 150 }}>
         {#if nextBlock && cSettings.iconPosition !== "None"}
             <img class="icon" src={itemTextureUrl(nextBlock)} alt={nextBlock}/>
         {/if}

@@ -94,7 +94,7 @@
         }
 
         resultElements[selectedIndex]?.scrollIntoView({
-            behavior: "smooth",
+            behavior: "instant",
             block: "nearest",
         });
     }

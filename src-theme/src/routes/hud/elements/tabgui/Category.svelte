@@ -12,7 +12,7 @@
         <span
             class="category-icon"
             aria-hidden="true"
-            transition:fade={{ duration: 200 }}
+            transition:fade={{ duration: 150 }}
             style={`mask-image: url('${location.origin}${location.pathname}/${iconPath}');`}
         >
             <img class="category-icon-size" src={iconPath} alt="" />

@@ -29,7 +29,7 @@
 </script>
 
 {#if visible && target != null}
-    <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
+    <div class="targethud" transition:fly={{ y: -10, duration: 150 }}>
         <div class="main-wrapper">
             <div class="avatar">
                 <img src="{REST_BASE}/api/v1/client/resource/skin?uuid={target.uuid}" alt="avatar" />
