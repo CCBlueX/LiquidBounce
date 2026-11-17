@@ -25,9 +25,18 @@ import kotlinx.coroutines.CopyableThreadContextElement
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import org.slf4j.LoggerFactory
 import kotlin.coroutines.CoroutineContext
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+
+private val logger = LoggerFactory.getLogger("$CLIENT_NAME/Guards")
+
+/**
+ * The name of a requirement while it no longer holds, `null` while it does.
+ */
+internal typealias Requirement = () -> String?
 
 /**
  * Requires what [read] returns for the rest of this run of the handler: `false` or `null` ends it. It is read again on
@@ -41,6 +50,8 @@ import kotlin.reflect.KProperty
  * requires { !InventoryManager.isHandledScreenOpen }
  * val pearl by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
  * ```
+ *
+ * A delegated value goes by its property name in the log of a run it ended; a condition without a value has none.
  *
  * Works in every handler run LiquidBounce starts for a listener; a coroutine launched from one is not part of the run.
  */
@@ -59,16 +70,33 @@ suspend fun unchanged(read: () -> Any?) {
     requires { read() === initial }
 }
 
-class Required<T : Any> internal constructor(read: () -> T?) : ReadOnlyProperty<Any?, T> {
+class Required<T : Any> internal constructor(
+    private val read: () -> T?,
+) : ReadOnlyProperty<Nothing?, T> {
 
     private var current: T? = null
 
-    internal val check = { read().also { current = it }.let { it != null && it != false } }
+    /** The property this was delegated to, for naming it in the log. */
+    private var label = "requirement"
+
+    internal val check: Requirement = {
+        val value = read()
+        current = value
+        when (value) {
+            null -> label
+            is Boolean -> if (value) null else label
+            else -> null
+        }
+    }
 
     val value: T
         get() = checkNotNull(current) { "Required value read before it was required" }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>): T = value
+    override fun getValue(thisRef: Nothing?, property: KProperty<*>): T = value
+
+    operator fun provideDelegate(thisRef: Nothing?, property: KProperty<*>): Required<T> = apply {
+        label = property.name
+    }
 
 }
 
@@ -78,10 +106,12 @@ class Required<T : Any> internal constructor(read: () -> T?) : ReadOnlyProperty<
  * Every coroutine started on a listener's scope gets one of its own, since each launch copies it empty; `withContext`
  * keeps it, as the code it runs is still part of the run.
  */
-class Guards internal constructor() : CopyableThreadContextElement<Unit> {
+class Guards internal constructor(
+    private val listener: EventListener? = null,
+) : CopyableThreadContextElement<Unit> {
 
     companion object Key : CoroutineContext.Key<Guards> {
-        private val NONE: Array<() -> Boolean> = emptyArray()
+        private val NONE: Array<Requirement> = emptyArray()
     }
 
     override val key: CoroutineContext.Key<*>
@@ -89,40 +119,39 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
 
     /** Replaced instead of changed, so that the threads checking it read a whole one. */
     @Volatile
-    private var conditions: Array<() -> Boolean> = NONE
+    private var requirements: Array<Requirement> = NONE
 
     internal val isIdle: Boolean
-        get() = conditions.isEmpty()
+        get() = requirements.isEmpty()
 
-    internal fun add(condition: () -> Boolean) {
-        conditions += condition
-        if (!condition()) {
-            throw GuardInterruption(condition)
-        }
+    internal fun add(requirement: Requirement) {
+        requirements += requirement
+        requirement()?.let { throw interrupt(it) }
     }
 
     /**
-     * Starts a run: it requires nothing yet, and is bound to the world it starts in.
+     * Starts a run: it requires nothing yet.
      */
     internal fun start() {
-        conditions = NONE
+        requirements = NONE
     }
 
     /**
-     * The interruption for the first condition that no longer holds.
+     * The interruption for the first requirement that no longer holds.
      */
     internal fun broken(): GuardInterruption? {
-        for (condition in conditions) {
-            if (!condition()) {
-                return GuardInterruption(condition)
-            }
+        for (requirement in requirements) {
+            requirement()?.let { return interrupt(it) }
         }
         return null
     }
 
-    override fun copyForChild() = Guards()
+    private fun interrupt(requirement: String) =
+        GuardInterruption(requirement).also { logger.debug("Run of {} ended: {}", listener, requirement) }
 
-    override fun mergeForChild(overwritingElement: CoroutineContext.Element): CoroutineContext = Guards()
+    override fun copyForChild() = Guards(listener)
+
+    override fun mergeForChild(overwritingElement: CoroutineContext.Element): CoroutineContext = Guards(listener)
 
     override fun updateThreadContext(context: CoroutineContext) = Unit
 
@@ -156,10 +185,10 @@ internal suspend inline fun asRun(block: () -> Unit) {
 }
 
 /**
- * Ends a run at the suspension where [condition] failed. Never reaches module code.
+ * Ends a run at the suspension where [requirement] stopped holding. Never reaches module code.
  */
 internal class GuardInterruption(
-    @JvmField val condition: () -> Boolean,
-) : CancellationException("A requirement of the run no longer holds") {
+    @JvmField val requirement: String,
+) : CancellationException("The run ended: $requirement") {
     override fun fillInStackTrace(): Throwable = this
 }

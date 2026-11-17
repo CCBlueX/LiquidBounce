@@ -110,6 +110,23 @@ class GuardsTest {
     }
 
     @Test
+    fun `an ended run names a delegated requirement by its property name`() =
+        runTest(UnconfinedTestDispatcher()) {
+            var current: String? = "first"
+            run {
+                val pearl by requires { current }
+                waitTicks(5)
+                pearl.length
+            }
+
+            current = null
+            ticker.tick()
+
+            assertEndedByGuard()
+            assertEquals("pearl", (ended as GuardInterruption).requirement)
+        }
+
+    @Test
     fun `a requirement failing on the resume tick ends the run`() = runTest(UnconfinedTestDispatcher()) {
         val alive = Flag()
         var resumed = false
@@ -403,6 +420,23 @@ class GuardsTest {
                 listener.removeEventListenerScope()
             }
         }
+    }
+
+    @Test
+    fun `waiting for the world change ends only once it came`() = runTest(UnconfinedTestDispatcher()) {
+        var resumed = false
+        run {
+            Listener.waitForWorldChange()
+            resumed = true
+        }
+
+        assertFalse(resumed)
+
+        EventManager.callEvent(WorldChangeEvent(null))
+        runCurrent()
+
+        assertNull(ended)
+        assertTrue(resumed)
     }
 
     @Test
