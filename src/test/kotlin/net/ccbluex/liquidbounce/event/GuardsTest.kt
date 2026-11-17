@@ -440,6 +440,32 @@ class GuardsTest {
     }
 
     @Test
+    fun `the cancellation callback is told what ended the run`() = runTest {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val listener = object : EventListener {}
+        val alive = Flag()
+        var cause: Throwable? = null
+
+        with(SuspendHandlerBehavior.DiscardLatest { cause = it }) {
+            listener.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) {
+                requires { alive.holds() }
+                waitTicks(5)
+            }
+        }
+
+        try {
+            EventManager.callEvent(ProbeEvent(1))
+            alive.value = false
+            ticker.tick()
+
+            assertTrue(cause is GuardInterruption, "The run ended with $cause")
+        } finally {
+            EventManager.unregisterEventHandler(listener)
+            listener.removeEventListenerScope()
+        }
+    }
+
+    @Test
     fun `disabling the listener cancels the run instead of ending it by a requirement`() = runTest {
         val listener = object : EventListener {
             override var running = true

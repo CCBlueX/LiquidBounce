@@ -23,7 +23,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -41,11 +40,14 @@ typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
 /**
  * Registers an event hook for events of type [T] and launches a sequence
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
 ) = suspendHandler<T>(
     context = wrapContinuationInterceptor(dispatcher),
@@ -59,10 +61,13 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code on [GameTickEvent].
  *
  * Use plain `handler<GameTickEvent>` if there is no suspend calls inside the block.
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: suspend CoroutineScope.() -> Unit,
 ) = ExclusiveHandler(
     this,

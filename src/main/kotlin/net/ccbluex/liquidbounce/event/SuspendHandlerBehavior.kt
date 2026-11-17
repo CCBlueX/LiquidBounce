@@ -25,11 +25,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import java.util.function.Consumer
 import kotlin.coroutines.CoroutineContext
 
 sealed interface SuspendHandlerBehavior {
@@ -45,7 +45,7 @@ sealed interface SuspendHandlerBehavior {
      * Starts a new job for each event.
      */
     @JvmRecord
-    data class Parallel(val start: CoroutineStart, val onCancellation: Runnable?) :
+    data class Parallel(val start: CoroutineStart, val onCancellation: Consumer<Throwable>?) :
         SuspendHandlerBehavior {
         override fun <T : Event> EventListener.createEventHook(
             eventClass: Class<T>,
@@ -122,7 +122,7 @@ sealed interface SuspendHandlerBehavior {
      * Discards the new event if a job is active.
      */
     @JvmRecord
-    data class DiscardLatest(val onCancellation: Runnable? = null) : SuspendHandlerBehavior {
+    data class DiscardLatest(val onCancellation: Consumer<Throwable>? = null) : SuspendHandlerBehavior {
         override fun <T : Event> EventListener.createEventHook(
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
@@ -145,7 +145,7 @@ class ExclusiveHandler<T : Event>(
     eventClass: Class<T>,
     private val context: CoroutineContext,
     priority: Short,
-    private val onCancellation: Runnable?,
+    private val onCancellation: Consumer<Throwable>?,
     handler: SuspendableEventHandler<T>,
 ) {
 
@@ -179,12 +179,11 @@ class ExclusiveHandler<T : Event>(
 
 }
 
-private fun Job.onCancellation(runnable: Runnable?) = apply {
-    runnable?.let {
-        this.invokeOnCompletion { t ->
-            if (t is CancellationException) {
-                it.run()
-            }
+private fun Job.onCancellation(callback: Consumer<Throwable>?) = apply {
+    callback ?: return@apply
+    invokeOnCompletion { cause ->
+        if (cause is CancellationException) {
+            callback.accept(cause)
         }
     }
 }

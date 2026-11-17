@@ -99,10 +99,12 @@ abstract class Buff(
                 waitTicks(AutoSwap.delayIn.random())
                 execute(slot)
             } finally {
-                // DelayOut outlives the run, however it ended: the next buff waits, then the hotbar goes back
-                ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
-                if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
-                    SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
+                // DelayOut outlives the run as long as the module does: the next buff waits, then the hotbar goes back
+                if (ModuleAutoBuff.running) {
+                    ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
+                    if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
+                        SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
+                    }
                 }
             }
             return true
