@@ -136,27 +136,24 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
         tileSize,
     )
 
-    protected inline fun withTile(rect: Rect2i, block: PoseStack.() -> Unit) {
+    protected inline fun withTile(rect: Rect2i, block: PoseStack.(RenderPass.RenderArea) -> Unit) {
         poseStack.pushPose()
         try {
-            RenderSystem.enableScissorForRenderTypeDraws(
-                rect.x,
-                textureSize - rect.y - rect.height,
-                rect.width,
-                rect.height,
+            poseStack.block(
+                RenderPass.RenderArea(
+                    rect.x,
+                    textureSize - rect.y - rect.height,
+                    rect.width,
+                    rect.height,
+                )
             )
-            try {
-                poseStack.block()
-            } finally {
-                RenderSystem.disableScissorForRenderTypeDraws()
-            }
         } finally {
             poseStack.popPose()
         }
     }
 
-    protected fun createRenderPass(): RenderPass {
-        return this.framebuffer.createRenderPass({ "$label pass" })
+    protected fun createRenderPass(renderArea: RenderPass.RenderArea): RenderPass {
+        return this.framebuffer.createRenderPass({ "$label pass" }, renderArea = renderArea)
     }
 
     private fun readbackAsync(tileRects: Map<Identifier, Rect2i>): CompletableFuture<A> {

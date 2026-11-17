@@ -82,18 +82,6 @@ inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlic
     setUniform("DynamicTransforms", gpuBufferSlice)
 }
 
-inline fun RenderPass.setupRenderTypeScissor() {
-    val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
-    if (scissorState.enabled()) {
-        enableScissor(
-            scissorState.x(),
-            scissorState.y(),
-            scissorState.width(),
-            scissorState.height()
-        )
-    }
-}
-
 /**
  * Set vertex and index buffers for [RenderPass] and call [RenderPass.drawIndexed].
  *
@@ -145,12 +133,14 @@ fun RenderTarget.createRenderPass(
     clearColor: Optional<Vector4fc> = Optional.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
+    renderArea: RenderPass.RenderArea = RenderArea(this.colorTextureView!!),
 ): RenderPass = newRenderPass(
     labelGetter,
     colorAttachment = this.colorTextureView!!,
     clearColor,
     depthAttachment = depthTextureView.takeIf { this.hasDepth() && useDepthAttachment },
     clearDepth,
+    renderArea,
 )
 
 /**
@@ -175,10 +165,16 @@ private inline fun newRenderPass(
     clearColor: Optional<Vector4fc> = Optional.empty(),
     depthAttachment: GpuTextureView? = null,
     clearDepth: OptionalDouble = OptionalDouble.empty(),
+    renderArea: RenderPass.RenderArea = RenderArea(colorAttachment),
 ): RenderPass = gpuDevice.createCommandEncoder().createRenderPass(
     labelGetter,
     colorAttachment,
     clearColor,
     depthAttachment,
     clearDepth,
+    renderArea,
 )
+
+// TODO(26.4): replace with RenderArea's <init> since 26.4
+@Suppress("FunctionNaming")
+fun RenderArea(texture: GpuTextureView) = RenderPass.RenderArea(0, 0, texture.getWidth(0), texture.getHeight(0))
