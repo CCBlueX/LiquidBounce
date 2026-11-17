@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
@@ -61,6 +62,7 @@ object ModuleInventoryCleaner : ClientModule(
     private val maxTotems by int("MaximumTotems", 37, 0..37)
 
     private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
+    private val throwUnknownItems by boolean("ThrowUnknownItems", false)
 
     private val isGreedy by boolean("Greedy", true)
 
@@ -94,6 +96,11 @@ object ModuleInventoryCleaner : ClientModule(
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {
             val slotTargets = buildSlotTargetMap()
+            val blockedSlots = if (InventoryManager.hasBlockedItems) {
+                findNonEmptySlotsInInventory().filter { InventoryManager.isItemBlocked(it.itemStack) }
+            } else {
+                emptyList()
+            }
 
             val forbiddenSlots = buildSet<ItemSlot> {
                 for ((slot, choice) in slotTargets) {
@@ -107,12 +114,16 @@ object ModuleInventoryCleaner : ClientModule(
                     // Disallow tampering with off-hand slot when AutoTotem is active
                     this.add(HotbarItemSlot.OFFHAND)
                 }
+
+                this += blockedSlots
             }
 
-            val forbiddenSlotsToFill = setOfNotNull(
+            val forbiddenSlotsToFill = buildSet<ItemSlot> {
                 // Disallow tampering with off-hand slot when AutoTotem is active
-                if (ModuleOffhand.isOperating()) HotbarItemSlot.OFFHAND else null
-            )
+                if (ModuleOffhand.isOperating()) this += HotbarItemSlot.OFFHAND
+
+                this += blockedSlots
+            }
 
             val constraintProvider = AmountConstraintProvider(
                 desiredItemsPerCategory = objectIntArrayMapOf(
@@ -123,6 +134,8 @@ object ModuleInventoryCleaner : ClientModule(
                     ItemSortChoice.LAVA.category, maxLavaBuckets,
                     ItemSortChoice.MILK.category, maxMilkBuckets,
                     ItemType.TOTEM.defaultCategory, maxTotems,
+                    ItemType.JUNK.defaultCategory, 0,
+                    ItemType.NONE.defaultCategory, if (throwUnknownItems) 0 else Int.MAX_VALUE,
                 ),
                 desiredValuePerFunction = referenceIntArrayMapOf(
                     ItemFunction.FOOD, maxFoods,
@@ -202,7 +215,9 @@ object ModuleInventoryCleaner : ClientModule(
         val blacklistedItems = currentInventorySlots.filter { it.itemStack.item in itemsBlackList }
 
         // Blacklisted items
-        val itemsToDispose = (blacklistedItems + planDisposalItems).distinct()
+        val itemsToDispose = (blacklistedItems + planDisposalItems)
+            .distinct()
+            .filterNot { InventoryManager.isItemBlocked(it.itemStack) }
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(

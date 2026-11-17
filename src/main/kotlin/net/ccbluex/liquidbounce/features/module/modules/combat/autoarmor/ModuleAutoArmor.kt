@@ -109,16 +109,29 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
      */
     private val skipCursed by multiEnumChoice<Curse>("SkipCursed")
 
+    internal val activeDurabilityThreshold: Int
+        get() = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
+
+    internal val activeComparatorMode: ArmorComparatorMode
+        get() = (modes.activeMode as? RawDefense)?.comparatorMode ?: Smart.comparatorMode
+
+    internal val activeConsiderProjectileProtection: Boolean
+        get() = RawDefense.considerProjectileProtection
+
+    internal fun isAllowedByCurseFilter(slot: ItemSlot): Boolean =
+        slot.slotType == ItemSlot.Type.ARMOR ||
+            skipCursed.none { EnchantmentHelper.has(slot.itemStack, it.effect) }
+
     /**
      * The slots armor is picked from. Worn pieces always count, as a bound one cannot be swapped out anyway.
      */
     internal val candidateSlots: List<ItemSlot>
-        get() = if (skipCursed.isEmpty()) {
+        get() = if (skipCursed.isEmpty() && !InventoryManager.hasBlockedItems) {
             Slots.All
         } else {
             Slots.All.filter { slot ->
-                slot.slotType == ItemSlot.Type.ARMOR ||
-                    skipCursed.none { EnchantmentHelper.has(slot.itemStack, it.effect) }
+                (slot.slotType == ItemSlot.Type.ARMOR || !InventoryManager.isItemBlocked(slot.itemStack)) &&
+                    isAllowedByCurseFilter(slot)
             }
         }
 
@@ -128,18 +141,12 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
             return@handler
         }
 
-        // Filter out already equipped armor pieces
-        val durabilityThreshold = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
-
-        val comparatorMode = (modes.activeMode as? RawDefense)?.comparatorMode ?: Smart.comparatorMode
-        val considerProjectileProtection = RawDefense.considerProjectileProtection
-
         val armorToEquip = ArmorEvaluation
             .findBestArmorPieces(
                 slots = candidateSlots,
-                durabilityThreshold = durabilityThreshold,
-                mode = comparatorMode,
-                considerProjectileProtection = considerProjectileProtection
+                durabilityThreshold = activeDurabilityThreshold,
+                mode = activeComparatorMode,
+                considerProjectileProtection = activeConsiderProjectileProtection
             )
             .values.filterNotNull().filter { !it.isAlreadyEquipped }
 
@@ -162,7 +169,10 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
-        if (stackInArmor.isGlider) {
+        if (stackInArmor.isGlider ||
+            InventoryManager.isItemBlocked(armorPiece.itemSlot.itemStack) ||
+            InventoryManager.isItemBlocked(stackInArmor)
+        ) {
             return null
         }
 
