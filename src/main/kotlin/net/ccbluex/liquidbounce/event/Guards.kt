@@ -103,23 +103,21 @@ class Required<T : Any> internal constructor(
 /**
  * What one run of a handler [requires], carried in its coroutine context so that suspension helpers find it.
  *
- * Every coroutine started on a listener's scope gets one of its own, since each launch copies it empty; `withContext`
- * keeps it, as the code it runs is still part of the run.
+ * A run is one coroutine, and every coroutine started on a listener's scope gets its own copy of this: empty, like a
+ * run that has not required anything yet. `withContext` keeps it, as the code it runs is still part of the run.
  */
 class Guards internal constructor(
     private val listener: EventListener? = null,
 ) : CopyableThreadContextElement<Unit> {
 
-    companion object Key : CoroutineContext.Key<Guards> {
-        private val NONE: Array<Requirement> = emptyArray()
-    }
+    companion object Key : CoroutineContext.Key<Guards>
 
     override val key: CoroutineContext.Key<*>
         get() = Key
 
     /** Replaced instead of changed, so that the threads checking it read a whole one. */
     @Volatile
-    private var requirements: Array<Requirement> = NONE
+    private var requirements: Array<Requirement> = emptyArray()
 
     internal val isIdle: Boolean
         get() = requirements.isEmpty()
@@ -127,13 +125,6 @@ class Guards internal constructor(
     internal fun add(requirement: Requirement) {
         requirements += requirement
         requirement()?.let { throw interrupt(it) }
-    }
-
-    /**
-     * Starts a run: it requires nothing yet.
-     */
-    internal fun start() {
-        requirements = NONE
     }
 
     /**
@@ -164,25 +155,6 @@ class Guards internal constructor(
  * so waits that require nothing skip the checks.
  */
 internal fun CoroutineContext.activeGuards(): Guards? = this[Guards]?.takeUnless { it.isIdle }
-
-/**
- * Starts a handler run in the current coroutine, see [Guards.start].
- */
-internal suspend fun beginRun() {
-    currentCoroutineContext()[Guards]?.start()
-}
-
-/**
- * Runs [block] as a run of its own in a coroutine that handles one event after the other: a failing requirement ends
- * only it.
- */
-internal suspend inline fun asRun(block: () -> Unit) {
-    currentCoroutineContext()[Guards]?.start()
-    try {
-        block()
-    } catch (_: GuardInterruption) {
-    }
-}
 
 /**
  * Ends a run at the suspension where [requirement] stopped holding. Never reaches module code.

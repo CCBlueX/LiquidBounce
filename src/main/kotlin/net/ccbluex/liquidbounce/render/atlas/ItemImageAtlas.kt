@@ -61,7 +61,7 @@ object ItemImageAtlas : EventListener {
 
     @Suppress("unused")
     private val resourceReloadHandler = suspendHandler<ResourceReloadEvent>(
-        behavior = SuspendHandlerBehavior.CancelPrevious,
+        behavior = SuspendHandlerBehavior.Exclusive.LatestWins,
     ) {
         tickUntil { inGame }
         atlas = ItemTextureRenderer(scale = 4).render().await()

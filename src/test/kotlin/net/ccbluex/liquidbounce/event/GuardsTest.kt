@@ -390,7 +390,7 @@ class GuardsTest {
         val alive = Flag()
         val finished = mutableListOf<String>()
 
-        with(SuspendHandlerBehavior.DiscardLatest.Default) {
+        with(SuspendHandlerBehavior.Exclusive.Drop) {
             guarding.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) { event ->
                 if (event.id == 1) {
                     requires { alive.holds() }
@@ -446,7 +446,7 @@ class GuardsTest {
         val alive = Flag()
         var cause: Throwable? = null
 
-        with(SuspendHandlerBehavior.DiscardLatest { cause = it }) {
+        with(SuspendHandlerBehavior.Exclusive(SuspendHandlerBehavior.WhenBusy.DROP) { cause = it }) {
             listener.createEventHook(ProbeEvent::class.java, ticker + dispatcher, 0) {
                 requires { alive.holds() }
                 waitTicks(5)

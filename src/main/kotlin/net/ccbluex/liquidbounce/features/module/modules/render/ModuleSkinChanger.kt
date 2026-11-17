@@ -257,7 +257,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         running && allowMixinAbstractClientPlayerEntity
 
     @Suppress("unused")
-    private val sessionHandler = suspendHandler<SessionEvent>(behavior = SuspendHandlerBehavior.CancelPrevious) {
+    private val sessionHandler = suspendHandler<SessionEvent>(behavior = SuspendHandlerBehavior.Exclusive.LatestWins) {
         triggerUpload()
     }
 
