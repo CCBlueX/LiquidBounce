@@ -300,7 +300,7 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
         val result = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             player,
             TrajectoryInfo.WIND_CHARGE,
-            TrajectoryType.WindCharge,
+            TrajectoryType.WIND_CHARGE,
             aim.rotation,
         ).runSimulation(maxFlightTicks + 1) // one sample past the solver's bound
 
