@@ -58,6 +58,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
 
         @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.vsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
 
         @JvmField
@@ -111,6 +114,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         @JvmField
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
+
+        @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.fsh")
 
         @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")

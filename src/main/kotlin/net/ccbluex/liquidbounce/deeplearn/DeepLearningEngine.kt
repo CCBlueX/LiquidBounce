@@ -36,6 +36,9 @@ object DeepLearningEngine {
     var isInitialized = false
         private set
 
+    val isSkipping = env("LB_DEEPLEARNING_SKIP", "net.ccbluex.liquidbounce.deeplearning.skip")?.toBoolean()
+        ?: false
+
     private val deepLearningFolder = rootFolder.resolve("deeplearning").apply {
         mkdirs()
     }

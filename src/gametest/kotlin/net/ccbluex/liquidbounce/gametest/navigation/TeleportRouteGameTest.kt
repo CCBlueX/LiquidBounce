@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.summon
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
@@ -60,7 +60,7 @@ private object Owner : EventListener
  * Routes from the teleport engine reach a survival player on the server without setbacks or fall damage, a setback
  * ends a run, and TpAura drives the same engine end to end.
  */
-class TeleportRouteGameTest : LiquidBounceGameTest({
+class TeleportRouteGameTest : ServerGameTest({
     context.restoring(ModuleTpAura) {
         val y = origin.y
         buildArena(y)

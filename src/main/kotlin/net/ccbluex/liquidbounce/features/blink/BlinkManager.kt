@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspBox
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
+import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspRing
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.effect.rendering
@@ -88,9 +89,10 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     private val espMode = modes(this, "Esp", 2) {
         arrayOf(
-            BlinkEspBox(it, ::getEspData),
-            BlinkEspModel(it, getEspData = ::getEspData),
-            BlinkEspWireframe(it, ::getEspData),
+            BlinkEspBox(it, ::getBodyEspData),
+            BlinkEspModel(it, getEspData = ::getBodyEspData),
+            BlinkEspWireframe(it, ::getBodyEspData),
+            BlinkEspRing(it, ::getEspData),
             BlinkEspNone(it),
         )
     }.apply {
@@ -202,8 +204,13 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
     private fun getEspData() = positions
         .firstOrNull()
-        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
         ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
+
+    /**
+     * In first person the camera would be inside a body drawn at the server-side position.
+     */
+    private fun getBodyEspData() = getEspData()
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

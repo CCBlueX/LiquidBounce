@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.connection.GameTestEnvironment
@@ -75,13 +74,8 @@ class NavigationGameTests : FabricClientGameTest {
         if (!navigationGameTests) {
             return
         }
-        // Server game tests report at the end of the run; a local one that fails must not keep the others from it
-        val run = if (GameTestEnvironment.anticheats.singleOrNull() == Anticheat.VANILLA) paperOnly + tests else tests
-        val failures = run.mapNotNull { test -> runCatching { test.runTest(context) }.exceptionOrNull() }
-        failures.firstOrNull()?.let { first ->
-            failures.drop(1).forEach(first::addSuppressed)
-            throw first
-        }
+        val run = if (GameTestEnvironment.paperOnly) paperOnly + tests else tests
+        run.forEach { it.runTest(context) }
     }
 
 }

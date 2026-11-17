@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
-import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
@@ -43,7 +43,7 @@ private const val DETOUR_TICKS = 400
  * The gap in a wall the path leads through is closed while the player walks up to it. The walk has to turn to the
  * other gap right away instead of standing in front of the block until the step times out.
  */
-class WalkBlockedGameTest : LiquidBounceGameTest({
+class WalkBlockedGameTest : ServerGameTest({
     lateinit var walker: TestWalker
     context.onClient {
         walker = TestWalker("TestWalker", GOAL_RADIUS)

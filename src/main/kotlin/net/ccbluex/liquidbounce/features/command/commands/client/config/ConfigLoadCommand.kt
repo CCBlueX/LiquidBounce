@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.MultiSelectArgumentType
@@ -106,10 +107,10 @@ object ConfigLoadCommand {
 
     private suspend fun CmdI18n.loadFromUrl(url: String, modules: Set<ClientModule>) {
         request {
-            val source = withContext(Dispatchers.IO) {
-                HttpClient.request(url, HttpMethod.GET).body.string()
+            val config = withContext(Dispatchers.IO) {
+                HttpClient.request(url, HttpMethod.GET).body.charStream().let(AutoConfig::readAutoConfig)
             }
-            ConfigTracker.loadExternal(source, modules)
+            ConfigTracker.loadExternal(config, modules)
         }
         chat(regular(t("load.loaded", variable(url))))
     }

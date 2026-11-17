@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.effectLevel
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -34,11 +35,11 @@ import net.ccbluex.liquidbounce.utils.math.rangeTo
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.roundToInt
-
 
 /**
  * Returns the yaw difference the position is from the player position
@@ -225,4 +226,16 @@ inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
 @AddonApi
 fun LocalPlayer.stopXZVelocity() {
     this.deltaMovement = this.deltaMovement.copy(x = 0.0, z = 0.0)
+}
+
+/**
+ * NoCheatPlus' allowed sprint distance per move, scaled by the Speed and Slowness effects.
+ *
+ * @see <a href="https://github.com/CCBlueX/LiquidBounce/blob/03bc91a3c34031d1ea7400ef3b67c00adf6a4c6e/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/speedmodes/ncp/NCPBHop.kt#L119-L126">LiquidBounce Legacy NCPBHop baseMoveSpeed</a>
+ */
+@Suppress("MaxLineLength")
+fun ncpBaseMoveSpeed(base: Double = 0.2873): Double {
+    val speed = player.effectLevel(MobEffects.SPEED)
+    val slowness = player.effectLevel(MobEffects.SLOWNESS)
+    return base * (1.0 + 0.2 * speed) / (1.0 + 0.2 * slowness)
 }
