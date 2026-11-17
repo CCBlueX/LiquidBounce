@@ -28,6 +28,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Predicate
@@ -192,3 +193,10 @@ suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
     priority: Short = 0,
     predicate: Predicate<T>,
 ): T? = withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
+
+/**
+ * Wait until this listener's world is left or replaced.
+ *
+ * The continuation resumes on the thread the world change is handled on, the client render thread.
+ */
+suspend fun EventListener.waitForWorldChange(): WorldChangeEvent = waitMatches { true }

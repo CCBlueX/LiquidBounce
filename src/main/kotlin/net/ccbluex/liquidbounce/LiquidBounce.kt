@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.Worlds
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
@@ -286,7 +285,6 @@ object LiquidBounce : EventListener {
         AccountManager
 
         // Utility managers
-        Worlds
         RotationManager
         BlinkManager
         Timer

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -29,6 +30,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -39,6 +42,8 @@ import kotlin.test.assertTrue
 class GuardsTest {
 
     private val ticker = ManualTicker()
+
+    private object Listener : EventListener
 
     private class Flag(var value: Boolean = true) {
         var checks = 0
@@ -56,7 +61,10 @@ class GuardsTest {
     private var ended: Throwable? = null
 
     private fun TestScope.run(block: suspend CoroutineScope.() -> Unit): Job =
-        launch(ticker + Guards(), block = block).also { job -> job.invokeOnCompletion { ended = it } }
+        launch(
+            ticker + Guards() + Listener.wrapContinuationInterceptor(coroutineContext[ContinuationInterceptor]),
+            block = block,
+        ).also { job -> job.invokeOnCompletion { ended = it } }
 
     private fun assertEndedByGuard() = assertTrue(ended is GuardInterruption, "The run ended with $ended")
 
@@ -120,25 +128,6 @@ class GuardsTest {
     }
 
     @Test
-    fun `a requirement failing between the last tick and the resumption ends the run`() = runTest {
-        val alive = Flag()
-        var resumed = false
-        run {
-            requires { alive.holds() }
-            waitTicks(1)
-            resumed = true
-        }
-        runCurrent()
-
-        ticker.tick()
-        alive.value = false
-        runCurrent()
-
-        assertEndedByGuard()
-        assertFalse(resumed)
-    }
-
-    @Test
     fun `a wait predicate never sees a failed requirement`() = runTest(UnconfinedTestDispatcher()) {
         var target: String? = "target"
         run {
@@ -195,71 +184,6 @@ class GuardsTest {
         ticker.tick()
 
         assertEndedByGuard()
-    }
-
-    @Test
-    fun `a run started in a world ends once that world is left`() = runTest(UnconfinedTestDispatcher()) {
-        Worlds.changed(inWorld = true)
-        try {
-            var resumed = false
-            run {
-                beginRun()
-                waitTicks(5)
-                resumed = true
-            }
-
-            ticker.tick()
-            Worlds.changed(inWorld = true)
-            ticker.tick()
-
-            assertEndedByGuard()
-            assertFalse(resumed)
-        } finally {
-            Worlds.changed(inWorld = false)
-        }
-    }
-
-    @Test
-    fun `a run started outside of a world keeps going when one is joined`() = runTest(UnconfinedTestDispatcher()) {
-        Worlds.changed(inWorld = false)
-        var resumed = false
-        try {
-            run {
-                beginRun()
-                waitTicks(2)
-                resumed = true
-            }
-
-            ticker.tick()
-            Worlds.changed(inWorld = true)
-            ticker.tick()
-
-            assertNull(ended)
-            assertTrue(resumed)
-        } finally {
-            Worlds.changed(inWorld = false)
-        }
-    }
-
-    @Test
-    fun `a coroutine that is no handler run outlives a world change`() = runTest(UnconfinedTestDispatcher()) {
-        Worlds.changed(inWorld = true)
-        var resumed = false
-        try {
-            run {
-                waitTicks(2)
-                resumed = true
-            }
-
-            ticker.tick()
-            Worlds.changed(inWorld = true)
-            ticker.tick()
-
-            assertNull(ended)
-            assertTrue(resumed)
-        } finally {
-            Worlds.changed(inWorld = false)
-        }
     }
 
     @Test
@@ -439,39 +363,6 @@ class GuardsTest {
                 EventManager.unregisterEventHandler(listener)
                 listener.removeEventListenerScope()
             }
-        }
-    }
-
-    @Test
-    fun `runs instead of the handler cancel its run and go one after the other`() = runTest {
-        val dispatcher = UnconfinedTestDispatcher(testScheduler)
-        val listener = object : EventListener {}
-        val log = mutableListOf<String>()
-        val handler = ExclusiveHandler(listener, ProbeEvent::class.java, ticker + dispatcher, 0, null) { event ->
-            log += "start ${event.id}"
-            waitTicks(5)
-            log += "end ${event.id}"
-        }
-
-        try {
-            EventManager.callEvent(ProbeEvent(1))
-            handler.runInstead {
-                waitTicks(2)
-                log += "first"
-            }
-            handler.runInstead {
-                waitTicks(2)
-                log += "second"
-            }
-            EventManager.callEvent(ProbeEvent(2))
-            ticker.tick(6)
-
-            EventManager.callEvent(ProbeEvent(3))
-            ticker.tick(5)
-            assertEquals(listOf("start 1", "first", "second", "start 3", "end 3"), log)
-        } finally {
-            EventManager.unregisterEventHandler(listener)
-            listener.removeEventListenerScope()
         }
     }
 

@@ -22,9 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitForWorldChange
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -85,14 +84,9 @@ object AutoQueueCustom : Mode("Custom") {
     }
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
-    private var awaitsWorldChange = false
-
-    override fun disable() {
-        awaitsWorldChange = false
-    }
 
     private val tickHandler = tickHandler(Dispatchers.Main) {
-        if (ModuleAutoQueue.shouldPause || awaitsWorldChange) {
+        if (ModuleAutoQueue.shouldPause) {
             return@tickHandler
         }
 
@@ -100,20 +94,13 @@ object AutoQueueCustom : Mode("Custom") {
 
         if (trigger.isTriggered) {
             AutoQueueControl.wasInQueue = true
-            // Set before the action, as the world it brings ends this run
-            awaitsWorldChange = waitUntilWorldChange
             actions.activeMode.execute()
+            if (waitUntilWorldChange) {
+                waitForWorldChange()
+            }
             waitTicks(20)
         } else if (AutoQueueControl.enabled && AutoQueueControl.wasInQueue) {
             AutoQueueControl.wasInQueue = false
-        }
-    }
-
-    @Suppress("unused")
-    private val worldChange = handler<WorldChangeEvent> {
-        if (awaitsWorldChange) {
-            awaitsWorldChange = false
-            tickHandler.runInstead { waitTicks(20) }
         }
     }
 

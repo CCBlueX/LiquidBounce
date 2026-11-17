@@ -26,7 +26,6 @@ import kotlinx.coroutines.CopyableThreadContextElement
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import kotlin.coroutines.CoroutineContext
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -44,8 +43,7 @@ import kotlin.reflect.KProperty
  * val pearl by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
  * ```
  *
- * A run started in a world also ends once that world is left, without asking for it. Works in every handler run
- * LiquidBounce starts for a listener; a coroutine launched from one is not part of the run.
+ * Works in every handler run LiquidBounce starts for a listener; a coroutine launched from one is not part of the run.
  */
 suspend fun <T : Any> requires(read: () -> T?): Required<T> {
     val guards = checkNotNull(currentCoroutineContext()[Guards]) {
@@ -83,21 +81,15 @@ class Required<T : Any> internal constructor(read: () -> T?) : ReadOnlyProperty<
  */
 class Guards internal constructor() : CopyableThreadContextElement<Unit> {
 
-    companion object Key : CoroutineContext.Key<Guards> {
-        private const val UNBOUND = -1
-        private val worldLeft = { false }
-    }
+    companion object Key : CoroutineContext.Key<Guards>
 
     override val key: CoroutineContext.Key<*>
         get() = Key
 
     private var conditions: ReferenceArrayList<() -> Boolean>? = null
 
-    /** The [Worlds.generation] the run started in, or [UNBOUND] outside of a world. */
-    private var world = UNBOUND
-
     internal val isIdle: Boolean
-        get() = world == UNBOUND && conditions.isNullOrEmpty()
+        get() = conditions.isNullOrEmpty()
 
     internal fun add(condition: () -> Boolean) {
         (conditions ?: ReferenceArrayList<() -> Boolean>(4).also { conditions = it }).add(condition)
@@ -107,26 +99,20 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
     }
 
     /**
-     * Starts a run: it requires nothing yet, and is bound to the world it starts in.
+     * Starts a run: it requires nothing yet.
      */
     internal fun start() {
         conditions?.clear()
-        world = if (Worlds.inWorld) Worlds.generation else UNBOUND
     }
 
     internal fun clear() {
         conditions?.clear()
-        world = UNBOUND
     }
 
     /**
-     * The interruption for the world being left or the first condition that no longer holds.
+     * The interruption for the first condition that no longer holds.
      */
     internal fun broken(): GuardInterruption? {
-        if (world != UNBOUND && world != Worlds.generation) {
-            return GuardInterruption(worldLeft)
-        }
-
         val conditions = conditions ?: return null
         for (i in 0 until conditions.size) {
             val condition = conditions[i]
@@ -152,32 +138,6 @@ class Guards internal constructor() : CopyableThreadContextElement<Unit> {
 }
 
 /**
- * Counts world changes, so that a run knows when the world it started in is gone.
- */
-internal object Worlds : EventListener {
-
-    @Volatile
-    internal var generation = 0
-        private set
-
-    @Volatile
-    internal var inWorld = false
-        private set
-
-    internal fun changed(inWorld: Boolean) {
-        generation++
-        this.inWorld = inWorld
-    }
-
-    // Before every other handler, so that runs started for the change belong to the new world
-    @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent>(priority = Short.MAX_VALUE) { event ->
-        changed(event.world != null)
-    }
-
-}
-
-/**
  * The guards of the coroutine this suspends in, or null outside of a listener's coroutines. Idle ones are null too,
  * so waits that require nothing skip the checks.
  */
@@ -191,8 +151,8 @@ internal suspend fun beginRun() {
 }
 
 /**
- * Runs [block] as a run of its own in a coroutine that handles one event after the other: a failing requirement or
- * the world being left ends only it.
+ * Runs [block] as a run of its own in a coroutine that handles one event after the other: a failing requirement ends
+ * only it.
  */
 internal suspend inline fun asRun(block: () -> Unit) {
     val guards = currentCoroutineContext()[Guards]

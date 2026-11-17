@@ -171,31 +171,6 @@ class ExclusiveHandler<T : Event>(
         }
     }
 
-    /** The last run queued with [runInstead]. */
-    private var queued: Job? = null
-
-    /**
-     * Runs [block] once in place of the handler: the active handler run is cancelled, runs queued here before go
-     * first. Events are dropped until the queue is empty.
-     */
-    @Synchronized
-    fun runInstead(block: suspend CoroutineScope.() -> Unit) {
-        val previous = queued?.takeIf { it.isActive }
-        val job = newRun {
-            if (previous != null) {
-                previous.join()
-                beginRun()
-            }
-            block()
-        }
-        queued = job
-        val replaced = jobRef.getAndSet(job)
-        if (previous == null) {
-            replaced?.cancel()
-        }
-        job.start()
-    }
-
     private fun newRun(block: suspend CoroutineScope.() -> Unit) =
         listener.eventListenerScope.launch(context, start = CoroutineStart.LAZY) {
             beginRun()
