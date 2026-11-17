@@ -21,14 +21,18 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -40,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetP
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -55,11 +60,12 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 
 /**
- * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts in
- * [GameTickEvent] once the server has the aim.
+ * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts on
+ * the tick the rotation going out hits the block.
  */
 class BlockActions(
     private val owner: EventListener,
@@ -71,6 +77,9 @@ class BlockActions(
     /** The aim of the current action, null while there is nothing to aim at. */
     var rotation: Rotation? = null
         private set
+
+    /** What the rotation system is asked for this tick, see [rotation]. */
+    private var target: RotationTarget? = null
 
     private var useCooldown = 0
 
@@ -120,45 +129,61 @@ class BlockActions(
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        if (useCooldown > 0) {
+            useCooldown--
+        }
+
         rotation = null
+        target = null
         val action = action ?: return@handler
-        val aim = when (action) {
+        val (aim, surface) = when (action) {
             is Action.Place -> {
                 action.plan = placementPlan(action.pos)
-                action.plan?.placementTarget?.rotation
+                action.plan?.placementTarget?.let { it.rotation to it.surface() }
             }
 
             else -> {
                 val state = world.getBlockState(action.pos)
                 val reach = player.blockInteractionRange()
-                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)?.rotation
+                // Any face does, also through blocks within reach
+                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)
+                    ?.let { it.rotation to Surface.of(action.pos, throughWalls = true) }
             }
         } ?: return@handler
 
         rotation = aim
-        RotationManager.setRotationTarget(
-            aim,
-            valueGroup = rotations,
-            priority = Priority.IMPORTANT_FOR_USAGE_1,
-            provider = owner,
-        )
+        target = rotations.toRotationTarget(aim, considerInventory = true, surface = surface)
     }
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        if (useCooldown > 0) {
-            useCooldown--
+    private val tickHandler = tickHandler {
+        target ?: return@tickHandler
+
+        val planned by requires { target }
+        val current by requires { action }
+        val (worked, hit) = owner.lookAt(Priority.IMPORTANT_FOR_USAGE_1, { planned }) { going ->
+            hitOn(current, going)?.let { current to it }
         }
 
-        when (val action = action) {
-            is Action.Mine -> breakTick(action.pos)
-            is Action.Open -> openTick(action.pos)
-            is Action.Place -> action.plan?.takeIf { action.ready }?.let(::placeTick)
-            null -> Unit
+        when (worked) {
+            is Action.Mine -> breakTick(worked.pos, hit)
+            is Action.Open -> openTick(worked.pos, hit)
+            is Action.Place -> worked.plan?.takeIf { worked.ready }?.let { placeTick(it, hit) }
         }
     }
 
-    private fun breakTick(pos: BlockPos) {
+    /** What [action] works on when the rotation going out is [rotation], the way vanilla acts on its look. */
+    private fun hitOn(action: Action, rotation: Rotation): BlockHitResult? = when (action) {
+        is Action.Place -> action.plan?.placementTarget?.verifyClick(rotation)
+        else -> {
+            // Mining may go on a little past the reach the break started from
+            val reach = player.blockInteractionRange() + if (action is Action.Mine) 1.0 else 0.0
+            raytraceBlock(reach, rotation, action.pos, world.getBlockState(action.pos))
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == action.pos }
+        }
+    }
+
+    private fun breakTick(pos: BlockPos, hit: BlockHitResult) {
         val state = world.getBlockState(pos)
         if (state.getCollisionShape(world, pos).isEmpty) {
             return
@@ -168,31 +193,22 @@ class BlockActions(
             ?.takeIf { it.itemStack.getDestroySpeedWithEnchantment(state) > 1f }
             ?.let { SilentHotbar.selectSlotSilently(this, it, SLOT_RESET_TICKS) }
 
-        // The action goes out before this tick's rotation, so it has to match the rotation the server has.
-        val reach = player.blockInteractionRange() + 1.0
-        val hit = raytraceBlock(reach, RotationManager.serverRotation, pos, state) ?: return
-        if (hit.type == HitResult.Type.BLOCK && hit.blockPos == pos) {
-            doBreak(hit)
-        }
+        doBreak(hit)
     }
 
-    private fun openTick(pos: BlockPos) {
+    private fun openTick(pos: BlockPos, hit: BlockHitResult) {
         val state = world.getBlockState(pos)
         if (useCooldown > 0 || state.getOptionalValue(BlockStateProperties.OPEN).orElse(true)) {
             return
         }
 
-        val hit = raytraceBlock(player.blockInteractionRange(), RotationManager.serverRotation, pos, state) ?: return
-        if (hit.type == HitResult.Type.BLOCK && hit.blockPos == pos) {
-            interactBlock(hit)
-            // The server gets time to answer before another use, which would close the block again.
-            useCooldown = USE_COOLDOWN_TICKS
-        }
+        interactBlock(hit)
+        // The server gets time to answer before another use, which would close the block again.
+        useCooldown = USE_COOLDOWN_TICKS
     }
 
-    private fun placeTick(plan: PlacementPlan) {
-        val rotation = RotationManager.serverRotation
-        val hit = plan.placementTarget.verifyClick(rotation) ?: return
+    private fun placeTick(plan: PlacementPlan, hit: BlockHitResult) {
+        val rotation = RotationManager.currentRotation ?: return
         if (SilentHotbar.selectSlotSilently(this, plan.hotbarItemSlot, SLOT_RESET_TICKS)) {
             doPlacement(hit, rotation, hand = plan.hotbarItemSlot.useHand)
         }
@@ -209,6 +225,7 @@ class BlockActions(
     private val worldChangeHandler = handler<WorldChangeEvent> {
         action = null
         rotation = null
+        target = null
     }
 
     override fun parent() = owner

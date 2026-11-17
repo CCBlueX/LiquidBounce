@@ -119,7 +119,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
         }
     }
 
-    override fun process(point: PointInsideBox): PointInsideBox {
+    override fun process(point: PointInsideBox, eyes: Vec3): PointInsideBox {
         if (yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance.isEnabled) {
             updateGaussianOffset(point)
         }

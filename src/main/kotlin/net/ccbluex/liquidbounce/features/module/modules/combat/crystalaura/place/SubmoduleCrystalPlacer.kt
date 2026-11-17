@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
 import it.unimi.dsi.fastutil.ints.IntCollection
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -28,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.findClosestPointOnBlockInLineWithCrystal
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -85,28 +89,72 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     )
 
     private val chronometer = Chronometer()
-    private var blockHitResult: BlockHitResult? = null
+
+    /**
+     * A crystal to place on [pos], with the rotation that places it.
+     */
+    private class Placement(val rotation: Rotation, val pos: BlockPos, val side: Direction)
+
+    /** The latest placement [tick] found, which may be computed off-thread. */
+    @Volatile
+    private var placement: Placement? = null
+    private var placing: Job? = null
+    private var placingAt: Placement? = null
 
     // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
 
-    @Suppress("LongMethod", "CognitiveComplexMethod")
     fun tick(excludeIds: IntCollection? = null) {
+        val next = findPlacement(excludeIds)
+        placement = next
+        if (next != null) {
+            mc.execute { follow(next) }
+        }
+    }
+
+    private fun findPlacement(excludeIds: IntCollection?): Placement? {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
-            return
+            return null
         }
 
         // if we don't have crystals, we don't need to run the method
-        getSlot() ?: return
+        getSlot() ?: return null
 
-        CrystalAuraPlaceTargetFactory.updateTarget(excludeIds)
+        val crosshair = if (ModuleCrystalAura.crosshairOnly) {
+            (mc.hitResult as? BlockHitResult)?.takeIf { it.type == HitResult.Type.BLOCK } ?: return null
+        } else {
+            null
+        }
+
+        CrystalAuraPlaceTargetFactory.updateTarget(excludeIds, crosshair?.blockPos)
 
         removeFromRenderer()
 
-        val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return
+        val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return null
 
+        val (rotation, side) = if (crosshair != null) {
+            RotationWithVector(RotationManager.serverRotation, crosshair.location) to crosshair.direction
+        } else {
+            findRotation(targetPos) ?: return null
+        }
+
+        if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
+            raytraceBlock(
+                getMaxRange().toDouble(),
+                rotation.rotation,
+                targetPos,
+                targetPos.stateOrEmpty
+            ) ?: return null
+        }
+
+        addToRenderer()
+        updatePrevious(rotation)
+        return Placement(rotation.rotation, targetPos, side)
+    }
+
+    private fun findRotation(targetPos: BlockPos): Pair<RotationWithVector, Direction>? {
         val notSameRotation = RotationManager.serverRotation != previousRotations.lastOrNull()?.first
         val rotationsNotToMatch = if (notSameRotation && jitter) {
             previousRotations.map { it.second }
@@ -114,70 +162,64 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
             null
         }
 
-        var side = Direction.UP
-        val rotation = if (onlyAbove) {
-            raytraceUpperBlockSide(
+        if (onlyAbove) {
+            val rotation = raytraceUpperBlockSide(
                 player.eyePosition,
                 range.toDouble(),
                 wallsRange.toDouble(),
                 targetPos,
                 rotationsNotToMatch = rotationsNotToMatch
-            )
-        } else {
-            val data = findClosestPointOnBlockInLineWithCrystal(
-                player.eyePosition,
-                range.toDouble(),
-                wallsRange.toDouble(),
-                targetPos,
-                notFacingAway,
-                rotationsNotToMatch
-            ) ?: return
-            side = data.second
+            ) ?: return null
 
-            data.first
-        } ?: return
-
-        if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
-            blockHitResult = raytraceBlock(
-                getMaxRange().toDouble(),
-                rotation.rotation,
-                targetPos,
-                targetPos.stateOrEmpty
-            ) ?: return
+            return rotation to Direction.UP
         }
 
-        addToRenderer()
-        updatePrevious(rotation)
-        queuePlacing(rotation, targetPos, side)
+        return findClosestPointOnBlockInLineWithCrystal(
+            player.eyePosition,
+            range.toDouble(),
+            wallsRange.toDouble(),
+            targetPos,
+            notFacingAway,
+            rotationsNotToMatch
+        )
     }
 
-    private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
-            blockHitResult = raytraceBlock(
-                getMaxRange().toDouble(),
-                RotationManager.serverRotation,
-                targetPos,
-                targetPos.stateOrEmpty
-            ) ?: return@rotate false
+    /**
+     * Keeps one sequence placing the current [placement], started over when it moves to another block face.
+     */
+    private fun follow(next: Placement) {
+        val running = placingAt
+        if (running == null || running.pos != next.pos || running.side != next.side) {
+            placing?.cancel()
+            placingAt = next
+        }
 
-            return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
-        }, onFinished = {
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                return@rotate
-            }
+        placing = launchSequence(placing) { place(next.pos, next.side) }
+    }
 
-            player.clickBlockWithSlot(
-                blockHitResult?.withDirection(side) ?: return@rotate,
-                getSlot() ?: return@rotate,
-                swingMode,
-                switchMode,
-                sequenced
-            )
+    private suspend fun place(pos: BlockPos, side: Direction) {
+        val surface = Surface.of(pos, side, throughWalls = wallsRange > 0f)
+        val current by requires { placement?.takeIf { it.pos == pos && it.side == side } }
+        val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
+            raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
+                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+        } ?: return
 
-            SubmoduleIdPredict.run(targetPos)
+        if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            return
+        }
 
-            chronometer.reset()
-        })
+        player.clickBlockWithSlot(
+            hit.withDirection(side),
+            getSlot() ?: return,
+            swingMode,
+            switchMode,
+            sequenced
+        )
+
+        SubmoduleIdPredict.run(pos)
+
+        chronometer.reset()
     }
 
     private fun updatePrevious(rotation: RotationWithVector) {

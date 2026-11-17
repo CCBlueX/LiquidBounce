@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -34,7 +37,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.SNAP
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
@@ -52,8 +54,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -74,6 +78,7 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.EntityHitResult
 
 /**
  * KillAura module
@@ -92,10 +97,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val rotations = tree(KillAuraRotationsValueGroup)
     private val pointTracker = tree(PointTracker(this))
 
-    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+    private val requirements by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.asBoolean }
+        get() = requirements.all { it.asBoolean }
 
     // Bypass techniques
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -112,6 +117,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      * such as KillAura. So back to the basics.
      */
     internal var waitTicks = 0
+
+    /**
+     * What the rotation update of this tick aims at. A tick with an aim fights once that rotation goes out.
+     */
+    private var aim: RotationTarget? = null
+    private var aiming: Job? = null
 
     init {
         tree(KillAuraAutoBlock)
@@ -143,6 +154,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             waitTicks--
         }
 
+        aim = null
+
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.gui.screen() is ContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDeadOrDying || !requirementsMet
@@ -160,10 +173,29 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
+    /** Fights on ticks without an aim; the others fight in [fightWithAim] once the aim goes out. */
     @Suppress("unused")
     private val gameHandler = tickHandler {
+        if (aim == null) {
+            fight(aimed = false, aimedHit = null)
+        }
+    }
+
+    private suspend fun fightWithAim() {
+        val planned by requires { aim }
+        // Resumes on the next rotation going out, whatever it hits
+        val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { planned }) { it }
+
+        fight(aimed = true, aimedHit = planned.entity?.let { attackHit(it, going) })
+    }
+
+    /**
+     * [aimed] tells whether this tick's rotation was asked for, and [aimedHit] is what the rotation going out attacks.
+     */
+    @Suppress("CognitiveComplexMethod")
+    private fun fight(aimed: Boolean, aimedHit: EntityHitResult?) {
         if (player.isDeadOrDying || player.isSpectator) {
-            return@tickHandler
+            return
         }
 
         // Check if there is target to attack
@@ -171,7 +203,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         if (CombatManager.shouldPauseCombat) {
             KillAuraAutoBlock.stopBlocking()
-            return@tickHandler
+            return
         }
 
         if (target == null) {
@@ -185,38 +217,34 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                     dealWithFakeSwing(null)
                 }
             }
-            return@tickHandler
+            return
         }
 
         // Check if the module should (not) continue after the blocking state is updated
         if (!requirementsMet) {
-            return@tickHandler
+            return
         }
 
-        val rotation = (if (rotations.rotationTiming == ON_TICK) {
-            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation
+        val onTickRotation = if (rotations.rotationTiming == ON_TICK) {
+            findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.first?.normalize()
         } else {
             null
-        } ?: RotationManager.currentRotation ?: player.rotation).normalize()
+        }
+        val rotation = onTickRotation ?: (RotationManager.currentRotation ?: player.rotation).normalize()
 
-        val crosshairTarget = when {
-            raycast != TRACE_NONE -> {
-                findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
-                    when (raycast) {
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                        else -> false
-                    }
-                })?.entity ?: target
-            }
-            else -> target
+        val hit = when {
+            onTickRotation != null -> attackHit(target, onTickRotation)
+            aimed -> aimedHit
+            // No request this tick, e.g. Snap waiting for the clicker
+            else -> attackHit(target, rotation)
         }
 
-        if (crosshairTarget is LivingEntity && crosshairTarget.shouldBeAttacked() && crosshairTarget != target) {
-            targetTracker.target = crosshairTarget
+        val attacked = hit?.entity ?: target
+        if (attacked is LivingEntity && attacked.shouldBeAttacked() && attacked != target) {
+            targetTracker.target = attacked
         }
 
-        attackTarget(crosshairTarget, rotation)
+        attackTarget(attacked, hit, rotation)
     }
 
     val shouldBlockSprinting
@@ -232,20 +260,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private fun attackTarget(target: Entity, rotation: Rotation) {
+    private fun attackTarget(target: Entity, attackHitResult: EntityHitResult?, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
         debugParameter("Rotation") { rotation }
         debugParameter("Target") { target }
-
-        val attackHitResult = isLookingAtEntity(
-            toEntity = target,
-            rotation = rotation,
-            range = range.interactionRange.toDouble(),
-            throughWallsRange = range.interactionThroughWallsRange.toDouble()
-        )
-
         debugParameter("Target Hit Result") { attackHitResult?.location }
 
         val isInRange = ModuleElytraTarget.canIgnoreKillAuraRotations ||
@@ -346,7 +366,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         range: Float,
         wallsRange: Float
     ): Boolean {
-        val (rotation, _) = findRotation(entity, range, wallsRange) ?: return false
+        val (rotation, surface) = findRotation(entity, range, wallsRange) ?: return false
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
@@ -370,16 +390,33 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             }
         }
 
-        RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                rotation,
-                entity,
-                considerInventory = !ignoreOpenInventory
-            ),
-            priority = Priority.IMPORTANT_FOR_USAGE_2,
-            provider = this@ModuleKillAura
+        aim = rotations.toRotationTarget(
+            rotation,
+            entity,
+            considerInventory = !ignoreOpenInventory,
+            surface = surface,
         )
+        aiming = launchSequence(aiming) { fightWithAim() }
         return true
+    }
+
+    /**
+     * What an attack with [rotation] hits: the entity in the crosshair as [raycast] picks it, else [target].
+     */
+    private fun attackHit(target: Entity, rotation: Rotation): EntityHitResult? {
+        val entity = when (raycast) {
+            TRACE_NONE -> null
+            else -> findEntityInCrosshair(range.interactionRange.toDouble(), rotation) {
+                raycast == TRACE_ALL || it.shouldBeAttacked()
+            }?.entity
+        } ?: target
+
+        return isLookingAtEntity(
+            toEntity = entity,
+            rotation = rotation,
+            range = range.interactionRange.toDouble(),
+            throughWallsRange = range.interactionThroughWallsRange.toDouble()
+        )
     }
 
     /**
@@ -388,9 +425,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      * @param entity The entity to attack
      * @param range The range to attack the entity (NOT SQUARED)
      *
-     *  @return The best spot to attack the entity
+     *  @return The best spot to attack the entity and the box it is on
      */
-    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): Pair<Rotation, Surface>? {
+        val throughWalls = wallsRange > 0f || rotations.aimThroughWalls
         if (rotations.lazyRotation) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentHit = isLookingAtEntity(
@@ -403,7 +441,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             if (currentHit != null) {
                 debugParameter("Lazy Rotation") { true }
-                return RotationWithVector(currentRotation, currentHit.location)
+                return currentRotation to Surface(Surface.of(entity).box, throughWalls = throughWalls)
             }
         }
 
@@ -425,7 +463,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             rotationPreference = rotationPreference
         )
 
-        return if (rotation == null && rotations.aimThroughWalls) {
+        val found = if (rotation == null && rotations.aimThroughWalls) {
             val rotationThroughWalls = raytraceBox(
                 eyes = eyes,
                 box = point.box,
@@ -439,6 +477,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         } else {
             rotation
         }
+
+        return found?.let { it.rotation to Surface(point.box, throughWalls = throughWalls) }
     }
 
     /**

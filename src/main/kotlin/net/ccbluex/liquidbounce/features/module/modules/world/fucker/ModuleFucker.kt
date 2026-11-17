@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -36,8 +37,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -72,6 +76,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -165,6 +170,9 @@ object ModuleFucker : ClientModule(
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
 
+    /** Aims at [currentTarget], planned anew every tick; null while PacketMine breaks it. */
+    private var aim: RotationTarget? = null
+
     internal val hasTarget: Boolean
         get() = currentTarget != null
 
@@ -187,11 +195,14 @@ object ModuleFucker : ClientModule(
     override fun onDisabled() {
         clearCurrentTarget()
         oldTarget = null
+        cooldownLeft = 0
         targetRenderer.clearSilently()
     }
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
+        aim = null
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
@@ -204,8 +215,16 @@ object ModuleFucker : ClientModule(
         updateCurrentTarget()
     }
 
+    /** Ticks of [delay] left after the last use. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val breaker = tickHandler {
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+            return@tickHandler
+        }
+
         if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
@@ -225,7 +244,6 @@ object ModuleFucker : ClientModule(
         }
 
         val destroyerTarget = currentTarget ?: return@tickHandler
-        val currentRotation = RotationManager.serverRotation
         targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
@@ -233,20 +251,13 @@ object ModuleFucker : ClientModule(
             return@tickHandler
         }
 
-        // Check if we are already looking at the block
-        val rayTraceResult = raytraceBlock(
-            max(range, wallRange).toDouble(),
-            currentRotation,
-            destroyerTarget.pos,
-            destroyerTarget.pos.state ?: return@tickHandler
-        ) ?: return@tickHandler
+        val plan by requires { aim }
+        requires { currentTarget == destroyerTarget }
+        requires { !ModuleBlink.running }
 
-        val raytracePos = rayTraceResult.blockPos
-
-        // Check if the raytrace result includes a block, if not we don't want to deal with it.
-        val raytraceState = raytracePos.state
-        if (rayTraceResult.type != HitResult.Type.BLOCK || raytracePos != destroyerTarget.pos ||
-            raytraceState == null || raytraceState.isNotBreakable(raytracePos)) {
+        val priority = if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1
+        val rayTraceResult = lookAt(priority, { plan }) { going -> hitOn(destroyerTarget.pos, going) }
+        if (rayTraceResult.blockPos.state?.isNotBreakable(rayTraceResult.blockPos) != false) {
             return@tickHandler
         }
 
@@ -256,7 +267,7 @@ object ModuleFucker : ClientModule(
                 swingMode.interactSwing(InteractionHand.MAIN_HAND)
             }
 
-            waitTicks(delay)
+            cooldownLeft = delay
         } else {
             doBreak(rayTraceResult, immediate = forceImmediateBreak, swingMode)
         }
@@ -308,6 +319,7 @@ object ModuleFucker : ClientModule(
             targetRenderer.removeBlock(target.pos)
         }
         currentTarget = null
+        aim = null
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
@@ -375,24 +387,31 @@ object ModuleFucker : ClientModule(
             return null
         }
 
-        if (!ModulePacketMine.running) {
-            RotationManager.setRotationTarget(
-                rotation = raytrace.rotation,
+        val plan = if (ModulePacketMine.running) {
+            null
+        } else {
+            rotations.toRotationTarget(
+                raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                priority = if (prioritizeOverKillAura) {
-                    Priority.IMPORTANT_FOR_USAGE_3
-                } else {
-                    Priority.IMPORTANT_FOR_USAGE_1
-                },
-                provider = this@ModuleFucker
+                surface = Surface.of(target.pos, throughWalls = throughWallsRange > 0.0),
             )
         }
 
         clearCurrentTarget()
         ModuleFucker.currentTarget = target
+        aim = plan
 
         return true
+    }
+
+    /**
+     * What breaking with [rotation] hits, once it meets [pos]; the ray may pass through other blocks within the wall
+     * range.
+     */
+    private fun hitOn(pos: BlockPos, rotation: Rotation): BlockHitResult? {
+        val state = pos.state ?: return null
+        return raytraceBlock(max(range, wallRange).toDouble(), rotation, pos, state)
+            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
     }
 
     private fun updateSurroundings(initialPosition: BlockPos): Boolean {

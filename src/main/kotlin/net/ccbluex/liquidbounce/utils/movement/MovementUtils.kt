@@ -23,6 +23,7 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.features.SilentMovementKeys
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -37,7 +38,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.roundToInt
 
 
 /**
@@ -97,15 +97,12 @@ fun getDirectionalInputForMovementYaw(forward: Int, strafe: Int, frameYaw: Float
     }
 
     // Silent correction reads the keys relative to the camera at frameYaw and turns them onto the rotation.
-    val delta = (frameYaw - rotation.yaw) * Mth.DEG_TO_RAD
-    val cos = Mth.cos(delta.toDouble())
-    val sin = Mth.sin(delta.toDouble())
     for (z in -1..1) {
         for (x in -1..1) {
-            val turnedX = (x * cos - z * sin).roundToInt()
-            val turnedZ = (z * cos + x * sin).roundToInt()
-            if (turnedX == strafe && turnedZ == forward) {
-                return DirectionalInput(z.toFloat(), x.toFloat())
+            val keys = DirectionalInput(z.toFloat(), x.toFloat())
+            val turned = SilentMovementKeys.peek(keys, frameYaw - rotation.yaw)
+            if (turned == DirectionalInput(forward.toFloat(), strafe.toFloat())) {
+                return keys
             }
         }
     }

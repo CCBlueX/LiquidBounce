@@ -22,9 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
@@ -60,6 +62,38 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
     private var currentChargeRandom: Int? = null
 
+    /**
+     * Whether the rotation going out this tick is on target. A crossbow shoots with it.
+     */
+    private var aimed = false
+
+    /**
+     * Whether the rotation that went out last tick was on target. A bow or trident shoots with it, since the release
+     * reaches the server before this tick's rotation.
+     */
+    private var aimedLastTick = false
+
+    @Suppress("unused")
+    private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        aimedLastTick = aimed
+        aimed = false
+        forceUncharged = false
+    }
+
+    fun isAimedAt(going: Rotation, rotation: Rotation) = going.directionAngleTo(rotation) <= aimThreshold
+
+    /**
+     * Shoots once the aimbot's rotation went out, [onTarget] telling whether this tick's is within [aimThreshold].
+     */
+    internal fun shootWithAim(onTarget: Boolean) {
+        if (!running || requiresHypotheticalHit) {
+            return
+        }
+
+        aimed = onTarget
+        shoot()
+    }
+
     private fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
         val mid = chargedRandom.start + lenHalf
@@ -81,13 +115,20 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        forceUncharged = false
+        if (!requiresHypotheticalHit && AutoBowAimbotFeature.enabled) {
+            return@handler
+        }
 
+        shoot()
+    }
+
+    @Suppress("CognitiveComplexMethod", "ReturnCount")
+    private fun shoot() {
         val usingItemHand = player.usingItemHand
             ?: if (usePrechargedCrossbow) {
-                InteractionHand.entries.find { player.getItemInHand(it).isChargedCrossbow } ?: return@handler
+                InteractionHand.entries.find { player.getItemInHand(it).isChargedCrossbow } ?: return
             } else {
-                return@handler
+                return
             }
 
         val usingItemStack = player.usingItemOrNull ?: player.getItemInHand(usingItemHand)
@@ -97,46 +138,43 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 val pullTime = CrossbowItem.getChargeDuration(usingItemStack, player)
                 val isChargedNow = usingItemStack.isChargedCrossbow
                 if (!isChargedNow && player.ticksUsingItem < pullTime) {
-                    return@handler
+                    return
                 }
             }
 
             is BowItem -> {
                 if (player.ticksUsingItem < charged + getChargedRandom()) {
-                    return@handler
+                    return
                 }
             }
 
             is TridentItem -> {
                 if (player.ticksUsingItem <= TridentItem.THROW_THRESHOLD_TIME) {
-                    return@handler
+                    return
                 }
             }
 
-            else -> return@handler
+            else -> return
         }
 
         if (!ModuleAutoBow.lastShotTimer.hasElapsed((delayBetweenShots * 1000.0F).toLong())) {
-            return@handler
+            return
         }
 
         if (requiresHypotheticalHit) {
             val hypotheticalHit = getHypotheticalHit()
 
             if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
-                return@handler
+                return
             }
         } else if (AutoBowAimbotFeature.enabled) {
             if (AutoBowAimbotFeature.targetTracker.target == null) {
-                return@handler
+                return
             }
 
-            val targetRotation = RotationManager.activeRotationTarget ?: return@handler
-
-            val aimDifference = RotationManager.serverRotation.directionAngleTo(targetRotation.rotation)
-
-            if (aimDifference > aimThreshold) {
-                return@handler
+            val onTarget = if (usingItemStack.item is CrossbowItem) aimed else aimedLastTick
+            if (!onTarget) {
+                return
             }
         }
 

@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
@@ -26,17 +29,15 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
-import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.EntityHitResult
 import kotlin.math.max
 
 object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Destroy", true) {
@@ -52,71 +53,97 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
     val chronometer = Chronometer()
 
+    /**
+     * A crystal to attack, with the rotation that hits it.
+     */
+    private class Attack(val rotation: Rotation, val target: EndCrystal)
+
+    /** The latest attack [tick] found, which may be computed off-thread. */
+    @Volatile
+    private var attack: Attack? = null
+    private var attacking: Job? = null
+    private var attackingTarget: EndCrystal? = null
+
     fun tick(providedCrystal: EndCrystal? = null) {
+        val next = findAttack(providedCrystal)
+        attack = next
+        if (next != null) {
+            mc.execute { follow(next) }
+        }
+    }
+
+    private fun findAttack(providedCrystal: EndCrystal?): Attack? {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
-            return
+            return null
+        }
+
+        val crystal = if (ModuleCrystalAura.crosshairOnly) {
+            (mc.hitResult as? EntityHitResult)?.entity as? EndCrystal ?: return null
+        } else {
+            providedCrystal
         }
 
         // update the target / validate the provided crystal
-        providedCrystal?.let { crystal ->
+        crystal?.let {
             // just check if it works, not if it's the best
-            CrystalAuraDestroyTargetFactory.validateAndUpdateTarget(crystal)
+            CrystalAuraDestroyTargetFactory.validateAndUpdateTarget(it)
         } ?: run {
             CrystalAuraDestroyTargetFactory.updateTarget()
         }
 
-        val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return
+        val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return null
 
         val base = FULL_BOX.move(target.blockPosition().below())
         mc.execute {
             ModuleCrystalAura.debugGeometry("predictedBlock") { DebuggedBox(base, Color4b.GREEN.fade(0.4f)) }
         }
 
-        val eyePos = player.eyePosition
-
         // find the best spot (and skip if no spot was found)
-        val (rotation, vec3d) =
-            raytraceBox(
-                eyePos,
-                target.boundingBox,
-                range = range.toDouble(),
-                wallsRange = wallsRange.toDouble(),
-                futureTarget = base,
-                prioritizeVisible = prioritizeVisibleFaces
-            ) ?: return
+        val spot = raytraceBox(
+            player.eyePosition,
+            target.boundingBox,
+            range = range.toDouble(),
+            wallsRange = wallsRange.toDouble(),
+            futureTarget = base,
+            prioritizeVisible = prioritizeVisibleFaces
+        ) ?: return null
 
-        queueDestroy(rotation, target, base, eyePos, vec3d)
+        return Attack(spot.rotation, target)
     }
 
-    private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
-        // create the action chain to execute
-        val action = {
-            ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = {
-                isLookingAtEntity(
-                    toEntity = target,
-                    rotation = RotationManager.serverRotation,
-                    range = range.toDouble(),
-                    throughWallsRange = wallsRange.toDouble()
-                ) != null
-            }, onFinished = {
-                if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                    return@rotate
-                }
-
-                val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
-
-                attackEntity(target1, swingMode)
-                postAttackHandlers.forEach { it.attacked(target1.id) }
-                chronometer.reset()
-            })
+    /**
+     * Keeps one sequence attacking the current [attack], started over when it moves to another crystal.
+     */
+    private fun follow(next: Attack) {
+        if (attackingTarget !== next.target) {
+            attacking?.cancel()
+            attackingTarget = next.target
         }
 
-        // fixes swinging off thread as other packets might interrupt
-        if (swingMode.serverSwing && !base.isHitByLine(eyePos, vec3d)) {
-            mc.execute(action)
-        } else {
-            action()
+        attacking = launchSequence(attacking) { destroy(next.target) }
+    }
+
+    private suspend fun destroy(target: EndCrystal) {
+        val surface = Surface(target.boundingBox, throughWalls = wallsRange > 0f)
+        val current by requires { attack?.takeIf { it.target === target } }
+        ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
+            isLookingAtEntity(
+                toEntity = target,
+                rotation = view,
+                range = range.toDouble(),
+                throughWallsRange = wallsRange.toDouble()
+            )
+        } ?: return
+
+        if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            return
         }
+
+        val crystal = CrystalAuraDestroyTargetFactory.currentTarget ?: return
+
+        attackEntity(crystal, swingMode)
+        postAttackHandlers.forEach { it.attacked(crystal.id) }
+        chronometer.reset()
     }
 
     fun getMaxRange() = max(range, wallsRange)

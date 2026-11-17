@@ -19,84 +19,98 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.ShortStopRotationProcessor
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.world.entity.Entity
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
- * An aim plan is a plan to aim at a certain rotation.
- * It is being used to calculate the next rotation to aim at.
- *
- * @param rotation The rotation we want to aim at.
- * @param angleSmooth The mode of the smoother.
+ * What a module wants the view to do. An axis left null is up to the rotation system: it stays with the player's own
+ * view, or with a target that does turn it.
  */
 @AddonApi
 @Suppress("LongParameterList")
 class RotationTarget @JvmOverloads constructor(
-    val rotation: Rotation,
-    var entity: Entity? = null,
+    val yaw: Float?,
+    val pitch: Float?,
+    val entity: Entity? = null,
     /**
-     * The rotation processors which are being used to calculate the next rotation.
-     * This list should start with [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth]
-     * and then continue with other processors like [ShortStopRotationProcessor] and [FailFocus].
+     * How the view turns; null turns it at once.
      */
-    val processors: List<RotationProcessor> = emptyList(),
+    val aim: Aim? = null,
     /**
-     * The ticks until reset defines the amount of ticks until we are rotating back.
+     * Ticks the target stays after the module stopped asking for it, before the view turns back to the player's.
      */
     val ticksUntilReset: Int = 1,
     /**
-     * The reset threshold defines the threshold at which we are going to reset the aim plan.
-     * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim.
-     *
-     * TODO: Replace this with a fixed check that checks if our current mouse movement
-     *   outperforms the threshold.
-     */
-    val resetThreshold: Float = 1f,
-    /**
-     * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating.
+     * Holds the view while the inventory is open.
      */
     val considerInventory: Boolean = false,
     val movementCorrection: MovementCorrection = MovementCorrection.SILENT,
     /**
-     * What should be done if the target rotation has been reached. Can be `null`.
-      */
-    val whenReached: RestrictedSingleUseAction? = null
+     * What the view has to meet, with [yaw] and [pitch] as the point on it the module recommends. Defaults to the box
+     * of [entity].
+     */
+    val surface: Surface? = null,
+    /**
+     * Degrees [yaw] and [pitch] may be missed by, when there is no [surface].
+     */
+    val tolerance: Float = 0f,
 ) {
 
-    /**
-     * Calculates the next rotation to aim at.
-     * [currentRotation] is the current rotation or rather last rotation we aimed at. It is being used to calculate the
-     * next rotation.
-     *
-     * We might even return null if we do not want to aim at anything yet.
-     */
-    fun towards(currentRotation: Rotation, isResetting: Boolean): Rotation {
-        if (isResetting) {
-            entity = null
-            return process(currentRotation, player.rotation)
-        }
-
-        return process(currentRotation, rotation)
+    init {
+        require(yaw != null || pitch != null) { "A rotation target has to turn at least one axis" }
     }
 
-    private fun process(currentRotation: Rotation, targetRotation: Rotation): Rotation {
-        var targetRotation = targetRotation
+    @JvmOverloads
+    constructor(
+        rotation: Rotation,
+        entity: Entity? = null,
+        aim: Aim? = null,
+        ticksUntilReset: Int = 1,
+        considerInventory: Boolean = false,
+        movementCorrection: MovementCorrection = MovementCorrection.SILENT,
+        surface: Surface? = null,
+        tolerance: Float = 0f,
+    ) : this(
+        rotation.yaw,
+        rotation.pitch,
+        entity,
+        aim,
+        ticksUntilReset,
+        considerInventory,
+        movementCorrection,
+        surface,
+        tolerance,
+    )
 
-        if (processors.isEmpty()) {
-            return targetRotation
-        }
+    /** The surface to hit, if there is one. */
+    val hitSurface: Surface?
+        get() = surface ?: entity?.let(Surface::of)
 
-        for (processor in processors) {
-            // We process the rotation with the processor but only the [targetRotation] is being updated.
-            targetRotation = processor.process(this, currentRotation, targetRotation)
-        }
-        return targetRotation
+    /** This target's angles, with [otherwise] on an axis it leaves free. */
+    fun rotation(otherwise: Rotation) = Rotation(yaw ?: otherwise.yaw, pitch ?: otherwise.pitch)
+
+}
+
+/**
+ * Whether [rotation] meets this target: the ray from the player's eyes meets [RotationTarget.hitSurface], or else the
+ * turned axes are within [RotationTarget.tolerance], at least half a mouse step.
+ */
+internal fun RotationTarget.isMetBy(rotation: Rotation): Boolean {
+    hitSurface?.let { surface ->
+        return surface.isHitBy(player.eyePosition, rotation)
     }
 
+    val margin = max(tolerance, RotationUtil.gcd.toFloat() / 2)
+    val yaw = yaw
+    val pitch = pitch
+    return (yaw == null || abs(angleDifference(rotation.yaw, yaw)) <= margin) &&
+        (pitch == null || abs(rotation.pitch - pitch) <= margin)
 }

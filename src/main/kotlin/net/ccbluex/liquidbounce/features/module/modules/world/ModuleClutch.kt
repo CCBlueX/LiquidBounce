@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldClutchFeature
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -51,7 +51,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
 
     /**
      * Where the coming ticks take the player on a fall that has to be caught, one position per tick.
-     * [ModuleScaffold] runs with [ScaffoldClutchTechnique] for as long as there is one.
+     * [ModuleScaffold] builds with [ScaffoldClutchFeature] for as long as there is one.
      */
     val fall: List<Vec3>?
         get() = path.takeIf { running }

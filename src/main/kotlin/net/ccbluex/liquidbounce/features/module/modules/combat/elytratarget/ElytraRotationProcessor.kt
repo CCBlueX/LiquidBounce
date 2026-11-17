@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -45,7 +45,7 @@ private const val BASE_YAW_SPEED = 45.0f
 private const val BASE_PITCH_SPEED = 35.0f
 private const val IDEAL_DISTANCE = 10
 
-internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProcessor, EventListener {
+internal object ElytraRotationProcessor : ValueGroup("Rotations"), EventListener {
     private val sharpRotations by boolean("Sharp", false)
     internal val ignoreKillAura by boolean("IgnoreKillAuraRotation", true)
     internal val look by boolean("Look", false)
@@ -86,11 +86,7 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProce
      * Please do not use this ANYWHERE ELSE
      * This is only for [ModuleElytraTarget]
      */
-    override fun process(
-        rotationTarget: RotationTarget,
-        currentRotation: Rotation,
-        targetRotation: Rotation
-    ): Rotation {
+    private fun turn(currentRotation: Rotation, targetRotation: Rotation): Rotation {
         val delta = currentRotation.rotationDeltaTo(targetRotation)
 
         val (deltaYaw, deltaPitch) = delta
@@ -150,25 +146,19 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), RotationProce
             MovementCorrection.STRICT
         }
 
-        calculateRotation(target).let {
-            RotationManager.setRotationTarget(
-                /*
-                 * Don't use the [RotationsValueGroup] because I need to superfast rotations.
-                 * Without any setting and angle smoothing
-                 */
-                plan = RotationTarget(
-                    rotation = it,
-                    entity = target,
-                    processors = listOf(ElytraRotationProcessor),
-                    ticksUntilReset = 1,
-                    resetThreshold = 1f,
-                    considerInventory = true,
-                    movementCorrection = correction
-                ),
-                priority = Priority.IMPORTANT_FOR_USAGE_3,
-                provider = ModuleElytraTarget
-            )
-        }
+        val next = turn(RotationManager.currentRotation ?: player.rotation, calculateRotation(target))
+        RotationManager.setRotationTarget(
+            // Turned here and not through [RotationsValueGroup]: these turns are faster than any aim offers
+            plan = RotationTarget(
+                rotation = next,
+                entity = target,
+                ticksUntilReset = 1,
+                considerInventory = true,
+                movementCorrection = correction
+            ),
+            priority = Priority.IMPORTANT_FOR_USAGE_3,
+            provider = ModuleElytraTarget
+        )
     }
 
     @Suppress("NOTHING_TO_INLINE")

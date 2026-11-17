@@ -191,8 +191,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             if (ModuleFreeCam.running) {
                 RotationManager.serverRotation
             } else {
-                RotationManager.activeRotationTarget?.rotation
-                    ?: RotationManager.currentRotation ?: otherPlayer.rotation
+                val view = RotationManager.currentRotation ?: otherPlayer.rotation
+                RotationManager.activeRotationTarget?.rotation(otherwise = view) ?: view
             }
         } else {
             otherPlayer.rotation
