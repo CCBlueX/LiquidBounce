@@ -1,6 +1,5 @@
 <script lang="ts">
     import {slide} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
     import {createEventDispatcher} from "svelte";
     import GenericSelect from "./GenericSelect.svelte";
 
@@ -26,7 +25,7 @@
     <svelte:fragment slot="options">
         {#each options as o}
             <div on:click={() => handleOptionClick(o)} class="option" class:active={o === value}
-                 transition:slide|global={{ duration: 200, easing: quintOut }}>{o}</div>
+                 transition:slide|global={{ duration: 140 }}>{o}</div>
         {/each}
     </svelte:fragment>
 </GenericSelect>

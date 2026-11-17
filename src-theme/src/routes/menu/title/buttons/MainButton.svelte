@@ -1,7 +1,6 @@
 <script lang="ts">
-    import {fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
-    import {backIn, backOut} from "svelte/easing";
+    import {fly} from "svelte/transition";
     import TitleButtonIcon from "./TitleButtonIcon.svelte";
 
     export let title: string;
@@ -16,8 +15,8 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="main-button" on:mouseenter={() => hovered = true} on:mouseleave={() => hovered = false} on:click={() => hovered = false}
-     on:click={() => dispatch("click")} out:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backIn}}
-     in:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backOut}}>
+     on:click={() => dispatch("click")}
+     in:fly|global={{duration: 180, x: -40, delay: index * 25}}>
     <div class="icon">
         <TitleButtonIcon {icon} />
     </div>
@@ -46,7 +45,7 @@
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
-    transition: background-position .2s ease-out;
+    transition: background-position .15s cubic-bezier(0.23, 1, 0.32, 1);
 
     &:hover {
       background-position: left bottom;
@@ -64,7 +63,7 @@
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    transition: ease background-color 0.2s, ease color 0.2s;
+    transition: ease background-color 0.15s, ease color 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
