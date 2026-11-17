@@ -85,6 +85,9 @@ object SchematicMode : ModuleAutoBuild.AutoBuildMode("Schematic") {
             }
             chat(markAsError(ModuleAutoBuild.message("missing", items)), ModuleAutoBuild)
         }
+        if (result.isMissingScaffold) {
+            chat(markAsError(ModuleAutoBuild.message("missingScaffold")), ModuleAutoBuild)
+        }
     }
 
     override fun getSlot(): HotbarItemSlot? = null
