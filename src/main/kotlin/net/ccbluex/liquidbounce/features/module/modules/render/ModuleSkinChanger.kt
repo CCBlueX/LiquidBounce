@@ -23,12 +23,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import com.mojang.authlib.GameProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -41,11 +40,11 @@ import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.ChangeSkinRequest
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.service.MinecraftServicesApi
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
+import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
-import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountService
 import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -64,6 +63,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.IOException
+import java.util.concurrent.CancellationException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -79,29 +79,27 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
     private val uploadSkin = boolean("UploadSkin", false)
 
     private val mode = choices("Mode", 0) {
-        arrayOf(Mode.Online, Mode.File)
+        arrayOf(SkinProvider.OtherPlayer, SkinProvider.LocalFile)
     }
 
     private val DEBOUNCE_DURATION = 3.seconds
 
-    private val uploadSkinFlow = MutableSharedFlow<Unit>(replay = 0)
+    private val uploadSkinFlow = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     init {
         ioScope.launch {
-            // debounce skin uploads to prevent rapid calls
+            // rapid triggers (typing a name, switching mode) collapse into one upload
             uploadSkinFlow.debounce(DEBOUNCE_DURATION).filter { canUploadSkin() }.collectLatest {
                 logger.info("Uploading skin...")
                 mode.activeMode.uploadSkin()
             }
         }
 
-        ioScope.launch {
-            combine(uploadSkin.asStateFlow(), mode.asStateFlow()) { skin, mode ->
-                if (skin) {
-                    triggerUpload()
-                }
-            }.collect()
-        }
+        uploadSkin.onChanged { if (it) triggerUpload() }
+        mode.onChanged { triggerUpload() }
     }
 
     private suspend fun waitUntilInGame() {
@@ -116,6 +114,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                 waitUntilInGame()
                 try {
                     action(it)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     if (this@ModuleSkinChanger.running) {
                         chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
@@ -126,7 +126,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         }
     }
 
-    private sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
+    private sealed class SkinProvider(name: String) : Mode(name) {
         final override val parent: ModeValueGroup<*>
             get() = mode
 
@@ -134,7 +134,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
 
         abstract suspend fun uploadSkin()
 
-        object Online : Mode("Online") {
+        object OtherPlayer : SkinProvider("Online") {
             private val username = text("Username", "LiquidBounce")
 
             init {
@@ -164,10 +164,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                     mc.services.sessionService.fetchProfile(uuid, false)
                 } ?: return
 
-                val texture = mc.services.sessionService.unpackTextures(
-                    mc.services.sessionService.getPackedTextures(profile.profile)
-                )
-                val skinTexture = texture.skin ?: return
+                val skinTexture = mc.services.sessionService.getTextures(profile.profile).skin ?: return
                 val variant = if (skinTexture.getMetadata("model") == "slim") {
                     PlayerModelType.SLIM
                 } else {
@@ -180,8 +177,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             }
         }
 
-        object File : Mode("File"), ClientAsset.Texture {
-            private val image = file("Image", supportedExtensions = setOf("png"))
+        object LocalFile : SkinProvider("File"), ClientAsset.Texture {
+            private val image = file("Image", supportedExtensions = ["png"])
 
             private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
@@ -210,7 +207,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             }
 
             init {
-                image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
+                image.asStateFlow().filter { it.isFile && it.canRead() }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
                         file.readNativeImage()
@@ -226,7 +223,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
 
             override suspend fun uploadSkin() {
                 val file = image.get()
-                if (!file.isFile) {
+                if (!file.isFile || !file.canRead()) {
                     return
                 }
 
@@ -257,7 +254,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         running && allowMixinAbstractClientPlayerEntity
 
     @Suppress("unused")
-    private val sessionHandler = suspendHandler<SessionEvent>(behavior = SuspendHandlerBehavior.CancelPrevious) {
+    private val sessionHandler = handler<SessionEvent> {
         triggerUpload()
     }
 
@@ -265,8 +262,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         triggerUpload()
     }
 
-    private suspend fun triggerUpload() {
-        uploadSkinFlow.emit(Unit)
+    private fun triggerUpload() {
+        uploadSkinFlow.tryEmit(Unit)
     }
 
     private inline fun request(block: MinecraftServicesApi.() -> Unit) {
