@@ -99,6 +99,9 @@ class EventListenerNotListeningException(val eventListener: EventListener) :
  *
  * This means the cancellation will not be **immediate** like [Thread.interrupt].
  *
+ * The check is handed to [original] instead of wrapping its result, so it runs on the thread the
+ * continuation continues on and immediately before it, which lets it read game state.
+ *
  * @param original The original [ContinuationInterceptor] such as a [CoroutineDispatcher],
  * because one [CoroutineContext] can only contain one value for a same key.
  *
@@ -112,21 +115,21 @@ private class EventListenerRunningContinuationInterceptor(
     override fun <T> interceptContinuation(
         continuation: Continuation<T>
     ): Continuation<T> {
-        // Process with original interceptor
-        val delegate = original?.interceptContinuation(continuation) ?: continuation
-
-        return object : Continuation<T> {
+        val checking = object : Continuation<T> {
             override val context get() = continuation.context
 
             override fun resumeWith(result: Result<T>) {
                 // if the event listener is no longer active, abort the result
-                val result = if (eventListener.running) {
-                    result
-                } else {
-                    Result.failure(EventListenerNotListeningException(eventListener))
-                }
-                delegate.resumeWith(result)
+                continuation.resumeWith(
+                    if (eventListener.running) {
+                        result
+                    } else {
+                        Result.failure(EventListenerNotListeningException(eventListener))
+                    }
+                )
             }
         }
+
+        return original?.interceptContinuation(checking) ?: checking
     }
 }
