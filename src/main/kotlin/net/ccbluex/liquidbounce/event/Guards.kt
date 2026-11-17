@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.event
 
-import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CopyableThreadContextElement
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -31,11 +30,11 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 /**
- * Requires what [read] returns for the rest of this run of the handler: `false` or `null` ends it. Every suspension
- * helper ([tickUntil], [waitTicks], [tickConditional], [waitSeconds], [waitMatches]) reads it again on each tick it
- * waits and once more right before the code after it runs, [waitFor] only the latter. Once it fails, the run ends there
- * quietly: nothing after that suspension runs, cleanup in `finally` and the handler's `onCancellation` still do, and
- * the next run starts without it. If it fails right now, the run ends here.
+ * Requires what [read] returns for the rest of this run of the handler: `false` or `null` ends it. It is read again on
+ * every tick a tick-based helper waits ([tickUntil], [waitTicks], [tickConditional], [waitSeconds]) and once more right
+ * before the code after any suspension runs. Once it fails, the run ends there quietly: nothing after that suspension
+ * runs, cleanup in `finally` and the handler's `onCancellation` still do, and the next run starts without it. If it
+ * fails right now, the run ends here.
  *
  * A condition and a value are written the same way; a delegated value is always the one read last:
  * ```kotlin
@@ -81,50 +80,44 @@ class Required<T : Any> internal constructor(read: () -> T?) : ReadOnlyProperty<
  */
 class Guards internal constructor() : CopyableThreadContextElement<Unit> {
 
-    companion object Key : CoroutineContext.Key<Guards>
+    companion object Key : CoroutineContext.Key<Guards> {
+        private val NONE: Array<() -> Boolean> = emptyArray()
+    }
 
     override val key: CoroutineContext.Key<*>
         get() = Key
 
-    private var conditions: ReferenceArrayList<() -> Boolean>? = null
+    /** Replaced instead of changed, so that the threads checking it read a whole one. */
+    @Volatile
+    private var conditions: Array<() -> Boolean> = NONE
 
     internal val isIdle: Boolean
-        get() = conditions.isNullOrEmpty()
+        get() = conditions.isEmpty()
 
     internal fun add(condition: () -> Boolean) {
-        (conditions ?: ReferenceArrayList<() -> Boolean>(4).also { conditions = it }).add(condition)
+        conditions += condition
         if (!condition()) {
             throw GuardInterruption(condition)
         }
     }
 
     /**
-     * Starts a run: it requires nothing yet.
+     * Starts a run: it requires nothing yet, and is bound to the world it starts in.
      */
     internal fun start() {
-        conditions?.clear()
-    }
-
-    internal fun clear() {
-        conditions?.clear()
+        conditions = NONE
     }
 
     /**
      * The interruption for the first condition that no longer holds.
      */
     internal fun broken(): GuardInterruption? {
-        val conditions = conditions ?: return null
-        for (i in 0 until conditions.size) {
-            val condition = conditions[i]
+        for (condition in conditions) {
             if (!condition()) {
                 return GuardInterruption(condition)
             }
         }
         return null
-    }
-
-    internal fun ensure() {
-        broken()?.let { throw it }
     }
 
     override fun copyForChild() = Guards()
@@ -155,13 +148,10 @@ internal suspend fun beginRun() {
  * only it.
  */
 internal suspend inline fun asRun(block: () -> Unit) {
-    val guards = currentCoroutineContext()[Guards]
-    guards?.start()
+    currentCoroutineContext()[Guards]?.start()
     try {
         block()
     } catch (_: GuardInterruption) {
-    } finally {
-        guards?.clear()
     }
 }
 

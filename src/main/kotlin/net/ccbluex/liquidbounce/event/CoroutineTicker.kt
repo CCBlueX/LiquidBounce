@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.event
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -33,7 +32,6 @@ import java.util.function.Predicate
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.time.Duration
 
 /**
  * A queue of callbacks advanced once per tick.
@@ -133,7 +131,7 @@ object CoroutineTicker : Ticker {
  *
  * Exceptions thrown by [stopAt] are delivered to the waiting coroutine.
  *
- * What the run [requires] is checked each tick before [stopAt] and once more before returning; when it fails,
+ * What the run [requires] is checked each tick before [stopAt]; when it fails,
  * [stopAt] is not called again and the run ends here.
  *
  * @param stopAt the callback of elapsed ticks. Will be called on game tick.
@@ -143,12 +141,9 @@ suspend fun tickUntil(
     stopAt: IntPredicate,
 ): Int {
     val context = currentCoroutineContext()
-    val guards = context.activeGuards()
-    val elapsedTicks = suspendCancellableCoroutine { continuation ->
-        context.ticker.register(TickUntilCallback(continuation, guards, stopAt))
+    return suspendCancellableCoroutine { continuation ->
+        context.ticker.register(TickUntilCallback(continuation, context.activeGuards(), stopAt))
     }
-    guards?.ensure()
-    return elapsedTicks
 }
 
 private class TickUntilCallback(
@@ -219,14 +214,3 @@ suspend fun waitTicks(ticks: Int) {
  * Note: When TPS is not 20, this won't be actual `seconds`.
  */
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
-
-/**
- * Waits [duration] of wall-clock time, for pauses shorter than a tick.
- *
- * What the run [requires] is checked once the time is up, on the thread that continues. Unlike
- * [kotlinx.coroutines.delay] alone, nothing after this runs when it failed meanwhile.
- */
-suspend fun waitFor(duration: Duration) {
-    delay(duration)
-    currentCoroutineContext().activeGuards()?.ensure()
-}

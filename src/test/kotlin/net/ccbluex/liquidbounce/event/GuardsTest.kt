@@ -128,6 +128,45 @@ class GuardsTest {
     }
 
     @Test
+    fun `a requirement failing between the last tick and the resumption ends the run`() = runTest {
+        val alive = Flag()
+        var resumed = false
+        run {
+            requires { alive.holds() }
+            waitTicks(1)
+            resumed = true
+        }
+        runCurrent()
+
+        ticker.tick()
+        alive.value = false
+        runCurrent()
+
+        assertEndedByGuard()
+        assertFalse(resumed)
+    }
+
+    @Test
+    fun `a suspension no wait helper knows about ends the run before the code after it`() = runTest {
+        val alive = Flag()
+        val resume = CompletableDeferred<Unit>()
+        var resumed = false
+        run {
+            requires { alive.holds() }
+            resume.await()
+            resumed = true
+        }
+        runCurrent()
+
+        alive.value = false
+        resume.complete(Unit)
+        runCurrent()
+
+        assertEndedByGuard()
+        assertFalse(resumed)
+    }
+
+    @Test
     fun `a wait predicate never sees a failed requirement`() = runTest(UnconfinedTestDispatcher()) {
         var target: String? = "target"
         run {

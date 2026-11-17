@@ -78,13 +78,13 @@ fun EventListener.removeEventListenerScope() {
 
 /**
  * Wrap the [original] interceptor and make it auto-detect
- * the listener's running state at suspension
- * to determine whether to resume the continuation.
+ * the listener's running state and what the running coroutine [requires]
+ * at suspension to determine whether to resume the continuation.
  */
 fun EventListener.wrapContinuationInterceptor(
     original: ContinuationInterceptor? = null,
-): ContinuationInterceptor = original as? EventListenerRunningContinuationInterceptor
-    ?: EventListenerRunningContinuationInterceptor(original, this)
+): ContinuationInterceptor = original as? EventListenerContinuationInterceptor
+    ?: EventListenerContinuationInterceptor(original, this)
 
 /**
  * Occurs when the running [Job] is canceled because [EventListener.running] is false
@@ -93,11 +93,11 @@ class EventListenerNotListeningException(val eventListener: EventListener) :
     CancellationException("EventListener $eventListener is not running")
 
 /**
- * Check [EventListener.running] on suspend.
- * If true, continue.
- * If false, cancel the job.
+ * Check [EventListener.running] and the coroutine's [Guards] on every resume.
+ * If they hold, continue; otherwise the continuation gets the failure instead of the result.
  *
  * This means the cancellation will not be **immediate** like [Thread.interrupt].
+ * It also means every suspension is covered, including ones no helper knows about.
  *
  * The check is handed to [original] instead of wrapping its result, so it runs on the thread the
  * continuation continues on and immediately before it, which lets it read game state.
@@ -107,7 +107,7 @@ class EventListenerNotListeningException(val eventListener: EventListener) :
  *
  * @author MukjepScarlet
  */
-private class EventListenerRunningContinuationInterceptor(
+private class EventListenerContinuationInterceptor(
     private val original: ContinuationInterceptor?,
     private val eventListener: EventListener,
 ) : AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
@@ -119,12 +119,22 @@ private class EventListenerRunningContinuationInterceptor(
             override val context get() = continuation.context
 
             override fun resumeWith(result: Result<T>) {
-                // if the event listener is no longer active, abort the result
+                if (result.isFailure) {
+                    continuation.resumeWith(result)
+                    return
+                }
+
+                // the listener or a requirement of the run may no longer hold, then the result is aborted
                 continuation.resumeWith(
-                    if (eventListener.running) {
-                        result
-                    } else {
+                    if (!eventListener.running) {
                         Result.failure(EventListenerNotListeningException(eventListener))
+                    } else {
+                        val broken = try {
+                            continuation.context.activeGuards()?.broken()
+                        } catch (e: Throwable) {
+                            e
+                        }
+                        broken?.let { Result.failure(it) } ?: result
                     }
                 )
             }

@@ -151,7 +151,6 @@ suspend fun <T : Event> EventListener.waitMatches(
             context.ticker.register(handler)
         }
     }
-    guards?.ensure()
     return event
 }
 
@@ -162,8 +161,8 @@ suspend fun <T : Event> EventListener.waitMatches(
  * - [net.ccbluex.liquidbounce.event.events.PacketEvent]: client Netty IO (EventLoopGroup)
  * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
  *
- * What the run [requires] is checked on every game tick while waiting and once more on the resuming thread before
- * returning.
+ * What the run [requires] is checked on every game tick while waiting, and again right before the
+ * code after the wait runs.
  *
  * @param priority The priority of the event hook.
  * @param predicate The predicate to match the event.
