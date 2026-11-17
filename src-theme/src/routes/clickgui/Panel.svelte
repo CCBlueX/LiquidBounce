@@ -17,7 +17,7 @@
     import {setItem} from "../../integration/persistent_storage";
 
     export let category: string;
-    export let modules: TModule[];
+    export let modules: TModule[] = [];
     export let panelIndex: number;
     export let icon: string | undefined = undefined;
 
@@ -240,9 +240,11 @@
             on:transitionend={handleModulesTransitionEnd}
             bind:this={modulesElement}
     >
-        {#each modules as {name, enabled, description, aliases} (name)}
-            <Module {name} {enabled} {description} {aliases}/>
-        {/each}
+        <slot>
+            {#each modules as {name, enabled, description, aliases} (name)}
+                <Module {name} {enabled} {description} {aliases}/>
+            {/each}
+        </slot>
     </div>
 </div>
 
