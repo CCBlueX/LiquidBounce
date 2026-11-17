@@ -35,9 +35,11 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.ServerPingedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option.MixinServerListAccessor
 import net.ccbluex.liquidbounce.integration.interop.forbidden
@@ -70,7 +72,6 @@ import java.util.concurrent.Future
 private fun Route.getServers() = get {
     runCatching {
         serverList.load()
-        pingThemAll()
 
         val servers = JsonArray()
         serverList.servers.forEachIndexed { id, serverInfo ->
@@ -87,6 +88,7 @@ private fun Route.getServers() = get {
         }
 
         call.respond(servers)
+        pingThemAll()
     }.getOrElse { call.internalServerError("Failed to get servers due to ${it.message}") }
 }
 
@@ -311,8 +313,10 @@ object ActiveServerList : EventListener {
     }
 
     @Suppress("unused")
-    private val screenHandler = handler<ScreenEvent> {
-        cancelTasks()
+    private val screenHandler = handler<ScreenEvent> { event ->
+        if (event.screen !is TitleScreen && event.screen !is JoinMultiplayerScreen) {
+            cancelTasks()
+        }
     }
 
     fun ping(serverEntry: ServerData) {
@@ -338,10 +342,12 @@ object ActiveServerList : EventListener {
             } catch (unknownHostException: UnknownHostException) {
                 serverEntry.setState(ServerData.State.UNREACHABLE)
                 serverEntry.motd = cannotResolveText
+                EventManager.callEvent(ServerPingedEvent(serverEntry))
                 logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
             } catch (exception: Exception) {
                 serverEntry.setState(ServerData.State.UNREACHABLE)
                 serverEntry.motd = cannotConnectText
+                EventManager.callEvent(ServerPingedEvent(serverEntry))
                 logger.error("Failed to ping server ${serverEntry.name}", exception)
             }
         }, Util.nonCriticalIoPool())

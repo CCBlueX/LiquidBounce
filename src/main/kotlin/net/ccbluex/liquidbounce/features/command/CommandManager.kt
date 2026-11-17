@@ -28,13 +28,16 @@ import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntList
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.command.CommandManager.getDispatcher
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.deepestExecutableContext
 import net.ccbluex.liquidbounce.features.command.brigadier.offset
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
@@ -45,7 +48,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
@@ -57,6 +59,7 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCoordinates
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandFollow
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandGoto
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandMapImage
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandPing
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandRemoteView
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandSay
@@ -68,7 +71,6 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.Comman
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemRename
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemSkull
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemStack
-import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandMapImage
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandPlayerTeleport
 import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandTeleport
@@ -81,12 +83,11 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoT
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -109,7 +110,7 @@ import kotlin.math.min
 object CommandManager : EventListener {
 
     @AddonApi
-    object GlobalSettings : ValueGroup("Commands") {
+    object GlobalSettings : ValueGroup("CommandManager", aliases = listOf("Commands")) {
 
         /**
          * The prefix of the commands.

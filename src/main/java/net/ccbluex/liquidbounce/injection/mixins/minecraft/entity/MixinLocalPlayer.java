@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.interfaces.ClientInputAddition;
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
@@ -437,16 +438,25 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     }
 
     /**
-     * ViaFabricPlus injects at HEAD of shouldStopRunSprinting with cancellable=true,
-     * bypassing the RETURN instruction so @ModifyReturnValue never fires.
-     * Intercepting the call site within aiStep works around this.
+     * ViaFabricPlus redirects this call for old versions, so neither {@link #hookForceStopSprinting}
+     * nor the omnidirectional {@code hasForwardImpulse} hook reach it. Up to 1.14.1 it stops sprinting
+     * unless {@code moveVector.y >= 0.8}, so omnidirectional sprint runs it with the input turned forward.
      * @see <a href="https://github.com/ViaVersion/ViaFabricPlus/blob/618332d/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinLocalPlayer.java#L262-L270">ViaFabricPlus changeStopSprintingConditions</a>
      */
-    @ModifyExpressionValue(
+    @WrapOperation(
         method = "aiStep",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
     )
-    private boolean hookVfpSprintStop(boolean shouldStop) {
+    private boolean hookVfpSprintStop(LocalPlayer instance, Operation<Boolean> original) {
+        if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
+            return original.call(instance) || liquid_bounce$shouldForceStopSprinting();
+        }
+
+        var addition = (ClientInputAddition) input;
+        var moveVector = input.getMoveVector();
+        addition.liquid_bounce$setMovementInput(new Vec2(0f, moveVector.length()));
+        boolean shouldStop = original.call(instance);
+        addition.liquid_bounce$setMovementInput(moveVector);
         return shouldStop || liquid_bounce$shouldForceStopSprinting();
     }
 

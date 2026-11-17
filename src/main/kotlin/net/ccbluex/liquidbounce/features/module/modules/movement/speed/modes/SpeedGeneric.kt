@@ -113,7 +113,7 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
             .maxWithOrNull(COMPARING_LUNGE_AND_SPEED) ?: return@tickHandler
         val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
 
-        SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
+        SilentHotbar.selectSlotSilently(this@SpeedPiercingAttack, slot, ticksUntilReset = holdTime.random())
         interaction.piercingAttack(slot.itemStack.attackAnimation, piercingWeapon)
 
         if (waitForCooldown) {

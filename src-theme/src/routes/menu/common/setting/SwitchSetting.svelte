@@ -38,7 +38,7 @@
     right: 0;
     bottom: 0;
     background-color: var(--menu-switch-track-color);
-    transition: ease 0.4s;
+    transition: 0.15s cubic-bezier(0.23, 1, 0.32, 1);
     height: 14px;
     border-radius: 10px;
 
@@ -50,7 +50,7 @@
       top: -4px;
       left: -10px;
       background-color: var(--menu-switch-thumb-color);
-      transition: ease 0.4s;
+      transition: 0.15s cubic-bezier(0.23, 1, 0.32, 1);
       border-radius: 50%;
     }
   }

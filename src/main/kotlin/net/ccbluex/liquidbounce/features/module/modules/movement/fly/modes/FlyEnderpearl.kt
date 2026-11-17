@@ -43,6 +43,7 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
+import java.util.concurrent.ThreadLocalRandom
 
 internal object FlyEnderpearl : Mode("Enderpearl") {
 
@@ -90,7 +91,7 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(
-                Rotation(player.yRot, (80f..90f).random()),
+                Rotation(player.yRot, ThreadLocalRandom.current().nextFloat(80f, 90f)),
                 valueGroup = rotations,
                 provider = ModuleFastUse,
                 priority = Priority.IMPORTANT_FOR_USAGE_2
@@ -114,8 +115,8 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
     }
 
     fun isABitAboveGround(): Boolean {
+        val boundingBox = player.box
         for (y in 0..5) {
-            val boundingBox = player.box
             val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
             if (detectionBox.isBlockAtPosition { it is Block }) return true

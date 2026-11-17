@@ -19,10 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.gui.indicator
 
-import net.ccbluex.liquidbounce.render.drawTriangle
+import net.ccbluex.liquidbounce.render.drawArrow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.util.Mth
 
 /**
  * A filled triangle with its base at the local origin and its tip at `(0, height)`, which is the shape
@@ -40,30 +39,7 @@ data class TriangleIndicatorStyle(
         get() = height
 
     override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) {
-        if (Mth.equal(tailConcaveSize, 0.0F)) {
-            ctx.drawTriangle(
-                x0 = -width * 0.5F, y0 = 0.0F,
-                x1 = 0.0F, y1 = height,
-                x2 = width * 0.5F, y2 = 0.0F,
-                fillColor = color,
-                cull = false,
-            )
-        } else {
-            ctx.drawTriangle(
-                x0 = -width * 0.5F, y0 = 0.0F,
-                x1 = 0.0F, y1 = height,
-                x2 = 0.0F, y2 = tailConcaveSize,
-                fillColor = color,
-                cull = false,
-            ) // left
-            ctx.drawTriangle(
-                x0 = 0.0F, y0 = tailConcaveSize,
-                x1 = 0.0F, y1 = height,
-                x2 = width * 0.5F, y2 = 0.0F,
-                fillColor = color,
-                cull = false,
-            ) // right
-        }
+        ctx.drawArrow(width, height, tailConcaveSize, color)
     }
 
 }

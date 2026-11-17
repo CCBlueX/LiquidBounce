@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,7 +42,17 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
     ))
 
     private val literalNPC by boolean("LiteralNPC", false)
-    private val notInTabList by boolean("NotInTabList", false)
+
+    private object NotInTabList : ToggleableValueGroup(ModuleAntiBot, "NotInTabList", false) {
+        /**
+         * How long after spawning a player may be missing from the tab list.
+         */
+        val grace by int("Grace", 0, 0..200, "ticks")
+    }
+
+    init {
+        tree(NotInTabList)
+    }
 
     @Suppress("unused")
     private val tagHandler = handler<TagEntityEvent> {
@@ -96,7 +107,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
             return true
         }
 
-        if (notInTabList && isMissingFromTabList(player)) {
+        if (NotInTabList.enabled && player.tickCount >= NotInTabList.grace && isMissingFromTabList(player)) {
             return true
         }
 

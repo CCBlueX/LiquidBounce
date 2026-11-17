@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.render.GuiRenderer
+import net.minecraft.client.gui.render.GuiRenderer.DEFAULT_ITEM_SIZE
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
@@ -39,8 +40,6 @@ import net.minecraft.util.LightCoordsUtil
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.Items
-
-private const val NATIVE_ITEM_SIZE: Int = GuiRenderer.DEFAULT_ITEM_SIZE
 
 private class Atlas(
     val images: Map<Identifier, ByteArray>,
@@ -63,6 +62,7 @@ object ItemImageAtlas : EventListener {
     private val resourceReloadHandler = suspendHandler<ResourceReloadEvent>(
         behavior = SuspendHandlerBehavior.Exclusive.LatestWins,
     ) {
+        // After first joining we can construct ItemStack
         tickUntil { inGame }
         atlas = ItemTextureRenderer(scale = 4).render().await()
     }
@@ -82,7 +82,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
 
     private val items = BuiltInRegistries.ITEM
 
-    override val tileSize get() = NATIVE_ITEM_SIZE * scale
+    override val tileSize get() = DEFAULT_ITEM_SIZE * scale
     override val tileCount get() = items.size()
 
     override fun buildAtlas(images: Map<Identifier, ByteArray>) = Atlas(images, findBlockToItemAliases())
@@ -117,7 +117,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
         state: TrackingItemStackRenderState,
         rect: Rect2i,
     ) {
-        withTile(rect) {
+        withTile(rect) { renderArea ->
             translate(
                 rect.x.toFloat() + rect.width.toFloat() * 0.5F,
                 rect.y.toFloat() + rect.height.toFloat() * 0.5F,
@@ -130,7 +130,7 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
 
             state.submit(this, submitNodeStorage, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0)
             featureRenderDispatcher.prepareFrame(submitNodeStorage).use { frame ->
-                createRenderPass().use { pass ->
+                createRenderPass(renderArea).use { pass ->
                     RenderSystem.bindDefaultUniforms(pass)
                     FeatureRenderDispatcher.renderAllFeatures(pass, frame)
                 }

@@ -26,12 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
-import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -53,7 +51,7 @@ sealed class EspMode(
         private val tickHandler = handler<GameTickEvent> {
             pool.recycleAll(prepared)
             prepared.clear()
-            for (entity in RenderedEntities) {
+            for (entity in ModuleESP.targets) {
                 if (!shouldRender(entity)) continue
 
                 val dimensions = entity.getDimensions(entity.pose)
@@ -77,7 +75,7 @@ sealed class EspMode(
         }
 
         protected class BoxBasedEspRenderState {
-            @JvmField var entity: LivingEntity? = null
+            @JvmField var entity: Entity? = null
             @JvmField var localBox: AABB = EMPTY_BOX
             @JvmField var position: Vec3 = Vec3.ZERO
             @JvmField var worldBox: AABB = EMPTY_BOX
