@@ -59,6 +59,7 @@ class NavigationGameTests : FabricClientGameTest {
         AutoWalkGameTest(),
         AutoWalkStagesGameTest(),
         AutoWalkBridgeGameTest(),
+        AutoWalkTravelGameTest(),
         WalkParkourGameTest(),
         ParkourAssistGameTest(),
         ParkourEdgeGameTest(),

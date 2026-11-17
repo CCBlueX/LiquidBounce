@@ -42,6 +42,8 @@ class Settings(
     private val allowFly by values.boolean("AllowFly", true)
     private val allowElytra by values.boolean("AllowElytra", true)
     private val elytraRockets by values.boolean("ElytraRockets", true)
+    private val allowBoat by values.boolean("AllowBoat", false)
+    private val allowEat by values.boolean("AllowEat", false)
 
     fun options(): Options {
         // Scaffold places the floors, so the walk bridges even without AllowPlace and only runs across them
@@ -61,6 +63,8 @@ class Settings(
             fastBridges = scaffold,
             placesBridgeFloors = scaffold,
             placeableBlocks = SCAFFOLD_BLOCKS,
+            canBoat = allowBoat,
+            canEat = allowEat,
         )
     }
 
