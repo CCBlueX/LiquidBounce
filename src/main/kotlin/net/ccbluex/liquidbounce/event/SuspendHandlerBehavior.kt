@@ -27,6 +27,8 @@ import kotlinx.coroutines.launch
 import java.util.function.Consumer
 import kotlin.coroutines.CoroutineContext
 
+private typealias OnCancellation = Consumer<in Throwable>
+
 sealed interface SuspendHandlerBehavior {
 
     fun <T : Event> EventListener.createEventHook(
@@ -40,7 +42,7 @@ sealed interface SuspendHandlerBehavior {
      * Starts a new job for each event.
      */
     @JvmRecord
-    data class Parallel(val start: CoroutineStart, val onCancellation: Consumer<Throwable>?) :
+    data class Parallel(val start: CoroutineStart, val onCancellation: OnCancellation?) :
         SuspendHandlerBehavior {
         override fun <T : Event> EventListener.createEventHook(
             eventClass: Class<T>,
@@ -65,7 +67,7 @@ sealed interface SuspendHandlerBehavior {
     @JvmRecord
     data class Exclusive(
         val whenBusy: WhenBusy,
-        val onCancellation: Consumer<Throwable>?,
+        val onCancellation: OnCancellation?,
     ) : SuspendHandlerBehavior {
 
         override fun <T : Event> EventListener.createEventHook(
@@ -105,39 +107,36 @@ sealed interface SuspendHandlerBehavior {
  * Handles one event at a time on the scope of [listener].
  */
 private class ExclusiveHandler<T : Event>(
-    listener: EventListener,
+    private val listener: EventListener,
     eventClass: Class<T>,
     private val context: CoroutineContext,
     priority: Short,
     private val whenBusy: SuspendHandlerBehavior.WhenBusy,
-    private val onCancellation: Consumer<Throwable>?,
+    private val onCancellation: OnCancellation?,
     private val handler: SuspendableEventHandler<T>,
-) {
+) : Consumer<T> {
 
     private val jobRef = atomic<Job?>(null)
 
-    private val scope = listener.eventListenerScope
+    @JvmField
+    val hook: EventHook<T> = listener.handler(eventClass, priority, this)
 
-    val hook: EventHook<T> = listener.handler(eventClass, priority) { event ->
+    override fun accept(event: T) {
         when (whenBusy) {
             SuspendHandlerBehavior.WhenBusy.DROP -> {
-                var newJob: Job? = null
-
                 while (true) {
                     val currentJob = jobRef.value
                     // nothing to do, and no job worth creating
                     if (currentJob?.isActive == true) break
 
-                    if (newJob == null) {
-                        newJob = newRun(event)
-                    }
+                    val newJob = newRun(event)
 
                     if (jobRef.compareAndSet(currentJob, newJob)) {
                         newJob.start()
                         break
                     }
 
-                    // lost the race against another event, this one was never started
+                    // lost the race against another event: this run was never started, try again with a fresh one
                     newJob.cancel()
                 }
             }
@@ -148,13 +147,13 @@ private class ExclusiveHandler<T : Event>(
         }
     }
 
-    private fun newRun(event: T) = scope.launch(context, CoroutineStart.LAZY) {
+    private fun newRun(event: T) = listener.eventListenerScope.launch(context, CoroutineStart.LAZY) {
         handler(event)
     }.onCancellation(onCancellation)
 
 }
 
-private fun Job.onCancellation(callback: Consumer<Throwable>?) = apply {
+private fun Job.onCancellation(callback: OnCancellation?) = apply {
     callback ?: return@apply
     invokeOnCompletion { cause ->
         if (cause is CancellationException) {
