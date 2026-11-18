@@ -112,7 +112,7 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
         val target = targetTracker.target ?: return null
         val damageToTarget = target.getDamage(pos, requestingSubmodule, CheckedEntity.TARGET)
         val targetHealth = target.getActualHealth() + target.absorptionAmount
-        val isLethal = forceLethal && damageToTarget.isGreaterThanOrEqual(targetHealth)
+        val isLethal = forceLethal && damageToTarget.isLethal(targetHealth)
 
         val requiredDamage = if (FacePlace.shouldFacePlace(target)) {
             FacePlace.minDamage.coerceAtMost(minEnemyDamage)

@@ -37,6 +37,38 @@ class DamageProviderTest {
     }
 
     @Test
+    fun `equal nonzero And damages count as smallerThanOrEqual`() {
+        val damage = AndBiDamageProvider(4f, 6f)
+        val equalDamage = AndBiDamageProvider(4f, 6f)
+
+        assertTrue(damage.isSmallerThanOrEqual(equalDamage))
+    }
+
+    @Test
+    fun `And damage comparison is reflexive`() {
+        val damage = AndBiDamageProvider(4f, 6f)
+
+        assertTrue(damage.isSmallerThanOrEqual(damage))
+    }
+
+    @Test
+    fun `pairwise dominated And damages count as smallerThanOrEqual`() {
+        val lowerDamage = AndBiDamageProvider(3f, 5f)
+        val higherDamage = AndBiDamageProvider(4f, 6f)
+
+        assertTrue(lowerDamage.isSmallerThanOrEqual(higherDamage))
+        assertFalse(higherDamage.isSmallerThanOrEqual(lowerDamage))
+    }
+
+    @Test
+    fun `Or to And comparison keeps either damage semantics`() {
+        val damage = OrBiDamageProvider(7f, 1f)
+        val other = AndBiDamageProvider(4f, 6f)
+
+        assertTrue(damage.isSmallerThanOrEqual(other))
+    }
+
+    @Test
     fun `custom DamageProvider fallback compares against other fixed value instead of self`() {
         val customHigh = object : DamageProvider by NormalDamageProvider(12f) {}
         val normalLow = NormalDamageProvider(4f)
@@ -60,6 +92,20 @@ class DamageProviderTest {
     fun `OrBiDamageProvider exposes peak damage for candidate sorting`() {
         val highCurrentLowPredicted = OrBiDamageProvider(14f, 1f)
         assertEquals(14f, highCurrentLowPredicted.getFixed())
+    }
+
+    @Test
+    fun `lethal damage requires positive target health`() {
+        assertFalse(AndBiDamageProvider(0f, 0f).isLethal(0f))
+        assertFalse(AndBiDamageProvider(10f, 10f).isLethal(0f))
+        assertFalse(NormalDamageProvider(10f).isLethal(-1f))
+    }
+
+    @Test
+    fun `lethal damage meets or exceeds positive target health`() {
+        assertTrue(NormalDamageProvider(8f).isLethal(8f))
+        assertTrue(NormalDamageProvider(9f).isLethal(8f))
+        assertFalse(NormalDamageProvider(7f).isLethal(8f))
     }
 
 }

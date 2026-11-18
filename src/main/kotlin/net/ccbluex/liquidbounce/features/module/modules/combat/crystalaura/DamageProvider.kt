@@ -39,6 +39,9 @@ interface DamageProvider {
     fun getFixed(): Float
 }
 
+internal fun DamageProvider.isLethal(targetHealth: Float): Boolean =
+    targetHealth > 0 && isGreaterThanOrEqual(targetHealth)
+
 class NormalDamageProvider(val damage: Float) : DamageProvider {
 
     override fun isSmallerThan(float: Float): Boolean = damage < float
@@ -109,6 +112,7 @@ class AndBiDamageProvider(damage: Float, damage1: Float) : BiDamageProvider(dama
     override fun isSmallerThanOrEqual(other: DamageProvider): Boolean {
         return when (other) {
             is NormalDamageProvider -> isSmallerThanOrEqual(other.damage)
+            is AndBiDamageProvider -> damage <= other.damage && damage1 <= other.damage1
             is BiDamageProvider -> other.isGreaterThanOrEqual(damage) && other.isGreaterThanOrEqual(damage1)
             else -> isSmallerThanOrEqual(other.getFixed())
         }

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.inventory.Slot
@@ -57,7 +58,8 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
         return (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT)
                         || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT))
                 && this.running
-                && mc.mouseHandler.isLeftPressed
+                // MouseHandler's pressed fields are only updated while no screen is open.
+                && InputTracker.isMouseButtonPressed(InputConstants.MOUSE_BUTTON_LEFT)
                 && chronometer.hasAtLeastElapsed(delay.random() * 50L)
     }
 }
