@@ -10,14 +10,11 @@
 
     .option-bar {
       background-color: var(--menu-button-container-background-color);
-      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-      padding: 14px 24px;
+      padding: 15px 30px;
       display: flex;
-      border: 1px solid var(--accent-border-color);
-      border-radius: var(--radius-md);
-      box-shadow: var(--elevation-sm) var(--menu-base-50-color);
+      border-radius: 5px;
       align-items: center;
-      column-gap: var(--space-6);
+      column-gap: 30px;
       margin-bottom: 25px;
     }
 </style>

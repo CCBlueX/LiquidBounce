@@ -42,20 +42,13 @@
 
   .search-input {
     width: 100%;
-    border: 1px solid var(--accent-border-color);
-    border-radius: var(--radius-xs);
+    border: none;
+    border-bottom: solid 1px var(--accent-color);
     font-family: "Inter", sans-serif;
     font-size: 12px;
-    padding: 7px;
+    padding: 5px;
     color: var(--clickgui-text-color);
-    margin-bottom: 7px;
+    margin-bottom: 5px;
     background-color: var(--clickgui-input-background-color);
-    transition: border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
-
-    &:focus-visible {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 0 2px var(--accent-subtle-background-color);
-    }
   }
 </style>

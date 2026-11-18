@@ -10,19 +10,16 @@
 
     .button-container {
       background-color: var(--menu-button-container-background-color);
-      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-      border: 1px solid var(--accent-border-color);
-      box-shadow: var(--elevation-sm) var(--menu-base-50-color);
-      padding: 14px 24px;
+      padding: 15px 30px;
       width: max-content;
-      border-radius: var(--radius-md);
+      border-radius: 5px;
       display: flex;
-      column-gap: var(--space-4);
+      column-gap: 20px;
 
       &.vertical {
         flex-direction: column;
-        row-gap: var(--space-4);
-        padding: 24px 14px;
+        row-gap: 20px;
+        padding: 30px 15px;
       }
     }
 </style>

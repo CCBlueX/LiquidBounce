@@ -79,8 +79,7 @@
   .header {
     display: flex;
     justify-content: space-between;
-    gap: var(--space-6);
-    margin-bottom: 48px;
+    margin-bottom: 60px;
     align-items: center;
   }
 
@@ -92,7 +91,7 @@
     grid-area: 1 / 1;
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--duration-base) var(--ease-standard);
+    transition: opacity .2s ease;
 
     &.visible {
       opacity: 1;

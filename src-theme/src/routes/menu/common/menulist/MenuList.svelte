@@ -58,13 +58,9 @@
 <style lang="scss">
 
   .menu-list {
-    background-color: var(--menu-list-background-color);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    background-color: var(--menu-button-container-background-color);
     flex: 1;
-    min-height: 0;
-    border: 1px solid var(--accent-border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--elevation-md) var(--menu-base-50-color);
+    border-radius: 5px;
     margin-bottom: 25px;
     position: relative;
   }

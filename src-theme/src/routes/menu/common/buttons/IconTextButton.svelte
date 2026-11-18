@@ -21,35 +21,29 @@
 
     .icon-text-button {
       display: flex;
-      border: 1px solid var(--accent-border-color);
-      border-radius: var(--radius-sm);
+      border: none;
+
+      border-radius: 5px;
       align-items: center;
       overflow: hidden;
-      background: linear-gradient(var(--accent-tint-color), var(--accent-tint-color)) left / 0 100% no-repeat var(--menu-icon-text-button-background-color);
-      box-shadow: var(--elevation-sm) var(--menu-base-50-color);
-      transition: opacity var(--duration-fast) var(--ease-standard),
-      background-size var(--duration-base) var(--ease-emphasized),
-      border-color var(--duration-fast) var(--ease-standard);
+      background: linear-gradient(var(--menu-icon-text-button-accent-color), var(--menu-icon-text-button-accent-color)) left / 0 100% no-repeat var(--menu-icon-text-button-background-color);
+      transition: ease opacity .2s, background-size .2s ease-out;
 
       &:not([disabled]):hover {
-        background-size: 100% 100%;
-        border-color: var(--accent-border-strong-color);
-        cursor: pointer;
-      }
-
-      &:not([disabled]):active {
-        transform: translateY(1px);
+        &:hover {
+          background-size: 100% 100%;
+          cursor: pointer;
+        }
       }
 
       &[disabled] {
-        cursor: not-allowed;
-        opacity: .45;
+        opacity: .6;
       }
     }
 
     .icon {
-      height: 56px;
-      width: 56px;
+      height: 58px;
+      width: 58px;
       background-color: var(--menu-icon-text-button-icon-background-color);
       display: flex;
       align-items: center;
@@ -57,10 +51,9 @@
     }
 
     .title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 500;
-      letter-spacing: -0.01em;
       color: var(--menu-text-color);
-      padding: 0 24px;
+      padding: 0 30px;
     }
 </style>

@@ -54,22 +54,15 @@
         "a d c";
     grid-template-columns: max-content 1fr max-content;
     background-color: var(--menu-list-item-background-color);
-    padding: 14px 18px;
-    column-gap: var(--space-4);
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    box-shadow: inset 2px 0 0 transparent;
-    transition: background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
+    padding: 15px 25px;
+    column-gap: 15px;
+    border-radius: 5px;
+    transition: ease background-color .2s;
     align-items: center;
     cursor: grab;
 
-    &:hover,
-    &:focus-within {
+    &:hover {
       background-color: var(--menu-list-item-hover-background-color);
-      border-color: var(--accent-border-color);
-      box-shadow: inset 2px 0 0 var(--accent-color);
 
       .subtitle {
         color: var(--menu-list-item-hover-subtitle-color);
@@ -128,18 +121,17 @@
     align-items: center;
 
     .text {
-      font-size: 18px;
+      font-size: 20px;
       color: var(--menu-text-color);
       font-weight: 600;
-      letter-spacing: -0.01em;
     }
   }
 
   .subtitle {
     grid-area: d;
-    font-size: 16px;
+    font-size: 18px;
     color: var(--menu-text-dimmed-color);
-    transition: color var(--duration-fast) var(--ease-standard);
+    transition: ease color .2s;
     align-self: flex-start;
   }
 

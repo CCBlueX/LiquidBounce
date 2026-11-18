@@ -15,17 +15,9 @@
     let innerHeight = $state(0);
 
     // One GUI pixel and the GUI row under the status text, which the client draws at height / 2 - 80
-    const guiPixel = $derived(calculateGuiPixel(gameWindow, innerHeight));
-    const top = $derived(calculateTop(gameWindow, guiPixel));
+    const guiPixel = $derived(gameWindow ? innerHeight / gameWindow.height * gameWindow.scaleFactor : 0);
+    const top = $derived(gameWindow ? (Math.floor(gameWindow.scaledHeight / 2) - 62) * guiPixel : 0);
     const parts = $derived(details ? sentence(details) : []);
-
-    function calculateGuiPixel(window: GameWindow | null, viewportHeight: number): number {
-        return window ? viewportHeight / window.height * window.scaleFactor : 0;
-    }
-
-    function calculateTop(window: GameWindow | null, guiPixel: number): number {
-        return window ? (Math.floor(window.scaledHeight / 2) - 62) * guiPixel : 0;
-    }
 
     function sentence({remoteAddress, serverAddress, proxy}: ConnectionDetails): Part[] {
         if (proxy) {

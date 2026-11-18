@@ -95,47 +95,37 @@
 
   .available-tabs {
     display: flex;
-    column-gap: var(--space-2);
+    column-gap: 10px;
   }
 
   .tab-button {
     font-family: "Inter", sans-serif;
     background-color: var(--menu-modal-tab-background-color);
-    color: var(--menu-text-dimmed-color);
-    padding: 12px 10px;
-    border: solid 1px var(--surface-border-color);
-    border-radius: var(--radius-sm);
+    color: var(--menu-text-color);
+    padding: 10px;
+    border: solid 2px transparent;
+    border-radius: 5px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    row-gap: var(--space-2);
+    row-gap: 10px;
     cursor: pointer;
-    transition: border-color var(--duration-fast) var(--ease-standard),
-    background-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    transition: ease border-color .2s;
     font-weight: 500;
 
     .icon {
-      height: 28px;
-    }
-
-    &:hover {
-      color: var(--menu-text-color);
-      border-color: var(--accent-border-color);
+      height: 30px;
     }
 
     &.active {
-      color: var(--menu-text-color);
-      background-color: var(--accent-subtle-background-color);
       border-color: var(--menu-modal-tab-active-border-color);
     }
   }
 
   .available-sub-tabs {
     background-color: var(--menu-modal-sub-tab-background-color);
-    border: 1px solid var(--surface-border-color);
-    border-radius: var(--radius-sm);
+    border-radius: 5px;
     overflow: hidden;
     margin-top: 15px;
     display: flex;
@@ -144,36 +134,21 @@
   .sub-tab-button {
     all: unset;
     flex: 1;
-    color: var(--menu-text-dimmed-color);
+    color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
     text-align: center;
-    padding: 11px 10px;
-    border-bottom: solid 2px transparent;
+    padding: 10px;
+    border-bottom: solid 3px transparent;
     cursor: pointer;
     font-weight: 500;
     font-size: 14px;
-    transition: color var(--duration-fast) var(--ease-standard),
-    background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
-
-    &:hover {
-      color: var(--menu-text-color);
-      background-color: var(--surface-hover-color);
-    }
-
-    &:focus-visible {
-      outline: var(--focus-ring-width) solid var(--accent-color);
-      outline-offset: -3px;
-    }
 
     &.active {
-      color: var(--menu-text-color);
-      background-color: var(--accent-subtle-background-color);
       border-color: var(--menu-modal-sub-tab-active-border-color);
     }
   }
 
   .content {
-    margin-top: 32px;
+    margin-top: 40px;
   }
 </style>

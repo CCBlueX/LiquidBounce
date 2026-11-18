@@ -62,13 +62,17 @@ object ThemeManager : Config("theme") {
     internal val marketplaceThemes: Map<Int, Theme>
         field = HashMap()
 
-    private var isApplyingTheme = false
-
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
-        // Public assignments refresh after updating both temporaryTheme and currentTheme.
-        // The initial config load is refreshed by load(), once themes are available.
-        if (!isApplyingTheme && themes.isNotEmpty()) {
-            refreshTheme()
+        // Loading the config sets it before the themes are there
+        if (themes.isNotEmpty()) {
+            Splash.useTheme(theme)
+        }
+        // Update integration browser
+        mc.execute {
+            FontManager.updateThemeFont()
+            ScreenManager.update()
+            ModuleHud.reopen()
+            ModuleClickGui.invalidate()
         }
     }
 
@@ -86,37 +90,21 @@ object ThemeManager : Config("theme") {
         set(value) {
             if (value == null) return
 
-            isApplyingTheme = true
-            try {
-                // When external, set as a temporary theme.
-                if (value.origin.external) {
-                    temporaryTheme = value
-                    val includedTheme = includedTheme ?: return
-                    currentTheme = includedTheme.metadata.id
-                } else {
-                    temporaryTheme = null
-                    currentTheme = value.metadata.id
-                }
-            } finally {
-                isApplyingTheme = false
+            // When external, set as a temporary theme.
+            if (value.origin.external) {
+                temporaryTheme = value
+                val includedTheme = includedTheme ?: return
+                currentTheme = includedTheme.metadata.id
+            } else {
+                temporaryTheme = null
+                currentTheme = value.metadata.id
             }
 
-            // Refresh even when switching between remote themes leaves currentTheme unchanged.
-            refreshTheme()
+            // Switching to a remote theme can leave currentTheme unchanged
+            mc.execute(FontManager::updateThemeFont)
+            mc.execute(ThemeSounds::sync)
+            Splash.useTheme(theme)
         }
-
-    private fun refreshTheme() {
-        mc.execute {
-            FontManager.updateThemeFont()
-            ThemeSounds.sync()
-            if (LiquidBounce.isInitialized) {
-                ScreenManager.update()
-                ModuleHud.reopen()
-                ModuleClickGui.invalidate()
-            }
-        }
-        Splash.useTheme(theme)
-    }
 
     val isThemeExternal: Boolean
         get() = theme?.origin?.external == true
@@ -211,8 +199,16 @@ object ThemeManager : Config("theme") {
         }
 
         includedTheme?.let { theme -> themes += theme }
+        mc.execute(ThemeSounds::sync)
+        Splash.useTheme(theme)
+
         ModuleHud.updateThemes()
-        refreshTheme()
+        if (LiquidBounce.isInitialized) {
+            FontManager.updateThemeFont()
+            ScreenManager.update()
+            ModuleHud.reopen()
+            ModuleClickGui.invalidate()
+        }
     }
 
     /**

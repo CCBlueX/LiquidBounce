@@ -11,17 +11,15 @@
     font-size: 12px;
     color: var(--clickgui-text-color);
     background-color: var(--clickgui-button-background-color);
-    border: 1px solid var(--accent-border-color);
-    padding: 7px 10px;
-    border-radius: var(--radius-xs);
+    border: none;
+    padding: 6px 10px;
+    border-radius: 3px;
     width: 100%;
     cursor: pointer;
-    transition: background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
+    transition: ease background-color .2s;
 
     &:hover {
       background-color: var(--clickgui-button-hover-background-color);
-      border-color: var(--accent-border-strong-color);
     }
   }
 </style>

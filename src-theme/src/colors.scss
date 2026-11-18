@@ -7,11 +7,6 @@
   --accent-color: #4677ff;
   --accent-hover-color: color-mix(in srgb, var(--accent-color) 82%, black);
   --accent-subtle-background-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
-  --accent-tint-color: color-mix(in srgb, var(--accent-color) 18%, transparent);
-  --accent-border-color: color-mix(in srgb, var(--accent-color) 26%, transparent);
-  --accent-border-strong-color: color-mix(in srgb, var(--accent-color) 52%, transparent);
-  --surface-border-color: color-mix(in srgb, var(--text-color) 9%, transparent);
-  --surface-hover-color: color-mix(in srgb, var(--text-color) 5%, transparent);
 
   --success-color: #4dac68;
   --error-color: #fc4130;
@@ -144,7 +139,7 @@
   --menu-option-bar-divider-color: var(--menu-base-36-color);
   --menu-list-background-color: var(--menu-base-68-color);
   --menu-list-item-background-color: var(--menu-base-36-color);
-  --menu-list-item-hover-background-color: var(--accent-tint-color);
+  --menu-list-item-hover-background-color: var(--accent-color);
   --menu-list-item-hover-subtitle-color: var(--menu-text-color);
   --menu-list-tag-background-color: var(--menu-base-36-color);
   --menu-icon-text-button-background-color: var(--menu-base-36-color);

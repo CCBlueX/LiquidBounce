@@ -43,79 +43,68 @@
     width: 100vw;
     height: 100vh;
     background-color: var(--menu-modal-backdrop-color);
-    backdrop-filter: blur(5px);
     z-index: 999;
   }
 
   .modal {
     background-color: var(--menu-modal-background-color);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     min-width: 500px;
-    max-width: calc(100vw - 64px);
-    max-height: calc(100vh - 64px);
-    overflow-y: auto;
     position: fixed;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    padding: 36px;
+    padding: 40px;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--accent-border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--elevation-lg) var(--menu-modal-shadow-color);
+    border-radius: 5px;
+    box-shadow: 0 0 10px var(--menu-modal-shadow-color);
   }
 
   .title {
     color: var(--menu-text-color);
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-size: 34px;
     position: relative;
     width: max-content;
-    max-width: calc(100% - 40px);
     align-self: center;
-    margin-bottom: 64px;
+    margin-bottom: 80px;
 
     &::after {
       content: "";
       position: absolute;
       display: block;
-      height: 3px;
-      width: 64%;
+      height: 8px;
+      width: calc(90%);
       background-color: var(--menu-modal-title-accent-color);
-      bottom: -18px;
+      bottom: -25px;
       left: 50%;
       transform: translateX(-50%);
-      border-radius: var(--radius-pill);
+      border-radius: 10px;
     }
   }
 
   .content {
     display: flex;
     flex-direction: column;
-    row-gap: 32px;
+    row-gap: 40px;
   }
 
   .button-modal-close {
-    height: 36px;
-    width: 36px;
+    height: 40px;
+    width: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: transparent;
-    border: solid 1px var(--accent-border-color);
+    border: solid 2px var(--menu-modal-close-border-color);
     border-radius: 50%;
     cursor: pointer;
-    top: 18px;
-    right: 18px;
-    position: absolute;
-    transition: background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
+    top: 20px;
+    right: 20px;
+    position: fixed;
+    transition: ease background-color .2s;
 
     &:hover {
       background-color: var(--menu-modal-close-hover-background-color);
-      border-color: var(--accent-border-strong-color);
     }
   }
 

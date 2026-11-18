@@ -15,7 +15,7 @@
 
 <style lang="scss">
   .menu {
-    padding: 48px 50px;
+    padding: 50px;
     display: flex;
     flex-direction: column;
     // Not sized in vh, which not every browser scales with zoom
@@ -25,7 +25,6 @@
 
   .menu-wrapper {
     flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
     will-change: transform;

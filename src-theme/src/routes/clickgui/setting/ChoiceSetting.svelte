@@ -85,8 +85,7 @@
         }
     }
     .nested-settings {
-        border-left: solid 1px var(--accent-border-strong-color);
-        margin-left: 3px;
-        padding-left: 8px;
+        border-left: solid 2px var(--clickgui-setting-group-border-color);
+        padding-left: 7px;
     }
 </style>
