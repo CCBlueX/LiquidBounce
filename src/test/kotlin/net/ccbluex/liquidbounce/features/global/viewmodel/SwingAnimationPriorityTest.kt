@@ -44,9 +44,11 @@ class SwingAnimationPriorityTest {
     }
 
     @Test
-    fun `does not use blocking visual when Hook is selected and blocking applies`() {
+    fun `does not use blocking visual when Hook is selected and view model is running`() {
         assertFalse(
-            SwingAnimationPriority.shouldUseBlockingVisual(true, SwingAnimationMode.Hook),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = true, activeMode = SwingAnimationMode.Hook
+            ),
             "Hook was selected explicitly, so the blocking pose must not take over"
         )
     }
@@ -54,23 +56,29 @@ class SwingAnimationPriorityTest {
     @Test
     fun `does not use blocking visual when a different swing mode is selected`() {
         assertFalse(
-            SwingAnimationPriority.shouldUseBlockingVisual(true, SwingAnimationMode.Swipe),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = true, activeMode = SwingAnimationMode.Swipe
+            ),
             "Any real swing mode, not just Hook, must keep priority over the blocking pose"
         )
     }
 
     @Test
-    fun `uses blocking visual when None mode is selected and blocking applies`() {
+    fun `uses blocking visual when None mode is selected and view model is running`() {
         assertTrue(
-            SwingAnimationPriority.shouldUseBlockingVisual(true, noneMode()),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = true, activeMode = noneMode()
+            ),
             "None keeps the vanilla blocking behaviour unchanged"
         )
     }
 
     @Test
-    fun `uses blocking visual when active mode is null and blocking applies`() {
+    fun `uses blocking visual when active mode is null and view model is running`() {
         assertTrue(
-            SwingAnimationPriority.shouldUseBlockingVisual(true, null),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = true, activeMode = null
+            ),
             "A missing active mode must not disable the blocking visual"
         )
     }
@@ -78,20 +86,49 @@ class SwingAnimationPriorityTest {
     @Test
     fun `does not use blocking visual when blocking does not apply`() {
         assertFalse(
-            SwingAnimationPriority.shouldUseBlockingVisual(false, SwingAnimationMode.Hook),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = false, activeMode = SwingAnimationMode.Hook
+            ),
             "Without a blocking condition no blocking visual can be forced"
         )
         assertFalse(
-            SwingAnimationPriority.shouldUseBlockingVisual(false, noneMode()),
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = true, blockingApplies = false, activeMode = noneMode()
+            ),
             "Without a blocking condition the blocking visual stays inactive for None too"
         )
     }
 
     @Test
-    fun `returns the same result when called twice with identical arguments`() {
-        val first = SwingAnimationPriority.shouldUseBlockingVisual(true, SwingAnimationMode.Hook)
-        val second = SwingAnimationPriority.shouldUseBlockingVisual(true, SwingAnimationMode.Hook)
+    fun `keeps blocking visual when view model is not running and a swing mode is selected`() {
+        assertTrue(
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = false, blockingApplies = true, activeMode = SwingAnimationMode.Hook
+            ),
+            "With the view model disabled the previous blocking behaviour must be preserved"
+        )
+    }
 
+    @Test
+    fun `does not force blocking visual when view model is not running and blocking does not apply`() {
+        assertFalse(
+            SwingAnimationPriority.shouldUseBlockingVisual(
+                running = false, blockingApplies = false, activeMode = SwingAnimationMode.Hook
+            ),
+            "Disabling the view model must not force the blocking pose without a blocking condition"
+        )
+    }
+
+    @Test
+    fun `returns the same result when called twice with identical arguments`() {
+        val first = SwingAnimationPriority.shouldUseBlockingVisual(
+            running = true, blockingApplies = true, activeMode = SwingAnimationMode.Hook
+        )
+        val second = SwingAnimationPriority.shouldUseBlockingVisual(
+            running = true, blockingApplies = true, activeMode = SwingAnimationMode.Hook
+        )
+
+        assertFalse(first, "A selected swing mode must win over the blocking visual")
         assertTrue(first == second, "The decision must be free of cumulative effects")
     }
 }

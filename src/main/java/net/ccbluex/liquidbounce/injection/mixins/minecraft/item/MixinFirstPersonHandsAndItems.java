@@ -247,8 +247,8 @@ public abstract class MixinFirstPersonHandsAndItems {
 
     @Unique
     private static boolean liquid_bounce$shouldUseBlockingVisual(boolean blockingApplies) {
-        return SwingAnimationPriority.shouldUseBlockingVisual(blockingApplies,
-            GlobalSettingsViewModel.INSTANCE.getSwingAnimation().getActiveMode());
+        return SwingAnimationPriority.shouldUseBlockingVisual(GlobalSettingsViewModel.INSTANCE.getRunning(),
+            blockingApplies, GlobalSettingsViewModel.INSTANCE.getSwingAnimation().getActiveMode());
     }
 
     @Unique

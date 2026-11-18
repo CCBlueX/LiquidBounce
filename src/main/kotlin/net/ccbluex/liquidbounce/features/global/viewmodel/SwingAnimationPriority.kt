@@ -24,10 +24,11 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 /**
  * Resolves which visual wins when a sword-blocking pose and a swing animation are both applicable.
  * A selected [SwingAnimationMode] was chosen explicitly, so the blocking visual must not replace it.
+ * With the view model disabled, the pre-existing blocking behaviour is preserved.
  */
 object SwingAnimationPriority {
 
     @JvmStatic
-    fun shouldUseBlockingVisual(blockingApplies: Boolean, activeMode: Mode?): Boolean =
-        blockingApplies && activeMode !is SwingAnimationMode
+    fun shouldUseBlockingVisual(running: Boolean, blockingApplies: Boolean, activeMode: Mode?): Boolean =
+        blockingApplies && (!running || activeMode !is SwingAnimationMode)
 }
