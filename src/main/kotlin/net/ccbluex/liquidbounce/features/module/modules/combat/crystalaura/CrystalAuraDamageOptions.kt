@@ -20,15 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.player
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
-import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
-import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.collection.LruCache
+import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.entity.armorItems
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
+import net.ccbluex.liquidbounce.utils.input.isPressed
+import net.ccbluex.liquidbounce.utils.item.durability
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -36,14 +41,21 @@ import net.minecraft.world.phys.Vec3
 
 object CrystalAuraDamageOptions : ValueGroup("Damage") {
 
-    private val maxSelfDamage by float("MaxSelfDamage", 2.0F, 0.0F..10.0F)
-    private val maxFriendDamage by float("MaxFriendDamage", 1.0F, 0.0F..10.0F)
-    private val minEnemyDamage by float("MinEnemyDamage", 5.0F, 0.0F..10.0F)
+    private const val MAX_DAMAGE_SETTING = 36.0F
+
+    private val maxSelfDamage by float("MaxSelfDamage", 12.0F, 0.0F..MAX_DAMAGE_SETTING)
+    private val maxFriendDamage by float("MaxFriendDamage", 6.0F, 0.0F..MAX_DAMAGE_SETTING)
+    private val minEnemyDamage by float("MinEnemyDamage", 4.5F, 0.0F..MAX_DAMAGE_SETTING)
 
     /**
      * Won't place / break crystals that would kill us.
      */
     private val antiSuicide by boolean("AntiSuicide", true)
+
+    /**
+     * Always allows crystals that would pop or kill the target, provided self-damage constraints pass.
+     */
+    private val forceLethal by boolean("ForceLethal", true)
 
     /**
      * Only places / breaks crystals that deal more damage to the enemy than to us.
@@ -55,6 +67,40 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
      */
     val terrain by boolean("Terrain", true)
 
+    /**
+     * Lowers minimum required damage when the enemy is low, has low armor durability, or a bind is held.
+     */
+    object FacePlace : ToggleableValueGroup(ModuleCrystalAura, "FacePlace", true) {
+        val health by float("Health", 8.0F, 0.0F..MAX_DAMAGE_SETTING)
+        val armorDurability by int("ArmorDurability", 15, 0..100, "%")
+        val noArmor by boolean("NoArmor", false)
+        val minDamage by float("MinDamage", 1.5F, 0.1F..10.0F)
+        val forceBind by key("ForceBind")
+
+        fun shouldFacePlace(target: LivingEntity): Boolean {
+            if (!enabled) {
+                return false
+            }
+
+            if (forceBind.isPressed || target.getActualHealth() + target.absorptionAmount <= health) {
+                return true
+            }
+
+            val armor = target.armorItems
+            if (noArmor && armor.any { it.isEmpty }) {
+                return true
+            }
+
+            return armorDurability > 0 && armor.any { stack ->
+                !stack.isEmpty && stack.maxDamage > 0 && (stack.durability * 100) / stack.maxDamage <= armorDurability
+            }
+        }
+    }
+
+    init {
+        tree(FacePlace)
+    }
+
     val cacheMap = LruCache<DamageConstellation, DamageProvider>(64)
 
     /**
@@ -65,38 +111,47 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
     internal fun approximateExplosionDamage(pos: Vec3, requestingSubmodule: RequestingSubmodule): FloatFloatPair? {
         val target = targetTracker.target ?: return null
         val damageToTarget = target.getDamage(pos, requestingSubmodule, CheckedEntity.TARGET)
-        val notEnoughDamage = damageToTarget.isSmallerThan(minEnemyDamage)
-        if (notEnoughDamage) {
+        val targetHealth = target.getActualHealth() + target.absorptionAmount
+        val isLethal = forceLethal && damageToTarget.isGreaterThanOrEqual(targetHealth)
+
+        val requiredDamage = if (FacePlace.shouldFacePlace(target)) {
+            FacePlace.minDamage.coerceAtMost(minEnemyDamage)
+        } else {
+            minEnemyDamage
+        }
+
+        if (!isLethal && damageToTarget.isSmallerThan(requiredDamage)) {
             return null
         }
 
         val selfDamage = player.getDamage(pos, requestingSubmodule, CheckedEntity.SELF)
         val willKill = antiSuicide && selfDamage.isAnyGreaterThanOrEqual(player.health + player.absorptionAmount)
-        val tooMuchDamage = selfDamage.isGreaterThan(maxSelfDamage)
+        val tooMuchDamage = selfDamage.isAnyGreaterThan(maxSelfDamage)
         if (willKill || tooMuchDamage) {
             return null
         }
 
-        var tooMuchDamageForFriend = false
-        if (maxFriendDamage < 10f) { // 10f is the maximum allowed by the setting
-            val friends =
-                world
-                    .getEntitiesBoxInRange(pos, 6.0) { FriendManager.isFriend(it) && it.boundingBox.maxY > pos.y }
-
-            if (friends.any {
-                it is LivingEntity &&
-                    it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
-            }) {
-                tooMuchDamageForFriend = true
-            }
-        }
-
-        val isNotEfficient = efficient && damageToTarget.isSmallerThanOrEqual(selfDamage)
-        if (tooMuchDamageForFriend || isNotEfficient) {
+        val isNotEfficient = !isLethal && efficient && damageToTarget.isSmallerThanOrEqual(selfDamage)
+        if (isNotEfficient || isFriendDamagedTooMuch(pos, requestingSubmodule)) {
             return null
         }
 
         return FloatFloatImmutablePair(selfDamage.getFixed(), damageToTarget.getFixed())
+    }
+
+    private fun isFriendDamagedTooMuch(pos: Vec3, requestingSubmodule: RequestingSubmodule): Boolean {
+        if (maxFriendDamage >= MAX_DAMAGE_SETTING) { // MAX_DAMAGE_SETTING is the maximum allowed by the setting
+            return false
+        }
+
+        val friends = world.getEntitiesBoxInRange(pos, 12.0) {
+            FriendManager.isFriend(it) && it.boundingBox.maxY > pos.y
+        }
+
+        return friends.any {
+            it is LivingEntity &&
+                it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isAnyGreaterThan(maxFriendDamage)
+        }
     }
 
     private fun LivingEntity.getDamage(
@@ -109,11 +164,11 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
             val excludeNotBlastResistant = terrain &&
                 (!requestingSubmodule.basePlace || SubmoduleBasePlace.terrain)
             checkedEntity.getDamage(
-                this,
-                requestingSubmodule,
-                crystal,
-                if (excludeNotBlastResistant) 9f else null,
-                if (requestingSubmodule.basePlace) BlockPos.containing(crystal).below() else null
+                entity = this,
+                requestingSubmodule = requestingSubmodule,
+                crystal = crystal,
+                maxBlastResistance = if (excludeNotBlastResistant) 9f else null,
+                include = if (requestingSubmodule.basePlace) BlockPos.containing(crystal).below() else null
             )
         }
 
@@ -155,7 +210,13 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
                     RequestingSubmodule.BASE_PLACE -> SelfPredict.basePlaceTicks
                 }
 
-                return SelfPredict.getDamage(entity as Player, ticks, crystal, maxBlastResistance, include)
+                return SelfPredict.getDamage(
+                    player = entity as Player,
+                    ticks = ticks,
+                    crystal = crystal,
+                    maxBlastResistance = maxBlastResistance,
+                    include = include
+                )
             }
         },
         TARGET {
@@ -167,7 +228,13 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
                 include: BlockPos?
             ): DamageProvider {
                 if (entity !is Player) {
-                    return OTHER.getDamage(entity, requestingSubmodule, crystal, maxBlastResistance, include)
+                    return OTHER.getDamage(
+                        entity = entity,
+                        requestingSubmodule = requestingSubmodule,
+                        crystal = crystal,
+                        maxBlastResistance = maxBlastResistance,
+                        include = include
+                    )
                 }
 
                 val ticks = when (requestingSubmodule) {
@@ -176,7 +243,13 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
                     RequestingSubmodule.BASE_PLACE -> TargetPredict.basePlaceTicks
                 }
 
-                return TargetPredict.getDamage(entity, ticks, crystal, maxBlastResistance, include)
+                return TargetPredict.getDamage(
+                    player = entity,
+                    ticks = ticks,
+                    crystal = crystal,
+                    maxBlastResistance = maxBlastResistance,
+                    include = include
+                )
             }
         },
         OTHER {
@@ -188,7 +261,7 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
                 include: BlockPos?
             ): DamageProvider {
                 return NormalDamageProvider(entity.getDamageFromExplosion(
-                    crystal,
+                    pos = crystal,
                     include = include,
                     maxBlastResistance = maxBlastResistance
                 ))

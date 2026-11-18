@@ -33,11 +33,16 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
+    @Volatile
     var placementTarget: BlockPos? = null
+
+    @Volatile
     var previousTarget: BlockPos? = null
 
     /**
@@ -64,7 +69,14 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         placementTarget = null
 
         val basePlace = SubmoduleBasePlace.shouldBasePlaceRun()
-        val currentBasePlaceTarget = if (basePlace) null else SubmoduleBasePlace.currentTarget
+        val currentBasePlaceTarget = if (basePlace) {
+            null
+        } else {
+            SubmoduleBasePlace.currentTarget?.takeIf { candidate ->
+                val block = candidate.pos.stateOrEmpty.block
+                block != Blocks.OBSIDIAN && block != Blocks.BEDROCK && SubmoduleBasePlace.hasAvailableBlocks
+            }
+        }
 
         val positions = mutableListOf<PlacementPositionCandidate>()
 
@@ -80,13 +92,13 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         // choose the best available target
         val bestTarget = selectOptimalCandidate(finalPositions, currentBasePlaceTarget) ?: return
 
-        // set the base place target
+        // set the base place target on the main thread (BlockPlacer mutates FastUtil maps and renderers)
         val notCurrentBasePlaceTarget = bestTarget != currentBasePlaceTarget
         if (bestTarget.requiresBasePlace && notCurrentBasePlaceTarget) {
-            SubmoduleBasePlace.currentTarget = bestTarget
-        } else if (notCurrentBasePlaceTarget) {
+            mc.execute { SubmoduleBasePlace.currentTarget = bestTarget }
+        } else if (!bestTarget.requiresBasePlace && SubmoduleBasePlace.currentTarget != null) {
             // base place isn't required
-            SubmoduleBasePlace.currentTarget = null
+            mc.execute { SubmoduleBasePlace.currentTarget = null }
         }
 
         // finally, update the current target
@@ -116,7 +128,8 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
             val cache = CandidateCache(pos)
             if (conditionChain.all { condition -> condition.isValid(context, cache, pos) }) {
                 val blocked = cache.up.isBlockedByEntitiesReturnCrystal(
-                    box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false)
+                    box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false
+                )
                 val crystal = blocked.value() != null
                 if (!blocked.keyBoolean() || crystal) {
                     positions.add(PlacementPositionCandidate(pos.immutable(), !crystal, !cache.canPlace))
@@ -131,23 +144,28 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         finalPositions: List<PlacementPositionCandidate>,
         currentBasePlaceTarget: PlacementPositionCandidate?
     ): PlacementPositionCandidate? {
-        // choose the target with the maximum damage
-        var bestTarget = finalPositions.maxOrNull() ?: return null
+        val nonBasePlaceTarget = finalPositions.filterNot { it.requiresBasePlace }.maxOrNull()
+
+        // choose the target with the maximum damage whose base either exists or has a valid foundation
+        var bestTarget = finalPositions
+            .sortedDescending()
+            .firstOrNull { !it.requiresBasePlace || SubmoduleBasePlace.hasFoundation(it.pos) }
+            ?: return nonBasePlaceTarget
+
         val minAdvantage = SubmoduleBasePlace.minAdvantage
 
         // find a target position that will not require base place if possible
-        if (bestTarget.requiresBasePlace) {
-            finalPositions.filterNot { it.requiresBasePlace }.maxOrNull()?.let { nonBasePlaceTarget ->
-                if (bestTarget.enemyDamage!! - nonBasePlaceTarget.enemyDamage!! <= minAdvantage) {
-                    bestTarget = nonBasePlaceTarget
-                }
+        if (bestTarget.requiresBasePlace && nonBasePlaceTarget != null) {
+            if (bestTarget.enemyDamage!! - nonBasePlaceTarget.enemyDamage!! <= minAdvantage) {
+                bestTarget = nonBasePlaceTarget
             }
         }
 
-        // if base place already is placing a block and this is block is still relevant, we wait for it
+        // if base place already is placing a block and this block is still relevant, we wait for it
         currentBasePlaceTarget?.let {
             it.calculate()
             if (it.isNotInvalid() &&
+                SubmoduleBasePlace.hasFoundation(it.pos) &&
                 bestTarget.enemyDamage!! - it.enemyDamage!! <= minAdvantage
             ) {
                 bestTarget = it

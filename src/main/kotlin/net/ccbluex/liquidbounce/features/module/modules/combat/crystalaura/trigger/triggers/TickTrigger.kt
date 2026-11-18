@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.offThread
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.placeTick
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runDestroy
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.Trigger
@@ -37,14 +37,11 @@ object TickTrigger : Trigger("Tick", true) {
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
         if (offThread) {
             runDestroy { SubmoduleCrystalDestroyer.tick() }
-            runPlace { SubmoduleCrystalPlacer.tick() }
+            runPlace()
         } else {
-            // Make the crystal destroyer run
             SubmoduleCrystalDestroyer.tick()
-            // Make the crystal placer run
-            SubmoduleCrystalPlacer.tick()
+            placeTick()
             if (!SubmoduleIdPredict.enabled) {
-                // Make the crystal destroyer run
                 SubmoduleCrystalDestroyer.tick()
             }
         }

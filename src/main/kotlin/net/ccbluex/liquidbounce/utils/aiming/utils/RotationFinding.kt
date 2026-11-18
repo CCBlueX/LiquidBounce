@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.aiming.utils
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -154,6 +155,7 @@ fun canSeeUpperBlockSide(
 ): Boolean {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
+    val maxRangeSquared = max(rangeSquared, wallsRangeSquared)
 
     val minX = pos.x.toDouble()
     val y = pos.y + 0.99
@@ -167,13 +169,13 @@ fun canSeeUpperBlockSide(
     return !topFace.forEachSamplePoint(ITERATION_PROPORTIONS_LOOSE) { vec3 ->
         val distanceSq = eyes.distanceToSqr(vec3)
 
-        if (distanceSq > rangeSquared) {
+        if (distanceSq > maxRangeSquared) {
             return@forEachSamplePoint true
         }
 
         val visible = player.isFacingBlock(eyes, vec3, pos, Direction.UP)
 
-        if (!visible && distanceSq > wallsRangeSquared) {
+        if (!isWithinAllowedRange(distanceSq, visible, rangeSquared, wallsRangeSquared)) {
             return@forEachSamplePoint true
         }
 
@@ -494,7 +496,7 @@ private fun isWithinAllowedRange(
     visible: Boolean,
     rangeSquared: Double,
     wallsRangeSquared: Double,
-): Boolean = distanceSquared < (if (visible) rangeSquared else wallsRangeSquared)
+): Boolean = distanceSquared <= (if (visible) rangeSquared else wallsRangeSquared)
 
 /**
  * Determines if the player is able to see a [AABB], testing up to [maxPoints] points of it.
@@ -516,12 +518,13 @@ fun canSeeBox(
 
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
+    val maxRangeSquared = max(rangeSquared, wallsRangeSquared)
 
     scanBoxPoints(eyes, box, maxPoints) { posInBox ->
         // skip because of out of range
         val distance = eyes.distanceToSqr(posInBox)
 
-        if (distance > rangeSquared) {
+        if (distance > maxRangeSquared) {
             return@scanBoxPoints
         }
 
@@ -534,7 +537,7 @@ fun canSeeBox(
             }
 
         // skip because not visible in range
-        if (!visible && distance > wallsRangeSquared) {
+        if (!isWithinAllowedRange(distance, visible, rangeSquared, wallsRangeSquared)) {
             return@scanBoxPoints
         }
 
@@ -581,6 +584,7 @@ fun raytraceUpperBlockSide(
 ): RotationWithVector? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
+    val maxRangeSquared = max(rangeSquared, wallsRangeSquared)
 
     val vec3d = Vec3.atLowerCornerOf(expectedTarget)
 
@@ -595,13 +599,13 @@ fun raytraceUpperBlockSide(
     topFace.forEachSamplePoint(proportions) { vec3 ->
         val distance = eyes.distanceToSqr(vec3)
 
-        if (distance > rangeSquared) {
+        if (distance > maxRangeSquared) {
             return@forEachSamplePoint true
         }
 
         val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
 
-        if (!visible && distance > wallsRangeSquared) {
+        if (!isWithinAllowedRange(distance, visible, rangeSquared, wallsRangeSquared)) {
             return@forEachSamplePoint true
         }
 
@@ -649,14 +653,19 @@ fun findClosestPointOnBlockInLineWithCrystal(
         expectedTarget.z.toDouble() + 1.5
     )
 
-    mc.execute {
-        ModuleCrystalAura.debugGeometry("predictedCrystal") { DebuggedBox(predictedCrystal, Color4b.RED.fade(0.4f)) }
+    if (ModuleDebug.running) {
+        mc.execute {
+            ModuleCrystalAura.debugGeometry("predictedCrystal") {
+                DebuggedBox(predictedCrystal, Color4b.RED.fade(0.4f))
+            }
+        }
     }
 
     checkCurrentRotation(range, wallsRange, expectedTarget, predictedCrystal, eyes)?.let { return it }
 
     val rangeSquared = range.sq()
     val wallsRangeSquared = wallsRange.sq()
+    val maxRangeSquared = max(rangeSquared, wallsRangeSquared)
     val blockBB = FULL_BOX.move(expectedTarget)
 
     for (direction in Direction.entries) {
@@ -679,12 +688,12 @@ fun findClosestPointOnBlockInLineWithCrystal(
             val distance = eyes.distanceToSqr(vec3)
 
             // skip if out of range or the current best is closer
-            if (distance > rangeSquared || bestDistance <= distance && (!intersects || bestIntersects)) {
+            if (distance > maxRangeSquared || bestDistance <= distance && (!intersects || bestIntersects)) {
                 return@forEachSamplePoint true
             }
 
-            // skip because not visible in range
-            if (distance > wallsRangeSquared && !player.isFacingBlock(eyes, vec3, expectedTarget, direction)) {
+            val visible = player.isFacingBlock(eyes, vec3, expectedTarget, direction)
+            if (!isWithinAllowedRange(distance, visible, rangeSquared, wallsRangeSquared)) {
                 return@forEachSamplePoint true
             }
 
@@ -724,11 +733,9 @@ private fun checkCurrentRotation(
     val pos = currentHit.location
     val intersects = predictedCrystal.isHitByLine(eyes, pos)
     val distance = eyes.distanceToSqr(pos)
+    val visible = player.isFacingBlock(eyes, pos, expectedTarget, currentHit.direction)
 
-    val visibleThroughWalls = distance <= wallsRange.sq() ||
-        player.isFacingBlock(eyes, pos, expectedTarget, currentHit.direction)
-
-    if (intersects && distance <= range.sq() && visibleThroughWalls) {
+    if (intersects && isWithinAllowedRange(distance, visible, range.sq(), wallsRange.sq())) {
         val rotation = Rotation.lookingAt(point = pos, from = eyes)
         return RotationWithVector(rotation, pos) to currentHit.direction
     }

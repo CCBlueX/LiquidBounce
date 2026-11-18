@@ -23,6 +23,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.render.FULL_BOX
@@ -31,16 +32,21 @@ import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Tries to build improved placement spots.
@@ -103,7 +109,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         val downError by boolean("DownError", false)
 
         /**
-         * Exclude y levels we might enter to not help enemies.
+         * Exclude y levels directly beneath simulated positions to not create crystal platforms for enemies.
          */
         val antiPlatform by boolean("AntiPlatformSimulate", true)
 
@@ -115,15 +121,17 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
 
     val minAdvantage by float("MinAdvantage", 2.0f, 0.1f..10f)
 
+    private fun findBaseSlot(): HotbarItemSlot? =
+        Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN) ?: Slots.OffhandWithHotbar.findSlot(Items.BEDROCK)
+
     private val placer = tree(BlockPlacer(
         "Placing",
         this,
         Priority.IMPORTANT_FOR_USAGE_2,
-        slotFinder = { _ ->
-            Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN) ?: Slots.OffhandWithHotbar.findSlot(Items.BEDROCK)
-        },
+        slotFinder = { _ -> findBaseSlot() },
     ))
 
+    @Volatile
     var currentTarget: PlacementPositionCandidate? = null
         set(value) {
             field = value
@@ -146,7 +154,10 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (currentTarget != null && trying.hasElapsed(timeOut.toLong())) {
+        val active = currentTarget ?: return@handler
+        val block = active.pos.stateOrEmpty.block
+        val alreadyPlaced = block == Blocks.OBSIDIAN || block == Blocks.BEDROCK
+        if (alreadyPlaced || !hasAvailableBlocks || trying.hasElapsed(timeOut.toLong())) {
             placer.clear()
             currentTarget = null
         }
@@ -157,11 +168,17 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         currentTarget = null
     }
 
+    val hasAvailableBlocks: Boolean
+        get() = enabled && placer.canAct() && findBaseSlot() != null
+
     /**
      * Returns whether base place should be calculated.
      */
     fun shouldBasePlaceRun(): Boolean {
-        if (!enabled) {
+        if (!hasAvailableBlocks) {
+            if (currentTarget != null) {
+                mc.execute { currentTarget = null }
+            }
             return false
         }
 
@@ -174,11 +191,33 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
     }
 
     /**
-     * Returns a set of y levels the  base place can be placed in.
+     * Thread-safe check ensuring [pos] is anchored to an existing block directly or within support depth,
+     * preventing unreachable floating mid-air blocks from starving crystal placements (#8053, #8140).
+     */
+    fun hasFoundation(pos: BlockPos): Boolean {
+        if (!hasAvailableBlocks) {
+            return false
+        }
+
+        if (Direction.entries.any { dir -> !pos.relative(dir).stateOrEmpty.canBeReplaced() }) {
+            return true
+        }
+
+        if (!placer.support.enabled || placer.support.filter.getSlot(placer.support.blocks) == null) {
+            return false
+        }
+
+        val maxDist = placer.support.depth + 1
+        return BlockPos.withinManhattan(pos, maxDist)
+            .any { candidate -> candidate != pos && !candidate.stateOrEmpty.canBeReplaced() }
+    }
+
+    /**
+     * Returns a set of y levels the base place can be placed in.
      */
     fun getBasePlaceLayers(targetY: Double): IntRange {
         var down = 3
-        var maxY = if (targetY % 1 > 0.2) {
+        var maxY = if (targetY - floor(targetY) > 0.2) {
             down++
             ceil(targetY).toInt()
         } else {
@@ -202,10 +241,14 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         layers: IntRange,
         state: BlockState
     ): Boolean {
+        val maxBaseRange = min(
+            max(placer.range, placer.wallRange),
+            min(SubmoduleCrystalPlacer.getMaxRange(), SubmoduleCrystalDestroyer.getMaxRange())
+        )
         return running &&
             (!onlyAboveSelf || pos.y >= player.blockPosition().y) &&
             pos.y in layers &&
-            pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange).sq() &&
+            pos.getCenterDistanceSquared() < (maxBaseRange + 0.5f).sq() &&
             state.canBeReplaced() &&
             pos.isUnobstructed() &&
             playerWillNotRunIn(pos) &&
@@ -226,6 +269,8 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
 
         val posBB = FULL_BOX.move(pos)
         val y = pos.y.toDouble()
+        val halfWidth = player.bbWidth * 0.5
+        val height = player.bbHeight.toDouble()
         val errorStep = SimulateMovement.errorStep.toDouble()
         val errorDown = SimulateMovement.downError
         var errorOffset = SimulateMovement.error.toDouble()
@@ -234,16 +279,21 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         return snapShots.none {
             val simulatedPos = it.pos
             val error = errorOffset
+            val minX = simulatedPos.x - halfWidth - error
+            val maxX = simulatedPos.x + halfWidth + error
+            val minZ = simulatedPos.z - halfWidth - error
+            val maxZ = simulatedPos.z + halfWidth + error
             val result = posBB.intersects(
-                simulatedPos.x - error,
+                minX,
                 simulatedPos.y - if (errorDown) error else 0.0,
-                simulatedPos.z - error,
-                simulatedPos.x + 1.0 + error,
-                simulatedPos.y + 1.8 + error,
-                simulatedPos.z + 1.0 + error
+                minZ,
+                maxX,
+                simulatedPos.y + height + error,
+                maxZ
             )
             errorOffset += errorStep
-            val isPlatform = SimulateMovement.antiPlatform && floor(simulatedPos.y) == y
+            // A base at y puts the crystal at y + 1, acting as a platform at our feet when floor(y) == y + 1
+            val isPlatform = SimulateMovement.antiPlatform && floor(simulatedPos.y) - 1.0 == y
             val isBelow = onlyAboveSelf && y < simulatedPos.y
             result || isPlatform || isBelow
         }
@@ -340,7 +390,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
     }
 
     private fun canEscapeThroughSides(layerA: Array<BlockPos>, layerB: Array<BlockPos>): Boolean {
-        // Do we find and escape side?
+        // Do we find an escape side?
         layerA.forEachIndexed { index, pos1 ->
             if (!pos1.stateOrEmpty.isSolid && !layerB[index].stateOrEmpty.isSolid) {
                 return true

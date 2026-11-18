@@ -45,7 +45,7 @@ object ExplodeSoundTrigger : PostPacketTrigger<ClientboundSoundEntityPacket>("Ex
             }
         }
 
-        runPlace { SubmoduleCrystalPlacer.tick() }
+        runPlace()
     }
 
 }

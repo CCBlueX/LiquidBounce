@@ -41,7 +41,8 @@ import net.ccbluex.liquidbounce.utils.render.TargetRenderer
  *
  * Automatically places and explodes end crystals.
  *
- * @author ccetl
+ * @author ccetl (original implementation)
+ * @author zyqelan
  */
 object ModuleCrystalAura : ClientModule(
     "CrystalAura",
@@ -51,7 +52,7 @@ object ModuleCrystalAura : ClientModule(
 ) {
 
     val targetTracker = tree(TargetTracker(
-        rangeValue = FloatValueProvider("Range", 4.5f, 1f..12f)
+        rangeValue = FloatValueProvider("Range", 10f, 1f..16f)
     ))
 
     object PredictFeature : ValueGroup("Predict") {
@@ -86,6 +87,7 @@ object ModuleCrystalAura : ClientModule(
 
     override fun onDisabled() {
         CrystalAuraTriggerer.terminateRunningTasks()
+        SubmoduleCrystalPlacer.onDisabled()
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
         SubmoduleBasePlace.onDisabled()

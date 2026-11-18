@@ -18,15 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
+import kotlin.math.max
+
 interface DamageProvider {
     fun isSmallerThan(float: Float): Boolean
     fun isSmallerThanOrEqual(float: Float): Boolean
     fun isSmallerThanOrEqual(other: DamageProvider): Boolean
     fun isGreaterThan(float: Float): Boolean
+    fun isGreaterThanOrEqual(float: Float): Boolean
 
     /**
-     * Any because it's used for death prevention.
+     * Any because it's used for self-damage caps and death prevention.
      */
+    fun isAnyGreaterThan(float: Float): Boolean
     fun isAnyGreaterThanOrEqual(float: Float): Boolean
 
     /**
@@ -37,29 +41,25 @@ interface DamageProvider {
 
 class NormalDamageProvider(val damage: Float) : DamageProvider {
 
-    override fun isSmallerThan(float: Float): Boolean {
-        return damage < float
-    }
+    override fun isSmallerThan(float: Float): Boolean = damage < float
 
-    override fun isSmallerThanOrEqual(float: Float): Boolean {
-        return damage <= float
-    }
+    override fun isSmallerThanOrEqual(float: Float): Boolean = damage <= float
 
     override fun isSmallerThanOrEqual(other: DamageProvider): Boolean {
         return when (other) {
             is NormalDamageProvider -> isSmallerThanOrEqual(other.damage)
-            is BiDamageProvider -> other.isGreaterThan(damage)
-            else -> isSmallerThanOrEqual(getFixed())
+            is BiDamageProvider -> other.isGreaterThanOrEqual(damage)
+            else -> isSmallerThanOrEqual(other.getFixed())
         }
     }
 
-    override fun isGreaterThan(float: Float): Boolean {
-        return damage > float
-    }
+    override fun isGreaterThan(float: Float): Boolean = damage > float
 
-    override fun isAnyGreaterThanOrEqual(float: Float): Boolean {
-        return damage >= float
-    }
+    override fun isGreaterThanOrEqual(float: Float): Boolean = damage >= float
+
+    override fun isAnyGreaterThan(float: Float): Boolean = damage > float
+
+    override fun isAnyGreaterThanOrEqual(float: Float): Boolean = damage >= float
 
     override fun getFixed() = damage
 
@@ -67,8 +67,12 @@ class NormalDamageProvider(val damage: Float) : DamageProvider {
 
 abstract class BiDamageProvider(val damage: Float, val damage1: Float) : DamageProvider {
 
+    override fun isAnyGreaterThan(float: Float): Boolean = damage > float || damage1 > float
+
+    override fun isAnyGreaterThanOrEqual(float: Float): Boolean = damage >= float || damage1 >= float
+
     /**
-     * The possible predicted value is more important.
+     * The predicted value is prioritized by default.
      */
     override fun getFixed() = damage1
 
@@ -76,56 +80,42 @@ abstract class BiDamageProvider(val damage: Float, val damage1: Float) : DamageP
 
 class OrBiDamageProvider(damage: Float, damage1: Float) : BiDamageProvider(damage, damage1) {
 
-    override fun isSmallerThan(float: Float): Boolean {
-        return damage < float || damage1 < float
-    }
+    override fun isSmallerThan(float: Float): Boolean = damage < float || damage1 < float
 
-    override fun isSmallerThanOrEqual(float: Float): Boolean {
-        return damage <= float || damage1 <= float
-    }
+    override fun isSmallerThanOrEqual(float: Float): Boolean = damage <= float || damage1 <= float
 
     override fun isSmallerThanOrEqual(other: DamageProvider): Boolean {
         return when (other) {
             is NormalDamageProvider -> isSmallerThanOrEqual(other.damage)
-            is BiDamageProvider -> other.isGreaterThan(damage) || other.isGreaterThan(damage1)
-            else -> isSmallerThanOrEqual(getFixed())
+            is BiDamageProvider -> other.isGreaterThanOrEqual(damage) || other.isGreaterThanOrEqual(damage1)
+            else -> isSmallerThanOrEqual(other.getFixed())
         }
     }
 
-    override fun isGreaterThan(float: Float): Boolean {
-        return damage > float || damage1 > float
-    }
+    override fun isGreaterThan(float: Float): Boolean = damage > float || damage1 > float
 
-    override fun isAnyGreaterThanOrEqual(float: Float): Boolean {
-        return damage >= float || damage1 >= float
-    }
+    override fun isGreaterThanOrEqual(float: Float): Boolean = damage >= float || damage1 >= float
+
+    override fun getFixed() = max(damage, damage1)
 
 }
 
 class AndBiDamageProvider(damage: Float, damage1: Float) : BiDamageProvider(damage, damage1) {
 
-    override fun isSmallerThan(float: Float): Boolean {
-        return damage < float && damage1 < float
-    }
+    override fun isSmallerThan(float: Float): Boolean = damage < float && damage1 < float
 
-    override fun isSmallerThanOrEqual(float: Float): Boolean {
-        return damage <= float && damage1 <= float
-    }
+    override fun isSmallerThanOrEqual(float: Float): Boolean = damage <= float && damage1 <= float
 
     override fun isSmallerThanOrEqual(other: DamageProvider): Boolean {
         return when (other) {
             is NormalDamageProvider -> isSmallerThanOrEqual(other.damage)
-            is BiDamageProvider -> other.isGreaterThan(damage) && other.isGreaterThan(damage1)
-            else -> isSmallerThanOrEqual(getFixed())
+            is BiDamageProvider -> other.isGreaterThanOrEqual(damage) && other.isGreaterThanOrEqual(damage1)
+            else -> isSmallerThanOrEqual(other.getFixed())
         }
     }
 
-    override fun isGreaterThan(float: Float): Boolean {
-        return damage > float && damage1 > float
-    }
+    override fun isGreaterThan(float: Float): Boolean = damage > float && damage1 > float
 
-    override fun isAnyGreaterThanOrEqual(float: Float): Boolean {
-        return damage >= float || damage1 >= float
-    }
+    override fun isGreaterThanOrEqual(float: Float): Boolean = damage >= float && damage1 >= float
 
 }

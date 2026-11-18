@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.notWhileUsingItem
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.BlockChangeTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ClientBlockBreakTrigger
@@ -38,7 +40,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.function.BooleanSupplier
 
-// TODO no duplicate place and break options per tick in both place and break
 /**
  * Catches events that should start a new place or break action.
  *
@@ -50,6 +51,9 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
 
     // avoids grim multi action flags
     private val notWhileUsingItem by boolean("NotWhileUsingItem", false)
+
+    // only run while holding right-click (#8111)
+    private val onlyOnRightClick by boolean("OnlyOnRightClick", false)
 
     /**
      * Runs the calculations on a separate thread avoiding overhead on the render thread.
@@ -101,7 +105,11 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         currentDestroyTask?.cancel(true)
     }
 
-    fun runPlace(runnable: Runnable) {
+    fun placeTick() {
+        SubmoduleCrystalPlacer.tick(SubmoduleSetDead.excludedIds)
+    }
+
+    fun runPlace(runnable: Runnable = Runnable(::placeTick)) {
         currentPlaceTask?.let {
             if (!it.isDone) {
                 return
@@ -134,7 +142,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     }
 
     /**
-     * We should not cache if the calculation is done off-tread because the cache gets cleared on tick,
+     * We should not cache if the calculation is done off-thread because the cache gets cleared on tick,
      * that means calculation which runs on a separate thread could run parallel to the clearing.
      *
      * Additionally, the caching is not needed if the calculation is multithreaded and therefore already has no
@@ -147,11 +155,12 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
 
     /**
      * Also pauses when the combat manager tells combat modules to pause or option
-     * (e.g. [notWhileUsingItem]) require it.
+     * (e.g. [notWhileUsingItem], [onlyOnRightClick]) require it.
      */
     override val running: Boolean
         get() = ModuleCrystalAura.running
             && !CombatManager.shouldPauseCombat
             && (!player.isUsingItem || !notWhileUsingItem)
+            && (!onlyOnRightClick || mc.options.keyUse.isDown)
 
 }

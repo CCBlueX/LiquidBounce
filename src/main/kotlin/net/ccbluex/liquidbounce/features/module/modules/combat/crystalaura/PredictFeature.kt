@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -91,9 +92,11 @@ abstract class PredictFeature(name: String) : ToggleableValueGroup(ModuleCrystal
             simulation.z + halfWidth
         )
 
-        mc.execute {
-            ModuleCrystalAura.debugGeometry("predictedIntersect$name") {
-                DebuggedBox(predictedBoundingBox, Color4b.BLUE.fade(0.4f))
+        if (ModuleDebug.running) {
+            mc.execute {
+                ModuleCrystalAura.debugGeometry("predictedIntersect$name") {
+                    DebuggedBox(predictedBoundingBox, Color4b.BLUE.fade(0.4f))
+                }
             }
         }
 
@@ -128,9 +131,11 @@ abstract class PredictFeature(name: String) : ToggleableValueGroup(ModuleCrystal
             simulated.z + halfWidth
         )
 
-        mc.execute {
-            ModuleCrystalAura.debugGeometry("predictedDamage$name") {
-                DebuggedBox(predictedBoundingBox, Color4b.GRAY.fade(0.4f))
+        if (ModuleDebug.running) {
+            mc.execute {
+                ModuleCrystalAura.debugGeometry("predictedDamage$name") {
+                    DebuggedBox(predictedBoundingBox, Color4b.GRAY.fade(0.4f))
+                }
             }
         }
 

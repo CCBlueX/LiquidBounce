@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
+import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -41,17 +42,23 @@ object CrystalSpawnTrigger : PostPacketTrigger<ClientboundAddEntityPacket>("Crys
             return
         }
 
+        val spawnedBase = BlockPos.containing(packet.x, packet.y, packet.z).below()
+        if (SubmoduleCrystalPlacer.pendingPlacePos == spawnedBase) {
+            SubmoduleCrystalPlacer.pendingPlacePos = null
+            SubmoduleCrystalPlacer.pendingPlaceTick = -1
+        }
+
         runDestroy {
             val entity = world.getEntity(packet.id)
             if (entity !is EndCrystal) {
                 return@runDestroy
             }
 
-            SubmoduleCrystalDestroyer.tick()
+            SubmoduleCrystalDestroyer.tick(entity)
         }
 
         if (SubmoduleSetDead.enabled) {
-            runPlace { SubmoduleCrystalPlacer.tick() }
+            runPlace()
         }
     }
 

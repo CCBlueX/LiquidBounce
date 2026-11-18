@@ -20,9 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.dest
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -32,9 +35,18 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
+import net.ccbluex.liquidbounce.utils.entity.effectLevel
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.getAttributeValue
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
@@ -49,7 +61,90 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     // prioritizes faces that are visible, might make the crystal aura slower
     private val prioritizeVisibleFaces by boolean("PrioritizeVisibleFaces", false)
 
-    var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
+    /**
+     * Switches to a weapon when afflicted with Weakness so End Crystals can still be destroyed.
+     */
+    object AntiWeakness : ToggleableValueGroup(this, "AntiWeakness", true) {
+        private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
+
+        private fun effectiveMeleeDamage(stack: ItemStack, baseDamage: Double, potionDelta: Double): Double {
+            val itemDamage = if (stack.isEmpty) {
+                baseDamage
+            } else {
+                stack.getAttributeValue(Attributes.ATTACK_DAMAGE, EquipmentSlot.MAINHAND, baseDamage)
+            }
+            return itemDamage + potionDelta
+        }
+
+        /**
+         * Executes [attackAction] while holding an item capable of damaging an End Crystal.
+         * Dispatches onto the main thread when a hotbar slot switch is required.
+         */
+        fun executeWithWeapon(attackAction: () -> Unit) {
+            if (!player.hasEffect(MobEffects.WEAKNESS)) {
+                attackAction()
+                return
+            }
+
+            val baseDamage = player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+            val potionDelta = 3.0 * player.effectLevel(MobEffects.STRENGTH) -
+                4.0 * player.effectLevel(MobEffects.WEAKNESS)
+            val currentStack = player.inventory.getItem(player.inventory.selectedSlot)
+
+            if (effectiveMeleeDamage(currentStack, baseDamage, potionDelta) > 0.0) {
+                attackAction()
+                return
+            }
+
+            if (!enabled || switchMode == SwitchMode.NONE) {
+                return
+            }
+
+            val switchAndAttack = switchAndAttack@{
+                val bestSlot = Slots.Hotbar
+                    .filter { effectiveMeleeDamage(it.itemStack, baseDamage, potionDelta) > 0.0 }
+                    .maxByOrNull { effectiveMeleeDamage(it.itemStack, baseDamage, potionDelta) }
+                    ?.hotbarIndex ?: return@switchAndAttack
+
+                val prevSlot = player.inventory.selectedSlot
+                player.inventory.selectedSlot = bestSlot
+                player.connection.sendHeldItemChange(bestSlot)
+                try {
+                    attackAction()
+                } finally {
+                    if (switchMode == SwitchMode.SILENT) {
+                        player.connection.sendHeldItemChange(prevSlot)
+                        player.inventory.selectedSlot = prevSlot
+                    }
+                }
+            }
+
+            if (mc.isSameThread) {
+                switchAndAttack()
+            } else {
+                mc.execute(switchAndAttack)
+            }
+        }
+    }
+
+    /**
+     * Prevents spam-attacking crystals that have already been attacked while waiting for server removal.
+     */
+    object Inhibit : ToggleableValueGroup(this, "Inhibit", true) {
+        val timeout by int("Timeout", 150, 20..1000, "ms")
+
+        object Tracker : CrystalPostAttackTracker() {
+            fun isInhibited(id: Int): Boolean = running && attackedIds.containsKey(id)
+            override fun timeOutAfter() = timeout.toLong()
+            override fun parent() = Inhibit
+        }
+    }
+
+    init {
+        treeAll(AntiWeakness, Inhibit)
+    }
+
+    var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker, Inhibit.Tracker)
     val chronometer = Chronometer()
 
     fun tick(providedCrystal: EndCrystal? = null) {
@@ -68,8 +163,10 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return
 
         val base = FULL_BOX.move(target.blockPosition().below())
-        mc.execute {
-            ModuleCrystalAura.debugGeometry("predictedBlock") { DebuggedBox(base, Color4b.GREEN.fade(0.4f)) }
+        if (ModuleDebug.running) {
+            mc.execute {
+                ModuleCrystalAura.debugGeometry("predictedBlock") { DebuggedBox(base, Color4b.GREEN.fade(0.4f)) }
+            }
         }
 
         val eyePos = player.eyePosition
@@ -92,22 +189,14 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         // create the action chain to execute
         val action = {
             ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = {
-                isLookingAtEntity(
+                !target.isRemoved && isLookingAtEntity(
                     toEntity = target,
                     rotation = RotationManager.serverRotation,
                     range = range.toDouble(),
                     throughWallsRange = wallsRange.toDouble()
                 ) != null
             }, onFinished = {
-                if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                    return@rotate
-                }
-
-                val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
-
-                attackEntity(target1, swingMode)
-                postAttackHandlers.forEach { it.attacked(target1.id) }
-                chronometer.reset()
+                executeDestroy(target)
             })
         }
 
@@ -116,6 +205,23 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
             mc.execute(action)
         } else {
             action()
+        }
+    }
+
+    private fun executeDestroy(target: EndCrystal) {
+        if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            return
+        }
+
+        if (target.isRemoved || !target.isWithinWorldBorder || Inhibit.Tracker.isInhibited(target.id)) {
+            return
+        }
+
+        AntiWeakness.executeWithWeapon {
+            if (attackEntity(target, swingMode)) {
+                postAttackHandlers.forEach { it.attacked(target.id) }
+                chronometer.reset()
+            }
         }
     }
 

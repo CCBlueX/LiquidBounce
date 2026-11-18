@@ -19,24 +19,44 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.ints.IntCollection
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 /**
- * Removes hit crystals instantly from the world instead of waiting for the actual remove packet
- * what might allow faster placement.
+ * Ignores or removes hit crystals immediately instead of waiting for the server remove packet,
+ * allowing faster consecutive placements without off-thread race conditions.
  */
 object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", true) {
 
+    private val mode by enumChoice("Mode", SetDeadMode.REMOVE)
+
     /**
-     * If the crystal was removed but no entity remove packet was sent after the confirmation time, the
-     * crystal is added back to the world.
+     * If no explosion sound or entity remove packet arrives within this window, the crystal is restored.
      */
     val confirmTime by int("ConfirmTime", 150, 10..2000, "ms")
+
+    enum class SetDeadMode(override val tag: String) : Tagged {
+        /**
+         * Removes the crystal entity client-side and restores it if unconfirmed.
+         */
+        REMOVE("Remove"),
+
+        /**
+         * Keeps the crystal entity in the world (avoiding strict anti-cheat entity desyncs)
+         * while excluding its ID from placement obstruction checks until confirmed or timed out.
+         */
+        EXCLUDE("Exclude")
+    }
+
+    val excludedIds: IntCollection?
+        get() = if (running) CrystalTracker.snapshotAttackedIds() else null
 
     object CrystalTracker : CrystalPostAttackTracker() {
 
@@ -48,17 +68,33 @@ object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", tru
 
         private val entities = Int2ObjectOpenHashMap<RemovedCrystal>().synchronized()
 
+        fun snapshotAttackedIds(): IntCollection? {
+            synchronized(attackedIds) {
+                if (attackedIds.isEmpty()) {
+                    return null
+                }
+                return IntOpenHashSet(attackedIds.keys)
+            }
+        }
+
         override fun attacked(id: Int) {
             if (!running) {
                 return
             }
 
+            // Record immediately so off-thread placement tasks exclude this ID before mc.execute runs
+            super.attacked(id)
+
+            if (mode != SetDeadMode.REMOVE) {
+                return
+            }
+
             mc.execute {
-                val entity = world.getEntity(id)
+                val currentWorld = mc.level ?: return@execute
+                val entity = currentWorld.getEntity(id)
                 if (entity is EndCrystal) {
-                    super.attacked(id)
-                    world.removeEntity(id, Entity.RemovalReason.DISCARDED)
-                    entities.put(id, RemovedCrystal(entity, world))
+                    currentWorld.removeEntity(id, Entity.RemovalReason.DISCARDED)
+                    entities.put(id, RemovedCrystal(entity, currentWorld))
                 }
             }
         }

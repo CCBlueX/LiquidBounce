@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trig
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.mc
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runDestroy
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
@@ -42,7 +41,7 @@ object SelfMoveTrigger : Trigger("SelfMove", false) {
 
         mc.execute {
             runDestroy { SubmoduleCrystalDestroyer.tick() }
-            runPlace { SubmoduleCrystalPlacer.tick() }
+            runPlace()
         }
     }
 

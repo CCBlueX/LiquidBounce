@@ -26,6 +26,7 @@ import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.phys.EntityHitResult
 import java.util.function.Predicate
+import kotlin.math.max
 
 fun Entity.findEntityInCrosshair(
     range: Double,
@@ -88,7 +89,7 @@ fun isLookingAtEntity(
     throughWallsRange: Double,
 ): EntityHitResult? {
     val cameraVec = fromEntity.eyePosition
-    val entityHitResult = fromEntity.findEntityInCrosshair(range, rotation) { entity ->
+    val entityHitResult = fromEntity.findEntityInCrosshair(max(range, throughWallsRange), rotation) { entity ->
         entity === toEntity
     } ?: return null
 

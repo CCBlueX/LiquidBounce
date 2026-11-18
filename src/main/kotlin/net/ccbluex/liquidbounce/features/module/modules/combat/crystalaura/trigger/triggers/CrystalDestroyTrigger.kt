@@ -62,7 +62,7 @@ object CrystalDestroyTrigger : PostPacketTrigger<ClientboundRemoveEntitiesPacket
             return
         }
 
-        runPlace { SubmoduleCrystalPlacer.tick() }
+        runPlace()
     }
 
 }

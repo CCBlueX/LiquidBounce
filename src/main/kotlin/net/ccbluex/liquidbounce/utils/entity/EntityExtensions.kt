@@ -617,7 +617,16 @@ fun LivingEntity.getDamageFromExplosion(
     entityBoundingBox: AABB? = null,
     damageSource: DamageSource? = null,
 ): Float {
-    val distSqr = this.distanceToSqr(pos)
+    val targetPos = if (entityBoundingBox != null) {
+        Vec3(
+            (entityBoundingBox.minX + entityBoundingBox.maxX) * 0.5,
+            entityBoundingBox.minY,
+            (entityBoundingBox.minZ + entityBoundingBox.maxZ) * 0.5,
+        )
+    } else {
+        this.position()
+    }
+    val distSqr = targetPos.distanceToSqr(pos)
     if (distSqr > damageDistance) {
         return 0f
     }

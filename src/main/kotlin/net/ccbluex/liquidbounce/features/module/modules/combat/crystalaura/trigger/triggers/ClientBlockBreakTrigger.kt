@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.Trigger
 
@@ -33,7 +32,7 @@ object ClientBlockBreakTrigger : Trigger("ClientBlockBreak", true) {
             return
         }
 
-        runPlace { SubmoduleCrystalPlacer.tick() }
+        runPlace()
     }
 
 }

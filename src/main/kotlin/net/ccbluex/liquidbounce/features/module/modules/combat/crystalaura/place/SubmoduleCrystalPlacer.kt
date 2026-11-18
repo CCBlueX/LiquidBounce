@@ -33,9 +33,11 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
+import net.ccbluex.liquidbounce.utils.raytracing.isFacingBlock
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
@@ -58,6 +60,11 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChanged {
         CrystalAuraPlaceTargetFactory.updateSphere()
     }
+
+    /**
+     * Prevents duplicate UseItemOn packets on the same block within a single tick before crystal spawn confirmation.
+     */
+    private val dedupPerTick by boolean("DedupPerTick", true)
 
     /**
      * Only place crystals above the block.
@@ -85,12 +92,25 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     )
 
     private val chronometer = Chronometer()
-    private var blockHitResult: BlockHitResult? = null
 
     // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
-    private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
+    private val previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
+
+    @Volatile
+    var pendingPlacePos: BlockPos? = null
+
+    @Volatile
+    var pendingPlaceTick: Int = -1
+
+    override fun onDisabled() {
+        pendingPlacePos = null
+        pendingPlaceTick = -1
+        synchronized(previousRotations) {
+            previousRotations.clear()
+        }
+    }
 
     @Suppress("LongMethod", "CognitiveComplexMethod")
     fun tick(excludeIds: IntCollection? = null) {
@@ -106,73 +126,99 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         removeFromRenderer()
 
         val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return
+        if (dedupPerTick && pendingPlacePos == targetPos && pendingPlaceTick == player.tickCount) {
+            return
+        }
 
-        val notSameRotation = RotationManager.serverRotation != previousRotations.lastOrNull()?.first
-        val rotationsNotToMatch = if (notSameRotation && jitter) {
-            previousRotations.map { it.second }
-        } else {
-            null
+        val rotationsNotToMatch = synchronized(previousRotations) {
+            val notSameRotation = RotationManager.serverRotation != previousRotations.lastOrNull()?.first
+            if (notSameRotation && jitter) {
+                previousRotations.map { it.second }
+            } else {
+                null
+            }
         }
 
         var side = Direction.UP
         val rotation = if (onlyAbove) {
             raytraceUpperBlockSide(
-                player.eyePosition,
-                range.toDouble(),
-                wallsRange.toDouble(),
-                targetPos,
+                eyes = player.eyePosition,
+                range = range.toDouble(),
+                wallsRange = wallsRange.toDouble(),
+                expectedTarget = targetPos,
                 rotationsNotToMatch = rotationsNotToMatch
             )
         } else {
             val data = findClosestPointOnBlockInLineWithCrystal(
-                player.eyePosition,
-                range.toDouble(),
-                wallsRange.toDouble(),
-                targetPos,
-                notFacingAway,
-                rotationsNotToMatch
+                eyes = player.eyePosition,
+                range = range.toDouble(),
+                wallsRange = wallsRange.toDouble(),
+                expectedTarget = targetPos,
+                notFacingAway = notFacingAway,
+                rotationsNotToMatch = rotationsNotToMatch
             ) ?: return
             side = data.second
 
             data.first
         } ?: return
 
-        if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
-            blockHitResult = raytraceBlock(
-                getMaxRange().toDouble(),
-                rotation.rotation,
-                targetPos,
-                targetPos.stateOrEmpty
-            ) ?: return
-        }
-
         addToRenderer()
         updatePrevious(rotation)
         queuePlacing(rotation, targetPos, side)
     }
 
-    private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
-        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
-            blockHitResult = raytraceBlock(
-                getMaxRange().toDouble(),
-                RotationManager.serverRotation,
-                targetPos,
-                targetPos.stateOrEmpty
-            ) ?: return@rotate false
+    private fun resolveValidBlockHit(checkRotation: Rotation, targetPos: BlockPos): BlockHitResult? {
+        val hit = raytraceBlock(
+            getMaxRange().toDouble(),
+            checkRotation,
+            targetPos,
+            targetPos.stateOrEmpty
+        ) ?: return null
 
-            return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
+        if (hit.type != HitResult.Type.BLOCK || hit.blockPos != targetPos) {
+            return null
+        }
+
+        val eyes = player.eyePosition
+        val distSq = eyes.distanceToSqr(hit.location)
+        val visible = player.isFacingBlock(eyes, hit.location, targetPos, hit.direction)
+        val allowedRangeSq = if (visible) range.toDouble().sq() else wallsRange.toDouble().sq()
+        return hit.takeIf { distSq <= allowedRangeSq }
+    }
+
+    private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
+        val noRotationHit = if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
+            resolveValidBlockHit(rotation.rotation, targetPos) ?: return
+        } else {
+            null
+        }
+
+        var verifiedHit: BlockHitResult? = noRotationHit
+
+        ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
+            verifiedHit = resolveValidBlockHit(RotationManager.serverRotation, targetPos)
+            verifiedHit != null
         }, onFinished = {
             if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
                 return@rotate
             }
 
+            if (dedupPerTick && pendingPlacePos == targetPos && pendingPlaceTick == player.tickCount) {
+                return@rotate
+            }
+
+            val finalHit = verifiedHit ?: resolveValidBlockHit(rotation.rotation, targetPos) ?: return@rotate
+
             player.clickBlockWithSlot(
-                blockHitResult?.withDirection(side) ?: return@rotate,
-                getSlot() ?: return@rotate,
-                swingMode,
-                switchMode,
-                sequenced
+                rayTraceResult = finalHit.withDirection(side),
+                slot = getSlot() ?: return@rotate,
+                swingMode = swingMode,
+                switchMode = switchMode,
+                sequenced = sequenced
             )
+
+            pendingPlacePos = targetPos
+            pendingPlaceTick = player.tickCount
 
             SubmoduleIdPredict.run(targetPos)
 
@@ -181,12 +227,14 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     }
 
     private fun updatePrevious(rotation: RotationWithVector) {
-        if (previousRotations.size == 2) {
-            previousRotations.removeFirst()
-        }
+        synchronized(previousRotations) {
+            if (previousRotations.size == 2) {
+                previousRotations.removeFirst()
+            }
 
-        // stores the mutable rotation and a copy to compare with the produced rotations
-        previousRotations.addLast(rotation.rotation to rotation.rotation.copy())
+            // stores the mutable rotation and a copy to compare with the produced rotations
+            previousRotations.addLast(rotation.rotation to rotation.rotation.copy())
+        }
     }
 
     private fun addToRenderer() = with(CrystalAuraPlaceTargetFactory) {

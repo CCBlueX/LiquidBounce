@@ -33,6 +33,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
+    @Volatile
     var currentTarget: EndCrystal? = null
 
     /**
@@ -43,7 +44,11 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
     fun updateTarget() {
         currentTarget =
             world.getEntitiesBoxInRange(player.eyePosition, getMaxRange().toDouble()) {
-                it is EndCrystal && it.isWithinWorldBorder && !cannotSeeEntity(it)
+                it is EndCrystal &&
+                    !it.isRemoved &&
+                    it.isWithinWorldBorder &&
+                    !SubmoduleCrystalDestroyer.Inhibit.Tracker.isInhibited(it.id) &&
+                    !cannotSeeEntity(it)
             }.mapNotNull {
                 val damage = dealsEnoughDamage(it) ?: return@mapNotNull null
 
@@ -59,7 +64,9 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
     fun validateAndUpdateTarget(crystal: EndCrystal) {
         val maxRange = getMaxRange().toDouble() + crystal.boundingBox.maxX - crystal.boundingBox.minX
         currentTarget = null
-        if (!crystal.isWithinWorldBorder) {
+        if (crystal.isRemoved || !crystal.isWithinWorldBorder ||
+            SubmoduleCrystalDestroyer.Inhibit.Tracker.isInhibited(crystal.id)
+        ) {
             return
         }
 

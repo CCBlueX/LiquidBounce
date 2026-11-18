@@ -65,7 +65,7 @@ object BlockChangeTrigger : PostPacketTrigger<ClientboundBlockUpdatePacket>("Blo
 
     private fun tickIfInRange(blockPos: BlockPos, eyePos: Vec3, rangeSq: Double): Boolean {
         if (AABB(blockPos).distanceToSqr(eyePos) < rangeSq) {
-            runPlace { SubmoduleCrystalPlacer.tick() }
+            runPlace()
             return true
         }
 
