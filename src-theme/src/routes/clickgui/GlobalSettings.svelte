@@ -37,6 +37,7 @@
 <style lang="scss">
   .settings {
     background-color: var(--clickgui-module-settings-background-color);
-    padding: 0 11px;
+    border-top: 1px solid var(--accent-border-color);
+    padding: 3px 11px 5px;
   }
 </style>

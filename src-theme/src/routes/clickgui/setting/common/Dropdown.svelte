@@ -111,20 +111,28 @@
       }
 
       .head {
-        border-radius: 3px 3px 0 0;
+        border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+        border-color: var(--accent-border-strong-color);
       }
     }
   }
 
   .head {
     background-color: var(--clickgui-dropdown-trigger-background-color);
-    padding: 6px 10px;
+    padding: 7px 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     position: relative;
-    border-radius: 3px;
-    transition: ease border-radius .2s;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-xs);
+    transition: border-radius var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--clickgui-button-hover-background-color);
+    }
 
     .text {
       font-weight: 500;
@@ -144,11 +152,11 @@
   .options {
     --dropdown-scale: 1;
 
-    padding: 6px 10px;
+    padding: 5px;
     background-color: var(--clickgui-dropdown-background-color);
     border: solid 1px var(--clickgui-dropdown-border-color);
-    border-top: none;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+    box-shadow: var(--elevation-md) var(--clickgui-panel-shadow-color);
     z-index: 999999;
     position: fixed;
     box-sizing: border-box;
@@ -159,17 +167,21 @@
       color: var(--clickgui-dropdown-option-color);
       font-weight: 500;
       font-size: 12px;
-      padding: 5px 0;
+      padding: 6px;
+      border-radius: var(--radius-xs);
       cursor: pointer;
       text-align: center;
-      transition: ease color 0.2s;
+      transition: color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
 
       &:hover {
         color: var(--clickgui-dropdown-option-hover-color);
+        background-color: var(--accent-subtle-background-color);
       }
 
       &.active {
         color: var(--clickgui-dropdown-option-selected-color);
+        background-color: var(--accent-subtle-background-color);
       }
     }
   }

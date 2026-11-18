@@ -44,23 +44,28 @@
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 5px;
-    padding: 6px;
-    border-radius: 999px;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-pill);
     background-color: var(--clickgui-tabs-background-color);
-    box-shadow: 0 0 10px var(--clickgui-tabs-shadow-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    box-shadow: var(--elevation-sm) var(--clickgui-tabs-shadow-color);
     z-index: 9999999999;
   }
 
   .tab-button {
     background: transparent;
     color: var(--clickgui-text-dimmed-color);
-    padding: 6px 14px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border-radius: var(--radius-pill);
     cursor: pointer;
-    transition: ease background-color 0.2s, ease color 0.2s;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
     border: solid 1px transparent;
 
     &:hover {
@@ -71,7 +76,7 @@
     &.active {
       color: var(--clickgui-text-color);
       background-color: var(--clickgui-tab-active-background-color);
-      border: 1px solid var(--clickgui-tab-active-border-color);
+      border-color: var(--accent-border-strong-color);
     }
   }
 </style>

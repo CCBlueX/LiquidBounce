@@ -55,65 +55,80 @@
     });
 </script>
 
-<style>
+<style lang="scss">
     .browser-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 6px;
         position: fixed;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        background-color: var(--menu-base-90-color);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+        padding: 8px;
+        border: 1px solid var(--accent-border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--elevation-md) var(--menu-base-50-color);
     }
 
     .address-bar {
         flex-grow: 1;
-        margin: 0 10px;
+        margin: 0 4px;
     }
 
     input {
         width: 100%;
-        padding: 10px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        outline: none;
+        padding: 10px 12px;
+        background-color: var(--menu-base-50-color);
+        color: var(--menu-text-color);
+        border: 1px solid var(--surface-border-color);
+        border-radius: var(--radius-sm);
         font-size: 14px;
+        transition: border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
+
+        &:focus-visible {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-subtle-background-color);
+        }
     }
 
     button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        margin-left: 5px;
-        border-radius: 5px;
+        background-color: var(--accent-subtle-background-color);
+        color: var(--menu-text-color);
+        border: 1px solid var(--accent-border-color);
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
         font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: background-color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard);
+
+        &:hover:not(:disabled) {
+            background-color: var(--menu-button-background-color);
+            border-color: var(--accent-border-strong-color);
+        }
     }
 
     button:disabled {
-        background-color: #6c757d;
         cursor: not-allowed;
-    }
-
-    button:focus {
-        outline: none;
+        opacity: 0.45;
     }
 </style>
 
 {#if browser}
     <div class="browser-controls">
-        <button on:click={handleBack}>&larr;</button>
-        <button on:click={handleForward}>&rarr;</button>
-        <button on:click={handleReload}>&#x21bb;</button>
+        <button type="button" aria-label="Go back" on:click={handleBack}>&larr;</button>
+        <button type="button" aria-label="Go forward" on:click={handleForward}>&rarr;</button>
+        <button type="button" aria-label="Reload" on:click={handleReload}>&#x21bb;</button>
         <div class="address-bar">
-            <input id="url" bind:value={browser.url} on:keypress={onKeyPress} placeholder="Enter URL" />
+            <input id="url" aria-label="URL" bind:value={browser.url} on:keypress={onKeyPress} placeholder="Enter URL" />
         </div>
-        <button on:click={handleGo}>Go</button>
-        <button on:click={handleForceReload}>Force Reload</button>
+        <button type="button" on:click={handleGo}>Go</button>
+        <button type="button" on:click={handleForceReload}>Force Reload</button>
     </div>
 {/if}

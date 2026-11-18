@@ -1,4 +1,5 @@
 @use "colors.scss";
+@use "design_tokens.scss";
 
 @font-face {
     font-family: "Inter";
@@ -38,22 +39,71 @@
     outline: none;
 }
 
+*:focus-visible {
+    outline: var(--focus-ring-width) solid var(--accent-color);
+    outline-offset: var(--focus-ring-offset);
+}
+
 body {
+    color: var(--text-color);
     font-family: "Inter", sans-serif;
+    line-height: 1.4;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     user-select: none;
     overflow: hidden;
 }
 
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+::selection {
+    background-color: var(--accent-tint-color);
+    color: var(--text-color);
+}
+
+::placeholder {
+    color: var(--text-dimmed-color);
+    opacity: 0.65;
+}
 
 ::-webkit-scrollbar-track {
     background-color: transparent;
 }
 
 ::-webkit-scrollbar {
-    width: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
+    background-color: var(--accent-border-strong-color);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
     background-color: var(--accent-color);
-    border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-delay: 0ms !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-delay: 0ms !important;
+        transition-duration: 1ms !important;
+    }
 }

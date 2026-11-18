@@ -1,12 +1,23 @@
 
 .noUi-handle {
     background-color: var(--clickgui-slider-handle-color);
-    box-shadow: unset;
+    box-shadow: 0 0 0 0 var(--accent-subtle-background-color);
     border: none;
     border-radius: 50%;
     height: 12px !important;
     width: 12px !important;
     transform: translate(-5px, 1px);
+    cursor: grab;
+    transition: box-shadow var(--duration-fast) var(--ease-standard);
+
+    &:hover,
+    &:focus-visible {
+        box-shadow: 0 0 0 4px var(--accent-subtle-background-color);
+    }
+
+    &:active {
+        cursor: grabbing;
+    }
 }
 
 .noUi-handle::after,
@@ -16,8 +27,9 @@
 
 .noUi-target {
     margin: 10px 0;
-    height: 2px;
+    height: 3px;
     border: none;
+    border-radius: var(--radius-pill);
     background-color: var(--clickgui-slider-track-color);
     box-shadow: unset;
 }

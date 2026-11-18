@@ -43,11 +43,16 @@
     font-family: monospace;
     font-size: 12px;
     color: var(--clickgui-text-color);
-    border: none;
-    border-bottom: solid 2px var(--clickgui-input-border-color);
-    padding: 5px;
-    border-radius: 3px;
-    transition: ease border-color .2s;
+    border: 1px solid var(--accent-border-color);
+    padding: 7px;
+    border-radius: var(--radius-xs);
+    transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+
+    &:focus-visible {
+      border-color: var(--clickgui-input-border-color);
+      box-shadow: 0 0 0 2px var(--accent-subtle-background-color);
+    }
 
     &::-webkit-scrollbar {
       background-color: transparent;

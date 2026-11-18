@@ -26,31 +26,39 @@
   .icon-text-input {
     display: grid;
     grid-template-columns: max-content 1fr max-content;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+
+    &:focus-within {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--accent-subtle-background-color);
+    }
   }
 
   .icon {
-    height: 64px;
-    width: 64px;
+    height: 60px;
+    width: 60px;
     background-color: var(--menu-input-icon-background-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px 0 0 5px;
   }
 
   .input {
     color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
-    font-size: 20px;
+    font-size: 18px;
     background-color: var(--menu-input-background-color);
     border: none;
     padding: 0 20px 0 18px;
-    border-radius: 0 5px 5px 0;
-    border-left: solid 2px var(--menu-input-divider-color);
+    border-left: solid 1px var(--surface-border-color);
     width: 100%;
 
     &:invalid {
-      border: solid 2px var(--menu-input-error-border-color);
+      box-shadow: inset 0 0 0 1px var(--menu-input-error-border-color);
     }
   }
 

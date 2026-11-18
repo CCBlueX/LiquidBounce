@@ -92,15 +92,19 @@
   .choice {
     color: var(--clickgui-text-dimmed-color);
     background-color: var(--clickgui-selection-chip-background-color);
-    border-radius: 3px;
-    padding: 3px 6px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    padding: 4px 7px;
     cursor: pointer;
     font-weight: 500;
-    transition: ease color 0.2s;
+    transition: color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
     overflow-wrap: anywhere;
 
     &:hover {
       color: var(--clickgui-text-color);
+      border-color: var(--accent-border-color);
     }
 
     &.error {
@@ -110,6 +114,7 @@
 
     &.active {
       background-color: var(--clickgui-selection-chip-selected-background-color);
+      border-color: var(--accent-border-strong-color);
       color: var(--clickgui-selection-chip-selected-color);
     }
   }

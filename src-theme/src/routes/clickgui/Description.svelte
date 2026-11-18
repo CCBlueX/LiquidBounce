@@ -45,9 +45,11 @@
 
   .description {
     position: relative;
-    border-radius: 5px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-sm);
     background-color: var(--clickgui-description-background-color);
-    filter: drop-shadow(0 0 10px var(--clickgui-description-shadow-color));
+    backdrop-filter: blur(var(--glass-blur));
+    filter: drop-shadow(0 8px 18px var(--clickgui-description-shadow-color));
 
     &::before {
       content: "";
@@ -73,8 +75,10 @@
   }
 
   .text {
+    max-width: 320px;
     font-size: 12px;
-    padding: 10px;
+    line-height: 1.5;
+    padding: 10px 12px;
     color: var(--clickgui-text-color);
   }
 </style>

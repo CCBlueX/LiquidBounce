@@ -247,11 +247,14 @@
 <style lang="scss">
 
   .panel {
-    border-radius: 5px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-md);
     width: 250px;
     position: absolute;
     overflow: hidden;
-    box-shadow: 0 0 10px var(--clickgui-panel-shadow-color);
+    background-color: var(--clickgui-panel-body-background-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    box-shadow: var(--elevation-md) var(--clickgui-panel-shadow-color);
     will-change: transform;
     transition: none;
     user-select: none;
@@ -261,21 +264,26 @@
     display: grid;
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
-    column-gap: 12px;
+    column-gap: var(--space-3);
     background-color: var(--clickgui-panel-header-background-color);
-    border-bottom: solid 2px var(--clickgui-panel-header-border-color);
-    padding: 10px 15px;
+    border-bottom: solid 1px var(--clickgui-panel-header-border-color);
+    padding: 11px 13px;
     cursor: grab;
 
+    &:active {
+      cursor: grabbing;
+    }
+
     .category {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--clickgui-text-color);
-      font-weight: 500;
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
   }
 
   .modules {
-    transition: max-height 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: max-height var(--duration-base) var(--ease-emphasized);
     scroll-behavior: smooth;
     max-height: 0;
     overflow-y: auto;
@@ -297,9 +305,20 @@
   }
 
   .expand-toggle {
+    display: grid;
+    place-items: center;
+    padding: 6px;
     background-color: transparent;
-    border: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
     cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--accent-subtle-background-color);
+      border-color: var(--accent-border-color);
+    }
 
     .icon {
       height: 12px;
@@ -310,7 +329,7 @@
         content: "";
         position: absolute;
         background-color: var(--clickgui-panel-toggle-icon-color);
-        transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+        transition: transform var(--duration-base) var(--ease-emphasized);
         top: 0;
         left: 50%;
         width: 2px;
@@ -322,7 +341,7 @@
         content: "";
         position: absolute;
         background-color: var(--clickgui-panel-toggle-icon-color);
-        transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+        transition: transform var(--duration-base) var(--ease-emphasized);
         top: 50%;
         left: 0;
         width: 100%;

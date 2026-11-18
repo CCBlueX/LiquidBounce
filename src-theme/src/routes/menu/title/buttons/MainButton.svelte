@@ -32,23 +32,28 @@
 
   .main-button {
     background-color: var(--menu-main-button-background-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     width: 590px;
-    padding: 25px 35px;
+    padding: 22px 28px;
     display: grid;
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
     cursor: pointer;
-    border-radius: 5px;
-    column-gap: 25px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-md) var(--menu-base-50-color);
+    column-gap: var(--space-6);
 
-    background: linear-gradient(to left, var(--menu-main-button-background-color) 50%, var(--menu-main-button-accent-color) 50%);
+    background: linear-gradient(to left, var(--menu-main-button-background-color) 50%, var(--accent-tint-color) 50%);
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
-    transition: background-position .15s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: background-position var(--duration-base) var(--ease-emphasized),
+    border-color var(--duration-fast) var(--ease-standard);
 
     &:hover {
       background-position: left bottom;
+      border-color: var(--accent-border-strong-color);
 
       .icon {
         background-color: var(--menu-main-button-icon-hover-background-color);
@@ -60,18 +65,20 @@
   .icon {
     background-color: var(--menu-main-button-icon-background-color);
     color: var(--menu-main-button-icon-foreground-color);
-    width: 90px;
-    height: 90px;
+    width: 82px;
+    height: 82px;
     border-radius: 50%;
-    transition: ease background-color 0.15s, ease color 0.15s;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .title {
-    font-size: 26px;
+    font-size: 25px;
     color: var(--menu-main-button-text-color);
     font-weight: 600;
+    letter-spacing: -0.02em;
   }
 </style>

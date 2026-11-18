@@ -49,7 +49,16 @@
     font-size: 12px;
     background-color: transparent;
     border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 2px;
     min-width: 5px;
     display: inline-block;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+    &:focus-visible {
+      background-color: var(--accent-subtle-background-color);
+      border-bottom-color: var(--accent-color);
+    }
   }
 </style>

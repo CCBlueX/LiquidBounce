@@ -33,14 +33,17 @@
 
   .button-setting {
     position: relative;
-    border: none;
+    border: 1px solid var(--accent-border-color);
     background-color: var(--menu-button-background-color);
     color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
-    padding: 20px;
-    border-radius: 5px;
-    font-size: 20px;
-    transition: ease background-color .2s, ease opacity .2s;
+    font-weight: 500;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-fast) var(--ease-standard);
 
     &.inset {
       margin: 0 30px;
@@ -50,9 +53,13 @@
       background-color: var(--menu-button-secondary-background-color);
     }
 
+    &:not([disabled]) {
+      cursor: pointer;
+    }
+
     &:not([disabled]):hover {
       background-color: var(--menu-button-hover-background-color);
-      cursor: pointer;
+      border-color: var(--accent-border-strong-color);
 
       &.secondary {
         background-color: var(--menu-button-secondary-hover-background-color);
@@ -60,7 +67,8 @@
     }
 
     &[disabled] {
-      opacity: .6;
+      cursor: not-allowed;
+      opacity: .45;
     }
   }
 </style>

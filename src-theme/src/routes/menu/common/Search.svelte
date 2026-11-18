@@ -22,16 +22,27 @@
 
   .search {
     background-color: var(--menu-search-background-color);
-    border: none;
+    border: 1px solid var(--accent-border-color);
     color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
-    font-size: 20px;
-    border-radius: 5px;
-    border-bottom: solid 4px var(--menu-search-border-color);
+    font-size: 18px;
+    border-radius: var(--radius-md);
     background-image: url("/img/menu/icon-search.svg");
     background-repeat: no-repeat;
     background-position: 20px center;
-    padding: 20px 20px 20px 60px;
+    padding: 18px 20px 18px 56px;
     flex: 1;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--menu-base-50-color);
+    }
+
+    &:focus-visible {
+      border-color: var(--menu-search-border-color);
+      box-shadow: 0 0 0 3px var(--accent-subtle-background-color);
+    }
   }
 </style>

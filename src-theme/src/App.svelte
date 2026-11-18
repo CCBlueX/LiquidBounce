@@ -80,18 +80,12 @@
     }
 
     onMount(async () => {
-        let metadata = await getMetadata();
-        let defaultSurfaceColor = metadata.colors.Tint;
+        let themeId: string | undefined;
+        let defaultSurfaceColor: string | undefined;
+        const latestColorChanges = new Map<string, ThemeColorChangeEvent>();
 
-        let theme = await getTheme(metadata.id);
-
-        applyAccentColor(theme.colors.accent);
-        applyTintColor(defaultSurfaceColor, theme.colors.tint);
-
-        await insertPersistentData();
-
-        listenAlways("themeColorChange", async (event: ThemeColorChangeEvent) => {
-            if (event.themeId !== metadata?.id) {
+        function applyThemeColorChange(event: ThemeColorChangeEvent) {
+            if (event.themeId !== themeId || defaultSurfaceColor === undefined) {
                 return;
             }
 
@@ -103,7 +97,31 @@
                     applyTintColor(defaultSurfaceColor, event.value);
                     break;
             }
+        }
+
+        listenAlways("themeColorChange", (event: ThemeColorChangeEvent) => {
+            latestColorChanges.set(`${event.themeId}:${event.name}`, event);
+            applyThemeColorChange(event);
         });
+
+        try {
+            const metadata = await getMetadata();
+            themeId = metadata.id;
+            defaultSurfaceColor = metadata.colors.Tint;
+
+            const theme = await getTheme(metadata.id);
+            applyAccentColor(theme.colors.accent);
+            applyTintColor(defaultSurfaceColor, theme.colors.tint);
+        } catch (error) {
+            console.error("[Theme] Failed to initialize theme colors", error);
+        } finally {
+            // Color events received during either fetch must win over the fetched snapshot.
+            for (const event of latestColorChanges.values()) {
+                applyThemeColorChange(event);
+            }
+        }
+
+        await insertPersistentData();
 
         if (isStatic) {
             return;

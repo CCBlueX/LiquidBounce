@@ -94,14 +94,17 @@
     z-index: 1001;
     box-sizing: border-box;
     background-color: var(--menu-header-notification-background-color);
-    border-radius: 5px;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-md) var(--menu-base-50-color);
     display: grid;
     grid-template-areas:
         "a b"
         "a c";
     grid-template-columns: max-content minmax(0, 1fr);
     overflow: hidden;
-    padding-right: 10px;
+    padding-right: 12px;
 
     .title, .message {
       overflow-wrap: anywhere;

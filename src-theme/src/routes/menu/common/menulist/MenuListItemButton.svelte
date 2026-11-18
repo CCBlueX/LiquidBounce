@@ -15,15 +15,28 @@
 
 <style lang="scss">
   .button {
+    display: grid;
+    place-items: center;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 4px;
     background-color: transparent;
-    border: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     position: relative;
-    margin-left: 15px;
+    margin-left: 8px;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--accent-subtle-background-color);
+      border-color: var(--accent-border-color);
+    }
   }
 
   .icon {
-    height: 27px;
-    width: 27px;
+    height: 25px;
+    width: 25px;
   }
 </style>

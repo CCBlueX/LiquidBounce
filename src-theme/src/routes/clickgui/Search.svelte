@@ -222,39 +222,50 @@
     top: 70px;
     transform: translateX(-50%);
     background-color: var(--clickgui-search-background-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     width: 600px;
-    border-radius: 30px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-pill);
     overflow: hidden;
-    transition: ease border-radius 0.2s;
-    box-shadow: 0 0 10px var(--clickgui-search-shadow-color);
+    transition: border-radius var(--duration-base) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+    box-shadow: var(--elevation-md) var(--clickgui-search-shadow-color);
 
     &.has-results {
-      border-radius: 10px;
+      border-radius: var(--radius-md);
     }
 
     &:focus-within,
     &.has-focus {
       z-index: 9999999999;
+      border-color: var(--accent-border-strong-color);
     }
   }
 
   .results {
-    border-top: solid 2px var(--clickgui-search-border-color);
-    padding: 5px 25px;
+    border-top: solid 1px var(--clickgui-search-border-color);
+    padding: 6px 8px;
     max-height: 250px;
     overflow: auto;
 
     .result {
-      font-size: 16px;
-      padding: 10px 0;
-      transition: ease padding-left 0.2s;
+      font-size: 14px;
+      margin: 2px 0;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      transition: background-color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard);
       cursor: pointer;
       display: grid;
       grid-template-columns: max-content 1fr max-content;
+      align-items: center;
 
       .module-name {
         color: var(--clickgui-text-dimmed-color);
-        transition: ease color 0.2s;
+        font-weight: 500;
+        transition: color var(--duration-fast) var(--ease-standard);
       }
 
       &.enabled {
@@ -269,37 +280,40 @@
       }
 
       &.selected {
-        padding-left: 10px;
+        background-color: var(--accent-subtle-background-color);
+        border-color: var(--accent-border-color);
       }
 
       &:hover {
         color: var(--clickgui-text-color);
+        background-color: var(--clickgui-module-hover-background-color);
 
         &::after {
           content: "Right-click to locate";
           color: var(--clickgui-search-hint-color);
-          font-size: 12px;
+          font-size: 11px;
+          margin-left: 12px;
         }
       }
     }
 
     .placeholder {
       color: var(--clickgui-text-dimmed-color);
-      font-size: 16px;
-      padding: 10px 0;
+      font-size: 14px;
+      padding: 12px;
     }
 
     &::-webkit-scrollbar {
-      width: 0;
+      width: 4px;
     }
   }
 
   .search-input {
-    padding: 15px 25px;
+    padding: 16px 20px;
     background-color: transparent;
     border: none;
     font-family: "Inter", sans-serif;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--clickgui-text-color);
     width: 100%;
   }

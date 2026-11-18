@@ -144,24 +144,25 @@
 
     .name {
       cursor: pointer;
-      transition: ease background-color 0.12s,
-      ease color 0.12s;
+      transition: background-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard);
 
       color: var(--clickgui-text-dimmed-color);
-      text-align: center;
+      text-align: left;
       font-size: 12px;
       font-weight: 500;
       position: relative;
-      padding: 10px;
+      padding: 11px 38px 11px 13px;
+      border-left: 2px solid transparent;
 
       &.highlight::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        width: calc(100% - 4px);
-        height: calc(100% - 4px);
-        border: solid 2px var(--clickgui-module-highlight-color);
+        inset: 2px;
+        pointer-events: none;
+        border: solid 1px var(--clickgui-module-highlight-color);
+        border-radius: var(--radius-xs);
       }
 
       &:hover {
@@ -171,13 +172,15 @@
 
       &.enabled {
         color: var(--clickgui-module-enabled-color);
+        background-color: var(--accent-subtle-background-color);
+        border-left-color: var(--clickgui-module-enabled-color);
       }
     }
 
     .settings {
       background-color: var(--clickgui-module-settings-background-color);
-      border-left: solid 4px var(--clickgui-module-settings-border-color);
-      padding: 0 11px 0 7px;
+      border-left: solid 2px var(--accent-border-strong-color);
+      padding: 2px 10px 4px 11px;
     }
 
     .expand-arrow {
@@ -191,6 +194,12 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+
+      &:focus-visible {
+        outline: var(--focus-ring-width) solid var(--accent-color);
+        outline-offset: -3px;
+        background-color: var(--accent-subtle-background-color);
+      }
     }
 
     .expand-arrow-icon {
@@ -202,7 +211,8 @@
       background-repeat: no-repeat;
       opacity: 0.5;
       transform: rotate(-90deg);
-      transition: ease opacity 0.15s, cubic-bezier(0.23, 1, 0.32, 1) transform 0.2s;
+      transition: opacity var(--duration-fast) var(--ease-standard),
+      transform var(--duration-base) var(--ease-emphasized);
     }
 
     &.expanded .expand-arrow-icon {

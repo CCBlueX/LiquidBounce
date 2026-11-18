@@ -188,24 +188,33 @@
 
     &.expanded {
       .header {
-        border-radius: 5px 5px 0 0;
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
       }
     }
   }
 
   .header {
     background-color: var(--menu-account-header-background-color);
-    padding: 15px 18px;
-    border-radius: 5px;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    padding: 14px 16px;
+    border: 1px solid var(--accent-border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-sm) var(--menu-base-50-color);
     align-items: center;
     display: grid;
     grid-template-areas:
         "a b c"
         "a d c";
     grid-template-columns: max-content 1fr max-content;
-    column-gap: 15px;
+    column-gap: var(--space-4);
     cursor: pointer;
-    transition: ease border-radius .2s;
+    transition: border-radius var(--duration-base) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      border-color: var(--accent-border-strong-color);
+    }
 
     .avatar-wrapper {
       grid-area: a;
@@ -277,8 +286,13 @@
     position: absolute;
     z-index: 1000;
     width: 100%;
-    border-radius: 0 0 5px 5px;
+    border: 1px solid var(--accent-border-color);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    box-shadow: var(--elevation-md) var(--menu-base-50-color);
     background-color: var(--menu-account-switcher-background-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    overflow: hidden;
 
     .placeholder {
       font-weight: 500;
@@ -295,7 +309,7 @@
       padding: 15px 15px 15px 50px;
       width: 100%;
       font-size: 18px;
-      border-bottom: solid 4px var(--menu-account-search-border-color);
+      border-bottom: solid 1px var(--menu-account-search-border-color);
       background-image: url("/img/menu/icon-search.svg");
       background-repeat: no-repeat;
       background-position: 18px center;
