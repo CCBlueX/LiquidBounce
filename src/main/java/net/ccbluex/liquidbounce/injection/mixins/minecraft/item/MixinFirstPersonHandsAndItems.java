@@ -26,6 +26,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimationMode;
+import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimationPriority;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
@@ -93,7 +94,8 @@ public abstract class MixinFirstPersonHandsAndItems {
     ) {
         AbstractClientPlayer player = Minecraft.getInstance().player;
 
-        if (player == null || !GlobalSettingsViewModel.INSTANCE.getRunning() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)
+        if (player == null || !GlobalSettingsViewModel.INSTANCE.getRunning() || arm != player.getMainArm()
+            || liquid_bounce$shouldUseBlockingVisual(ModuleSwordBlock.shouldAnimateSwordBlock(player))
             || !(GlobalSettingsViewModel.INSTANCE.getSwingAnimation().getActiveMode() instanceof SwingAnimationMode swingAnimation)) {
             return;
         }
@@ -189,7 +191,8 @@ public abstract class MixinFirstPersonHandsAndItems {
         @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState
     ) {
         var entity = liquid_bounce$getEntity(playerState);
-        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity, itemStack)) {
+        if (entity instanceof LivingEntity livingEntity
+            && liquid_bounce$shouldUseBlockingVisual(ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity, itemStack))) {
             return ItemUseAnimation.BLOCK;
         }
         return original;
@@ -203,7 +206,8 @@ public abstract class MixinFirstPersonHandsAndItems {
     )
     private boolean hookIsUseItem(boolean original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
         var entity = liquid_bounce$getEntity(playerState);
-        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
+        if (entity instanceof LivingEntity livingEntity
+            && liquid_bounce$shouldUseBlockingVisual(ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity))) {
             return true;
         }
 
@@ -218,7 +222,8 @@ public abstract class MixinFirstPersonHandsAndItems {
     )
     private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
         var entity = liquid_bounce$getEntity(playerState);
-        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
+        if (entity instanceof LivingEntity livingEntity
+            && liquid_bounce$shouldUseBlockingVisual(ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity))) {
             return InteractionHand.MAIN_HAND;
         }
 
@@ -233,10 +238,17 @@ public abstract class MixinFirstPersonHandsAndItems {
     )
     private int hookItemUseItem(int original, @Local(argsOnly = true, name = "playerState") PlayerRenderState playerState) {
         var entity = liquid_bounce$getEntity(playerState);
-        if (entity instanceof LivingEntity livingEntity && ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity)) {
+        if (entity instanceof LivingEntity livingEntity
+            && liquid_bounce$shouldUseBlockingVisual(ModuleSwordBlock.shouldAnimateSwordBlock(livingEntity))) {
             return 7200;
         }
         return original;
+    }
+
+    @Unique
+    private static boolean liquid_bounce$shouldUseBlockingVisual(boolean blockingApplies) {
+        return SwingAnimationPriority.shouldUseBlockingVisual(blockingApplies,
+            GlobalSettingsViewModel.INSTANCE.getSwingAnimation().getActiveMode());
     }
 
     @Unique
