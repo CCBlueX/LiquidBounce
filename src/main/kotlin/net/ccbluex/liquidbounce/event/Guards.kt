@@ -129,9 +129,14 @@ class Guards internal constructor(
     }
 
     /**
-     * The interruption for the first requirement that no longer holds.
+     * What ends the run: its listener no longer running, which is asked first as the requirements may read a world
+     * that is gone by then, or the first requirement that no longer holds.
      */
-    internal fun broken(): GuardInterruption? {
+    internal fun broken(): CancellationException? {
+        if (listener?.running == false) {
+            return EventListenerNotListeningException(listener)
+        }
+
         for (requirement in requirements) {
             requirement()?.let { return interrupt(it) }
         }
