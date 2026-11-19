@@ -60,7 +60,7 @@ object ItemImageAtlas : EventListener {
 
     @Suppress("unused")
     private val resourceReloadHandler = suspendHandler<ResourceReloadEvent>(
-        behavior = SuspendHandlerBehavior.CancelPrevious,
+        behavior = SuspendHandlerBehavior.Exclusive.LatestWins,
     ) {
         // After first joining we can construct ItemStack
         tickUntil { inGame }

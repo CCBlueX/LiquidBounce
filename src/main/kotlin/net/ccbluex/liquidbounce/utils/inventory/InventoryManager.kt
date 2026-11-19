@@ -181,9 +181,14 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    // This should usually not happen, but we have to check it
-                    if (!chained.canPerformAction()) {
-                        logger.warn("Cannot perform action $action because it is not possible")
+                    // The waits may outlive the chain, e.g. when its menu closes meanwhile
+                    fun isStillPossible() = chained.canPerformAction().also { possible ->
+                        if (!possible) {
+                            logger.warn("Cannot perform action $action because it is not possible")
+                        }
+                    }
+
+                    if (!isStillPossible()) {
                         break
                     }
 
@@ -206,11 +211,14 @@ object InventoryManager : EventListener {
                         waitTicks(constraints.closeDelay.random())
                         cycles = 0
                     }
-                    if (action.performAction()) {
-                        if (action !is InventoryAction.CloseScreen) {
-                            waitTicks(constraints.clickDelay.random())
-                            cycles = 0
-                        }
+
+                    if (!isStillPossible()) {
+                        break
+                    }
+
+                    if (action.performAction() && action !is InventoryAction.CloseScreen) {
+                        waitTicks(constraints.clickDelay.random())
+                        cycles = 0
                     }
                 }
             }

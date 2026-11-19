@@ -23,10 +23,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.coroutines.ContinuationInterceptor
@@ -38,11 +40,14 @@ typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
 /**
  * Registers an event hook for events of type [T] and launches a sequence
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
 ) = suspendHandler<T>(
     context = wrapContinuationInterceptor(dispatcher),
@@ -56,14 +61,17 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code on [GameTickEvent].
  *
  * Use plain `handler<GameTickEvent>` if there is no suspend calls inside the block.
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: suspend CoroutineScope.() -> Unit,
-) = suspendHandler<GameTickEvent>(
+): EventHook<GameTickEvent> = suspendHandler<GameTickEvent>(
     context = wrapContinuationInterceptor(dispatcher),
-    behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)
+    behavior = SuspendHandlerBehavior.Exclusive(SuspendHandlerBehavior.WhenBusy.DROP, onCancellation),
 ) {
     eventHandler()
 }
@@ -94,34 +102,58 @@ suspend fun <T : Event> EventListener.waitMatches(
     eventClass: Class<T>,
     priority: Short,
     predicate: Predicate<T>,
-): T = suspendCancellableCoroutine { continuation ->
-    val handler = object : CompletionHandler, Consumer<T> {
-        @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
+): T {
+    val context = currentCoroutineContext()
+    val guards = context.activeGuards()
+    val event = suspendCancellableCoroutine { continuation ->
+        val handler = object : CompletionHandler, Consumer<T>, BooleanSupplier {
+            @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
 
-        private fun unregisterAndResume(result: Result<T>) {
-            EventManager.unregisterEventHook(eventClass, eventHook)
-            if (continuation.isActive) {
-                continuation.resumeWith(result)
-            }
-        }
-
-        override fun invoke(p1: Throwable?) {
-            EventManager.unregisterEventHook(eventClass, eventHook)
-        }
-
-        override fun accept(event: T) {
-            try {
-                if (predicate.test(event)) {
-                    unregisterAndResume(Result.success(event))
+            private fun unregisterAndResume(result: Result<T>) {
+                EventManager.unregisterEventHook(eventClass, eventHook)
+                if (continuation.isActive) {
+                    continuation.resumeWith(result)
                 }
-            } catch (e: Throwable) {
-                unregisterAndResume(Result.failure(e))
             }
+
+            override fun invoke(p1: Throwable?) {
+                EventManager.unregisterEventHook(eventClass, eventHook)
+            }
+
+            override fun accept(event: T) {
+                try {
+                    if (predicate.test(event)) {
+                        unregisterAndResume(Result.success(event))
+                    }
+                } catch (e: Throwable) {
+                    unregisterAndResume(Result.failure(e))
+                }
+            }
+
+            // Requirements may read the world, so they are checked on game ticks, not on the event thread.
+            override fun getAsBoolean(): Boolean {
+                if (!continuation.isActive) {
+                    return true
+                }
+
+                val broken = try {
+                    guards!!.broken() ?: return false
+                } catch (e: Throwable) {
+                    e
+                }
+                // Unlike a resume, cancel stays safe when the event thread resumes at the same moment.
+                continuation.cancel(broken)
+                return true
+            }
+        }
+
+        continuation.invokeOnCancellation(handler)
+        EventManager.registerEventHook(eventClass, handler.eventHook)
+        if (guards != null) {
+            context.ticker.register(handler)
         }
     }
-
-    continuation.invokeOnCancellation(handler)
-    EventManager.registerEventHook(eventClass, handler.eventHook)
+    return event
 }
 
 /**
@@ -130,6 +162,9 @@ suspend fun <T : Event> EventListener.waitMatches(
  * The continuation resumes on the event handler thread. For example:
  * - [net.ccbluex.liquidbounce.event.events.PacketEvent]: client Netty IO (EventLoopGroup)
  * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
+ *
+ * What the run [requires] is checked on every game tick while waiting, and again right before the
+ * code after the wait runs.
  *
  * @param priority The priority of the event hook.
  * @param predicate The predicate to match the event.
@@ -159,3 +194,10 @@ suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
     priority: Short = 0,
     predicate: Predicate<T>,
 ): T? = withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
+
+/**
+ * Wait until this listener's world is left or replaced.
+ *
+ * The continuation resumes on the thread the world change is handled on, the client render thread.
+ */
+suspend fun EventListener.waitForWorldChange(): WorldChangeEvent = waitMatches { true }

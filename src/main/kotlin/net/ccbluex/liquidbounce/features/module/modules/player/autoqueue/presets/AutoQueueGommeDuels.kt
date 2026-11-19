@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitSeconds
+import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
@@ -112,13 +112,13 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             notification("AutoPlay", "Match won", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            waitSeconds(2)
+            waitMillis(2000)
             network.sendChat(winMessage)
         } else if (ev.message.contains("Du wurdest von") && ev.message.contains("getötet")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            waitSeconds(2)
+            waitMillis(2000)
             network.sendChat(loseMessage)
         }
     }
@@ -150,7 +150,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        waitSeconds(5)
+        waitMillis(5000)
     }
 
     private suspend fun handleDuelsSituation() {
