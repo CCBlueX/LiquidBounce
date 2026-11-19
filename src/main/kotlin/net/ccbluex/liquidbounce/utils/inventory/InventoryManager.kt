@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -120,7 +120,13 @@ object InventoryManager : EventListener {
         val actionType: ContainerInput,
         val stack: ItemStack,
         val time: Long,
-    )
+        val wasMoving: Boolean,
+    ) {
+        /**
+         * When a resync first put the item back, 0 while none did.
+         */
+        var restoredAt = 0L
+    }
 
     private class Rejection(val stack: ItemStack, var count: Int = 0, var cooldownUntil: Long = 0L)
 
@@ -132,12 +138,20 @@ object InventoryManager : EventListener {
     val isGlobalRevertCooldown
         get() = System.currentTimeMillis() < globalCooldownUntil
 
+    /**
+     * A resync put a clicked item back and it is open whether the server rejected the click or only answered
+     * an earlier one. Clicking on would be based on an inventory that is about to change again.
+     */
+    val isRevertPending
+        get() = recentClicks.any { it.restoredAt != 0L }
+
     val canClickPlayerInventory
         get() = player.containerMenu.isPlayerInventory &&
             !interaction.isServerControlledInventory &&
             !isContainerOpenPending &&
             !isUseItemPending &&
-            !isGlobalRevertCooldown
+            !isGlobalRevertCooldown &&
+            !isRevertPending
 
     /**
      * Items the server keeps putting back, such as lobby menu items. Moving them only loops.
@@ -298,6 +312,7 @@ object InventoryManager : EventListener {
                                 action.actionType,
                                 action.slot.itemStack.copy(),
                                 System.currentTimeMillis(),
+                                wasMoving = !InventoryRequirements.NO_MOVEMENT.test(action),
                             )
                         }
                     } else {
@@ -314,7 +329,7 @@ object InventoryManager : EventListener {
                                 cycles = 0
                             }
                             is InventoryAction.UseItem -> {
-                                useItemCooldownUntil = System.currentTimeMillis() + player.ping + USE_ITEM_GRACE_MS
+                                useItemCooldownUntil = System.currentTimeMillis() + USE_ITEM_GRACE_MS
                                 waitTicks(max(constraints.clickDelay.random(), 2))
                                 cycles = 0
                             }
@@ -387,7 +402,7 @@ object InventoryManager : EventListener {
         }
 
         if (mayOpenContainer) {
-            containerOpenPendingUntil = System.currentTimeMillis() + player.ping + CONTAINER_OPEN_GRACE_MS
+            containerOpenPendingUntil = System.currentTimeMillis() + CONTAINER_OPEN_GRACE_MS
         } else if (packet is ClientboundOpenScreenPacket) {
             containerOpenPendingUntil = 0L
         }
@@ -396,10 +411,15 @@ object InventoryManager : EventListener {
             val containerId = packet.containerId
             val items = packet.items
             mc.execute { onContainerResync(containerId, items) }
-        } else if (packet is ClientboundContainerSetSlotPacket && packet.containerId == 0 && !packet.item.isEmpty) {
+        } else if (packet is ClientboundContainerSetSlotPacket && packet.containerId == 0) {
             val slot = packet.slot
             val stack = packet.item
             mc.execute { onSlotResync(slot, stack) }
+        }
+
+        // A closed container is never resynced again, so its clicks stay unjudged.
+        if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket) {
+            mc.execute { recentClicks.removeIf { it.containerId != 0 } }
         }
 
         if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket
@@ -459,11 +479,25 @@ object InventoryManager : EventListener {
         serverLockedItems.clear()
     }
 
-    private fun pruneRecentClicks(now: Long) {
-        val window = player.ping + RESYNC_GRACE_MS
-        while (recentClicks.firstOrNull()?.let { now - it.time > window } == true) {
-            recentClicks.removeFirst()
-            consecutiveReverts = 0
+    /**
+     * Counts a restored click as reverted once the server had the time to take the restore back, and forgets
+     * clicks no resync is going to answer anymore.
+     */
+    @Suppress("unused")
+    private val revertHandler = handler<GameTickEvent> {
+        val now = System.currentTimeMillis()
+        val iterator = recentClicks.iterator()
+        while (iterator.hasNext()) {
+            val click = iterator.next()
+            if (click.restoredAt != 0L) {
+                if (now - click.restoredAt > RESYNC_COOLDOWN_MS) {
+                    iterator.remove()
+                    recordRevert(click, now)
+                }
+            } else if (now - click.time > RESYNC_GRACE_MS) {
+                iterator.remove()
+                consecutiveReverts = 0
+            }
         }
     }
 
@@ -472,67 +506,53 @@ object InventoryManager : EventListener {
             actionType == ContainerInput.SWAP ||
             actionType == ContainerInput.QUICK_MOVE
 
-    private fun recordRevert(stack: ItemStack, now: Long) {
+    private fun recordRevert(click: SentClick, now: Long) {
+        val stack = click.stack
         if (++consecutiveReverts >= GLOBAL_REVERT_THRESHOLD) {
             val shift = (consecutiveReverts - GLOBAL_REVERT_THRESHOLD).coerceAtMost(2)
-            globalCooldownUntil = now + player.ping + (GLOBAL_REVERT_COOLDOWN_MS shl shift)
+            globalCooldownUntil = now + (GLOBAL_REVERT_COOLDOWN_MS shl shift)
         }
 
-        if (isServerLocked(stack)) {
-            return
-        }
+        // Servers that reject clicks of a moving player reject any item, which says nothing about this one.
+        if (!click.wasMoving && !isServerLocked(stack)) {
+            val rejection = rejections.find { ItemStack.isSameItemSameComponents(it.stack, stack) }
+                ?: Rejection(stack).also(rejections::add)
 
-        val rejection = rejections.find { ItemStack.isSameItemSameComponents(it.stack, stack) }
-            ?: Rejection(stack).also(rejections::add)
-
-        // Cooldown prevents re-sending the same SWAP before an in-flight click's response arrives.
-        rejection.cooldownUntil = now + player.ping + RESYNC_COOLDOWN_MS
-        if (++rejection.count >= LOCK_AFTER_REJECTIONS) {
-            serverLockedItems += stack
+            // Cooldown prevents re-sending the same SWAP before an in-flight click's response arrives.
+            rejection.cooldownUntil = now + RESYNC_COOLDOWN_MS
+            if (++rejection.count >= LOCK_AFTER_REJECTIONS) {
+                serverLockedItems += stack
+            }
         }
+    }
+
+    /**
+     * Marks the click as restored when the resynced slot holds the clicked item again, and drops the click
+     * when it does not: the server then applied it.
+     */
+    private fun markRestored(click: SentClick, slotStack: ItemStack, now: Long): Boolean {
+        val isRestored = isRevertibleAction(click.actionType) &&
+            ItemStack.isSameItemSameComponents(slotStack, click.stack) && slotStack.count >= click.stack.count
+        if (!isRestored) {
+            consecutiveReverts = 0
+        } else if (click.restoredAt == 0L) {
+            click.restoredAt = now
+        }
+        return isRestored
     }
 
     private fun onContainerResync(containerId: Int, items: List<ItemStack>) {
         val now = System.currentTimeMillis()
-        pruneRecentClicks(now)
-
-        val iterator = recentClicks.iterator()
-        while (iterator.hasNext()) {
-            val click = iterator.next()
-            if (click.containerId != containerId) {
-                continue
-            }
-            iterator.remove()
-
-            if (!isRevertibleAction(click.actionType)) {
-                continue
-            }
-            val slotStack = items.getOrNull(click.slotId) ?: continue
-            if (ItemStack.isSameItemSameComponents(slotStack, click.stack) &&
-                slotStack.count >= click.stack.count
-            ) {
-                recordRevert(click.stack, now)
-            } else {
-                consecutiveReverts = 0
-            }
+        recentClicks.removeIf { click ->
+            click.containerId == containerId &&
+                !markRestored(click, items.getOrNull(click.slotId) ?: ItemStack.EMPTY, now)
         }
     }
 
     private fun onSlotResync(slot: Int, stack: ItemStack) {
         val now = System.currentTimeMillis()
-        pruneRecentClicks(now)
-
-        val iterator = recentClicks.iterator()
-        while (iterator.hasNext()) {
-            val click = iterator.next()
-            if (click.containerId != 0 || click.slotId != slot || !isRevertibleAction(click.actionType)) {
-                continue
-            }
-            if (ItemStack.isSameItemSameComponents(stack, click.stack) && stack.count >= click.stack.count) {
-                iterator.remove()
-                recordRevert(click.stack, now)
-                break
-            }
+        recentClicks.removeIf { click ->
+            click.containerId == 0 && click.slotId == slot && !markRestored(click, stack, now)
         }
     }
 
@@ -543,10 +563,12 @@ object InventoryManager : EventListener {
             it.priority
         }
 
-    private const val CONTAINER_OPEN_GRACE_MS = 150L
-    private const val USE_ITEM_GRACE_MS = 100L
-    private const val RESYNC_GRACE_MS = 300L
-    private const val RESYNC_COOLDOWN_MS = 200L
+    // Round trips measured on rewound.cc and CubeCraft: 80 to 270 ms for a container to open or a click to be
+    // answered. The tab list ping is no measure of it, CubeCraft reports up to 20 seconds.
+    private const val CONTAINER_OPEN_GRACE_MS = 400L
+    private const val USE_ITEM_GRACE_MS = 250L
+    private const val RESYNC_GRACE_MS = 500L
+    private const val RESYNC_COOLDOWN_MS = 350L
     private const val LOCK_AFTER_REJECTIONS = 3
     private const val GLOBAL_REVERT_THRESHOLD = 2
     private const val GLOBAL_REVERT_COOLDOWN_MS = 400L

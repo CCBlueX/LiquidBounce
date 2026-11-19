@@ -131,9 +131,10 @@ sealed interface InventoryAction {
                 return false
             }
 
-            // Screen is null, which means we are targeting the player inventory
-            if (requiresPlayerInventoryOpen() && InventoryManager.canClickPlayerInventory) {
-                return true
+            // Screen is null, which means we are targeting the player inventory. Falling through would let an open
+            // InventoryScreen (also container 0) skip the checks of canClickPlayerInventory.
+            if (requiresPlayerInventoryOpen()) {
+                return InventoryManager.canClickPlayerInventory
             }
 
             // Check if current screen is the same as the screen we want to interact with
