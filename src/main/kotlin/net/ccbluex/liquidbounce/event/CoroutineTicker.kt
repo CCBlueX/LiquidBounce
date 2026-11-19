@@ -20,10 +20,14 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
@@ -214,3 +218,13 @@ suspend fun waitTicks(ticks: Int) {
  * Note: When TPS is not 20, this won't be actual `seconds`.
  */
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
+
+/**
+ * Waits [millis] of real time before continuing.
+ * Re-entry on the render thread, between ticks. Requirements are checked when the wait ends, not during it.
+ */
+suspend fun waitMillis(millis: Int) {
+    if (millis > 0) {
+        withContext(Dispatchers.Minecraft) { delay(millis.toLong()) }
+    }
+}
