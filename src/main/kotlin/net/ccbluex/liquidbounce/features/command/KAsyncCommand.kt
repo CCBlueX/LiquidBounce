@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.context.CommandContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -31,9 +33,14 @@ import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClickRun
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.CommonComponents
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
@@ -62,8 +69,14 @@ class KAsyncCommand<S : Any> internal constructor(
             return 0
         }
 
-        // Progress message job
         val progressMessageMetadata = MessageMetadata(id = "C$commandPath#progress", remove = true)
+
+        // Handler job
+        val handlerJob = scope.launch(CoroutineName(commandPath)) {
+            handler(ctx)
+        }
+
+        // Progress message job
         val progressJob = scope.launch(CoroutineName("$commandPath Progress")) {
             val startAt = System.currentTimeMillis()
             var n = 0
@@ -77,17 +90,14 @@ class KAsyncCommand<S : Any> internal constructor(
                         regular("<$char>"),
                         variable(commandPath),
                         variable(duration.toString()),
-                    ),
+                    ).append(" ").append(cancelButton(commandPath, handlerJob)),
                     metadata = progressMessageMetadata
                 )
                 n++
             }
         }
 
-        // Handler job
-        scope.launch(CoroutineName(commandPath)) {
-            handler(ctx)
-        }.invokeOnCompletion {
+        handlerJob.invokeOnCompletion {
             EXECUTING_COMMANDS.remove(commandPath)
             progressJob.cancel()
             mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
@@ -95,6 +105,22 @@ class KAsyncCommand<S : Any> internal constructor(
 
         return Command.SINGLE_SUCCESS
     }
+
+    private fun cancelButton(commandPath: String, job: Job): MutableComponent = markAsError("[\u2715]")
+        .onHover(HoverEvent.ShowText(CommonComponents.GUI_CANCEL))
+        .onClickRun {
+            if (!job.isActive) {
+                return@onClickRun
+            }
+
+            val message = translation("liquidbounce.commandManager.commandCancelled", variable(commandPath))
+
+            job.cancel(CancellationException(message.string))
+            chat(
+                message,
+                metadata = MessageMetadata(id = "C$commandPath#cancelled", remove = true)
+            )
+        }
 
     fun interface Handler<S : Any> {
         suspend operator fun invoke(ctx: CommandContext<S>)
