@@ -108,6 +108,8 @@ class Navigator(
      * handler at [CRITICAL_MODIFICATION], after ticking the scope its skills run on.
      */
     fun tick(event: MovementInputEvent) {
+        // A tick the agent presses nothing in, such as one aiming at a crop, must not repeat the keys of the one before
+        body.release()
         navigator.options = settings.options()
         agent.tick()
         body.applyKeys(event)
