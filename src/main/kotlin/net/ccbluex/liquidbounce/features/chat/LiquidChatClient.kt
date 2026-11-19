@@ -40,6 +40,7 @@ import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.protocol.ErrorCode
 import net.ccbluex.axochat.protocol.SuccessReason
 import net.ccbluex.axochat.user.LegacyUser
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.event.EventManager
@@ -81,6 +82,7 @@ object LiquidChatClient {
         // the API client's interceptor rejects the 101 of the websocket upgrade
         HttpClient.defaultClient,
         malformed = { logger.warn("Malformed LiquidChat packet: {}", it.take(MALFORMED_LOG_LENGTH)) },
+        name = LiquidBounce.CLIENT_NAME,
     )
 
     private val backoff = Backoff()

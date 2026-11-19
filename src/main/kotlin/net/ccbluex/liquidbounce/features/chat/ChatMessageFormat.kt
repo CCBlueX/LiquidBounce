@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.user.Author
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
@@ -90,6 +91,11 @@ object ChatMessageFormat {
         val parts = mutableListOf<Component>()
         if (event.chatGroup == ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT) {
             parts += "[".asPlainText(ChatFormatting.DARK_GRAY)
+        }
+        // without brackets, so a client cannot pass its name off as a role
+        author?.client?.takeIf { it != LiquidBounce.CLIENT_NAME }?.let { client ->
+            parts += client.asPlainText(ChatFormatting.DARK_AQUA)
+            parts += " ▸ ".asPlainText(ChatFormatting.DARK_GRAY)
         }
         parts += playerSprite
         parts += PlainText.SPACE
