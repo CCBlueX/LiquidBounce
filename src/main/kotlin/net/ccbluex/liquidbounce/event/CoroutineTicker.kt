@@ -36,6 +36,7 @@ import java.util.function.Predicate
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.TimeSource
 
 /**
  * A queue of callbacks advanced once per tick.
@@ -220,11 +221,35 @@ suspend fun waitTicks(ticks: Int) {
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
 /**
- * Waits [millis] of real time before continuing.
- * Re-entry on the render thread, between ticks. Requirements are checked when the wait ends, not during it.
+ * Where the code after a wait of real time continues.
  */
-suspend fun waitMillis(millis: Int) {
-    if (millis > 0) {
-        withContext(Dispatchers.Minecraft) { delay(millis.toLong()) }
+enum class Reentry {
+    /**
+     * On the first game tick after the time passed, like the waits that count ticks. What the run [requires] is
+     * checked on every tick of the wait.
+     */
+    GAME_TICK,
+
+    /**
+     * On the render thread as soon as the time passed, which is between two ticks most of the time. What the run
+     * [requires] is only checked when the wait ends.
+     */
+    RENDER_THREAD,
+}
+
+/**
+ * Waits [millis] of real time before continuing at [reentry].
+ */
+suspend fun waitMillis(millis: Int, reentry: Reentry) {
+    if (millis <= 0) {
+        return
+    }
+
+    when (reentry) {
+        Reentry.GAME_TICK -> {
+            val start = TimeSource.Monotonic.markNow()
+            tickUntil { start.elapsedNow().inWholeMilliseconds >= millis }
+        }
+        Reentry.RENDER_THREAD -> withContext(Dispatchers.Minecraft) { delay(millis.toLong()) }
     }
 }
