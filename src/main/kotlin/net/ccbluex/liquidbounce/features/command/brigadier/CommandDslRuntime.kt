@@ -167,7 +167,7 @@ internal class CmdLiteralNode(
  */
 internal class CmdExecutorSpec(@JvmField val command: Command<ClientCommandSource>) : ChainElement {
     constructor(allowParallel: Boolean, handler: KAsyncCommand.Handler<ClientCommandSource>) :
-        this(CommandExecutor.wrapSuspend(allowParallel, handler))
+        this(KAsyncCommand(allowParallel, CommandExecutor.commandCoroutineScope, handler))
 }
 
 private fun leafExecutorOf(leaf: ChainElement): Command<ClientCommandSource> =

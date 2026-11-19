@@ -66,18 +66,6 @@ object CommandExecutor : EventListener {
     private var isShuttingDown: Boolean = false
 
     /**
-     * Wraps a suspend handler into a Brigadier [Command], keeping the scheduling,
-     * re-entrance guard and progress-message behavior of the previous meta-model
-     * `suspendHandler`.
-     *
-     * @param allowParallel allow or prevent duplicated executions
-     */
-    fun wrapSuspend(
-        allowParallel: Boolean = false,
-        handler: KAsyncCommand.Handler<ClientCommandSource>,
-    ): Command<ClientCommandSource> = KAsyncCommand(allowParallel, commandCoroutineScope, handler)
-
-    /**
      * Handling exceptions for suspend handlers
      */
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -91,7 +79,7 @@ object CommandExecutor : EventListener {
     /**
      * Render thread scope
      */
-    private val commandCoroutineScope = CoroutineScope(
+    internal val commandCoroutineScope = CoroutineScope(
         Dispatchers.Main + SupervisorJob() + coroutineExceptionHandler
     )
 

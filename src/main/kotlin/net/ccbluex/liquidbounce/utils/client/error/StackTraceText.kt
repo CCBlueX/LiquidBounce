@@ -31,8 +31,12 @@ import net.minecraft.network.chat.Style
 
 private const val PROJECT_PACKAGE = "net.ccbluex.liquidbounce"
 
-private val causeLabel = "Caused by: ".asPlainText(Style.EMPTY + ChatFormatting.RED + ChatFormatting.BOLD)
-private val suppressedLabel = "Suppressed: ".asPlainText(Style.EMPTY + ChatFormatting.LIGHT_PURPLE + ChatFormatting.BOLD)
+private val causeLabel = "Caused by: ".asPlainText(
+    Style.EMPTY + ChatFormatting.RED + ChatFormatting.BOLD
+)
+private val suppressedLabel = "Suppressed: ".asPlainText(
+    Style.EMPTY + ChatFormatting.LIGHT_PURPLE + ChatFormatting.BOLD
+)
 
 /**
  * Colors the stack trace the way an IDE does: the throwable red with its message orange, LiquidBounce's own frames blue
@@ -109,7 +113,8 @@ private fun sourceText(frame: StackTraceElement): Component {
             else -> {
                 this += fileName.asPlainText(ChatFormatting.GREEN)
                 this += ":".asPlainText(ChatFormatting.DARK_GRAY)
-                this += frame.lineNumber.toString().asPlainText(Style.EMPTY + ChatFormatting.GREEN + ChatFormatting.BOLD)
+                this += frame.lineNumber.toString()
+                    .asPlainText(Style.EMPTY + ChatFormatting.GREEN + ChatFormatting.BOLD)
             }
         }
 
