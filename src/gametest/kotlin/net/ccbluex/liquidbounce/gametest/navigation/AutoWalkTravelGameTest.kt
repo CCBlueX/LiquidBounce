@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.TestWorld
 import net.ccbluex.gametest.harness.action.awaitServer
@@ -38,19 +40,26 @@ import net.minecraft.world.phys.Vec3
  * `.goto` across a lake that falls off into the void on both sides: hungry, AutoWalk puts the boat it carries on the
  * water, rows across, takes the boat along again at the far shore and eats its steak on the way.
  */
-class AutoWalkTravelGameTest : SingleplayerGameTest(TestWorld.VOID, {
+class AutoWalkTravelGameTest : SingleplayerGameTest(TestWorld.VOID, travel)
+
+/** The same crossing on the game test server, under its anticheats. */
+class AutoWalkTravelServerGameTest : ServerGameTest(TestWorld.VOID, travel)
+
+private val travel: GameTestScope.() -> Unit = {
     context.restoring(ModuleAutoWalk) {
         val y = origin.y
         fill(BlockPos(-4, y - 4, -8), BlockPos(40, y - 1, 8), "minecraft:stone")
         fill(BlockPos(6, y - 3, -8), BlockPos(26, y - 1, 8), "minecraft:water")
         awaitServer("block 26 ${y - 1} 8 minecraft:water")
+        // Peaceful refills the bar
+        run("difficulty easy")
         run("gamemode survival $playerName")
         run("clear $playerName")
         run("item replace entity $playerName inventory.0 with minecraft:oak_boat")
         run("item replace entity $playerName inventory.1 with minecraft:cooked_beef 2")
         moveTo(Vec3(1.5, y.toDouble(), 0.5), yaw = -90f)
-        // Hunger at its strongest empties the bar within a few seconds
-        run("effect give $playerName minecraft:hunger 3 255")
+        // Hunger at its strongest empties the bar within a few seconds, cleared once it is low enough
+        run("effect give $playerName minecraft:hunger 10 255")
         awaitClient("the player to get hungry") { checkNotNull(it.player).foodData.foodLevel <= 6 }
         run("effect clear $playerName minecraft:hunger")
         val hunger = context.fromClient { checkNotNull(it.player).foodData.foodLevel }
@@ -84,4 +93,4 @@ class AutoWalkTravelGameTest : SingleplayerGameTest(TestWorld.VOID, {
         check(boats == 1) { "Carries $boats boats after the crossing, not the one it brought" }
         check(fed > hunger) { "Hunger went from $hunger to $fed on the way" }
     }
-})
+}

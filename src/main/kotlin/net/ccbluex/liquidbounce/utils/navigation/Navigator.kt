@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
@@ -129,7 +130,8 @@ class Navigator(
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (body.wantsSprint && event.directionalInput.isMoving &&
+        // Eating or drinking on the way is walked, not sprinted: anticheats flag the sprint
+        if (body.wantsSprint && !player.isUsingItem && event.directionalInput.isMoving &&
             (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT)
         ) {
             event.sprint = true
