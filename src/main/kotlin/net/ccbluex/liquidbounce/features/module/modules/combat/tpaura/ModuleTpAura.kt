@@ -232,7 +232,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return replan()
         }
 
-        val arrival = route.batches(steps.packetsPerTick).size
+        val arrival = steps.ticks(route)
         if (!clicker.willClickAt(arrival) && engagement.waited++ < MAX_WAIT) {
             return
         }

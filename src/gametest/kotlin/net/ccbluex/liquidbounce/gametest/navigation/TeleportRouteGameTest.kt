@@ -37,6 +37,7 @@ import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.summon
 import net.ccbluex.gametest.harness.action.teleport
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
@@ -165,7 +166,10 @@ private fun GameTestScope.checkOutcomes(y: Int) {
     check((midAir as? Outcome.Failed)?.failure == Failure.INVALID_DESTINATION) { "Mid-air gave $midAir" }
 }
 
-/** TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up. */
+/**
+ * TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up, and one
+ * nearby with every pacing.
+ */
 private fun GameTestScope.checkTpAura(y: Int) {
     checkTpAuraAttack(Vec3(2.5, y.toDouble(), -10.5), BlockPos(16, y, -11))
 
@@ -176,6 +180,13 @@ private fun GameTestScope.checkTpAura(y: Int) {
     fill(BlockPos(32, y + 12, -12), BlockPos(36, y + 12, -8), "minecraft:stone")
     checkTpAuraAttack(Vec3(27.5, y.toDouble(), -10.5), BlockPos(34, y + 13, -11))
     fill(BlockPos(32, y + 12, -12), BlockPos(36, y + 12, -8), "minecraft:air")
+
+    // Every packet in one tick, and a single one to the end, reach a husk within one packet's range
+    val steps = ModuleTpAura.containedValues.first { it.name == "Steps" } as ValueGroup
+    for (pacing in listOf("Burst", "Instant", "Batches")) {
+        context.onClient { steps.containedValues.first { it.name == "Pacing" }.setByString(pacing) }
+        checkTpAuraAttack(Vec3(2.5, y.toDouble(), -10.5), BlockPos(10, y, -11))
+    }
 }
 
 /** Starts TpAura at [origin] until it hits a husk standing at [target], then checks that the player came back. */
