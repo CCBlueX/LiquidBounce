@@ -35,14 +35,18 @@ class PlacementPositionCandidate(
     var enemyDamage: Float? = null
 
     /**
-     * The damage a crystal at the specific position would deal to the enemy.
+     * The damage a crystal at the specific position would deal to us.
      */
-    private var selfDamage: Float? = null
+    var selfDamage: Float? = null
+        private set
 
     /**
      * The distance to us.
      */
-    private val distanceSq by lazy { pos.distToCenterSqr(player.position()) }
+    val distanceSq by lazy { pos.distToCenterSqr(player.position()) }
+
+    val isImmediatelyActionable: Boolean
+        get() = isNotInvalid() && notBlockedByCrystal && !requiresBasePlace
 
     init {
         calculate()

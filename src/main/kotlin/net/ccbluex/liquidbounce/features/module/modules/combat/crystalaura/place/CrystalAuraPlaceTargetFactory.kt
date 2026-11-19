@@ -31,9 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.PredictBlockageCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.ValidHeightCondition
 import net.ccbluex.liquidbounce.render.FULL_BOX
+import net.ccbluex.liquidbounce.utils.aiming.utils.findClosestPointOnBlockInLineWithCrystal
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
@@ -56,6 +59,41 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
     fun updateSphere() {
         sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())
+    }
+
+    /**
+     * Evaluates placements without changing placement or BasePlace state. The caller is responsible for making
+     * [target] the current damage target while this method runs.
+     */
+    internal fun findImmediatePlacementOpportunities(target: LivingEntity): List<PlacementPositionCandidate> {
+        val positions = mutableListOf<PlacementPositionCandidate>()
+        evaluateCandidatePositions(
+            basePlace = false,
+            excludeIds = null,
+            positions = positions,
+            targetOverride = target,
+            immediateOnly = true
+        )
+
+        return positions.filter { it.isImmediatelyActionable && hasActionableFace(it.pos) }
+    }
+
+    private fun hasActionableFace(pos: BlockPos): Boolean {
+        val eyePos = player.eyePosition
+        val range = SubmoduleCrystalPlacer.range.toDouble()
+        val wallsRange = SubmoduleCrystalPlacer.wallsRange.toDouble()
+        return if (SubmoduleCrystalPlacer.onlyAbove) {
+            raytraceUpperBlockSide(eyePos, range, wallsRange, pos) != null
+        } else {
+            findClosestPointOnBlockInLineWithCrystal(
+                eyePos,
+                range,
+                wallsRange,
+                pos,
+                notFacingAway = SubmoduleCrystalPlacer.notFacingAway,
+                rotationsNotToMatch = null
+            ) != null
+        }
     }
 
     fun updateTarget(excludeIds: IntCollection?) {
@@ -98,9 +136,11 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
     private fun evaluateCandidatePositions(
         basePlace: Boolean,
         excludeIds: IntCollection?,
-        positions: MutableList<PlacementPositionCandidate>
+        positions: MutableList<PlacementPositionCandidate>,
+        targetOverride: LivingEntity? = null,
+        immediateOnly: Boolean = false
     ): Boolean {
-        val target = ModuleCrystalAura.targetTracker.target ?: return true
+        val target = targetOverride ?: ModuleCrystalAura.targetTracker.target ?: return true
         val expectedCrystal = if (oldVersion) FULL_BOX.setMaxY(2.0) else FULL_BOX
         val basePlaceLayers = if (basePlace) SubmoduleBasePlace.getBasePlaceLayers(target.y) else IntRange.EMPTY
 
@@ -118,7 +158,11 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
                 val blocked = cache.up.isBlockedByEntitiesReturnCrystal(
                     box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false)
                 val crystal = blocked.value() != null
-                if (!blocked.keyBoolean() || crystal) {
+                if (immediateOnly) {
+                    if (!blocked.keyBoolean() && !crystal && cache.canPlace) {
+                        positions.add(PlacementPositionCandidate(pos.immutable(), true, false))
+                    }
+                } else if (!blocked.keyBoolean() || crystal) {
                     positions.add(PlacementPositionCandidate(pos.immutable(), !crystal, !cache.canPlace))
                 }
             }
@@ -131,30 +175,51 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         finalPositions: List<PlacementPositionCandidate>,
         currentBasePlaceTarget: PlacementPositionCandidate?
     ): PlacementPositionCandidate? {
-        // choose the target with the maximum damage
-        var bestTarget = finalPositions.maxOrNull() ?: return null
-        val minAdvantage = SubmoduleBasePlace.minAdvantage
-
-        // find a target position that will not require base place if possible
-        if (bestTarget.requiresBasePlace) {
-            finalPositions.filterNot { it.requiresBasePlace }.maxOrNull()?.let { nonBasePlaceTarget ->
-                if (bestTarget.enemyDamage!! - nonBasePlaceTarget.enemyDamage!! <= minAdvantage) {
-                    bestTarget = nonBasePlaceTarget
-                }
-            }
+        currentBasePlaceTarget?.calculate()
+        val currentChoice = currentBasePlaceTarget?.takeIf(PlacementPositionCandidate::isNotInvalid)?.let {
+            it.toChoice(!it.requiresBasePlace || SubmoduleBasePlace.hasFoundation(it.pos))
         }
 
-        // if base place already is placing a block and this is block is still relevant, we wait for it
-        currentBasePlaceTarget?.let {
-            it.calculate()
-            if (it.isNotInvalid() &&
-                bestTarget.enemyDamage!! - it.enemyDamage!! <= minAdvantage
-            ) {
-                bestTarget = it
-            }
-        }
-
-        return bestTarget
+        return PlacementCandidateDecider.select(
+            finalPositions.toChoices(),
+            currentChoice,
+            SubmoduleBasePlace.minAdvantage
+        )?.source
     }
+
+    /**
+     * Supplies foundation inputs only until ordered selection has found its first usable candidate. Lower base-place
+     * candidates cannot win the initial comparison and are not queried; a retained target is checked independently.
+     */
+    private fun List<PlacementPositionCandidate>.toChoices():
+        List<PlacementCandidateChoice<PlacementPositionCandidate>> {
+        var bestOverallFound = false
+        return sortedDescending().map { candidate ->
+            val hasFoundation = when {
+                !candidate.requiresBasePlace -> true
+                bestOverallFound -> false
+                else -> SubmoduleBasePlace.hasFoundation(candidate.pos)
+            }
+
+            if (!candidate.requiresBasePlace || hasFoundation) {
+                bestOverallFound = true
+            }
+
+            candidate.toChoice(hasFoundation)
+        }
+    }
+
+    private fun PlacementPositionCandidate.toChoice(hasFoundation: Boolean) =
+        PlacementCandidateChoice(
+            source = this,
+            features = PlacementCandidateFeatures(
+                enemyDamage = enemyDamage!!,
+                selfDamage = selfDamage!!,
+                distanceSq = distanceSq,
+                requiresBasePlace = requiresBasePlace,
+                notBlockedByCrystal = notBlockedByCrystal,
+                hasFoundation = hasFoundation
+            )
+        )
 
 }

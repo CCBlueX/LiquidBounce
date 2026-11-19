@@ -62,15 +62,19 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
      *
      * The first float is the self-damage, the second is the enemy damage.
      */
-    internal fun approximateExplosionDamage(pos: Vec3, requestingSubmodule: RequestingSubmodule): FloatFloatPair? {
-        val target = targetTracker.target ?: return null
-        val damageToTarget = target.getDamage(pos, requestingSubmodule, CheckedEntity.TARGET)
+    internal fun approximateExplosionDamage(
+        pos: Vec3,
+        requestingSubmodule: RequestingSubmodule,
+        useCache: Boolean = true
+    ): FloatFloatPair? {
+        val target = targetTracker.target?.takeIf { it.isAlive } ?: return null
+        val damageToTarget = target.getDamage(pos, requestingSubmodule, CheckedEntity.TARGET, useCache)
         val notEnoughDamage = damageToTarget.isSmallerThan(minEnemyDamage)
         if (notEnoughDamage) {
             return null
         }
 
-        val selfDamage = player.getDamage(pos, requestingSubmodule, CheckedEntity.SELF)
+        val selfDamage = player.getDamage(pos, requestingSubmodule, CheckedEntity.SELF, useCache)
         val willKill = antiSuicide && selfDamage.isAnyGreaterThanOrEqual(player.health + player.absorptionAmount)
         val tooMuchDamage = selfDamage.isGreaterThan(maxSelfDamage)
         if (willKill || tooMuchDamage) {
@@ -81,11 +85,11 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
         if (maxFriendDamage < 10f) { // 10f is the maximum allowed by the setting
             val friends =
                 world
-                    .getEntitiesBoxInRange(pos, 6.0) { FriendManager.isFriend(it) && it.boundingBox.maxY > pos.y }
+                    .getEntitiesBoxInRange(pos, 6.0) { FriendManager.isFriend(it) }
 
             if (friends.any {
                 it is LivingEntity &&
-                    it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER).isGreaterThan(maxFriendDamage)
+                    it.getDamage(pos, requestingSubmodule, CheckedEntity.OTHER, useCache).isGreaterThan(maxFriendDamage)
             }) {
                 tooMuchDamageForFriend = true
             }
@@ -102,7 +106,8 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
     private fun LivingEntity.getDamage(
         crystal: Vec3,
         requestingSubmodule: RequestingSubmodule,
-        checkedEntity: CheckedEntity
+        checkedEntity: CheckedEntity,
+        useCache: Boolean
     ): DamageProvider {
         val damageConstellation = DamageConstellation(this, blockPosition(), crystal, requestingSubmodule)
         val calc: (DamageConstellation) -> DamageProvider = {
@@ -117,7 +122,7 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
             )
         }
 
-        return if (CrystalAuraTriggerer.canCache()) {
+        return if (useCache && CrystalAuraTriggerer.canCache()) {
             cacheMap.computeIfAbsent(damageConstellation, calc)
         } else {
             calc(damageConstellation)

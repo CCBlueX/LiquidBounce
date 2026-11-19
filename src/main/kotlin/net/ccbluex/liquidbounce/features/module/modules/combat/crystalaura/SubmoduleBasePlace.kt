@@ -22,22 +22,32 @@ import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.baseplace.findBasePlaceSupportPath
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.baseplace.selectBaseSlot
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import java.util.concurrent.CompletableFuture
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -45,6 +55,7 @@ import kotlin.math.max
 /**
  * Tries to build improved placement spots.
  */
+@Suppress("TooManyFunctions")
 object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace", true) {
 
     /**
@@ -115,53 +126,86 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
 
     val minAdvantage by float("MinAdvantage", 2.0f, 0.1f..10f)
 
+    private fun findBaseSlot(): HotbarItemSlot? = selectBaseSlot(
+        Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN),
+        Slots.OffhandWithHotbar.findSlot(Items.BEDROCK),
+    )
+
     private val placer = tree(BlockPlacer(
         "Placing",
         this,
         Priority.IMPORTANT_FOR_USAGE_2,
-        slotFinder = { _ ->
-            Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN) ?: Slots.OffhandWithHotbar.findSlot(Items.BEDROCK)
-        },
+        slotFinder = { _ -> findBaseSlot() },
     ))
 
-    var currentTarget: PlacementPositionCandidate? = null
-        set(value) {
-            field = value
-            val blockedPositions = placer.support.blockedPositions
-            blockedPositions.clear()
-            value?.let {
-                // make sure the placer won't build up the position
-                blockedPositions.add(it.pos.above())
-                if (SubmoduleCrystalPlacer.oldVersion) {
-                    blockedPositions.add(it.pos.above(2))
-                }
+    @Volatile
+    private var target: PlacementPositionCandidate? = null
 
-                placer.update(setOf(it.pos))
-                trying.reset()
-            } ?: run { placer.clear() }
+    var currentTarget: PlacementPositionCandidate?
+        get() = target
+        set(value) {
+            onClientThread {
+                // A worker invalidated while its update was queued must not resurrect BasePlace after disable.
+                if (value == null || running) {
+                    updateCurrentTarget(value)
+                }
+            }
         }
+
+    /** Must run on the client thread: BlockPlacer mutates FastUtil collections and renderers. */
+    private fun updateCurrentTarget(value: PlacementPositionCandidate?) {
+        target = value
+        val blockedPositions = placer.support.blockedPositions
+        blockedPositions.clear()
+        value?.let {
+            // make sure the placer won't build up the position
+            blockedPositions.add(it.pos.above())
+            if (SubmoduleCrystalPlacer.oldVersion) {
+                blockedPositions.add(it.pos.above(2))
+            }
+
+            placer.update(setOf(it.pos))
+            trying.reset()
+        } ?: placer.clear()
+    }
 
     private val calculations = Chronometer()
     private val trying = Chronometer()
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (currentTarget != null && trying.hasElapsed(timeOut.toLong())) {
-            placer.clear()
+        val active = currentTarget ?: return@handler
+        val state = active.pos.stateOrEmpty
+        val alreadyPlaced = state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK
+        val invalid = !alreadyPlaced && !state.canBeReplaced()
+        if (alreadyPlaced || invalid || !hasAvailableBlocks || trying.hasElapsed(timeOut.toLong())) {
             currentTarget = null
         }
     }
 
     override fun onDisabled() {
-        placer.disable()
+        onClientThread {
+            placer.disable()
+            updateCurrentTarget(null)
+        }
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         currentTarget = null
     }
+
+    val hasAvailableBlocks: Boolean
+        get() = onClientThread { running && placer.canAct() && findBaseSlot() != null } == true
 
     /**
      * Returns whether base place should be calculated.
      */
     fun shouldBasePlaceRun(): Boolean {
-        if (!enabled) {
+        if (!hasAvailableBlocks) {
+            if (currentTarget != null) {
+                currentTarget = null
+            }
             return false
         }
 
@@ -171,6 +215,91 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         }
 
         return false
+    }
+
+    /**
+     * Proves that [pos] can be placed now or reached by a connected support path.
+     *
+     * Candidate selection normally runs on CrystalAura's worker. The actual proof runs on the client thread because it
+     * uses BlockPlacer's queues, support reservations, inventory and target finding. A missing path or an exhausted
+     * search budget is rejected; proximity to arbitrary terrain is never accepted as a foundation.
+     */
+    fun hasFoundation(pos: BlockPos): Boolean {
+        val target = pos.immutable
+        return onClientThread { hasFoundationOnClient(target) } == true
+    }
+
+    private fun hasFoundationOnClient(pos: BlockPos): Boolean {
+        if (!running || !placer.canAct() || findBaseSlot() == null) {
+            return false
+        }
+
+        val support = placer.support
+        val canSupport = support.enabled && support.filter.getSlot(support.blocks) != null
+        if (!canSupport) {
+            return placer.canClickPlace(pos)
+        }
+
+        val depth = support.depth
+        val rangeSq = placer.range.sq()
+        // BlockPlacer removes old support entries before searching. Keep those positions eligible for revalidation,
+        // but never route a new path through another structural target.
+        val queuedTargets = placer.blocks.long2BooleanEntrySet()
+            .filterNot { entry -> entry.booleanValue }
+            .map { entry -> entry.longKey }
+            .toSet()
+        return findBasePlaceSupportPath(
+            target = pos,
+            hasSolidNeighbor = { it.hasAnySolidPlacementNeighbor() },
+            canClickPlace = placer::canClickPlace,
+            neighbors = { current ->
+                buildList {
+                    for (direction in Direction.entries) {
+                        val neighbor = current.relative(direction)
+                        val invalidState = support.blockedPositions.contains(neighbor) ||
+                            !neighbor.stateOrEmpty.canBeReplaced() ||
+                            queuedTargets.contains(neighbor.asLong())
+                        val outsideSearch = neighbor.distManhattan(pos) > depth ||
+                            neighbor.distToCenterSqr(player.eyePosition) > rangeSq
+                        if (invalidState || outsideSearch || !neighbor.isUnobstructed()) {
+                            continue
+                        }
+
+                        add(neighbor)
+                    }
+                }
+            },
+            maxIterations = supportSearchIterationLimit(depth),
+        ) != null
+    }
+
+    /** Six possible incoming edges per node plus the start, bounding queue expansions for this unit-cost search. */
+    private fun supportSearchIterationLimit(depth: Int): Int {
+        val nodes = 1 + 2 * depth * (depth + 1) * (2 * depth + 1) / 3
+        return 6 * nodes + 1
+    }
+
+    /** Runs [block] on the client thread and waits for its result when called from CrystalAura's worker. */
+    private fun <T> onClientThread(block: () -> T): T? {
+        if (mc.isSameThread) {
+            return block()
+        }
+
+        val future = CompletableFuture<T>()
+        mc.execute {
+            try {
+                future.complete(block())
+            } catch (throwable: Throwable) {
+                future.completeExceptionally(throwable)
+            }
+        }
+
+        return try {
+            future.get()
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            null
+        }
     }
 
     /**

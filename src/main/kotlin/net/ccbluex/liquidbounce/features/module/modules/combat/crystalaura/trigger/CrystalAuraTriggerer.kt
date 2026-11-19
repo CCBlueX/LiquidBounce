@@ -60,13 +60,16 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         Thread(it, "CrystalAuraTriggerer").apply { isDaemon = true }
     }
 
+    private val taskLock = Object()
+    private var taskGeneration = 0L
+
     /**
-     * The currently executed placement task.
+     * The currently executed placement task. Access is guarded by [taskLock].
      */
     private var currentPlaceTask: Future<*>? = null
 
     /**
-     * The currently executed destroy task.
+     * The currently executed destroy task. Access is guarded by [taskLock].
      */
     private var currentDestroyTask: Future<*>? = null
 
@@ -97,40 +100,73 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     }
 
     fun terminateRunningTasks() {
-        currentPlaceTask?.cancel(true)
-        currentDestroyTask?.cancel(true)
+        synchronized(taskLock) {
+            taskGeneration++
+            currentPlaceTask?.cancel(true)
+            currentDestroyTask?.cancel(true)
+            currentPlaceTask = null
+            currentDestroyTask = null
+        }
     }
 
     fun runPlace(runnable: Runnable) {
-        currentPlaceTask?.let {
-            if (!it.isDone) {
-                return
-            }
-        }
-
         if (offThread) {
-            currentPlaceTask = service.submit(runnable)
+            synchronized(taskLock) {
+                if (currentPlaceTask?.isDone == false) {
+                    return
+                }
+
+                val generation = taskGeneration
+                currentPlaceTask = service.submit {
+                    if (isCurrentGeneration(generation) && ModuleCrystalAura.enabled) {
+                        runnable.run()
+                    }
+                }
+            }
         } else {
-            currentPlaceTask?.cancel(true)
-            currentPlaceTask = null
-            mc.execute(runnable)
+            val generation = synchronized(taskLock) {
+                currentPlaceTask?.cancel(true)
+                currentPlaceTask = null
+                taskGeneration
+            }
+            mc.execute {
+                if (isCurrentGeneration(generation) && running) {
+                    runnable.run()
+                }
+            }
         }
     }
 
     fun runDestroy(runnable: Runnable) {
-        currentDestroyTask?.let {
-            if (!it.isDone) {
-                return
+        if (offThread) {
+            synchronized(taskLock) {
+                if (currentDestroyTask?.isDone == false) {
+                    return
+                }
+
+                val generation = taskGeneration
+                currentDestroyTask = service.submit {
+                    if (isCurrentGeneration(generation) && ModuleCrystalAura.enabled) {
+                        runnable.run()
+                    }
+                }
+            }
+        } else {
+            val generation = synchronized(taskLock) {
+                currentDestroyTask?.cancel(true)
+                currentDestroyTask = null
+                taskGeneration
+            }
+            mc.execute {
+                if (isCurrentGeneration(generation) && running) {
+                    runnable.run()
+                }
             }
         }
+    }
 
-        if (offThread) {
-            currentDestroyTask = service.submit(runnable)
-        } else {
-            currentDestroyTask?.cancel(true)
-            currentDestroyTask = null
-            mc.execute(runnable)
-        }
+    private fun isCurrentGeneration(generation: Long): Boolean = synchronized(taskLock) {
+        generation == taskGeneration
     }
 
     /**

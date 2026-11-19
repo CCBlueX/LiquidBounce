@@ -19,19 +19,23 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -51,11 +55,15 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
 
     var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
     val chronometer = Chronometer()
+    private val actionLock = Any()
+    private var actionGeneration = 0
 
     fun tick(providedCrystal: EndCrystal? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
             return
         }
+
+        val generation = nextActionGeneration()
 
         // update the target / validate the provided crystal
         providedCrystal?.let { crystal ->
@@ -66,6 +74,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         }
 
         val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return
+        val enemyTargetId = ModuleCrystalAura.targetTracker.target?.id ?: return
 
         val base = FULL_BOX.move(target.blockPosition().below())
         mc.execute {
@@ -85,29 +94,28 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
                 prioritizeVisible = prioritizeVisibleFaces
             ) ?: return
 
-        queueDestroy(rotation, target, base, eyePos, vec3d)
+        queueDestroy(generation, enemyTargetId, rotation, target, base, eyePos, vec3d)
     }
 
-    private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
+    private fun queueDestroy(
+        generation: Int,
+        enemyTargetId: Int,
+        rotation: Rotation,
+        target: EndCrystal,
+        base: AABB,
+        eyePos: Vec3,
+        vec3d: Vec3
+    ) {
         // create the action chain to execute
         val action = {
             ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = {
-                isLookingAtEntity(
-                    toEntity = target,
-                    rotation = RotationManager.serverRotation,
-                    range = range.toDouble(),
-                    throughWallsRange = wallsRange.toDouble()
-                ) != null
+                isCurrentAction(generation) && findEntityHitResult(rotation, target) != null
             }, onFinished = {
-                if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
-                    return@rotate
+                if (mc.isSameThread) {
+                    destroy(generation, enemyTargetId, rotation, target)
+                } else {
+                    mc.execute { destroy(generation, enemyTargetId, rotation, target) }
                 }
-
-                val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
-
-                attackEntity(target1, swingMode)
-                postAttackHandlers.forEach { it.attacked(target1.id) }
-                chronometer.reset()
             })
         }
 
@@ -117,6 +125,57 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         } else {
             action()
         }
+    }
+
+    @Suppress("ComplexCondition")
+    private fun destroy(generation: Int, enemyTargetId: Int, rotation: Rotation, target: EndCrystal) {
+        synchronized(actionLock) {
+            if (generation != actionGeneration || !running || !CrystalAuraTriggerer.running ||
+                ModuleCrystalAura.targetTracker.target?.id != enemyTargetId ||
+                CrystalAuraDestroyTargetFactory.currentTarget !== target ||
+                !chronometer.hasAtLeastElapsed(delay.toLong()) ||
+                !target.isAlive || !target.isWithinWorldBorder || world.getEntity(target.id) !== target
+            ) {
+                return
+            }
+
+            findEntityHitResult(rotation, target) ?: return
+
+            CrystalAuraDamageOptions.approximateExplosionDamage(
+                target.position(),
+                CrystalAuraDamageOptions.RequestingSubmodule.DESTROY,
+                useCache = false
+            ) ?: return
+
+            if (!attackEntity(target, swingMode)) {
+                return
+            }
+
+            postAttackHandlers.forEach { it.attacked(target.id) }
+            chronometer.reset()
+        }
+    }
+
+    private fun findEntityHitResult(rotation: Rotation, target: EndCrystal) = isLookingAtEntity(
+        fromEntity = player,
+        toEntity = target,
+        rotation = if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
+            rotation
+        } else {
+            RotationManager.serverRotation
+        },
+        range = range.toDouble(),
+        throughWallsRange = wallsRange.toDouble()
+    )
+
+    private fun nextActionGeneration() = synchronized(actionLock) { ++actionGeneration }
+
+    private fun isCurrentAction(generation: Int) = synchronized(actionLock) {
+        generation == actionGeneration
+    }
+
+    override fun onDisabled() {
+        nextActionGeneration()
     }
 
     fun getMaxRange() = max(range, wallsRange)

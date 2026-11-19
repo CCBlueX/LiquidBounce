@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockb
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTickBase
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
+import net.ccbluex.liquidbounce.features.module.modules.combat.anchoraura.ModuleAnchorAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
@@ -457,6 +458,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
         val builtin = arrayOf(
             // Combat
             ModuleAimbot,
+            ModuleAnchorAura,
             ModuleAutoArmor,
             ModuleAutoBow,
             ModuleAutoClicker,

@@ -127,7 +127,7 @@ fun LocalPlayer.clickBlockWithSlot(
     swingMode: SwingMode,
     switchMode: SwitchMode = SwitchMode.SILENT,
     sequenced: Boolean = true,
-) {
+): Boolean {
     val hand = if (slot == Inventory.SLOT_OFFHAND) {
         InteractionHand.OFF_HAND
     } else {
@@ -138,7 +138,7 @@ fun LocalPlayer.clickBlockWithSlot(
     if (hand == InteractionHand.MAIN_HAND) {
         if (switchMode == SwitchMode.NONE && slot != prevHotbarSlot) {
             // the slot is not selected and we can't switch
-            return
+            return false
         }
 
         this.inventory.selectedSlot = slot
@@ -179,6 +179,7 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     this.inventory.selectedSlot = prevHotbarSlot
+    return true
 }
 
 fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.executeInTickLoop {

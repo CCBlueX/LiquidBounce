@@ -68,15 +68,17 @@ abstract class CrystalPostAttackTracker : EventListener {
 
                 val id = packet.id
                 // Default (non-existing) value = 0
-                if (attackedIds.remove(id) != 0L) {
-                    confirmed(id)
+                val attackedAt = attackedIds.remove(id)
+                if (attackedAt != 0L) {
+                    confirmed(id, (System.currentTimeMillis() - attackedAt).coerceAtLeast(0L))
                 }
             }
 
             is ClientboundRemoveEntitiesPacket -> {
                 packet.entityIds.forEachInt { id ->
-                    if (attackedIds.remove(id) != 0L) {
-                        confirmed(id)
+                    val attackedAt = attackedIds.remove(id)
+                    if (attackedAt != 0L) {
+                        confirmed(id, (System.currentTimeMillis() - attackedAt).coerceAtLeast(0L))
                     }
                 }
             }
@@ -94,6 +96,19 @@ abstract class CrystalPostAttackTracker : EventListener {
      * @param id The id of the attacked entity.
      */
     open fun confirmed(id: Int) {}
+
+    /**
+     * Gets called when we are sure the crystal got destroyed.
+     *
+     * The default implementation preserves the original [confirmed] callback. Trackers that need timing data can
+     * override this overload without changing existing trackers.
+     *
+     * @param id The id of the attacked entity.
+     * @param latencyMs Elapsed time between [attacked] and the first confirmation packet, in milliseconds.
+     */
+    open fun confirmed(id: Int, latencyMs: Long) {
+        confirmed(id)
+    }
 
     /**
      * Gets called when the crystal was not confirmed in the time defined by [timeOutAfter] in ms.

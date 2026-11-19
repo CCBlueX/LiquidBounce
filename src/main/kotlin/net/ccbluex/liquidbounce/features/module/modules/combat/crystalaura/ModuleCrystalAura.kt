@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destr
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.targeting.CrystalAuraSmartTargeting
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
@@ -64,6 +66,7 @@ object ModuleCrystalAura : ClientModule(
         treeAll(
             SubmoduleCrystalPlacer,
             SubmoduleCrystalDestroyer,
+            CrystalAuraSmartTargeting,
             CrystalAuraDamageOptions,
             CrystalAuraTriggerer,
             PredictFeature,
@@ -89,6 +92,7 @@ object ModuleCrystalAura : ClientModule(
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
         SubmoduleBasePlace.onDisabled()
+        CrystalAuraSmartTargeting.reset()
         CrystalAuraDamageOptions.cacheMap.clear()
     }
 
@@ -100,10 +104,16 @@ object ModuleCrystalAura : ClientModule(
     private val simulatedTickHandler = handler<RotationUpdateEvent>(1) {
         CrystalAuraDamageOptions.cacheMap.clear()
         if (CombatManager.shouldPauseCombat) {
+            CrystalAuraSmartTargeting.reset()
             return@handler
         }
 
-        targetTracker.selectFirst()
+        if (CrystalAuraSmartTargeting.enabled) {
+            CrystalAuraSmartTargeting.selectTarget()
+        } else {
+            CrystalAuraSmartTargeting.reset()
+            targetTracker.selectFirst()
+        }
     }
 
 }
