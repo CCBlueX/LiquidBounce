@@ -208,10 +208,13 @@ data class MessageMetadata(
     }
 }
 
+private fun Component.withClientPrefix(metadata: MessageMetadata): Component =
+    if (metadata.prefix) clientPrefix.copy().append(this) else this
+
 @AddonApi
 @JvmOverloads
 fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
-    val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
+    val realText = text.withClientPrefix(metadata)
 
     if (mc.player == null) {
         logger.info("(Chat) ${realText.string}")
@@ -233,6 +236,22 @@ fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
 @AddonApi
 fun chat(vararg texts: Component, metadata: MessageMetadata = defaultMessageMetadata) {
     chat(texts.asText(), metadata)
+}
+
+/**
+ * Shows [text] as the message carrying `metadata.id`, replacing its content in place when the chat already
+ * displays it.
+ *
+ * Unlike [chat], a refresh writes no log line and does not move the chat scroll, which is what a message that
+ * updates on its own is drawn with. Outside the game there is no chat to update, so nothing happens.
+ */
+fun updateChat(text: Component, metadata: MessageMetadata) {
+    if (mc.player == null) {
+        return
+    }
+
+    val realText = text.withClientPrefix(metadata)
+    mc.gui.hud.chat.updateMessage(realText, metadata)
 }
 
 @AddonApi

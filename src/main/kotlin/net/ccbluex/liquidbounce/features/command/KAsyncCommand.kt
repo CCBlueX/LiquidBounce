@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.updateChat
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.HoverEvent
@@ -84,13 +85,13 @@ class KAsyncCommand<S : Any> internal constructor(
                 delay(0.25.seconds)
                 val duration = (System.currentTimeMillis() - startAt) / 1000
                 val char = LOADING_CHARS[n % LOADING_CHARS.size]
-                chat(
+                updateChat(
                     translation(
                         "liquidbounce.commandManager.commandProgress",
                         regular("<$char>"),
                         variable(commandPath),
                         variable(duration.toString()),
-                    ).append(" ").append(cancelButton(commandPath, handlerJob)),
+                    ).append(CommonComponents.SPACE).append(cancelButton(commandPath, handlerJob)),
                     metadata = progressMessageMetadata
                 )
                 n++
