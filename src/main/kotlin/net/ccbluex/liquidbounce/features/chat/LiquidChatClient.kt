@@ -81,6 +81,8 @@ object LiquidChatClient {
         // the API client's interceptor rejects the 101 of the websocket upgrade
         HttpClient.defaultClient,
         malformed = { logger.warn("Malformed LiquidChat packet: {}", it.take(MALFORMED_LOG_LENGTH)) },
+        // public: the chat server looks up the name of this client by it
+        key = "b160f08e7c06e57b129172fe53e1a67c",
     )
 
     private val backoff = Backoff()

@@ -91,6 +91,11 @@ object ChatMessageFormat {
         if (event.chatGroup == ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT) {
             parts += "[".asPlainText(ChatFormatting.DARK_GRAY)
         }
+        // without brackets, so a client cannot pass its name off as a role
+        author?.client?.takeIf { it != ChatSession.self?.client }?.let { client ->
+            parts += client.asPlainText(ChatFormatting.DARK_AQUA)
+            parts += " ▸ ".asPlainText(ChatFormatting.DARK_GRAY)
+        }
         parts += playerSprite
         parts += PlainText.SPACE
         if (role != null) {
