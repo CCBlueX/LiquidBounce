@@ -51,6 +51,9 @@ viafabricplus = "5.1.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.17.1+26.3-fabric"
 iris = "1.11.7+26.3-fabric"
+# Game tests of AutoBuild's Schematic mode (-PgameTestSchematics)
+litematica = "0.29.1"
+malilib = "0.30.2"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -129,6 +132,8 @@ exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-ap
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+litematica = { group = "maven.modrinth", name = "litematica", version.ref = "litematica" }
+malilib = { group = "maven.modrinth", name = "malilib", version.ref = "malilib" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

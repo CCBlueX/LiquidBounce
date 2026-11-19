@@ -20,11 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import net.ccbluex.agent.math.BlockPos
 import net.ccbluex.agent.v26_3.fabric.litematica.Placements
 import net.ccbluex.agent.skills.build.BuildResult
 import net.ccbluex.agent.skills.build.build
 import net.ccbluex.agent.tick.TickScope
 import net.ccbluex.agent.v26_3.toMinecraft
+import net.ccbluex.agent.world.block.BlockEntityType
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -32,10 +34,11 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.navigation.Navigator
+import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen
 
 /**
  * Builds the enabled Litematica placements with Minecraft Agent's build skill: walks to each block, places it facing
- * the way the schematic has it, and reports what it lacked.
+ * the way the schematic has it, takes more items from the chests around when it runs out, and reports what it lacked.
  */
 object SchematicMode : ModuleAutoBuild.AutoBuildMode("Schematic") {
 
@@ -53,7 +56,8 @@ object SchematicMode : ModuleAutoBuild.AutoBuildMode("Schematic") {
             mc.schedule { ModuleAutoBuild.enabled = false }
             return
         }
-        val launched = scope.launch { report(navigator.agent.build(blocks, breakWrong)) }
+        val supplies = chestsAround(blocks.keys)
+        val launched = scope.launch { report(navigator.agent.build(blocks, breakWrong, supplies)) }
         job = launched
         launched.invokeOnCompletion { mc.schedule { if (job === launched) ModuleAutoBuild.enabled = false } }
     }
@@ -69,8 +73,21 @@ object SchematicMode : ModuleAutoBuild.AutoBuildMode("Schematic") {
         if (job == null) {
             return@handler
         }
+        // A placed sign opens its editor; the sign stays blank
+        if (mc.gui.screen() is AbstractSignEditScreen) {
+            mc.gui.setScreen(null)
+        }
         scope.tick()
         navigator.tick(event)
+    }
+
+    /** The chests within two chunks of the player outside [placement]. */
+    private fun chestsAround(placement: Set<BlockPos>): List<BlockPos> {
+        val level = navigator.agent.body.level
+        val chunk = player.chunkPosition()
+        return (chunk.x - 2..chunk.x + 2).flatMap { x ->
+            (chunk.z - 2..chunk.z + 2).flatMap { z -> level.blockEntities(x, z, BlockEntityType.CHEST) }
+        }.filter { it !in placement }
     }
 
     private fun report(result: BuildResult) {
