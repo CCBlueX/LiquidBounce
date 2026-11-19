@@ -40,7 +40,8 @@ internal typealias Requirement = () -> String?
 
 /**
  * Requires what [read] returns for the rest of this run of the handler: `false` or `null` ends it. It is read again on
- * every tick a tick-based helper waits ([tickUntil], [waitTicks], [tickConditional], [waitSeconds]) and once more right
+ * every tick a tick-based helper waits ([tickUntil], [waitTicks], [tickConditional], [waitMillis]) and
+ * once more right
  * before the code after any suspension runs. Once it fails, the run ends there quietly: nothing after that suspension
  * runs, cleanup in `finally` and the handler's `onCancellation` still do, and the next run starts without it. If it
  * fails right now, the run ends here.

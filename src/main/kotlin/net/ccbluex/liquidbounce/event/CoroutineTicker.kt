@@ -20,14 +20,10 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
@@ -213,43 +209,14 @@ suspend fun waitTicks(ticks: Int) {
 }
 
 /**
- * Waits a fixed amount of seconds on tick level before continuing.
- * Re-entry at the game tick.
- *
- * Note: When TPS is not 20, this won't be actual `seconds`.
+ * Waits [millis] of real time, however long the ticks take, before continuing.
+ * Re-entry at the game tick, as with every wait here.
  */
-suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
-
-/**
- * Where the code after a wait of real time continues.
- */
-enum class Reentry {
-    /**
-     * On the first game tick after the time passed, like the waits that count ticks. What the run [requires] is
-     * checked on every tick of the wait.
-     */
-    GAME_TICK,
-
-    /**
-     * On the render thread as soon as the time passed, which is between two ticks most of the time. What the run
-     * [requires] is only checked when the wait ends.
-     */
-    RENDER_THREAD,
-}
-
-/**
- * Waits [millis] of real time before continuing at [reentry].
- */
-suspend fun waitMillis(millis: Int, reentry: Reentry) {
+suspend fun waitMillis(millis: Int) {
     if (millis <= 0) {
         return
     }
 
-    when (reentry) {
-        Reentry.GAME_TICK -> {
-            val start = TimeSource.Monotonic.markNow()
-            tickUntil { start.elapsedNow().inWholeMilliseconds >= millis }
-        }
-        Reentry.RENDER_THREAD -> withContext(Dispatchers.Minecraft) { delay(millis.toLong()) }
-    }
+    val start = TimeSource.Monotonic.markNow()
+    tickUntil { start.elapsedNow().inWholeMilliseconds >= millis }
 }
