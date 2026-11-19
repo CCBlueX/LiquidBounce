@@ -19,14 +19,15 @@
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.agent.navigation.teleport.Options
+import net.ccbluex.agent.navigation.teleport.Pacing
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 
 class StepsValueGroup : ValueGroup("Steps") {
 
     private val length by float("Length", Options.DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks")
-    val packetsPerTick by int("PerTick", Options.DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets")
+    val packetsPerTick by int("PerTick", Pacing.DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets")
 
-    fun options() = Options(length.toDouble(), packetsPerTick)
+    fun options() = Options(length.toDouble(), Pacing.Batches(packetsPerTick))
 
 }

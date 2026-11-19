@@ -24,7 +24,7 @@ import net.ccbluex.agent.simulation.Forecasts
 import net.ccbluex.agent.simulation.PositionExtrapolation
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent

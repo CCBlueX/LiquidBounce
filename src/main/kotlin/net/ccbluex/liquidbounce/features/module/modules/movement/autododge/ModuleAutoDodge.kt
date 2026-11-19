@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 import net.ccbluex.agent.math.AABB
 import net.ccbluex.agent.simulation.PlayerSimulation
 import net.ccbluex.agent.simulation.SimulatedArrow
-import net.ccbluex.agent.vanilla.toAgent
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged

@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.agent.simulation.Forecast
 import net.ccbluex.agent.simulation.SimulatedArrow
-import net.ccbluex.agent.vanilla.toAgent
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent

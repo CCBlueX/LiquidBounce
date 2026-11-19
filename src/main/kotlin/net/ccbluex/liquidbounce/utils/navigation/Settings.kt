@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.agent.navigation.Options
 import net.ccbluex.agent.navigation.PlaceableBlocks
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection

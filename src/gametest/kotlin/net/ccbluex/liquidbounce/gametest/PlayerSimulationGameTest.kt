@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.gametest
 import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
-import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener

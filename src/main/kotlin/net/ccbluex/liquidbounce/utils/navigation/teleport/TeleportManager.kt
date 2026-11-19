@@ -22,7 +22,7 @@ import net.ccbluex.agent.navigation.Listener
 import net.ccbluex.agent.navigation.teleport.Owner
 import net.ccbluex.agent.navigation.teleport.Teleports
 import net.ccbluex.agent.navigation.teleport.Trip
-import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent

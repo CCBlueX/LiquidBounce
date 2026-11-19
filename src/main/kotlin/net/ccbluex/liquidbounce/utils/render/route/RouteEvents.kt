@@ -22,7 +22,7 @@ import net.ccbluex.agent.math.BlockPos
 import net.ccbluex.agent.math.Vec3
 import net.ccbluex.agent.navigation.Listener
 import net.ccbluex.agent.navigation.Progress
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toMinecraft
 
 /** Fills [view] from what a navigator or a trip reports, for [RouteRenderer]. */
 class RouteEvents(private val view: RouteView) : Listener {

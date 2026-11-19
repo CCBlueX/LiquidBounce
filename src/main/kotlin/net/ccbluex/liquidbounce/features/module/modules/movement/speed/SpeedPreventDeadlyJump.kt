@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
-import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.agent.world.Input
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer

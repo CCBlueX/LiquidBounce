@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation
 
-import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent

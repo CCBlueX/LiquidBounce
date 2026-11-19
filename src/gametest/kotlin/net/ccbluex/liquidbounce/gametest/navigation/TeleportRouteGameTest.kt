@@ -29,8 +29,8 @@ import net.ccbluex.agent.pathfinder.route.Outcome
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.agent.pathfinder.teleport.WaypointSearch
 import net.ccbluex.agent.pathfinder.terrain.Terrain
-import net.ccbluex.agent.vanilla.toAgent
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer

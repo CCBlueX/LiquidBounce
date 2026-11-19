@@ -23,8 +23,8 @@ import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.agent.simulation.SimulationHooks
-import net.ccbluex.agent.vanilla.toAgent
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.agent.world.entity.MoverType
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent

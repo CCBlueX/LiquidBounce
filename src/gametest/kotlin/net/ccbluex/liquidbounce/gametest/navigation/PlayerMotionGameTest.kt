@@ -24,8 +24,8 @@ import net.ccbluex.agent.simulation.MotionTraits
 import net.ccbluex.agent.simulation.PlayerMotion
 import net.ccbluex.agent.simulation.SimulatedInput
 import net.ccbluex.agent.simulation.SimulatedPlayer
-import net.ccbluex.agent.vanilla.live
-import net.ccbluex.agent.vanilla.toAgent
+import net.ccbluex.agent.v26_3.live
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput

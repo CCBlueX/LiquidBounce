@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation
 
-import net.ccbluex.agent.client.ClientBody
+import net.ccbluex.agent.v26_3.fabric.ClientBody
 import net.ccbluex.agent.math.Vec3
 import net.ccbluex.agent.math.ViewRotation
 import net.ccbluex.agent.navigation.BodyTraits
 import net.ccbluex.agent.navigation.LookPurpose
 import net.ccbluex.agent.navigation.Teleporter
 import net.ccbluex.agent.navigation.Turning
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.agent.world.Input
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent

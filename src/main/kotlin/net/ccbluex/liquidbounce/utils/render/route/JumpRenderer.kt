@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.render.route
 
 import net.ccbluex.agent.navigation.walk.AssistedJump
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent

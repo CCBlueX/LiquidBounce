@@ -25,9 +25,9 @@ import net.ccbluex.agent.pathfinder.route.Outcome
 import net.ccbluex.agent.pathfinder.teleport.Route
 import net.ccbluex.agent.pathfinder.terrain.Terrain
 import net.ccbluex.agent.pathfinder.terrain.reachPositions
-import net.ccbluex.agent.vanilla.live
-import net.ccbluex.agent.vanilla.toAgent
-import net.ccbluex.agent.vanilla.toMinecraft
+import net.ccbluex.agent.v26_3.live
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
