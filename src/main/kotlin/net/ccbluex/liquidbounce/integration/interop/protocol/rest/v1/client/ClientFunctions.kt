@@ -72,17 +72,17 @@ private fun Route.getUpdateInfo() = get("/update") {
 
         val updateInfo = update.await() ?: return@apply
         add("update", JsonObject().apply {
-            addProperty("buildId", updateInfo.buildId)
+            addProperty("buildId", updateInfo.id)
             addProperty("commitId", updateInfo.commitId.substring(0, 7))
-            addProperty("branch", updateInfo.branch)
+            addProperty("branch", updateInfo.edition)
             addProperty("clientVersion", updateInfo.lbVersion)
             addProperty("minecraftVersion", updateInfo.mcVersion)
             addProperty("release", updateInfo.release)
 
-            addProperty("date", updateInfo.date.toString())
+            addProperty("date", updateInfo.committedAt.toString())
             addProperty("message", updateInfo.message)
 
-            addProperty("url", updateInfo.url)
+            addProperty("url", updateInfo.downloadUrl)
         })
     })
 }

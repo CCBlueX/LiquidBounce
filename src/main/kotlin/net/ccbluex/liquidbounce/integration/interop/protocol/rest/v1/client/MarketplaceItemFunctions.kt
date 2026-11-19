@@ -189,7 +189,7 @@ private fun Route.postOpenLink() = post("/openLink") {
         val id = call.requireId()
         val url = call.receive<OpenLinkRequest>().url
         val uri = runCatching { URI(url) }.getOrNull()?.takeIf { it.host != null }
-        if (uri == null || !hasLink(MarketplaceApi.getMarketplaceItem(id, getSessionOrNull()).description, url)) {
+        if (uri == null || !hasLink(MarketplaceApi.getMarketplaceItem(id).description, url)) {
             call.forbidden("Not a link of this item")
         }
 

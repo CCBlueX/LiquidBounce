@@ -18,25 +18,22 @@
  */
 package net.ccbluex.liquidbounce.api.models.marketplace
 
-import com.google.gson.annotations.SerializedName
-
+/**
+ * @param liquidbounce add-ons: the LiquidBounce versions it loads in, `null` when no known build fits
+ * @param protocolName configs: the server protocol it was saved with
+ * @param reports configs: what players reported about it, over all time
+ */
 data class MarketplaceItemRevision(
     val id: Int,
-    @SerializedName("item_id")
     val itemId: Int,
     val version: String,
-    @SerializedName("file_pid")
-    val filePid: String,
-    val changelog: String?,
-    @SerializedName("created_at")
     val createdAt: String,
-    val status: MarketplaceItemStatus,
-    @SerializedName("includes_binds")
+    val changelog: String? = null,
+    val liquidbounce: LiquidBounceRange? = null,
     val includesBinds: Boolean? = null,
-    /**
-     * The LiquidBounce versions an add-on revision works with, `null` when no build is known to.
-     */
-    val liquidbounce: LiquidBounceRange? = null
+    val protocolName: String? = null,
+    val protocolVersion: Int? = null,
+    val reports: MarketplaceReportCounts? = null
 )
 
 data class LiquidBounceRange(val min: String, val max: String) {

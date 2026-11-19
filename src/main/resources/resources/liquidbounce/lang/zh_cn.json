@@ -159,7 +159,6 @@
   "liquidbounce.command.marketplace.error.fileNotFound": "文件未找到：%s",
   "liquidbounce.command.marketplace.error.fileReadError": "读取文件失败：%s",
   "liquidbounce.command.marketplace.error.installFailed": "安装 %s 失败：%s",
-  "liquidbounce.command.marketplace.error.itemPending": "该物品仍在等待审核，请稍后再试。",
   "liquidbounce.command.marketplace.error.notFound": "未找到与 %s 匹配的物品。",
   "liquidbounce.command.marketplace.error.notLoggedIn": "您必须登录才能执行此操作。",
   "liquidbounce.command.marketplace.error.notSubscribed": "您未订阅 %s。",

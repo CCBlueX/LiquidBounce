@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.arguments.StringArgumentType
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -83,9 +82,6 @@ object ConfigSetCommand {
         }
     }
 
-    /**
-     * The API replaces name and description on every update, so the current ones are sent along.
-     */
     private suspend fun CmdI18n.edit(
         name: String? = null,
         description: String? = null,
@@ -99,20 +95,12 @@ object ConfigSetCommand {
             requireEditableTracked()
         }
         val updated = request {
-            val item = MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session)
-            MarketplaceApi.updateMarketplaceItem(
-                session,
-                item.id,
-                name ?: item.name,
-                MarketplaceItemType.CONFIG,
-                description ?: item.description,
-                details
-            )
+            MarketplaceApi.updateMarketplaceItem(session, ConfigTracker.itemId, name, description, details)
         }
 
         ConfigTracker.renamed(updated)
         chat(regular(t("set.updated", variable(updated.name))))
-        updated.shareCode?.let { code ->
+        request { updated.findShareCode() }?.let { code ->
             chat(regular(t("info.shareCode", variable(code).copyable())))
         }
     }

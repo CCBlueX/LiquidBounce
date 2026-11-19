@@ -19,6 +19,15 @@
 package net.ccbluex.liquidbounce.api.models.cosmetics
 
 /**
- * [category] is null for categories newer than this client.
+ * @param category `null` for categories newer than this client
+ * @param style the texture's name, `null` for a cosmetic without one
+ * @param enabled only told about my own cosmetics; a disabled one is shown to nobody
  */
-data class Cosmetic(val category: CosmeticCategory?, val extra: String? = null)
+data class Cosmetic(val category: CosmeticCategory?, val style: String? = null, val enabled: Boolean? = null)
+
+class Carrier(val cosmetics: Set<Cosmetic>)
+
+/**
+ * @param hashes MD5 of each carrier's UUID
+ */
+class CarrierHashes(val hashes: Set<String>)

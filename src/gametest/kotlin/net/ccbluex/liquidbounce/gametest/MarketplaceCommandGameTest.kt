@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.gametest.harness.ClientGameTest
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceAuthor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
@@ -83,16 +83,12 @@ private fun unsubscribesByName(context: ClientGameTestContext) {
 private fun subscription(name: String, id: Int, author: String) = SubscribedItem(
     MarketplaceItem(
         id = id,
-        uid = "",
         type = MarketplaceItemType.SCRIPT,
         name = name,
-        branch = "",
+        owner = MarketplaceAuthor("", author),
+        edition = "",
         description = "",
-        thumbnailPid = null,
-        featured = false,
         createdAt = "",
-        status = MarketplaceItemStatus.ACTIVE,
-        author = author,
     )
 )
 
