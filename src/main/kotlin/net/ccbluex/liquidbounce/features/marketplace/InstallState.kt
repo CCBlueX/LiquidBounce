@@ -68,10 +68,9 @@ internal suspend fun MarketplaceItem.getInstallState(): InstallState {
  * Walks what the item needs like installing it does, without installing anything.
  */
 private suspend fun MarketplaceItem.checkInstallable(): InstallState {
-    val dependencies = getDependencies(id)
+    val dependencies = getDependencies(this)
     var compatibleRevision: MarketplaceItemRevision? = null
-    val installables = dependencies.installables + InstallableItem(this, dependencies.requiredIds)
-    val skipped = installInOrder(installables) { item ->
+    val skipped = installInOrder(dependencies, this) { item ->
         val subscribed = SubscribedItem(item)
         when (val result = subscribed.locked { subscribed.findCompatibleRevision(known = item) }) {
             is RevisionResult.Compatible -> {
@@ -90,7 +89,7 @@ private suspend fun MarketplaceItem.checkInstallable(): InstallState {
         installedRevision = null,
         compatibleRevision = compatibleRevision,
         installable = compatibleRevision != null && skipped.isEmpty(),
-        incompatible = skipped.any { it.unavailable.hasOtherVersions },
+        incompatible = skipped.any { it.hasOtherVersions },
         restartRequired = isRestartRequired(subscribed = false),
     )
 }
@@ -105,7 +104,7 @@ private suspend fun MarketplaceItem.isRestartRequired(subscribed: Boolean) = whe
 }
 
 private suspend fun MarketplaceItem.findScriptRuntime(): MarketplaceItem? {
-    val dependencies = getDependencies(id)
+    val dependencies = getDependencies(this)
     return dependencies.installables
         .map { it.item }
         .firstOrNull { it.id in dependencies.requiredIds && it.type == MarketplaceItemType.ADDON }

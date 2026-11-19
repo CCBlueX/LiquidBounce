@@ -99,8 +99,8 @@ object ConfigLoadCommand {
         }
 
         val item = findConfig(input)
-        val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
-        val result = request { ConfigTracker.load(item, revisionId, modules) }
+        val revision = item.liveRevision ?: throw CommandException(t("load.noRevision", variable(item.name)))
+        val result = request { ConfigTracker.load(item, revision.id, modules) }
         chat(regular(t("load.loaded", variable(item.name))))
         reportInstalled(result)
     }

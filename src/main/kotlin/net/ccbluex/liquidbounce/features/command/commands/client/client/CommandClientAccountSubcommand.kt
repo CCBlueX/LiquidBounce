@@ -69,10 +69,13 @@ object CommandClientAccountSubcommand {
             val account = ClientAccountManager.clientAccount
             account.updateInfo()
             account.userInformation?.let { info ->
-                info.nickname?.let { nickname -> chat(regular("Nickname: "), variable(nickname)) }
+                chat(regular("Nickname: "), variable(info.nickname))
                 chat(regular("Email: "), variable(info.email))
-                chat(regular("User ID: "), variable(info.userId))
-                chat(regular("Groups: "), info.groups.joinToText(ComponentUtils.DEFAULT_SEPARATOR, ::variable))
+                chat(regular("User ID: "), variable(info.uid))
+                chat(
+                    regular("Roles: "),
+                    info.roles.joinToText(ComponentUtils.DEFAULT_SEPARATOR) { variable(it.displayName) }
+                )
                 chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
             }
         } catch (e: HttpException) {

@@ -21,12 +21,10 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
@@ -34,10 +32,7 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.features.marketplace.getInstallState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
-
-private const val REVIEW_PAGE_SIZE = 100
 
 internal class PageData<T>(val items: List<T>, val pagination: Pagination)
 
@@ -155,33 +150,26 @@ internal class InstalledItemData(val id: Int, val type: MarketplaceItemType, val
 
 internal val clientVersionTag get() = "v${AddonInstaller.liquidbounce}"
 
-private val MarketplaceLinkedItem.address
-    get() = (author ?: item.author)?.let { "$it/${item.name}" } ?: item.name
+private suspend fun MarketplaceItem.findServerIcon() = targetServers.firstNotNullOfOrNull { ServerIcons.of(it) }
 
-private suspend fun MarketplaceItem.findServerIcon() =
-    targetServers.orEmpty().firstNotNullOfOrNull { ServerIcons.of(it) }
-
-internal suspend fun MarketplaceItem.toConfigData(): ConfigData {
-    val base = MarketplaceApi.getItemDependencies(id).firstOrNull { it.item.type == MarketplaceItemType.CONFIG }
-    return ConfigData(
-        id = id,
-        name = name,
-        address = address,
-        image = findServerIcon(),
-        featured = featured,
-        binds = includesBinds == true,
-        tags = tags.orEmpty().map { it.name },
-        servers = targetServers.orEmpty(),
-        protocol = protocolName?.takeIf(String::isNotEmpty),
-        protocolMatches = protocolVersion == null || protocolVersion == clientProtocol.version,
-        works = recentWorks,
-        fails = recentFails,
-        downloads = downloads,
-        updatedAt = parseEpochMillis(updatedAt ?: createdAt),
-        overlayOn = base?.address,
-        visibility = visibility,
-    )
-}
+internal suspend fun MarketplaceItem.toConfigData() = ConfigData(
+    id = id,
+    name = name,
+    address = address,
+    image = findServerIcon(),
+    featured = featured,
+    binds = liveRevision?.includesBinds == true,
+    tags = tags.map { it.name },
+    servers = targetServers,
+    protocol = liveRevision?.protocolName?.takeIf(String::isNotEmpty),
+    protocolMatches = liveRevision?.protocolVersion.let { it == null || it == clientProtocol.version },
+    works = recentReports?.works ?: 0,
+    fails = recentReports?.fails ?: 0,
+    downloads = downloads,
+    updatedAt = parseEpochMillis(liveRevision?.createdAt ?: createdAt),
+    overlayOn = dependencies.firstOrNull { it.type == MarketplaceItemType.CONFIG }?.address,
+    visibility = visibility,
+)
 
 internal suspend fun List<MarketplaceItem>.toConfigData() = coroutineScope {
     map { async { it.toConfigData() } }.awaitAll()
@@ -197,21 +185,20 @@ internal fun MarketplaceItemRevision.toRevisionData() = RevisionData(
     changelog = changelog?.takeIf(String::isNotBlank),
 )
 
-internal suspend fun MarketplaceItem.toItemData(): ItemData = coroutineScope {
-    val rating = async { getRating(id) }
+internal suspend fun MarketplaceItem.toItemData(): ItemData {
     val state = getInstallState()
 
-    ItemData(
+    return ItemData(
         id = id,
         type = type,
         name = name,
-        author = author,
+        author = owner.nickname,
         image = thumbnailPid?.let(MarketplaceApi::fileUrl),
         summary = description.lineSequence().map(String::trim).firstOrNull(String::isNotEmpty).orEmpty(),
         featured = featured,
         downloads = downloads,
-        rating = rating.await().average,
-        reviews = rating.await().count,
+        rating = rating?.average,
+        reviews = rating?.count ?: 0,
         subscribed = state.subscribed,
         installable = state.installable,
         notFor = clientVersionTag.takeIf { state.incompatible },
@@ -220,20 +207,4 @@ internal suspend fun MarketplaceItem.toItemData(): ItemData = coroutineScope {
         restartRequired = state.restartRequired,
         inUse = ThemeManager.marketplaceThemes[id]?.let { it === ThemeManager.theme } == true,
     )
-}
-
-private class Rating(val average: Double?, val count: Int)
-
-/**
- * Reviews failing to load leave the item without a rating rather than failing the item.
- */
-private suspend fun getRating(id: Int): Rating {
-    val ratings = try {
-        collectAllPages { page -> MarketplaceApi.getReviews(id, page, REVIEW_PAGE_SIZE) }.map { it.rating }
-    } catch (e: Exception) {
-        if (e.httpException == null) throw e
-        logger.debug("Failed to load the reviews of marketplace item $id", e)
-        emptyList()
-    }
-    return Rating(ratings.average().takeIf { ratings.isNotEmpty() }, ratings.size)
 }

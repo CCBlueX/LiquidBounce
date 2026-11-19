@@ -171,8 +171,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = getDependencies(item.id)
-        val (installed, unavailable) = installDependencies(dependencies.installables)
+        val dependencies = getDependencies(item)
+        val (installed, unavailable) = installDependencies(dependencies)
         val chain = dependencies.configSteps()
         val configs = readConfigs(chain + Step(item.id, revisionId))
 
@@ -197,7 +197,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * The modules loading [revisionId] of [item] sets, its config dependencies included.
      */
     internal suspend fun getLoadableModuleNames(item: MarketplaceItem, revisionId: Int): List<String> {
-        val steps = getDependencies(item.id).configSteps() + Step(item.id, revisionId)
+        val steps = getDependencies(item).configSteps() + Step(item.id, revisionId)
         return steps.flatMap { getModuleNames(it.itemId, it.revisionId) }.distinct()
     }
 
@@ -407,8 +407,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             MarketplaceItemType.CONFIG,
+            API_EDITION,
             description,
-            details.copy(branch = API_EDITION)
+            details
         )
 
         val revision = try {
@@ -429,8 +430,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     ) = updateTracking {
         itemId = item.id
         itemName = item.name
-        itemUid = item.uid
-        itemAuthor = item.author.orEmpty()
+        itemUid = item.owner.uid
+        itemAuthor = item.owner.nickname.orEmpty()
         this.revisionId = revisionId
         chainText = encodeChain(chain)
         baseText = base?.let(::encodeHashes).orEmpty()

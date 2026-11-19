@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.api.core.orNotFound
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
@@ -38,8 +38,8 @@ sealed interface RevisionResult {
 }
 
 /**
- * No revision of [name] fits this game, though it has others when [hasOtherVersions]. Otherwise the item is not
- * active or has nothing published.
+ * No revision of [name] fits this game, though it has others when [hasOtherVersions]. Otherwise the item has
+ * nothing published.
  */
 data class UnavailableItem(val name: String, val hasOtherVersions: Boolean) {
 
@@ -64,22 +64,14 @@ class NoCompatibleRevisionException(val unavailable: UnavailableItem) : Exceptio
  * spares fetching the item. Callers hold [SubscribedItem.locked].
  */
 internal suspend fun SubscribedItem.findCompatibleRevision(known: MarketplaceItem? = null): RevisionResult {
-    val item = known ?: MarketplaceApi.getMarketplaceItem(id)
-    if (item.status != MarketplaceItemStatus.ACTIVE) {
-        return RevisionResult.NoneCompatible(UnavailableItem(name, false))
-    }
-
-    val revision = if (type == MarketplaceItemType.ADDON) {
-        MarketplaceApi.getMarketplaceItemRevisions(id, 1, 1, AddonInstaller.minecraft, AddonInstaller.liquidbounce)
-    } else {
-        MarketplaceApi.getMarketplaceItemRevisions(id, 1, 1)
-    }.items.firstOrNull()
+    // Not found once it is taken down.
+    val item = known ?: orNotFound { MarketplaceApi.getMarketplaceItem(id) }
+    val revision = if (type == MarketplaceItemType.ADDON) item?.compatibleRevision else item?.liveRevision
     if (revision != null) {
         return RevisionResult.Compatible(revision)
     }
 
-    val hasOtherVersions = type == MarketplaceItemType.ADDON && item.liveRevisionId != null
-    return RevisionResult.NoneCompatible(UnavailableItem(name, hasOtherVersions))
+    return RevisionResult.NoneCompatible(UnavailableItem(name, hasOtherVersions = item?.liveRevision != null))
 }
 
 /**

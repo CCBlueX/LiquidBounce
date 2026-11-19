@@ -18,16 +18,21 @@
  */
 package net.ccbluex.liquidbounce.api.models.user
 
-import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 
+/**
+ * @param permissions of all roles together, such as `cosmetics` or `moderate`
+ * @param cosmetics disabled ones included
+ */
 data class UserInformation(
-    @SerializedName("user_id")
-    val userId: String,
+    val uid: String,
     val email: String,
     val name: String?,
-    val nickname: String?,
-    val groups: List<String>,
+    val nickname: String,
+    val roles: List<Role>,
+    val permissions: Set<String>,
     val premium: Boolean,
-    @SerializedName("is_admin")
-    val admin: Boolean
-)
+    val cosmetics: Set<Cosmetic>
+) {
+    data class Role(val id: String, val displayName: String)
+}

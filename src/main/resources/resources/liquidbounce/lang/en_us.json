@@ -236,7 +236,6 @@
   "liquidbounce.command.marketplace.error.fileNotFound": "File not found: %s",
   "liquidbounce.command.marketplace.error.fileReadError": "Failed to read file: %s",
   "liquidbounce.command.marketplace.error.installFailed": "Failed to install %s: %s",
-  "liquidbounce.command.marketplace.error.itemPending": "This item is still pending approval. Please try again later.",
   "liquidbounce.command.marketplace.error.notFound": "No item found for %s.",
   "liquidbounce.command.marketplace.error.notLoggedIn": "You must be logged in to perform this action.",
   "liquidbounce.command.marketplace.error.notSubscribed": "You are not subscribed to %s.",

@@ -32,14 +32,9 @@ class ApiConfig(
     val sessionToken: String,
 ) {
 
-    val apiEndpointV1 = url.apiEndpoint(1)
-    val apiEndpointV3 = url.apiEndpoint(3)
+    val retrofit = apiRetrofit(url.toString())
 
-    val retrofitApiV1 = apiRetrofit(apiEndpointV1)
-    val retrofitApiV3 = apiRetrofit(apiEndpointV3)
-
-    private fun HttpUrl.apiEndpoint(version: Int): String =
-        newBuilder().addPathSegments("api/v$version").build().toString()
+    fun endpoint(path: String): String = url.newBuilder().addPathSegments(path).build().toString()
 
     companion object {
 

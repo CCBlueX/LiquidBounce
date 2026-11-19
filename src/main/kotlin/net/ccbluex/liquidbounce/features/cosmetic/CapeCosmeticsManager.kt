@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
-import net.ccbluex.liquidbounce.api.services.cosmetics.CapeApi
+import net.ccbluex.liquidbounce.api.services.cosmetics.CosmeticApi
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -75,7 +75,7 @@ object CapeCosmeticsManager : EventListener {
 
             CosmeticService.fetchCosmetic(uuid, category) { cosmetic ->
                 // Get url of cape from cape service
-                val name = cosmetic.extra ?: return@fetchCosmetic
+                val name = cosmetic.style ?: return@fetchCosmetic
 
                 // Check if the cape is cached
                 val cachedCapeId = cachedCapes[name]
@@ -88,7 +88,7 @@ object CapeCosmeticsManager : EventListener {
                 // Request cape texture
                 val nativeImage = runCatching {
                     runBlocking {
-                        CapeApi.getCape(name)
+                        CosmeticApi.getCape(name)
                     }
                 }.getOrNull() ?: return@fetchCosmetic
 
