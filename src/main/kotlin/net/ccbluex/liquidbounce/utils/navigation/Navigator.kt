@@ -100,6 +100,8 @@ class Navigator(
         exactKeys = false
     }
 
+    private var agentOptions = settings.options()
+
     /** An agent on this navigator, for Minecraft Agent's skills; made once the player exists. */
     val agent: Agent by lazy { Agent(body, navigator, Skills()) }
 
@@ -110,7 +112,12 @@ class Navigator(
     fun tick(event: MovementInputEvent) {
         // A tick the agent presses nothing in, such as one aiming at a crop, must not repeat the keys of the one before
         body.release()
-        navigator.options = settings.options()
+        // Only changed settings: a skill may hold options of its own for a while, such as placing scaffold
+        val options = settings.options()
+        if (options != agentOptions) {
+            agentOptions = options
+            navigator.options = options
+        }
         agent.tick()
         body.applyKeys(event)
         exactKeys = body.keysExact

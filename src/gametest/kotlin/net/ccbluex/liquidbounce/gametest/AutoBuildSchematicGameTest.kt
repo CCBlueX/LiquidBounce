@@ -91,6 +91,7 @@ private fun GameTestScope.buildSchematic(file: Path) {
     fill(site.offset(-10, 0, -10), site.offset(28, 15, 28), "minecraft:air")
     fill(site.offset(-10, -1, -10), site.offset(28, -1, 28), "minecraft:grass_block")
     run("kill @e[type=item]")
+    run("time set noon")
     run("clear $playerName")
     travel(origin)
     val setup = context.fromClient { placeSchematic(file, site) }
