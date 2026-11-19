@@ -36,8 +36,11 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.item.canMerge
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.item.ArrowItem
 
 /**
  * InventoryCleaner module
@@ -163,6 +166,7 @@ object ModuleInventoryCleaner : ClientModule(
         when {
             // Step 1: Prioritize hotbar swaps
             processHotbarSwaps(event, cleanupPlan) -> return@handler
+            processHotbarArrows(event) -> return@handler
             // Step 2: Merge stackable items to optimize space
             processStackMerging(event, cleanupPlan) -> return@handler
             // Step 3: Remove unwanted items (lowest priority)
@@ -185,6 +189,25 @@ object ModuleInventoryCleaner : ClientModule(
             inventoryConstraints,
             InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
         )
+
+        return true
+    }
+
+    /**
+     * Arrows are shot from any slot and no hotbar slot can be set to them, so there they only take one up.
+     * @return true if a move was scheduled, false otherwise
+     */
+    private fun processHotbarArrows(event: ScheduleInventoryActionEvent): Boolean {
+        val slotTargets = buildSlotTargetMap()
+        val arrowSlot = Slots.Hotbar.firstOrNull { slot ->
+            val stack = slot.itemStack
+            stack.item is ArrowItem && slotTargets[slot] != ItemSortChoice.IGNORE &&
+                !InventoryManager.isItemBlocked(stack) &&
+                // A shift-click that does not fit leaves the rest behind and would be repeated forever.
+                Slots.Inventory.any { it.itemStack.isEmpty || it.itemStack.canMerge(stack) }
+        } ?: return false
+
+        event.schedule(inventoryConstraints, InventoryAction.Click.performQuickMove(slot = arrowSlot))
 
         return true
     }

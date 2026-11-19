@@ -116,6 +116,7 @@ private fun GameTestScope.sortsGearMergesBlocksAndCleansJunk() {
     setSlot("inventory.5", HEALTH_POTION)
     setSlot("inventory.6", "minecraft:rail")
     setSlot("inventory.7", NAMED_PAPER)
+    setSlot("hotbar.3", "minecraft:arrow", 16)
     awaitClient("initial junk setup") {
         val inv = checkNotNull(it.player).inventory
         inv.countItem(Items.IRON_SWORD) == 1 && inv.countItem(Items.RAIL) == 1
@@ -134,6 +135,10 @@ private fun GameTestScope.sortsGearMergesBlocksAndCleansJunk() {
         val inv = checkNotNull(it.player).inventory
         (0 until inv.containerSize).count { slot -> inv.getItem(slot).`is`(Items.OAK_PLANKS) } == 1
     }) { "partial oak planks stacks were not merged into one" }
+    check(client {
+        val inv = checkNotNull(it.player).inventory
+        inv.getItem(3).isEmpty && inv.countItem(Items.ARROW) == 16
+    }) { "arrows were not moved from the hotbar into the inventory" }
     check(carried("minecraft:rail") == 1) { "unknown item was thrown while ThrowUnknownItems was disabled" }
 
     client { ModuleInventoryCleaner.settings.getValue("ThrowUnknownItems").setByString("true") }
