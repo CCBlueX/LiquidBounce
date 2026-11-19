@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
@@ -25,6 +27,7 @@ import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -36,12 +39,19 @@ import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.atomic.AtomicInteger
@@ -64,6 +74,9 @@ private const val PROT_IV_IRON_HELMET =
  * 5. Chest interaction sets `isContainerOpenPending` before `ClientboundOpenScreenPacket` arrives.
  * 6. Stray cursor stack is placed back before cleaning without no-op `THROW` spam.
  * 7. Server-reverted clicks lock only the rejected stack while allowing other junk cleanup to continue.
+ * 8. A resync that only answers an earlier click is not counted as a rejection.
+ * 9. Rejections of a moving player do not lock the item.
+ * 10. An open inventory screen does not let clicks through while a container may be opening.
  */
 class InventoryCleanerGameTest : SingleplayerGameTest({
     context.restoring(ModuleInventoryCleaner, ModuleAutoArmor, ModuleAutoBuff) {
@@ -77,6 +90,9 @@ class InventoryCleanerGameTest : SingleplayerGameTest({
         chestInteractionSetsContainerPendingBeforeScreenOpens()
         strayCursorItemRecoveredBeforeCleaning()
         serverRevertedItemLocksWithoutBlockingOtherCleanup()
+        staleResyncIsNotCountedAsRejection()
+        rejectionsWhileMovingDoNotLock()
+        inventoryScreenWaitsForPendingContainer()
     }
 })
 
@@ -364,6 +380,181 @@ private fun GameTestScope.serverRevertedItemLocksWithoutBlockingOtherCleanup() {
     }
 
     disable(ModuleInventoryCleaner)
+}
+
+private fun GameTestScope.staleResyncIsNotCountedAsRejection() {
+    resetInventory()
+    useFastConstraints(ModuleInventoryCleaner)
+
+    val bottleClicks = AtomicInteger()
+    val listener = object : EventListener {}
+    listener.on(PacketEvent::class.java) { event ->
+        val packet = event.packet
+        if (event.origin == TransferOrigin.OUTGOING && packet is ServerboundContainerClickPacket &&
+            packet.slotNum.toInt() == 9
+        ) {
+            bottleClicks.incrementAndGet()
+        }
+    }.use {
+        enable(ModuleInventoryCleaner)
+        repeat(4) {
+            val clicksBefore = bottleClicks.get()
+            run("kill @e[type=item]")
+            setSlot("inventory.0", "minecraft:glass_bottle")
+            awaitCondition("glass bottle thrown") { bottleClicks.get() > clicksBefore }
+
+            // What a server that resends the inventory after every click sends for the click before this one.
+            client { it.receive(inventoryContent(it, ItemStack(Items.GLASS_BOTTLE))) }
+            ticks(1)
+            client { it.receive(inventoryContent(it, ItemStack.EMPTY)) }
+            waitMillis(400)
+        }
+
+        check(client { !InventoryManager.isServerLocked(ItemStack(Items.GLASS_BOTTLE)) }) {
+            "resyncs answering an earlier click locked the glass bottle"
+        }
+        check(carried("minecraft:glass_bottle") == 0) { "glass bottle was not thrown" }
+    }
+
+    disable(ModuleInventoryCleaner)
+}
+
+private fun GameTestScope.rejectionsWhileMovingDoNotLock() {
+    resetInventory()
+    useFastConstraints(ModuleInventoryCleaner)
+    client { ModuleInventoryCleaner.settings.getValue("ThrowUnknownItems").setByString("true") }
+
+    // The compass is still locked from the test before.
+    setSlot("hotbar.4", "minecraft:clock")
+    awaitClient("clock") { checkNotNull(it.player).inventory.countItem(Items.CLOCK) == 1 }
+
+    val clockClicks = AtomicInteger()
+    var restored = 0
+    // Puts the clock back right after it was clicked, the way a server that rejects the click does.
+    fun restoreClock() {
+        if (clockClicks.get() > restored) {
+            restored = clockClicks.get()
+            ticks(1)
+            run("kill @e[type=item]")
+            setSlot("hotbar.4", "minecraft:clock")
+        }
+    }
+
+    val listener = object : EventListener {}
+    listener.on(PacketEvent::class.java) { event ->
+        val packet = event.packet
+        if (event.origin == TransferOrigin.OUTGOING && packet is ServerboundContainerClickPacket &&
+            packet.slotNum.toInt() == 40
+        ) {
+            clockClicks.incrementAndGet()
+        }
+    }.use {
+        input.holdKey { it.keyJump }
+        try {
+            awaitClient("jumping") { checkNotNull(it.player).jumping }
+            enable(ModuleInventoryCleaner)
+
+            awaitCondition("clock put back 4 times", maxTicks = 600) {
+                restoreClock()
+                restored >= 4
+            }
+            waitMillis(600)
+            check(client { !InventoryManager.isServerLocked(ItemStack(Items.CLOCK)) }) {
+                "rejections while moving locked the clock"
+            }
+        } finally {
+            input.releaseKey { it.keyJump }
+        }
+
+        // Standing still, the same rejections lock it: they were noticed and only the movement kept them out.
+        awaitClient("standing") { !checkNotNull(it.player).jumping }
+        awaitCondition("clock locked while standing", maxTicks = 600) {
+            restoreClock()
+            client { InventoryManager.isServerLocked(ItemStack(Items.CLOCK)) }
+        }
+    }
+
+    disable(ModuleInventoryCleaner)
+}
+
+private fun GameTestScope.inventoryScreenWaitsForPendingContainer() {
+    resetInventory()
+    useFastConstraints(ModuleInventoryCleaner)
+    setSlot("inventory.0", "minecraft:glass_bottle")
+    awaitClient("glass bottle") { checkNotNull(it.player).inventory.countItem(Items.GLASS_BOTTLE) == 1 }
+
+    val clicksWhilePending = AtomicInteger()
+    val listener = object : EventListener {}
+    listener.on(PacketEvent::class.java) { event ->
+        if (event.origin == TransferOrigin.OUTGOING && event.packet is ServerboundContainerClickPacket &&
+            InventoryManager.isContainerOpenPending
+        ) {
+            clicksWhilePending.incrementAndGet()
+        }
+    }.use {
+        client { mc ->
+            check(mc.interactWithClientOnlyFurnace(origin.south(2))) {
+                "isContainerOpenPending was not set by interacting with a furnace"
+            }
+            mc.gui.setScreen(InventoryScreen(checkNotNull(mc.player)))
+        }
+        enable(ModuleInventoryCleaner)
+
+        var pendingTicks = 0
+        while (client { InventoryManager.isContainerOpenPending } && pendingTicks < 100) {
+            ticks(1)
+            pendingTicks++
+        }
+        check(pendingTicks >= 2) { "the container wait ended too early to observe ($pendingTicks ticks)" }
+        check(clicksWhilePending.get() == 0) {
+            "${clicksWhilePending.get()} clicks were sent from the inventory screen while a container was pending"
+        }
+        awaitCondition("glass bottle thrown from the inventory screen") {
+            carried("minecraft:glass_bottle") == 0
+        }
+    }
+
+    disable(ModuleInventoryCleaner)
+    client { it.gui.setScreen(null) }
+    ticks(2)
+}
+
+/**
+ * Hands [packet] to the client the way the connection does, so packet listeners see it.
+ */
+private fun Minecraft.receive(packet: Packet<ClientGamePacketListener>) {
+    val event = EventManager.callEvent(PacketEvent(TransferOrigin.INCOMING, packet, true))
+    if (!event.isCancelled) {
+        packet.handle(checkNotNull(connection))
+    }
+}
+
+/**
+ * A resync of the player inventory as it is, with [firstInventoryItem] in the slot the tests throw from.
+ */
+private fun inventoryContent(mc: Minecraft, firstInventoryItem: ItemStack): ClientboundContainerSetContentPacket {
+    val menu = checkNotNull(mc.player).inventoryMenu
+    val items = menu.slots.mapTo(ArrayList()) { it.item.copy() }
+    items[9] = firstInventoryItem
+    return ClientboundContainerSetContentPacket(menu.containerId, menu.stateId, items, ItemStack.EMPTY)
+}
+
+/**
+ * Interacts with a furnace only the client knows of, so the server never opens a screen for it.
+ */
+private fun Minecraft.interactWithClientOnlyFurnace(pos: BlockPos): Boolean {
+    val player = checkNotNull(player)
+    checkNotNull(level).setBlock(pos, Blocks.FURNACE.defaultBlockState(), 0)
+    val hit = BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false)
+    checkNotNull(gameMode).useItemOn(player, InteractionHand.MAIN_HAND, hit)
+    return InventoryManager.isContainerOpenPending
+}
+
+private fun GameTestScope.waitMillis(millis: Long) {
+    val end = System.currentTimeMillis() + millis
+    while (System.currentTimeMillis() < end) {
+        ticks(1)
+    }
 }
 
 private fun GameTestScope.resetInventory() {
