@@ -63,7 +63,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
 
-    private val selectionMode = choices("SelectionMode", Distance, arrayOf(Distance, Index, Random)).apply(::tagBy)
+    private val selectionMode = choices(
+        "SelectionMode",
+        Distance,
+        arrayOf(Distance, Value, Index, Random),
+    ).apply(::tagBy)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
@@ -89,11 +93,27 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         val screen = getChestScreen() ?: return@inventoryPlan
 
         val cleanupPlan = createCleanupPlan(screen)
+        val isByValue = selectionMode.activeMode === Value
+
+        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
+        selectionMode.activeMode.process(itemsToCollect)
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (quickSwaps) {
+        val swaps = when {
+            !quickSwaps -> emptyList()
+            isByValue -> cleanupPlan.swaps.sortedByDescending { it.priority }
+            else -> cleanupPlan.swaps
+        }
+        // By value, the swaps wait for the items worth more than all of them
+        val itemsBeforeSwaps = if (isByValue) {
+            itemsToCollect.takeWhile { item -> swaps.any() && swaps.all { valueOf(item) > it.priority } }
+        } else {
+            emptyList()
+        }
+
+        if (itemsBeforeSwaps.isEmpty()) {
             var hasSwapped = false
-            for (hotbarSwap in cleanupPlan.swaps) {
+            for (hotbarSwap in swaps) {
                 perform(
                     findQuickSwapActions(cleanupPlan, screen, slotOf(hotbarSwap.from), hotbarSwap.to) ?: continue,
                     /**
@@ -112,12 +132,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         }
 
         val itemsToThrow = ArrayDeque(cleanupPlan.findItemsToThrowOut(findNonEmptySlotsInInventory()))
-        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
-
         var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
-        selectionMode.activeMode.process(itemsToCollect)
 
-        for (slot in itemsToCollect) {
+        for (slot in itemsBeforeSwaps.ifEmpty { itemsToCollect }) {
             var moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot)
 
             if (moveActions == null && stillRequiredSpace > 0) {
@@ -127,10 +144,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
                 moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot)
             }
 
-            perform(
-                moveActions ?: continue,
-                priority = ItemCategorization.Default.getItemFacets(slot).maxOf { it.category.type.allocationPriority }
-            )
+            perform(moveActions ?: continue, priority = valueOf(slot))
         }
 
         // Check if stealing the chest was completed
@@ -380,6 +394,20 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
             },
         }
     }
+
+    /**
+     * What matters most first, a better sword before blocks. Equal ones stay in the order of their slots.
+     */
+    private object Value : SelectionMode("Value") {
+        override fun process(slots: ArrayList<ContainerItemSlot>) = slots.sortByDescending(::valueOf)
+    }
+
+    /**
+     * we prioritize item based on how important it is
+     * for example we should prioritize armor over apples
+     */
+    private fun valueOf(slot: ItemSlot) =
+        ItemCategorization.Default.getItemFacets(slot).maxOf { it.category.type.allocationPriority }
 
     private object Random : SelectionMode("Random") {
         override fun process(slots: ArrayList<ContainerItemSlot>) = slots.shuffle()

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest.server
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -30,18 +31,20 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * An [InventoryPlan] on a real server: it is kept across its own clicks, made again when something else changes the
- * inventory, and waits for a plan of a higher priority.
+ * inventory, waits for a plan of a higher priority, and takes the cursor to what it clicks.
  */
 class InventoryPlanGameTest : ServerGameTest({
     keepsPlanAcrossClicks()
     plansAgainAfterServerChange()
     performsHigherPriorityFirst()
+    movesCursorToClickedSlot()
 })
 
 /**
@@ -52,6 +55,7 @@ private class Sorter(
     private val priority: Priority = Priority.NORMAL,
     private val pause: Int = 0,
     private val performed: MutableList<Item> = CopyOnWriteArrayList(),
+    constraints: PlayerInventoryConstraints = PlayerInventoryConstraints(),
 ) : EventListener {
 
     @Volatile
@@ -65,7 +69,7 @@ private class Sorter(
         get() = isActive
 
     @Suppress("unused")
-    private val sort = inventoryPlan(PlayerInventoryConstraints()) {
+    private val sort = inventoryPlan(constraints) {
         val swaps = moves.mapNotNull { (item, to) -> Slots.Inventory.findSlot(item)?.let { Triple(item, it, to) } }
         if (swaps.isEmpty()) {
             return@inventoryPlan
@@ -85,6 +89,33 @@ private inline fun GameTestScope.withSorters(vararg sorters: Sorter, block: () -
         block()
     } finally {
         client { sorters.forEach { it.isActive = false; it.unregister() } }
+    }
+}
+
+private fun GameTestScope.movesCursorToClickedSlot() {
+    giveIngots()
+    val sorter = client {
+        val constraints = PlayerInventoryConstraints()
+        (constraints.inner.first { it.name == "CursorTravel" } as ToggleableValueGroup).enabled = true
+        Sorter(INGOT_SLOTS, constraints = constraints)
+    }
+    withSorters(sorter) {
+        client { it.gui.setScreen(InventoryScreen(checkNotNull(it.player))) }
+        try {
+            sorter.isActive = true
+            awaitIngotsSorted()
+            val isOnSlot = client { mc ->
+                val screen = mc.gui.screen() as InventoryScreen
+                // inventory.11, where the ingot swapped last was
+                val slot = screen.menu.slots[20]
+                val x = mc.mouseHandler.xpos() * mc.window.guiScaledWidth / mc.window.screenWidth - screen.leftPos
+                val y = mc.mouseHandler.ypos() * mc.window.guiScaledHeight / mc.window.screenHeight - screen.topPos
+                x >= slot.x && x <= slot.x + 16 && y >= slot.y && y <= slot.y + 16
+            }
+            check(isOnSlot) { "the cursor did not end on the slot clicked last" }
+        } finally {
+            client { it.gui.setScreen(null) }
+        }
     }
 }
 

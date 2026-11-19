@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.Reference2IntMap
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectIntArrayMapOf
 import net.ccbluex.fastutil.referenceIntArrayMapOf
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
@@ -53,6 +54,15 @@ object ModuleInventoryCleaner : ClientModule(
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
+    private val order by enumChoice("Order", Order.VALUE)
+
+    private enum class Order(override val tag: String) : Tagged {
+        /** What matters most first, a better sword before blocks. */
+        VALUE("Value"),
+
+        /** Whatever is closest to the cursor first. */
+        DISTANCE("Distance"),
+    }
 
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
     private val maxArrows by int("MaximumArrows", 128, 0..2500)
@@ -161,8 +171,13 @@ object ModuleInventoryCleaner : ClientModule(
         val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots)
             .generatePlan()
 
+        val swaps = when (order) {
+            Order.VALUE -> cleanupPlan.swaps.sortedByDescending { it.priority }
+            Order.DISTANCE -> InventoryManager.nearestFirst(cleanupPlan.swaps) { it.from }
+        }
+
         var hasSwapped = false
-        for (hotbarSwap in cleanupPlan.swaps) {
+        for (hotbarSwap in swaps) {
             val to = hotbarSwap.to
             require(to is HotbarItemSlot) {
                 "Invalid swap target: $to. Only hotbar slots are supported."
@@ -186,6 +201,7 @@ object ModuleInventoryCleaner : ClientModule(
             cleanupPlan.findItemsToThrowOut(currentInventorySlots))
             .distinct()
             .filterNot { InventoryManager.isServerLocked(it.itemStack) }
+            .let { slots -> if (order == Order.DISTANCE) InventoryManager.nearestFirst(slots) { it } else slots }
 
         for (slot in findHotbarArrows()) {
             perform(InventoryAction.Click.performQuickMove(slot = slot))

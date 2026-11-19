@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -39,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.text.StringMatchMode
 import net.minecraft.client.gui.screens.Screen
@@ -48,6 +50,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import org.joml.Vector2f
 import java.util.EnumSet
 import java.util.function.Predicate
 
@@ -63,6 +66,7 @@ open class InventoryConstraints : ValueGroup("Constraints") {
     internal val clickDelay by intRange("ClickDelay", 100..200, 0..1000, "ms")
     internal val closeDelay by intRange("CloseDelay", 50..100, 0..1000, "ms")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
+    internal val cursorTravel = tree(CursorTravel())
 
     /**
      * Saved since the delays are milliseconds. A config without it holds them in ticks.
@@ -100,6 +104,32 @@ open class InventoryConstraints : ValueGroup("Constraints") {
      */
     fun passesRequirements(action: InventoryAction) =
         requirements.matchesAll(action)
+
+}
+
+/**
+ * Makes every click wait the time a hand needs to get the cursor to its slot: from the middle of the screen after
+ * opening, from the slot clicked last after that. The other delays come on top.
+ */
+class CursorTravel : ToggleableValueGroup(null, "CursorTravel", false) {
+
+    private val time = curve(
+        "Time",
+        mutableListOf(Vector2f(0f, 0f), Vector2f(2f, 70f), Vector2f(6f, 200f), Vector2f(12f, 480f)),
+        xAxis = "Slots" axis 0f..12f,
+        yAxis = "Milliseconds" axis 0f..1000f,
+    )
+    private val variation by floatRange("Variation", 0.85f..1.15f, 0.5f..2f, "x")
+
+    /**
+     * Whether the real cursor goes along while a screen shows the slots.
+     */
+    val moveCursor by boolean("MoveCursor", true)
+
+    /**
+     * @param distance in slots
+     */
+    fun millis(distance: Float): Int = (time.transform(distance) * variation.random()).toInt()
 
 }
 

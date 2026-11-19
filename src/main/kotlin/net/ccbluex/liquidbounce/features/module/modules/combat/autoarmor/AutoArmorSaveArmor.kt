@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.Reentry
 import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
@@ -143,7 +144,7 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
         }
 
         this@AutoArmorSaveArmor.hasOpenedInventory = false
-        waitMillis(ModuleAutoArmor.inventoryConstraints.closeDelay.random())
+        waitMillis(ModuleAutoArmor.inventoryConstraints.closeDelay.random(), Reentry.RENDER_THREAD)
 
         // the current screen might change while the module is waiting
         if (mc.gui.screen() is InventoryScreen) {

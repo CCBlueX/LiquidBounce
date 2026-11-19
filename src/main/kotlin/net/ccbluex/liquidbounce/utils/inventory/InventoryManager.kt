@@ -24,6 +24,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.additions.setPosition
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventListenerNotListeningException
 import net.ccbluex.liquidbounce.event.Guards
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.Reentry
 import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -60,12 +62,15 @@ import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
+import org.joml.Vector2f
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.math.max
 import kotlin.random.Random
+import kotlin.time.TimeSource
 
 /**
  * Manages the inventory state and timings and schedules inventory actions
@@ -90,6 +95,9 @@ object InventoryManager : EventListener {
             if (!field && value) {
                 onInventoryOpened()
             }
+            if (!value) {
+                cursor = null
+            }
             field = value
         }
 
@@ -97,6 +105,88 @@ object InventoryManager : EventListener {
         internal set
 
     private var recentInventoryOpen = false
+
+    /**
+     * Where the cursor is taken to be while no screen shows it, in pixels of the menu. Null in the middle, where
+     * opening puts it.
+     */
+    private var cursor: Vector2f? = null
+
+    private fun AbstractContainerMenu.center() = Vector2f(
+        (slots.minOf { it.x } + slots.maxOf { it.x }) / 2f + 8f,
+        (slots.minOf { it.y } + slots.maxOf { it.y }) / 2f + 8f,
+    )
+
+    /**
+     * [items] of the player inventory in the order that takes the cursor the shortest way from each to the next.
+     */
+    fun <T> nearestFirst(items: List<T>, slot: (T) -> ItemSlot): List<T> {
+        val menu = player.inventoryMenu
+        fun position(item: T) = menu.slots.getOrNull(slot(item).getIdForServer(null) ?: -1)
+            ?.let { Vector2f(it.x.toFloat(), it.y.toFloat()) }
+
+        val left = items.toMutableList()
+        var from = cursor ?: menu.center()
+        return List(items.size) {
+            val next = left.minBy { position(it)?.distanceSquared(from) ?: Float.MAX_VALUE }
+            left -= next
+            position(next)?.let { from = it }
+            next
+        }
+    }
+
+    /**
+     * Takes the cursor to the slot [action] clicks, which takes the time [travel] gives the way.
+     */
+    private suspend fun moveCursor(action: InventoryAction, travel: CursorTravel) {
+        if (action !is InventoryAction.Click || !travel.enabled) {
+            return
+        }
+
+        val menu = action.screen?.menu ?: player.inventoryMenu
+        val slot = menu.slots.getOrNull(action.slot.getIdForServer(action.screen) ?: return) ?: return
+        val screen = (mc.gui.screen() as? AbstractContainerScreen<*>)
+            ?.takeIf { it.menu === menu && travel.moveCursor && !mc.mouseHandler.isMouseGrabbed }
+        val scale = mc.window.screenWidth.toFloat() / mc.window.guiScaledWidth
+
+        val from = if (screen != null) {
+            Vector2f(
+                mc.mouseHandler.xpos().toFloat() / scale - screen.leftPos,
+                mc.mouseHandler.ypos().toFloat() / scale - screen.topPos,
+            )
+        } else {
+            cursor ?: menu.center()
+        }
+        // Somewhere on the slot, nobody hits the middle every time
+        val to = Vector2f(slot.x + 2f + Random.nextFloat() * 12f, slot.y + 2f + Random.nextFloat() * 12f)
+        // Slots are 18 pixels apart
+        val millis = travel.millis(from.distance(to) / 18f)
+        cursor = to
+
+        if (screen == null) {
+            waitMillis(millis, Reentry.RENDER_THREAD)
+            return
+        }
+
+        val start = TimeSource.Monotonic.markNow()
+        do {
+            val progress = if (millis > 0) {
+                (start.elapsedNow().inWholeMilliseconds.toFloat() / millis).coerceAtMost(1f)
+            } else {
+                1f
+            }
+            // Slow at both ends
+            val position = from.lerp(to, progress * progress * (3f - 2f * progress), Vector2f())
+            mc.mouseHandler.setPosition(
+                ((screen.leftPos + position.x) * scale).toDouble(),
+                ((screen.topPos + position.y) * scale).toDouble(),
+            )
+            if (progress < 1f) {
+                // Short enough for every frame to show a new position
+                waitMillis(5, Reentry.RENDER_THREAD)
+            }
+        } while (progress < 1f && mc.gui.screen() === screen)
+    }
 
     private class Request(
         val plan: InventoryPlan,
@@ -282,7 +372,7 @@ object InventoryManager : EventListener {
 
                 // A plan may ask for its next chain during the wait
                 maximumCloseDelay > 0 -> {
-                    waitMillis(maximumCloseDelay)
+                    waitMillis(maximumCloseDelay, Reentry.RENDER_THREAD)
                     maximumCloseDelay = 0
                 }
 
@@ -354,17 +444,17 @@ object InventoryManager : EventListener {
             // First action to be executed will be the start delay
             if (recentInventoryOpen) {
                 recentInventoryOpen = false
-                waitMillis(constraints.startDelay.random())
+                waitMillis(constraints.startDelay.random(), Reentry.RENDER_THREAD)
             }
 
             // Handle player inventory open requirements
             if (action.requiresPlayerInventoryOpen()) {
                 if (!isInventoryOpen) {
                     network.send1_11_1OpenInventory()
-                    waitMillis(constraints.startDelay.random())
+                    waitMillis(constraints.startDelay.random(), Reentry.RENDER_THREAD)
                 }
             } else if (canCloseMainInventory && isInventoryOpen) {
-                waitMillis(constraints.closeDelay.random())
+                waitMillis(constraints.closeDelay.random(), Reentry.RENDER_THREAD)
                 network.sendCloseInventory()
             }
 
@@ -379,13 +469,15 @@ object InventoryManager : EventListener {
                 // Simulate a miss click (this is only possible for container-type slots)
                 // TODO: Add support for inventory slots
                 if (action.performMissClick()) {
-                    waitMillis(constraints.clickDelay.random())
+                    waitMillis(constraints.clickDelay.random(), Reentry.RENDER_THREAD)
                 }
             }
 
             if (action is InventoryAction.CloseScreen) {
-                waitMillis(constraints.closeDelay.random())
+                waitMillis(constraints.closeDelay.random(), Reentry.RENDER_THREAD)
             }
+
+            moveCursor(action, constraints.cursorTravel)
 
             // The waits may outlive the chain, e.g. when its menu closes meanwhile
             if (!chain.canPerformAction()) {
@@ -411,7 +503,7 @@ object InventoryManager : EventListener {
                 if (action is InventoryAction.CloseScreen) {
                     waitTicks(1)
                 } else {
-                    waitMillis(constraints.clickDelay.random())
+                    waitMillis(constraints.clickDelay.random(), Reentry.RENDER_THREAD)
                 }
             }
         }
