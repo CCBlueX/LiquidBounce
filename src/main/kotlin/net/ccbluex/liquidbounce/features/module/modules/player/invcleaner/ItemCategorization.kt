@@ -384,6 +384,11 @@ class ItemCategorization(
 
                     itemStack.isFood -> add(FoodItemFacet(slot))
 
+                    // A custom name marks what the server handed out, such as a lobby menu item or a tracker.
+                    // Its own category keeps it out of ThrowUnknownItems.
+                    itemStack.has(DataComponents.CUSTOM_NAME) ->
+                        add(PrimitiveItemFacet(slot, ItemCategory(ItemType.NONE, 1)))
+
                     else -> add(ItemFacet(slot))
                 }
             }

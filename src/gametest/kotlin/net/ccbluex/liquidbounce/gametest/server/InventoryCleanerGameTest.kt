@@ -64,6 +64,8 @@ private const val POISON_POTION =
     """minecraft:potion[minecraft:potion_contents={potion:"minecraft:poison"}]"""
 private const val PROT_IV_IRON_HELMET =
     """minecraft:iron_helmet[minecraft:enchantments={"minecraft:protection":4}]"""
+private const val NAMED_PAPER =
+    """minecraft:paper[minecraft:custom_name="Tracker"]"""
 
 /**
  * Covers the failure modes seen in SkyWars and BlitzSG inventory recordings:
@@ -113,6 +115,7 @@ private fun GameTestScope.sortsGearMergesBlocksAndCleansJunk() {
     setSlot("inventory.4", "minecraft:glass_bottle")
     setSlot("inventory.5", HEALTH_POTION)
     setSlot("inventory.6", "minecraft:rail")
+    setSlot("inventory.7", NAMED_PAPER)
     awaitClient("initial junk setup") {
         val inv = checkNotNull(it.player).inventory
         inv.countItem(Items.IRON_SWORD) == 1 && inv.countItem(Items.RAIL) == 1
@@ -135,6 +138,8 @@ private fun GameTestScope.sortsGearMergesBlocksAndCleansJunk() {
 
     client { ModuleInventoryCleaner.settings.getValue("ThrowUnknownItems").setByString("true") }
     awaitCondition("unknown item thrown when ThrowUnknownItems is enabled") { carried("minecraft:rail") == 0 }
+    ticks(10)
+    check(carried("minecraft:paper") == 1) { "unknown item with a custom name was thrown" }
     disable(ModuleInventoryCleaner)
 }
 
