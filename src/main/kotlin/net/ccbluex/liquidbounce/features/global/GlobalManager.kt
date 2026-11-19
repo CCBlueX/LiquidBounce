@@ -45,7 +45,8 @@ object GlobalManager : Config("Settings") {
             GlobalSettingsTarget,
             GlobalSettingsTeleport,
             GlobalSettingsAutoTranslate,
-            GlobalSettingsViewModel
+            GlobalSettingsViewModel,
+            GlobalSettingsInventory
         )
     }
 

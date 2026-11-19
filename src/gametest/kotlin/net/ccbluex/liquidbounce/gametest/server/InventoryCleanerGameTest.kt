@@ -601,7 +601,7 @@ private fun GameTestScope.useFastConstraints(module: ClientModule) {
     client {
         val constraints = module.settings.getValue("Constraints") as ValueGroup
         constraints.inner.first { it.name == "StartDelay" }.setByString("0..0")
-        constraints.inner.first { it.name == "ClickDelay" }.setByString("1..1")
+        constraints.inner.first { it.name == "ClickDelay" }.setByString("50..50")
         constraints.inner.first { it.name == "CloseDelay" }.setByString("0..0")
     }
 }

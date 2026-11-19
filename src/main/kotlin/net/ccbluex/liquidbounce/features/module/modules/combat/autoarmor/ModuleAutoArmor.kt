@@ -126,11 +126,11 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
      * The slots armor is picked from. Worn pieces always count, as a bound one cannot be swapped out anyway.
      */
     internal val candidateSlots: List<ItemSlot>
-        get() = if (skipCursed.isEmpty() && !InventoryManager.hasBlockedItems) {
+        get() = if (skipCursed.isEmpty() && !InventoryManager.hasServerLockedItems) {
             Slots.All
         } else {
             Slots.All.filter { slot ->
-                (slot.slotType == ItemSlot.Type.ARMOR || !InventoryManager.isItemBlocked(slot.itemStack)) &&
+                (slot.slotType == ItemSlot.Type.ARMOR || !InventoryManager.isServerLocked(slot.itemStack)) &&
                     isAllowedByCurseFilter(slot)
             }
         }
@@ -170,8 +170,8 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
         if (stackInArmor.isGlider ||
-            InventoryManager.isItemBlocked(armorPiece.itemSlot.itemStack) ||
-            InventoryManager.isItemBlocked(stackInArmor)
+            InventoryManager.isServerLocked(armorPiece.itemSlot.itemStack) ||
+            InventoryManager.isServerLocked(stackInArmor)
         ) {
             return null
         }

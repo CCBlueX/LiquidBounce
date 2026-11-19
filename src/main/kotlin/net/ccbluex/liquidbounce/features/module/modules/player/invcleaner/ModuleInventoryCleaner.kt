@@ -99,8 +99,8 @@ object ModuleInventoryCleaner : ClientModule(
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {
             val slotTargets = buildSlotTargetMap()
-            val blockedSlots = if (InventoryManager.hasBlockedItems) {
-                findNonEmptySlotsInInventory().filter { InventoryManager.isItemBlocked(it.itemStack) }
+            val blockedSlots = if (InventoryManager.hasServerLockedItems) {
+                findNonEmptySlotsInInventory().filter { InventoryManager.isServerLocked(it.itemStack) }
             } else {
                 emptyList()
             }
@@ -202,7 +202,7 @@ object ModuleInventoryCleaner : ClientModule(
         val arrowSlot = Slots.Hotbar.firstOrNull { slot ->
             val stack = slot.itemStack
             stack.item is ArrowItem && slotTargets[slot] != ItemSortChoice.IGNORE &&
-                !InventoryManager.isItemBlocked(stack) &&
+                !InventoryManager.isServerLocked(stack) &&
                 // A shift-click that does not fit leaves the rest behind and would be repeated forever.
                 Slots.Inventory.any { it.itemStack.isEmpty || it.itemStack.canMerge(stack) }
         } ?: return false
@@ -240,7 +240,7 @@ object ModuleInventoryCleaner : ClientModule(
         // Blacklisted items
         val itemsToDispose = (blacklistedItems + planDisposalItems)
             .distinct()
-            .filterNot { InventoryManager.isItemBlocked(it.itemStack) }
+            .filterNot { InventoryManager.isServerLocked(it.itemStack) }
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(
