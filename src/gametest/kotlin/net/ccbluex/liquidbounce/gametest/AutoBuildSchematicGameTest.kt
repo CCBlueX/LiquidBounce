@@ -48,7 +48,9 @@ import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 
-private const val BUILD_TICKS = 20 * 60 * 45
+// A budget of three seconds a block, at most 45 minutes
+private const val TICKS_PER_BLOCK = 20 * 3
+private const val MAX_BUILD_TICKS = 20 * 60 * 45
 private const val RUN_TICKS = 20 * 120
 private const val SLOTS_PER_CHEST = 27
 
@@ -79,9 +81,11 @@ val autoBuildSchematic: GameTestScope.() -> Unit = {
             run("gamemode survival $playerName")
             run("gamerule do_fire_tick false")
             configure(ModuleAutoBuild, "Mode" to "Schematic")
-            for (file in dir.listDirectoryEntries("*.litematic").sorted()) {
-                buildSchematic(file)
+            val failed = dir.listDirectoryEntries("*.litematic").sorted().mapNotNull { file ->
+                runCatching { buildSchematic(file) }.exceptionOrNull()?.let { file.name to it }
             }
+            failed.forEach { (name, error) -> logger.error("$name failed", error) }
+            check(failed.isEmpty()) { "Not built: ${failed.joinToString { it.first }}" }
         }
     }
 }
@@ -102,13 +106,20 @@ private fun GameTestScope.buildSchematic(file: Path) {
         val blocks = context.fromClient { wanted() }
         stock(blocks)
         val started = System.nanoTime()
+        val startTick = context.fromClient { checkNotNull(it.level).gameTime }
         client { ModuleAutoBuild.enabled = true }
-        awaitClient("AutoBuild to build ${file.name}", BUILD_TICKS) { !ModuleAutoBuild.enabled }
-        logger.info("Built ${file.name}, ${blocks.size} blocks, in ${(System.nanoTime() - started) / 1_000_000_000} s")
+        val budget = minOf(MAX_BUILD_TICKS, 20 * 60 + TICKS_PER_BLOCK * blocks.size)
+        awaitClient("AutoBuild to build ${file.name}", budget) { !ModuleAutoBuild.enabled }
+        val ticks = context.fromClient { checkNotNull(it.level).gameTime } - startTick
+        logger.info(
+            "Built ${file.name}, ${blocks.size} blocks, in ${ticks / 20} s game time " +
+                "(${"%.2f".format(ticks / 20.0 / blocks.size)} s a block), ${(System.nanoTime() - started) / 1_000_000_000} s wall",
+        )
         // Liquids flow on for a moment
         ticks(40)
         checkBuilt(blocks)
-        checkWorks(blocks, setup)
+        // Only the farms have composters to make bone meal with
+        if (blocks.values.any { it.`is`(Blocks.COMPOSTER) }) checkWorks(blocks, setup)
     } finally {
         client {
             ModuleAutoBuild.enabled = false
