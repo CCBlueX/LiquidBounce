@@ -148,7 +148,11 @@ object ModuleFastExp : ClientModule(
 
     @Suppress("unused")
     private val repeatable = tickHandler(onCancellation = { resetRepair() }) {
-        requires { !InventoryManager.isHandledScreenOpen }
+        // A screen only pauses the repair, ending the run by it would reset the count
+        if (InventoryManager.isHandledScreenOpen) {
+            return@tickHandler
+        }
+
         requires { !player.isDeadOrDying }
         val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
