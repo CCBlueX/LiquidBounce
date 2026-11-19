@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
@@ -30,7 +32,12 @@ import net.minecraft.core.BlockPos
 /**
  * AutoFarm walks to a row of ripe wheat and carrots, harvests it, sows it again and picks up what it dropped.
  */
-class AutoFarmGameTest : SingleplayerGameTest({
+class AutoFarmGameTest : SingleplayerGameTest(farming)
+
+/** The same farm on the game test server, under its anticheats. */
+class AutoFarmServerGameTest : ServerGameTest(farming)
+
+private val farming: GameTestScope.() -> Unit = {
     val y = origin.y
     context.restoring(ModuleAutoFarm) {
         run("gamemode survival $playerName")
@@ -62,4 +69,4 @@ class AutoFarmGameTest : SingleplayerGameTest({
             fillArea(BlockPos(-8, y, -8), BlockPos(8, y + 4, 8), "minecraft:air")
         }
     }
-})
+}
