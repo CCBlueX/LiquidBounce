@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.RespawnAnchorBlock
@@ -60,8 +61,8 @@ import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 /**
- * Places, fully charges, and detonates respawn anchors in dimensions where anchors explode instead of setting spawn.
- * Only one anchor and one interaction are tracked at a time; world state confirms every transition.
+ * Places, charges once, protects the player's feet, and detonates respawn anchors where they explode instead of
+ * setting spawn. Only one anchor and one interaction are tracked at a time; world state confirms every transition.
  */
 @Suppress("LargeClass", "TooManyFunctions")
 object ModuleAnchorAura : ClientModule(
@@ -70,6 +71,8 @@ object ModuleAnchorAura : ClientModule(
     aliases = listOf("AutoAnchor"),
     disableOnQuit = true,
 ) {
+
+    private const val MAX_PLACEMENT_TARGET_DISTANCE_SQR = 4.0
 
     val targetTracker = tree(TargetTracker(
         rangeValue = FloatValueProvider("Range", 5f, 1f..12f)
@@ -83,6 +86,7 @@ object ModuleAnchorAura : ClientModule(
         val lethalOverride by boolean("LethalOverride", true)
         val efficient by boolean("Efficient", true)
         val terrain by boolean("Terrain", true)
+        val feetProtection by boolean("FeetProtection", true)
     }
 
     object Prediction : ValueGroup("Prediction") {
@@ -107,20 +111,22 @@ object ModuleAnchorAura : ClientModule(
     private val placer = tree(BlockPlacer(
         "Placing",
         this,
-        Priority.IMPORTANT_FOR_USAGE_2,
+        Priority.IMPORTANT_FOR_USAGE_3,
         {
             val current = active
-            if (current?.phase == AnchorAuraPhase.PLACING && isSafe(current, useCache = false)) {
-                findAnchorSlot()
-            } else {
-                null
+            when (current?.phase) {
+                AnchorAuraPhase.PLACING -> findAnchorSlot().takeIf { isSafe(current, useCache = false) }
+                AnchorAuraPhase.PROTECTING -> findProtectionSlot().takeIf {
+                    isSafe(current, useCache = false, protectionPos = current.protectionPos)
+                }
+                else -> null
             }
         },
     ))
 
     private val rotationMode = modes(this, "InteractionRotation") {
         arrayOf(
-            NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_2, true),
+            NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_3, true),
             NoRotationMode(it, this),
         )
     }
@@ -146,10 +152,18 @@ object ModuleAnchorAura : ClientModule(
         var pendingGeneration: Long = 0L,
         var pending: Boolean = false,
         var awaitingConfirmation: Boolean = false,
+        var protectionPos: BlockPos? = null,
+        var protectionStartedAt: Long = 0L,
+        var protectionChecked: Boolean = false,
     )
 
     private data class RetryState(val failures: Int, val notBefore: Long)
     private data class Visibility(val visible: Boolean)
+    private data class ProtectionChoice(
+        val pos: BlockPos,
+        val damage: AnchorDamageInput,
+        val lineDistance: Double,
+    )
 
     private val maxCharge = RespawnAnchorBlock.CHARGE.possibleValues.max()
     private val retries = HashMap<Long, RetryState>()
@@ -158,6 +172,7 @@ object ModuleAnchorAura : ClientModule(
     private var nextSearchAt = 0L
     private var cachedSearchRadius = -1f
     private var searchOffsets = emptyArray<BlockPos>()
+    private val protectionDirections = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
 
     init {
         treeAll(Damage, Prediction)
@@ -235,7 +250,7 @@ object ModuleAnchorAura : ClientModule(
         }
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "ReturnCount")
     private fun tickActive(current: ActiveAnchor, now: Long) {
         val state = current.pos.stateOrEmpty
         if (state.block !is RespawnAnchorBlock) {
@@ -273,17 +288,43 @@ object ModuleAnchorAura : ClientModule(
             }
         }
 
+        if (current.phase == AnchorAuraPhase.PROTECTING && action == AnchorAuraAction.DETONATE) {
+            tickProtection(current, now)
+            return
+        }
+
         val expectedPhase = AnchorAuraLogic.phaseFor(action)
         if (current.phase != expectedPhase) {
             actionGeneration++
+            placer.clear()
             current.phase = expectedPhase
             current.pending = false
             current.pendingGeneration = 0L
             current.awaitingConfirmation = false
             current.awaitingSince = 0L
             current.lastActionAt = now
+            current.protectionPos = null
+            current.protectionStartedAt = 0L
+            current.protectionChecked = false
             if (expectedPhase == AnchorAuraPhase.DETONATING) {
                 retries.remove(current.pos.asLong())
+            }
+        }
+
+        if (action == AnchorAuraAction.DETONATE && Damage.feetProtection) {
+            val protectionPos = current.protectionPos
+            if (protectionPos != null && !protectionPos.stateOrEmpty.isSolid) {
+                current.protectionPos = null
+                current.protectionChecked = false
+            }
+
+            if (!current.protectionChecked) {
+                current.protectionChecked = true
+                val protection = findBestProtection(current.pos, current.target)
+                if (protection != null) {
+                    beginProtection(current, protection.pos, now)
+                    return
+                }
             }
         }
 
@@ -358,6 +399,121 @@ object ModuleAnchorAura : ClientModule(
         }
     }
 
+    private fun tickProtection(current: ActiveAnchor, now: Long) {
+        val protectionPos = current.protectionPos
+        if (!Damage.feetProtection) {
+            current.protectionPos = null
+            completeProtection(current, now)
+            return
+        }
+
+        if (protectionPos == null) {
+            recordFailure(current, now)
+            resetActive()
+            nextSearchAt = now + searchInterval
+            return
+        }
+
+        if (protectionPos.stateOrEmpty.isSolid) {
+            completeProtection(current, now)
+            return
+        }
+
+        if (findProtectionSlot() == null ||
+            !isSafe(current, useCache = false, protectionPos = protectionPos) ||
+            now - current.protectionStartedAt >= placeTimeout
+        ) {
+            recordFailure(current, now)
+            resetActive()
+            nextSearchAt = now + searchInterval
+            return
+        }
+
+        placer.update(setOf(protectionPos))
+    }
+
+    private fun beginProtection(current: ActiveAnchor, protectionPos: BlockPos, now: Long) {
+        actionGeneration++
+        current.phase = AnchorAuraPhase.PROTECTING
+        current.pending = false
+        current.pendingGeneration = 0L
+        current.awaitingConfirmation = false
+        current.awaitingSince = 0L
+        current.lastActionAt = now
+        current.protectionPos = protectionPos.immutable()
+        current.protectionStartedAt = now
+        placer.update(setOf(protectionPos))
+    }
+
+    private fun completeProtection(current: ActiveAnchor, now: Long) {
+        actionGeneration++
+        placer.clear()
+        current.phase = AnchorAuraPhase.DETONATING
+        current.pending = false
+        current.pendingGeneration = 0L
+        current.awaitingConfirmation = false
+        current.awaitingSince = 0L
+        current.lastActionAt = now
+        current.protectionChecked = true
+        retries.remove(current.pos.asLong())
+    }
+
+    /** Finds a new solid block on the anchor-to-feet rays and verifies the complete blast result before placing it. */
+    private fun findBestProtection(
+        anchorPos: BlockPos,
+        target: LivingEntity,
+        reserveGlowstoneForCharge: Boolean = false,
+    ): ProtectionChoice? {
+        if (findProtectionSlot(reserveGlowstoneForCharge) == null) {
+            return null
+        }
+
+        val feet = player.blockPosition()
+        val origin = player.position().add(0.0, 0.25, 0.0)
+        val anchorCenter = anchorPos.center
+        if (origin.distanceToSqr(anchorCenter) < 0.01) {
+            return null
+        }
+
+        val candidates = LinkedHashSet<BlockPos>(protectionDirections.size * 2)
+        for (direction in protectionDirections) {
+            candidates.add(feet.relative(direction))
+            candidates.add(anchorPos.relative(direction))
+        }
+
+        return candidates.asSequence()
+            .filter { pos ->
+                pos != anchorPos && world.worldBorder.isWithinBounds(pos) &&
+                    pos.stateOrEmpty.canBeReplaced() && pos.isUnobstructed()
+            }
+            .mapNotNull { pos ->
+                val lineDistance = AnchorProtectionLogic.lineDistance(pos, origin, anchorCenter)
+                    ?: return@mapNotNull null
+                val damage = AnchorAuraDamage.calculate(
+                    target = target,
+                    anchorPos = anchorPos,
+                    terrain = Damage.terrain,
+                    selfPredictionTicks = Prediction.selfTicks,
+                    targetPredictionTicks = Prediction.targetTicks,
+                    useCache = false,
+                    protectionPos = pos,
+                )
+                if (AnchorAuraLogic.damageRejection(damage, damageLimits()) != null || !placer.canClickPlace(pos)) {
+                    return@mapNotNull null
+                }
+
+                ProtectionChoice(pos, damage, lineDistance)
+            }
+            .minWithOrNull(
+                compareBy<ProtectionChoice>(
+                    { it.damage.selfDamage },
+                    { it.damage.friendDamage },
+                    { -it.damage.enemyDamage },
+                    { it.lineDistance },
+                )
+            )
+    }
+
     @Suppress("CognitiveComplexMethod", "LongMethod", "NestedBlockDepth", "LoopWithTooManyJumpStatements")
     private fun findBestCandidate(targets: List<LivingEntity>, now: Long): Candidate? {
         if (targets.isEmpty()) {
@@ -400,10 +556,15 @@ object ModuleAnchorAura : ClientModule(
                 if (action == null) {
                     continue
                 }
+                if (action == AnchorAuraAction.PLACE &&
+                    pos.distSqr(origin) > MAX_PLACEMENT_TARGET_DISTANCE_SQR
+                ) {
+                    continue
+                }
 
                 val available = when (action) {
-                    AnchorAuraAction.PLACE -> anchorsAvailable
-                    AnchorAuraAction.CHARGE -> glowstoneAvailable
+                    AnchorAuraAction.PLACE -> anchorsAvailable && glowstoneAvailable && detonationHandAvailable
+                    AnchorAuraAction.CHARGE -> glowstoneAvailable && detonationHandAvailable
                     AnchorAuraAction.DETONATE -> detonationHandAvailable
                 }
                 if (!available || (retries[pos.asLong()]?.notBefore ?: 0L) > now) {
@@ -413,15 +574,26 @@ object ModuleAnchorAura : ClientModule(
                 val visibility = visibility(pos, isAnchor) ?: continue
                 evaluated++
                 targetEvaluated++
-                val damage = AnchorAuraDamage.calculate(
+                val initialDamage = AnchorAuraDamage.calculate(
                     target = target,
                     anchorPos = pos,
                     terrain = Damage.terrain,
                     selfPredictionTicks = Prediction.selfTicks,
                     targetPredictionTicks = Prediction.targetTicks,
                 )
-                if (AnchorAuraLogic.damageRejection(damage, damageLimits()) != null) {
-                    continue
+                val rejection = AnchorAuraLogic.damageRejection(initialDamage, damageLimits())
+                val damage = if (rejection == null) {
+                    initialDamage
+                } else {
+                    if (!Damage.feetProtection || !canPlanProtection(rejection)) {
+                        continue
+                    }
+
+                    findBestProtection(
+                        pos,
+                        target,
+                        reserveGlowstoneForCharge = action != AnchorAuraAction.DETONATE,
+                    )?.damage ?: continue
                 }
 
                 val score = AnchorAuraLogic.candidateScore(
@@ -474,6 +646,9 @@ object ModuleAnchorAura : ClientModule(
     @Suppress("CognitiveComplexMethod", "LongMethod")
     private fun scheduleInteraction(current: ActiveAnchor, action: AnchorAuraAction, now: Long) {
         if (interactionSlot(action) == null) {
+            recordFailure(current, now)
+            resetActive()
+            nextSearchAt = now + searchInterval
             return
         }
 
@@ -524,7 +699,10 @@ object ModuleAnchorAura : ClientModule(
                 }
 
                 val slot = interactionSlot(action) ?: run {
-                    recordFailure(current, System.currentTimeMillis())
+                    val failureTime = System.currentTimeMillis()
+                    recordFailure(current, failureTime)
+                    resetActive()
+                    nextSearchAt = failureTime + searchInterval
                     return@rotate
                 }
                 if (!SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)) {
@@ -616,7 +794,12 @@ object ModuleAnchorAura : ClientModule(
             !CombatManager.shouldPauseCombat && placer.canAct() && targetTracker.validate(current.target)
     }
 
-    private fun isSafe(current: ActiveAnchor, useCache: Boolean): Boolean {
+    private fun isSafe(
+        current: ActiveAnchor,
+        useCache: Boolean,
+        protectionPos: BlockPos? = current.protectionPos,
+    ): Boolean {
+        val effectiveProtectionPos = protectionPos.takeIf { Damage.feetProtection }
         val damage = AnchorAuraDamage.calculate(
             target = current.target,
             anchorPos = current.pos,
@@ -624,8 +807,36 @@ object ModuleAnchorAura : ClientModule(
             selfPredictionTicks = Prediction.selfTicks,
             targetPredictionTicks = Prediction.targetTicks,
             useCache = useCache,
+            protectionPos = effectiveProtectionPos,
         )
-        return AnchorAuraLogic.damageRejection(damage, damageLimits()) == null
+        val rejection = AnchorAuraLogic.damageRejection(damage, damageLimits())
+        if (rejection == null) {
+            return true
+        }
+
+        if (effectiveProtectionPos != null || !Damage.feetProtection || !canPlanProtection(rejection)) {
+            return false
+        }
+        if (current.phase != AnchorAuraPhase.PLACING && current.phase != AnchorAuraPhase.CHARGING) {
+            return false
+        }
+
+        val protection = findBestProtection(
+            current.pos,
+            current.target,
+            reserveGlowstoneForCharge = true,
+        ) ?: return false
+        current.protectionPos = protection.pos.immutable()
+        current.protectionChecked = true
+        return true
+    }
+
+    private fun canPlanProtection(rejection: AnchorDamageRejection): Boolean = when (rejection) {
+        AnchorDamageRejection.SELF_DAMAGE,
+        AnchorDamageRejection.ANTI_SUICIDE,
+        AnchorDamageRejection.INEFFICIENT -> true
+        AnchorDamageRejection.MIN_ENEMY_DAMAGE,
+        AnchorDamageRejection.FRIEND_DAMAGE -> false
     }
 
     private fun damageLimits() = AnchorDamageLimits(
@@ -646,6 +857,16 @@ object ModuleAnchorAura : ClientModule(
     private fun findAnchorSlot() = Slots.OffhandWithHotbar.findClosestSlot(Items.RESPAWN_ANCHOR)
 
     private fun findGlowstoneSlot() = Slots.OffhandWithHotbar.findClosestSlot(Items.GLOWSTONE)
+
+    /** Reuse the charging hand when possible, without planning the same last glowstone as both charge and shield. */
+    private fun findProtectionSlot(reserveGlowstoneForCharge: Boolean = false): HotbarItemSlot? {
+        val glowstoneCount = Slots.OffhandWithHotbar.sumOf { slot ->
+            if (slot.itemStack.item === Items.GLOWSTONE) slot.itemStack.count else 0
+        }
+        return findGlowstoneSlot().takeIf {
+            AnchorProtectionLogic.canProtectWithGlowstone(glowstoneCount, reserveGlowstoneForCharge)
+        } ?: Slots.OffhandWithHotbar.findClosestSlot(Items.OBSIDIAN)
+    }
 
     /** Empty stacks intentionally qualify. Glowstone in the opposite hand does not matter for a direct hand packet. */
     private fun findDetonationSlot() = Slots.OffhandWithHotbar.findClosestSlot { stack ->
@@ -678,6 +899,7 @@ object ModuleAnchorAura : ClientModule(
         active = null
         placer.clear()
         SilentHotbar.resetSlot(this)
+        SilentHotbar.resetSlot(placer)
     }
 
     private fun resetRuntime(clearRetries: Boolean) {

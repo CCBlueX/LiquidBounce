@@ -60,22 +60,21 @@ class AnchorAuraLogicTest {
     }
 
     @Test
-    fun `nonfull anchors charge until the maximum`() {
-        for (charges in 0 until ANCHOR_MAX_CHARGE) {
-            assertEquals(AnchorAuraAction.CHARGE, AnchorAuraLogic.actionFor(true, charges))
-            assertEquals(
-                AnchorAuraPhase.CHARGING,
-                AnchorAuraLogic.phaseFor(AnchorAuraLogic.actionFor(true, charges)!!),
-            )
-        }
+    fun `only an uncharged anchor requires glowstone`() {
+        val action = assertNotNull(AnchorAuraLogic.actionFor(anchorPresent = true, charges = 0))
+
+        assertEquals(AnchorAuraAction.CHARGE, action)
+        assertEquals(AnchorAuraPhase.CHARGING, AnchorAuraLogic.phaseFor(action))
     }
 
     @Test
-    fun `full anchor detonates instead of consuming more glowstone`() {
-        val action = assertNotNull(AnchorAuraLogic.actionFor(anchorPresent = true, charges = ANCHOR_MAX_CHARGE))
+    fun `every charged anchor detonates without consuming more glowstone`() {
+        for (charges in 1..ANCHOR_MAX_CHARGE) {
+            val action = assertNotNull(AnchorAuraLogic.actionFor(anchorPresent = true, charges = charges))
 
-        assertEquals(AnchorAuraAction.DETONATE, action)
-        assertEquals(AnchorAuraPhase.DETONATING, AnchorAuraLogic.phaseFor(action))
+            assertEquals(AnchorAuraAction.DETONATE, action)
+            assertEquals(AnchorAuraPhase.DETONATING, AnchorAuraLogic.phaseFor(action))
+        }
     }
 
     @Test
@@ -89,6 +88,14 @@ class AnchorAuraLogicTest {
     fun `custom positive full-charge boundary is respected`() {
         assertEquals(AnchorAuraAction.CHARGE, AnchorAuraLogic.actionFor(true, charges = 0, maxCharge = 1))
         assertEquals(AnchorAuraAction.DETONATE, AnchorAuraLogic.actionFor(true, charges = 1, maxCharge = 1))
+    }
+
+    @Test
+    fun `one glowstone completes the place charge detonate cycle`() {
+        assertEquals(AnchorAuraAction.PLACE, AnchorAuraLogic.actionFor(anchorPresent = false, charges = 0))
+        assertEquals(AnchorAuraAction.CHARGE, AnchorAuraLogic.actionFor(anchorPresent = true, charges = 0))
+        assertEquals(AnchorAuraAction.DETONATE, AnchorAuraLogic.actionFor(anchorPresent = true, charges = 1))
+        assertEquals(AnchorAuraAction.PLACE, AnchorAuraLogic.actionFor(anchorPresent = false, charges = 0))
     }
 
     @Test

@@ -30,6 +30,7 @@ enum class AnchorAuraPhase {
     SEARCHING,
     PLACING,
     CHARGING,
+    PROTECTING,
     DETONATING,
 }
 
@@ -67,8 +68,8 @@ enum class AnchorDamageRejection {
 object AnchorAuraLogic {
 
     /**
-     * Returns null for an invalid charge value. A charged anchor is only detonated at full charge; zero to three
-     * charges require glowstone. In particular, a full anchor never produces another charge action.
+     * Returns null for an invalid charge value. Only an uncharged anchor needs glowstone. Every charged state has the
+     * same blast power and can be detonated immediately, so charging more than once wastes both time and glowstone.
      */
     @JvmStatic
     @JvmOverloads
@@ -89,10 +90,9 @@ object AnchorAuraLogic {
             return null
         }
 
-        return if (charges < maxCharge) {
+        return if (charges == 0) {
             AnchorAuraAction.CHARGE
         } else {
-            // maxCharge is positive, therefore this also enforces charges > 0.
             AnchorAuraAction.DETONATE
         }
     }

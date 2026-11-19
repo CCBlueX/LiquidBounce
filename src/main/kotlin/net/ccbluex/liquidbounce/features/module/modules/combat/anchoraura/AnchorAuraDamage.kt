@@ -56,15 +56,16 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         selfPredictionTicks: Int,
         targetPredictionTicks: Int,
         useCache: Boolean = true,
+        protectionPos: BlockPos? = null,
     ): AnchorDamageInput {
         val center = anchorPos.center
-        val enemyDamage = enemyDamage(target, anchorPos, center, terrain, targetPredictionTicks)
-        val splash = if (useCache) {
+        val enemyDamage = enemyDamage(target, anchorPos, center, terrain, targetPredictionTicks, protectionPos)
+        val splash = if (useCache && protectionPos == null) {
             splashCache.computeIfAbsent(anchorPos.asLong()) {
-                splashDamage(anchorPos, center, terrain, selfPredictionTicks)
+                splashDamage(anchorPos, center, terrain, selfPredictionTicks, protectionPos = null)
             }
         } else {
-            splashDamage(anchorPos, center, terrain, selfPredictionTicks)
+            splashDamage(anchorPos, center, terrain, selfPredictionTicks, protectionPos)
         }
 
         return AnchorDamageInput(
@@ -83,8 +84,9 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         center: Vec3,
         terrain: Boolean,
         predictionTicks: Int,
+        protectionPos: BlockPos?,
     ): Float {
-        val current = damage(target, anchorPos, center, terrain)
+        val current = damage(target, anchorPos, center, terrain, protectionPos = protectionPos)
         if (predictionTicks <= 0 || target !is Player) {
             return current
         }
@@ -96,7 +98,8 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
             anchorPos,
             center,
             terrain,
-            target.getBoundingBoxAt(predictedPos),
+            boundingBox = target.getBoundingBoxAt(predictedPos),
+            protectionPos = protectionPos,
         )
         return minOf(current, predicted)
     }
@@ -107,8 +110,9 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         center: Vec3,
         terrain: Boolean,
         predictionTicks: Int,
+        protectionPos: BlockPos?,
     ): Float {
-        val current = damage(player, anchorPos, center, terrain)
+        val current = damage(player, anchorPos, center, terrain, protectionPos = protectionPos)
         if (predictionTicks <= 0) {
             return current
         }
@@ -120,7 +124,8 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
             anchorPos,
             center,
             terrain,
-            player.getBoundingBoxAt(predictedPos),
+            boundingBox = player.getBoundingBoxAt(predictedPos),
+            protectionPos = protectionPos,
         )
         return maxOf(current, predicted)
     }
@@ -130,6 +135,7 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         center: Vec3,
         terrain: Boolean,
         selfPredictionTicks: Int,
+        protectionPos: BlockPos?,
     ): SplashDamage {
         var friendDamage = 0f
         val nearbyFriends = world.getEntitiesBoxInRange(center, EXPLOSION_RANGE.toDouble()) { entity ->
@@ -138,10 +144,16 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
 
         for (friend in nearbyFriends) {
             val living = friend as LivingEntity
-            friendDamage = maxOf(friendDamage, damage(living, anchorPos, center, terrain))
+            friendDamage = maxOf(
+                friendDamage,
+                damage(living, anchorPos, center, terrain, protectionPos = protectionPos),
+            )
         }
 
-        return SplashDamage(selfDamage(anchorPos, center, terrain, selfPredictionTicks), friendDamage)
+        return SplashDamage(
+            selfDamage(anchorPos, center, terrain, selfPredictionTicks, protectionPos),
+            friendDamage,
+        )
     }
 
     private fun damage(
@@ -150,6 +162,7 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         center: Vec3,
         terrain: Boolean,
         boundingBox: AABB? = null,
+        protectionPos: BlockPos? = null,
     ): Float = entity.getDamageFromExplosion(
         pos = center,
         power = POWER,
@@ -157,6 +170,7 @@ internal object AnchorAuraDamage : MinecraftShortcuts {
         damageDistance = DAMAGE_DISTANCE,
         // Vanilla removes the respawn anchor before applying the explosion.
         exclude = listOf(anchorPos),
+        include = protectionPos,
         maxBlastResistance = if (terrain) TERRAIN_BLAST_RESISTANCE else null,
         entityBoundingBox = boundingBox,
         damageSource = entity.damageSources().badRespawnPointExplosion(center),
