@@ -46,8 +46,9 @@ private const val MARKER = "progress marker"
 class AsyncCommandProgressGameTest : SingleplayerGameTest({
     val cancellations = AtomicInteger()
 
-    val cancelledNotice = translation("liquidbounce.commandManager.commandCancelled", PROBE).string
-    val alreadyExecuting = translation("liquidbounce.commandManager.commandExecuting", PROBE).string
+    // Resolving a translation reads Minecraft's language option, which only the client thread may do
+    val cancelledNotice = client { translation("liquidbounce.commandManager.commandCancelled", PROBE).string }
+    val alreadyExecuting = client { translation("liquidbounce.commandManager.commandExecuting", PROBE).string }
 
     val node = literal(PROBE) {
         execSuspend {
