@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -153,14 +152,6 @@ object ModuleAutoBuff : ClientModule(
                     return@tickHandler
                 }
             }
-        }
-    }
-
-    @Suppress("unused")
-    private val refiller = handler<ScheduleInventoryActionEvent> {
-        // Move valid buff items from the inventory into empty hotbar slots whenever inventory actions are scheduled
-        if (Refill.enabled) {
-            Refill.execute(it)
         }
     }
 

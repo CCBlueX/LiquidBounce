@@ -22,14 +22,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.ItemStack
@@ -79,19 +78,16 @@ internal object Soup : HealthBasedBuff("Soup") {
         }
 
         @Suppress("unused")
-        private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-            val slot = bowlSlot ?: return@handler
-            bowlSlot = null
+        private val stacker = inventoryPlan(inventoryConstraints) {
+            val slot = bowlSlot ?: return@inventoryPlan
 
             if (!holdsBowl(slot) || !ignoreInventoryFull && !hasInventorySpace()) {
-                return@handler
+                bowlSlot = null
+                return@inventoryPlan
             }
 
-            event.schedule(
-                inventoryConstraints,
-                InventoryAction.Click.performQuickMove(slot = slot),
-                Priority.IMPORTANT_FOR_USAGE_2
-            )
+            perform(InventoryAction.Click.performQuickMove(slot = slot), priority = Priority.IMPORTANT_FOR_USAGE_2)
+            bowlSlot = null
         }
 
         override fun disable() {

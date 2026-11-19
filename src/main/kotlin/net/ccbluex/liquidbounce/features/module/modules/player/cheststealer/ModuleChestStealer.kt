@@ -23,8 +23,6 @@ import net.ccbluex.fastutil.swap
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
@@ -44,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screens.Screen
@@ -85,47 +84,58 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     }
 
     @Suppress("unused")
-    private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+    private val steal = inventoryPlan(inventoryConstrains) {
         // Check if we are in a chest screen
-        val screen = getChestScreen() ?: return@handler
+        val screen = getChestScreen() ?: return@inventoryPlan
 
         val cleanupPlan = createCleanupPlan(screen)
+
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (quickSwaps && performQuickSwaps(event, cleanupPlan, screen)) {
-            return@handler
-        }
-
-        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
-
-        val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
-        selectionMode.activeMode.process(itemsToCollect)
-
-        val targetBlacklist = ObjectOpenHashSet<ItemSlot>()
-
-        for (slot in itemsToCollect) {
-            val moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot, targetBlacklist)
-
-            if (moveActions != null) {
-                event.schedule(
-                    inventoryConstrains, moveActions,
+        if (quickSwaps) {
+            var hasSwapped = false
+            for (hotbarSwap in cleanupPlan.swaps) {
+                perform(
+                    findQuickSwapActions(cleanupPlan, screen, slotOf(hotbarSwap.from), hotbarSwap.to) ?: continue,
                     /**
                      * we prioritize item based on how important it is
                      * for example we should prioritize armor over apples
                      */
-                    ItemCategorization.Default.getItemFacets(slot).maxOf { it.category.type.allocationPriority }
+                    priority = hotbarSwap.priority
                 )
-            } else if (stillRequiredSpace > 0) {
-                // Throw useless items
-                event.schedule(
-                    inventoryConstrains,
-                    throwItem(cleanupPlan, screen, targetBlacklist) ?: break
-                )
+                hasSwapped = true
+            }
+
+            // The plan does not say what becomes of the items its swaps push out of the hotbar, the next one does
+            if (hasSwapped) {
+                return@inventoryPlan
             }
         }
 
+        val itemsToThrow = ArrayDeque(cleanupPlan.findItemsToThrowOut(findNonEmptySlotsInInventory()))
+        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstanceTo(ArrayList<ContainerItemSlot>())
+
+        var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
+        selectionMode.activeMode.process(itemsToCollect)
+
+        for (slot in itemsToCollect) {
+            var moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot)
+
+            if (moveActions == null && stillRequiredSpace > 0) {
+                // Throw useless items
+                perform(throwItem(screen, itemsToThrow) ?: break)
+                stillRequiredSpace--
+                moveActions = Slots.HotbarAndInventory.findPossiblePickActions(screen, slot)
+            }
+
+            perform(
+                moveActions ?: continue,
+                priority = ItemCategorization.Default.getItemFacets(slot).maxOf { it.category.type.allocationPriority }
+            )
+        }
+
         // Check if stealing the chest was completed
-        if (autoClose && itemsToCollect.isEmpty()) {
-            event.schedule(inventoryConstrains, InventoryAction.CloseScreen(screen))
+        if (autoClose && itemsToCollect.all { it.itemStack.isEmpty }) {
+            perform(InventoryAction.CloseScreen(screen))
         }
     }
 
@@ -136,23 +146,20 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private fun Iterable<ItemSlot>.findPossiblePickActions(
         screen: AbstractContainerScreen<*>,
         from: ItemSlot,
-        targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
         val fromStack = from.itemStack
-        val remaining = mergeableCapacityFor(fromStack, blacklist = targetBlacklist)
+        val remaining = mergeableCapacityFor(fromStack)
 
         // Impossible to pick any item into inventory
         if (remaining == 0) return null
 
-        targetBlacklist?.add(from)
         return when (itemMoveMode) {
             ItemMoveMode.QUICK_MOVE -> listOf(InventoryAction.Click.performQuickMove(screen, from))
 
             ItemMoveMode.DRAG_AND_DROP -> {
                 // Never empty
                 val targets = filterTo(ArrayDeque()) {
-                    (targetBlacklist == null || it !in targetBlacklist) &&
-                        (it.itemStack.isEmpty || it.itemStack.isMergeable(fromStack))
+                    it.itemStack.isEmpty || it.itemStack.isMergeable(fromStack)
                 }
 
                 /* The remaining count after merged with [fromStack]. Negative -> fromStack has remaining */
@@ -165,7 +172,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
                     val possibleSinglePut = targets.firstOrNull { mergedRemaining(it.itemStack) >= 0 }
                     if (possibleSinglePut != null) {
                         this += InventoryAction.Click.performPickup(screen, possibleSinglePut)
-                        targetBlacklist?.add(possibleSinglePut)
                     } else {
                         // Now all `mergedRemaining` result of [targets] are negative
                         // Minimize click count
@@ -175,7 +181,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
                             val target = targets.removeFirstOrNull() ?: break
                             count += mergedRemaining(target.itemStack)
                             this += InventoryAction.Click.performPickup(screen, target)
-                            targetBlacklist?.add(target)
                         }
                     }
 
@@ -189,25 +194,21 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     }
 
     /**
-     * @return if we should wait
+     * Gets the click that throws the next of [itemsToThrow] that is still in the inventory, or null if nothing is to
+     * be thrown
      */
     private fun throwItem(
-        cleanupPlan: InventoryCleanupPlan,
         screen: AbstractContainerScreen<*>,
-        targetBlacklist: MutableSet<ItemSlot>,
+        itemsToThrow: ArrayDeque<ItemSlot>,
     ): List<InventoryAction>? {
-        val itemsInInv = findNonEmptySlotsInInventory()
-        val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
-            .firstOrNull { it.getIdForServer(screen) != null } ?: return null
+        val itemToThrowOut = generateSequence { itemsToThrow.removeFirstOrNull() }
+            .firstOrNull { !it.itemStack.isEmpty && it.getIdForServer(screen) != null } ?: return null
 
         return when (onFull) {
             OnFull.NONE -> null
 //            OnFull.PUT_BACK -> screen.getSlotsInContainer()
-//                .findPossiblePickActions(screen, itemToThrowOut, targetBlacklist)
-            OnFull.THROW -> {
-                targetBlacklist.add(itemToThrowOut)
-                listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
-            }
+//                .findPossiblePickActions(screen, itemToThrowOut)
+            OnFull.THROW -> listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
         }
     }
 
@@ -233,70 +234,45 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     }
 
     /**
-     * @return true if a quick swap transaction was scheduled and the plan should be regenerated next tick
+     * Gets the clicks that bring the stack in [from] to the hotbar slot [to], or null if it is not to be swapped
      */
-    @Suppress("CognitiveComplexMethod")
-    private fun performQuickSwaps(
-        event: ScheduleInventoryActionEvent,
+    private fun findQuickSwapActions(
         cleanupPlan: InventoryCleanupPlan,
-        screen: AbstractContainerScreen<*>
-    ): Boolean {
-        cleanupPlan.swaps.forEach { hotbarSwap ->
-            // We only care about swaps from the chest to the hotbar
-            if (hotbarSwap.from.slotType != ItemSlot.Type.CONTAINER) {
-                return@forEach
-            }
-
-            val hotbarSlot = hotbarSwap.to as? HotbarItemSlot ?: return@forEach
-            if (!hotbarSlot.canBeSwapTarget) {
-                return@forEach
-            }
-
-            val actions = when {
-                // Target slot is empty, swap
-                hotbarSlot.itemStack.isEmpty -> listOf(
-                    InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot)
-                )
-
-                // Target slot item is useful, swap it with another empty slot
-                hotbarSlot in cleanupPlan.usefulItems ->
-                    Slots.Inventory.firstOrNull { it.itemStack.isEmpty }?.let { emptyInventorySlot ->
-                        listOf(
-                            InventoryAction.Click.performSwap(screen, emptyInventorySlot, hotbarSlot),
-                            InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot),
-                        )
-                    } ?: return@forEach
-
-                // Target slot item is useless, throw and swap
-                else -> if (hotbarSlot.isOffHand) {
-                    // Throwing offhand item inside container looks not legit
-                    listOf(InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot))
-                } else {
-                    listOf(
-                        InventoryAction.Click.performThrow(screen, hotbarSlot),
-                        InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSlot),
-                    )
-                }
-            }
-
-            if (actions.any { it.slot.getIdForServer(screen) == null }) {
-                return@forEach
-            }
-
-            event.schedule(
-                inventoryConstrains,
-                actions,
-                /**
-                 * we prioritize item based on how important it is
-                 * for example we should prioritize armor over apples
-                 */
-                hotbarSwap.priority
-            )
-
-            return true
+        screen: AbstractContainerScreen<*>,
+        from: ItemSlot,
+        to: ItemSlot,
+    ): List<InventoryAction.Click>? {
+        // We only care about swaps from the chest to the hotbar
+        if (from.slotType != ItemSlot.Type.CONTAINER || to !is HotbarItemSlot || !to.canBeSwapTarget) {
+            return null
         }
 
-        return false
+        val actions = when {
+            // Target slot is empty, swap
+            to.itemStack.isEmpty -> listOf(InventoryAction.Click.performSwap(screen, from, to))
+
+            // Target slot item is useful, swap it with another empty slot
+            to in cleanupPlan.usefulItems ->
+                Slots.Inventory.firstOrNull { it.itemStack.isEmpty }?.let { emptyInventorySlot ->
+                    listOf(
+                        InventoryAction.Click.performSwap(screen, emptyInventorySlot, to),
+                        InventoryAction.Click.performSwap(screen, from, to),
+                    )
+                } ?: return null
+
+            // Target slot item is useless, throw and swap
+            else -> if (to.isOffHand) {
+                // Throwing offhand item inside container looks not legit
+                listOf(InventoryAction.Click.performSwap(screen, from, to))
+            } else {
+                listOf(
+                    InventoryAction.Click.performThrow(screen, to),
+                    InventoryAction.Click.performSwap(screen, from, to),
+                )
+            }
+        }
+
+        return actions.takeUnless { clicks -> clicks.any { it.slot.getIdForServer(screen) == null } }
     }
 
     /**

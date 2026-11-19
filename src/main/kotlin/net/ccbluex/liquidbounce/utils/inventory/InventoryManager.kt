@@ -19,15 +19,16 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.EventListenerNotListeningException
+import net.ccbluex.liquidbounce.event.Guards
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,7 +38,6 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
@@ -62,6 +62,8 @@ import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -72,6 +74,7 @@ import kotlin.random.Random
  *  - Progress Bar
  *  - Off-screen actions
  */
+@Suppress("TooManyFunctions")
 object InventoryManager : EventListener {
 
     @AddonApi
@@ -95,11 +98,26 @@ object InventoryManager : EventListener {
 
     private var recentInventoryOpen = false
 
+    private class Request(
+        val plan: InventoryPlan,
+        val chain: InventoryAction.Chain,
+        val guards: Guards?,
+        val continuation: CancellableContinuation<Unit>,
+    )
+
     /**
-     * As soon the inventory changes unexpectedly,
-     * we have to update the scheduled inventory actions
+     * Chains the running plans wait for. Only touched on the render thread.
      */
-    private var requiresUpdate = false
+    private val requests = ArrayList<Request>()
+
+    internal fun request(
+        plan: InventoryPlan,
+        chain: InventoryAction.Chain,
+        guards: Guards?,
+        continuation: CancellableContinuation<Unit>,
+    ) {
+        requests += Request(plan, chain, guards, continuation)
+    }
 
     /**
      * A wait for the server that ends by itself after [GlobalSettingsInventory.responseTime].
@@ -161,6 +179,25 @@ object InventoryManager : EventListener {
          * Whether a resync put the item back.
          */
         var isRestored = false
+
+        companion {
+            /**
+             * What clicking as [action] says sends, unless its slot is empty or not part of its screen.
+             */
+            fun of(action: InventoryAction): SentClick? {
+                if (action !is InventoryAction.Click || action.slot.itemStack.isEmpty) {
+                    return null
+                }
+
+                return SentClick(
+                    action.screen.syncId,
+                    action.slot.getIdForServer(action.screen) ?: return null,
+                    action.actionType,
+                    action.slot.itemStack.copy(),
+                    wasMoving = !InventoryRequirements.NO_MOVEMENT.test(action),
+                )
+            }
+        }
     }
 
     private class Rejection(val stack: ItemStack, var count: Int = 0)
@@ -195,17 +232,16 @@ object InventoryManager : EventListener {
     val hasServerLockedItems: Boolean
         get() = serverLockedItems.isNotEmpty()
 
+    internal val serverLockedCount: Int
+        get() = serverLockedItems.size
+
     fun isServerLocked(stack: ItemStack): Boolean =
         !stack.isEmpty && serverLockedItems.any { ItemStack.isSameItemSameComponents(it, stack) }
 
-    /**
-     * We keep running during the entire time
-     * and schedule the inventory actions
-     */
     @Suppress("unused")
-    private val repeatingSchedulerExecutor = tickHandler {
-        // We are not in-game, so we don't need to do anything and throw away the schedule
+    private val executor = tickHandler {
         if (!inGame) {
+            endRequests { CancellationException("Not in game") }
             return@tickHandler
         }
 
@@ -228,159 +264,162 @@ object InventoryManager : EventListener {
         }
 
         var maximumCloseDelay = 0
+        var isDone = false
 
-        var cycles = 0
-        do {
-            cycles++
-            // Safety check to prevent infinite loops
-            if (cycles > 100) {
-                chat("InventoryManager has been running for too long ($cycles cycles) on tick, stopping now. " +
-                    "Please report this issue.")
-                break
-            }
+        while (!isDone) {
+            debugParameter("Requests") { requests.size }
 
-            requiresUpdate = false
-
-            val event = EventManager.callEvent(ScheduleInventoryActionEvent())
-            val schedule = event.schedule
-                .filterTo(ObjectArrayList()) { actionChain ->
-                    actionChain.canPerformAction() && actionChain.actions.isNotEmpty()
+            val request = takeRequest()
+            when {
+                request != null -> try {
+                    maximumCloseDelay = max(maximumCloseDelay, perform(request))
+                } finally {
+                    // Its plan would wait forever if the chain did not get to its end
+                    request.continuation.cancel()
                 }
 
-            // If the schedule is empty, we can break the loop
-            if (schedule.isEmpty) {
-                break
-            }
+                !isInventoryOpen || !canCloseMainInventory -> isDone = true
 
-            // Schedule of actions that have to be executed
-            // The schedule is sorted by
-            // 1. With Non-inventory open required actions
-            // 2. With inventory open required actions
-            schedule.sortWith(COMPARATOR_ACTION_CHAIN)
-
-            debugParameter("Schedule Size") { schedule.size }
-
-            // Handle non-inventory open actions first
-            for ((scheduleIndex, chained) in schedule.withIndex()) {
-                // Do not continue if we need to update the schedule
-                if (requiresUpdate) {
-                    break
+                // A plan may ask for its next chain during the wait
+                maximumCloseDelay > 0 -> {
+                    waitMillis(maximumCloseDelay)
+                    maximumCloseDelay = 0
                 }
 
-                // These are chained actions that have to be executed in order
-                // We cannot interrupt them
-                debugParameter("Schedule Index") { scheduleIndex }
-                debugParameter("Action Size") { chained.actions.size }
-                for ((index, action) in chained.actions.withIndex()) {
-                    debugParameter("Action Index") { index }
-                    val constraints = chained.inventoryConstraints
-
-                    // Update close delay maximum
-                    maximumCloseDelay = max(maximumCloseDelay, constraints.closeDelay.random())
-
-                    // First action to be executed will be the start delay
-                    if (recentInventoryOpen) {
-                        recentInventoryOpen = false
-                        waitMillis(constraints.startDelay.random())
-                        cycles = 0
-                    }
-
-                    // Handle player inventory open requirements
-                    val requiresPlayerInventory = action.requiresPlayerInventoryOpen()
-                    if (requiresPlayerInventory) {
-                        if (!isInventoryOpen) {
-                            network.send1_11_1OpenInventory()
-                            waitMillis(constraints.startDelay.random())
-                            cycles = 0
-                        }
-                    } else if (canCloseMainInventory) {
-                        // When all scheduled actions are done, we can close the inventory
-                        if (isInventoryOpen) {
-                            waitMillis(constraints.closeDelay.random())
-                            cycles = 0
-                            network.sendCloseInventory()
-                        }
-                    }
-
-                    // This should usually not happen, but we have to check it
-                    if (!chained.canPerformAction()) {
-                        logger.warn("Cannot perform action $action because it is not possible")
-                        break
-                    }
-
-                    // Check if this is the first action in the chain, which allows us to simulate a miss click
-                    // This is only possible for container-type slots and also does not make much sense when
-                    // the action is a throw action (you cannot miss-click really when throwing)
-                    if (index == 0 && action is InventoryAction.Click
-                        && constraints.missChance.random() > Random.nextInt(100)
-                        && action.actionType != ContainerInput.THROW
-                    ) {
-                        // Simulate a miss click (this is only possible for container-type slots)
-                        // TODO: Add support for inventory slots
-                        if (action.performMissClick()) {
-                            waitMillis(constraints.clickDelay.random())
-                            cycles = 0
-                        }
-                    }
-
-                    if (action is InventoryAction.CloseScreen) {
-                        waitMillis(constraints.closeDelay.random())
-                        cycles = 0
-                    }
-                    val clickRecord = if (action is InventoryAction.Click && !action.slot.itemStack.isEmpty) {
-                        action.slot.getIdForServer(action.screen)?.let { slotId ->
-                            SentClick(
-                                action.screen.syncId,
-                                slotId,
-                                action.actionType,
-                                action.slot.itemStack.copy(),
-                                wasMoving = !InventoryRequirements.NO_MOVEMENT.test(action),
-                            )
-                        }
-                    } else {
-                        null
-                    }
-                    if (action.performAction()) {
-                        if (clickRecord != null) {
-                            recentClicks += clickRecord
-                            // A click the server took as predicted is never answered.
-                            clickRecord.wait.start { recentClicks -= clickRecord }
-                        }
-                        when (action) {
-                            is InventoryAction.CloseScreen -> {
-                                waitTicks(1)
-                                requiresUpdate = true
-                            }
-                            is InventoryAction.UseItem -> {
-                                useItemWait.start()
-                                waitMillis(constraints.clickDelay.random())
-                            }
-                            else -> waitMillis(constraints.clickDelay.random())
-                        }
-                        cycles = 0
-                    }
+                else -> {
+                    network.sendCloseInventory()
+                    isDone = true
                 }
             }
-        } while (schedule.isNotEmpty())
-
-        // When all scheduled actions are done, we can close the inventory
-        if (isInventoryOpen && canCloseMainInventory) {
-            waitMillis(maximumCloseDelay)
-            network.sendCloseInventory()
         }
 
         lastClickedSlot = -1
     }
 
     /**
-     * Called when a click occurs. Can be tracked by listening for [ServerboundContainerClickPacket]
-     *
-     * @see net.ccbluex.liquidbounce.injection.mixins.viaversion.MixinPacketWrapper
+     * Ends the plans waiting for a chain for which [cause] returns why, at the suspension they wait in.
      */
-    @JvmStatic
-    fun onClickOccurs() {
-        // Every click will require an update
-        requiresUpdate = true
+    private inline fun endRequests(cause: (Request) -> Throwable?) {
+        val ended = ArrayList<Pair<Request, Throwable>>()
+        for (request in requests) {
+            cause(request)?.let { ended += request to it }
+        }
+
+        // Resuming runs plan code, which must not find the list half changed
+        for ((request, _) in ended) {
+            requests -= request
+        }
+        for ((request, throwable) in ended) {
+            request.continuation.resumeWithException(throwable)
+        }
+    }
+
+    /**
+     * The chain to perform next: possible right now, not needing the player inventory before needing it, then by
+     * priority, then the one waiting longest.
+     */
+    private fun takeRequest(): Request? {
+        requests.removeIf { !it.continuation.isActive }
+        endRequests { request ->
+            val listener = request.plan.listener
+            if (!listener.running) {
+                EventListenerNotListeningException(listener)
+            } else {
+                try {
+                    request.guards?.broken()
+                } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+                    e
+                }
+            }
+        }
+
+        return requests
+            .filter { it.chain.canPerformAction() }
+            .minWithOrNull(compareBy(COMPARATOR_ACTION_CHAIN) { it.chain })
+            ?.also { requests -= it }
+    }
+
+    /**
+     * Performs the chain of [request] without interruption. Its plan continues right after the last action, while
+     * the inventory is what that plan expects; the click delay passes before the next chain.
+     *
+     * @return the close delay of its constraints
+     */
+    @Suppress("CognitiveComplexMethod")
+    private suspend fun perform(request: Request): Int {
+        val chain = request.chain
+        val constraints = chain.inventoryConstraints
+
+        for ((index, action) in chain.actions.withIndex()) {
+            // First action to be executed will be the start delay
+            if (recentInventoryOpen) {
+                recentInventoryOpen = false
+                waitMillis(constraints.startDelay.random())
+            }
+
+            // Handle player inventory open requirements
+            if (action.requiresPlayerInventoryOpen()) {
+                if (!isInventoryOpen) {
+                    network.send1_11_1OpenInventory()
+                    waitMillis(constraints.startDelay.random())
+                }
+            } else if (canCloseMainInventory && isInventoryOpen) {
+                waitMillis(constraints.closeDelay.random())
+                network.sendCloseInventory()
+            }
+
+            // Check if this is the first action in the chain, which allows us to simulate a miss click
+            // This is only possible for container-type slots and also does not make much sense when
+            // the action is a throw action (you cannot miss-click really when throwing)
+            if (index == 0 && action is InventoryAction.Click
+                && constraints.missChance.random() > Random.nextInt(100)
+                && action.actionType != ContainerInput.THROW
+                && chain.canPerformAction()
+            ) {
+                // Simulate a miss click (this is only possible for container-type slots)
+                // TODO: Add support for inventory slots
+                if (action.performMissClick()) {
+                    waitMillis(constraints.clickDelay.random())
+                }
+            }
+
+            if (action is InventoryAction.CloseScreen) {
+                waitMillis(constraints.closeDelay.random())
+            }
+
+            // The waits may outlive the chain, e.g. when its menu closes meanwhile
+            if (!chain.canPerformAction()) {
+                logger.warn("Cannot perform action $action because it is not possible")
+                request.continuation.cancel(CancellationException("The chain is no longer possible"))
+                return 0
+            }
+
+            val clickRecord = SentClick.of(action)
+            if (action.performAction()) {
+                request.plan.onPerformed(action)
+                if (clickRecord != null) {
+                    recentClicks += clickRecord
+                    // A click the server took as predicted is never answered.
+                    clickRecord.wait.start { recentClicks -= clickRecord }
+                }
+                if (action is InventoryAction.UseItem) {
+                    useItemWait.start()
+                }
+                if (index == chain.actions.lastIndex) {
+                    request.continuation.resume(Unit)
+                }
+                if (action is InventoryAction.CloseScreen) {
+                    waitTicks(1)
+                } else {
+                    waitMillis(constraints.clickDelay.random())
+                }
+            }
+        }
+
+        if (request.continuation.isActive) {
+            request.continuation.resume(Unit)
+        }
+        return constraints.closeDelay.random()
     }
 
     /**
@@ -403,10 +442,7 @@ object InventoryManager : EventListener {
             return@handler
         }
 
-        // If we actually send a click packet, we can reset the click chronometer
         if (packet is ServerboundContainerClickPacket) {
-            onClickOccurs()
-
             if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
             }
@@ -489,6 +525,7 @@ object InventoryManager : EventListener {
 
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
+        endRequests { CancellationException("World changed") }
         isInventoryOpenServerSide = false
         containerOpenWait.stop()
         useItemWait.stop()

@@ -21,16 +21,18 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.mode
 import net.ccbluex.liquidbounce.additions.shooter
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.world.entityGetter
 import net.ccbluex.liquidbounce.utils.world.none
 import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
@@ -64,10 +66,10 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
     }
 
     @Suppress("unused")
-    private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (skipTicks > 0 || !shouldUseFirework()) return@handler
+    private val firework = inventoryPlan(ConsiderInventory.constraints) {
+        if (skipTicks > 0 || !shouldUseFirework()) return@inventoryPlan
 
-        val fireworkSlot = slotsToSearch.findSlot(Items.FIREWORK_ROCKET) ?: return@handler
+        val fireworkSlot = slotsToSearch.findSlot(Items.FIREWORK_ROCKET) ?: return@inventoryPlan
         if (fireworkSlot is HotbarItemSlot) {
             useHotbarSlotOrOffhand(fireworkSlot)
         } else {
@@ -77,12 +79,14 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
                 HotbarItemSlot(player.inventory.selectedSlot)
             }
 
-            val actions = listOf<InventoryAction>(
+            val stack = fireworkSlot.itemStack.copy()
+            // Once a rocket is used up, the run has to get to the cooldown
+            requires { shouldUseFirework() || !ItemStack.matches(fireworkSlot.itemStack, stack) }
+            perform(
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = targetSlot),
-                InventoryAction.UseItem(targetSlot, this),
+                InventoryAction.UseItem(targetSlot, this@ElytraFlyModeFirework),
                 InventoryAction.Click.performSwap(from = fireworkSlot, to = targetSlot),
             )
-            event.schedule(ConsiderInventory.constraints, actions)
         }
 
         skipTicks = cooldown.random()

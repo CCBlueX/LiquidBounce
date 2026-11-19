@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.ItemStack
 
@@ -32,25 +32,18 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    fun execute(event: ScheduleInventoryActionEvent) {
-        val hasEmptyHotbarSlot = Slots.Hotbar.any { it.itemStack.isEmpty }
+    @Suppress("unused")
+    private val refill = inventoryPlan(inventoryConstraints) {
         val validFeatures = ModuleAutoBuff.activeFeatures
-
         val validItems = Slots.Inventory.filter { slot ->
-            val stack = slot.itemStack
-            validFeatures.any { f -> f.isValidItem(stack, false) } &&
-                (hasEmptyHotbarSlot || canMergeIntoHotbar(stack))
-        }
-
-        if (validItems.isEmpty()) {
-            return
+            validFeatures.any { f -> f.isValidItem(slot.itemStack, false) }
         }
 
         for (slot in validItems) {
-            event.schedule(
-                inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
-                Priority.IMPORTANT_FOR_USAGE_1
-            )
+            // An earlier step may have filled the hotbar
+            if (Slots.Hotbar.any { it.itemStack.isEmpty } || canMergeIntoHotbar(slot.itemStack)) {
+                perform(InventoryAction.Click.performQuickMove(slot = slot), priority = Priority.IMPORTANT_FOR_USAGE_1)
+            }
         }
     }
 
