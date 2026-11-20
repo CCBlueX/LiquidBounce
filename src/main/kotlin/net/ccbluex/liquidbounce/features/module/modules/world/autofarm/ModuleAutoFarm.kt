@@ -24,7 +24,7 @@ import net.ccbluex.agent.skills.ItemMatch
 import net.ccbluex.agent.skills.farm.Farm
 import net.ccbluex.agent.skills.farm.farm
 import net.ccbluex.agent.tick.TickScope
-import net.ccbluex.agent.tick.waitTicks
+import net.ccbluex.agent.tick.tickConditional
 import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -39,12 +39,14 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.navigation.Navigator
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 
@@ -153,9 +155,22 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         job = scope.launch {
             while (true) {
                 navigator.agent.farm(farm())
-                waitTicks(10)
+                // A drop is walked to as soon as it shows up, crops are looked for again every 10 ticks
+                tickConditional(10) { seesDrop() }
             }
         }
+    }
+
+    /** Whether a drop lies in the area the farm walks to items in, while it may pick one up. */
+    private fun seesDrop(): Boolean {
+        if (!AutoFarmAutoWalk.enabled || !AutoFarmAutoWalk.ToItems.enabled || !hasInventorySpace()) {
+            return false
+        }
+        val range = AutoFarmAutoWalk.ToItems.range.toDouble()
+        val area = AABB.ofSize(player.position(), 64.0, 8.0, 64.0)
+        return world.getEntitiesOfClass(ItemEntity::class.java, area) {
+            it.distanceTo(player) <= range && AutoFarmAutoWalk.ToItems.shouldPickUp(it.item)
+        }.isNotEmpty()
     }
 
     override fun onDisabled() {
