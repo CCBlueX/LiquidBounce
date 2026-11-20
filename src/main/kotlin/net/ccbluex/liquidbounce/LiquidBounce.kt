@@ -45,13 +45,13 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.features.addon.AddonInstaller
-import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
@@ -165,7 +165,7 @@ object LiquidBounce : EventListener {
      *
      * TODO: Replace this approach with full semantic versioning.
      */
-    const val IN_DEVELOPMENT = true
+    const val IN_DEVELOPMENT = false
 
     /**
      * Client logger to print out console messages
