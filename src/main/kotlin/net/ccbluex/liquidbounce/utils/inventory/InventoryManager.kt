@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsInventory
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -157,8 +158,10 @@ object InventoryManager : EventListener {
 
         val menu = action.screen?.menu ?: player.inventoryMenu
         val slot = menu.slots.getOrNull(action.slot.getIdForServer(action.screen) ?: return) ?: return
+        // A silent screen is not shown, so its cursor is the player's own
         val screen = (mc.gui.screen() as? AbstractContainerScreen<*>)?.takeIf {
-            it.menu === menu && ModuleBetterInventory.shouldMoveCursor && !mc.mouseHandler.isMouseGrabbed
+            it.menu === menu && ModuleBetterInventory.shouldMoveCursor && !mc.mouseHandler.isMouseGrabbed &&
+                !FeatureSilentScreen.shouldHide
         }
         val scale = mc.window.screenWidth.toFloat() / mc.window.guiScaledWidth
         // Nothing was clicked since opening
@@ -509,7 +512,8 @@ object InventoryManager : EventListener {
                     // A click the server took as predicted is never answered.
                     clickRecord.wait.start { recentClicks -= clickRecord }
                 }
-                if (action is InventoryAction.UseItem) {
+                // A chain that goes on after a use says itself what follows it
+                if (action is InventoryAction.UseItem && index == chain.actions.lastIndex) {
                     useItemWait.start()
                 }
                 if (index == chain.actions.lastIndex) {

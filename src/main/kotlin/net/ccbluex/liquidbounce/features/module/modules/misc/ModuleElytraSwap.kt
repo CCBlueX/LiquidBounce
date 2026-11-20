@@ -48,23 +48,24 @@ object ModuleElytraSwap : ClientModule(
 
     private val slotsToSearch = Slots.Hotbar + Slots.Inventory + HotbarItemSlot.OFFHAND
 
+    /**
+     * Decided once per enabling: a run that ends halfway would otherwise swap back in the next one.
+     */
+    private var wantsGlider: Boolean? = null
+
+    override fun onEnabled() {
+        wantsGlider = null
+    }
+
     @Suppress("unused")
     private val swap = inventoryPlan(constraints) {
-        val elytraItem = slotsToSearch.findSlot { it.isGlider && !it.nextDamageWillBreak() }
-        val chestplateItem = slotsToSearch.findSlot { it.isChestArmor }
-
         val chestplateStack = ArmorItemSlot.CHEST.itemStack
+        val wantsGlider = wantsGlider ?: (!chestplateStack.isGlider).also { wantsGlider = it }
+
         val slot = when {
-            // put on elytra
-            chestplateStack.isEmpty && elytraItem != null -> elytraItem
-
-            // replacing of elytra with a chestplate
-            chestplateStack.isGlider && chestplateItem != null -> chestplateItem
-
-            // replacing the chestplate with elytra
-            chestplateStack.isChestArmor && elytraItem != null -> elytraItem
-
-            else -> null
+            chestplateStack.isGlider == wantsGlider -> null
+            wantsGlider -> slotsToSearch.findSlot { it.isGlider && !it.nextDamageWillBreak() }
+            else -> slotsToSearch.findSlot { it.isChestArmor }
         }
 
         if (slot != null) {
