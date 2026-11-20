@@ -413,16 +413,6 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
                 RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
     }
 
-    /**
-     * A sneak holding the player at a ledge can take its whole move while the player keeps its speed. Grim takes a
-     * tick without a position for one the player hardly moved in and predicts the next move without that speed.
-     */
-    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "move")
-    private boolean hookSendPositionHeldAtLedge(boolean move) {
-        var player = (LocalPlayer) (Object) this;
-        return move || player.onGround() && player.isShiftKeyDown() && player.getDeltaMovement().horizontalDistanceSqr() > 0.0;
-    }
-
     @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;canStartSprinting()Z"))
     private boolean hookSprint0(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
