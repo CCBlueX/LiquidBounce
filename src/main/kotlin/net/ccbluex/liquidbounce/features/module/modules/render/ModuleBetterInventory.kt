@@ -119,6 +119,14 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(ContainerItemView)
     }
 
+    private val moveCursor by boolean("MoveCursor", true)
+
+    /**
+     * Whether the cursor goes to the slots the inventory modules click while a screen shows them.
+     */
+    val shouldMoveCursor
+        get() = running && moveCursor
+
     fun GuiGraphicsExtractor.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
 

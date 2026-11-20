@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.Holder
@@ -57,39 +55,6 @@ class InventoryCleanupPlan(
     val swaps: MutableList<InventorySwap>,
     val mergeableItems: MutableMap<ItemAndComponents, MutableList<ItemSlot>>,
 ) {
-    /**
-     * Replaces the slot from key to value
-     *
-     * This method modifies all members.
-     */
-    fun remapSlots(slotMap: Map<ItemSlot, ItemSlot>) {
-        val usefulItemsToAdd = ObjectLinkedOpenHashSet<ItemSlot>()
-        val usefulItemsToRemove = ObjectOpenHashSet<ItemSlot>()
-
-        for ((from, to) in slotMap) {
-            if (from in usefulItems) {
-                usefulItemsToRemove.add(from)
-                usefulItemsToAdd.add(to)
-            }
-        }
-
-        this.usefulItems.removeAll(usefulItemsToRemove)
-        this.usefulItems.addAll(usefulItemsToAdd)
-
-        this.swaps.replaceAll { hotbarSwap ->
-            hotbarSwap.copy(
-                from = slotMap[hotbarSwap.from] ?: hotbarSwap.from,
-                to = slotMap[hotbarSwap.to] ?: hotbarSwap.to
-            )
-        }
-
-        this.mergeableItems.values.forEach { mergeableItems ->
-            mergeableItems.replaceAll { itemSlot ->
-                slotMap[itemSlot] ?: itemSlot
-            }
-        }
-    }
-
     fun findItemsToThrowOut(
         itemSlots: List<ItemSlot>,
     ) = itemSlots.filter { it !in usefulItems }

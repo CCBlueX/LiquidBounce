@@ -122,7 +122,6 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
@@ -262,7 +261,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ProxyCheckResultEvent::class.java,
     ScaleFactorChangeEvent::class.java,
     OverlayMessageEvent::class.java,
-    ScheduleInventoryActionEvent::class.java,
     SelectHotbarSlotSilentlyEvent::class.java,
     SpaceSeperatedNamesChangeEvent::class.java,
     ClickGuiScaleChangeEvent::class.java,

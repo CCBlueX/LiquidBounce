@@ -22,8 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.io.CodePointReader
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.core.component.DataComponents
@@ -113,19 +113,17 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
     private val randomBook get() = Slots.All.findSlot(::isCandidate)
 
     @Suppress("unused")
-    private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+    private val bookWriter = inventoryPlan(inventoryConstraints) {
         val book = randomBook ?: run {
             enabled = false
-            return@handler
+            return@inventoryPlan
         }
 
         if (!isCandidate(player.mainHandItem)) {
-            event.schedule(
-                inventoryConstraints, InventoryAction.Click.performSwap(
-                    from = book,
-                    to = HotbarItemSlot(player.inventory.selectedSlot),
-                )
-            )
+            val selectedSlot = player.inventory.selectedSlot
+            requires { player.inventory.selectedSlot == selectedSlot }
+
+            perform(InventoryAction.Click.performSwap(from = book, to = HotbarItemSlot(selectedSlot)))
         }
 
         if (chronometer.hasElapsed((delay * 1000L).toLong())) {

@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.isBurrowed
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
@@ -327,7 +326,6 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        InventoryManager.onClickOccurs()
         actions.forEach { it.performAction() }
         return true
     }

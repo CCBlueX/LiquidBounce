@@ -189,3 +189,5 @@ accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComp
 
 accessible field net/minecraft/client/sounds/SoundManager registry Ljava/util/Map;
 accessible field net/minecraft/client/sounds/SoundManager soundCache Ljava/util/Map;
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I

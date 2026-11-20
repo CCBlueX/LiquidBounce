@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autodeposit
 
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -30,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.syncId
 import net.minecraft.client.gui.screens.Screen
@@ -71,49 +70,38 @@ object ModuleAutoDeposit : ClientModule(
             checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)
     }
 
-    // Session state so we only auto-close containers we actually deposited into.
-    private var currentSyncId = -1
-    private var depositedAnything = false
+    // Container we deposited into, so we only auto-close containers we actually deposited into.
+    private var depositedSyncId = -1
 
     override fun onDisabled() {
         super.onDisabled()
-        currentSyncId = -1
-        depositedAnything = false
+        depositedSyncId = -1
     }
 
     @Suppress("unused")
-    private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+    private val deposit = inventoryPlan(inventoryConstraints) {
         val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: run {
-            currentSyncId = -1
-            depositedAnything = false
-            return@handler
+            depositedSyncId = -1
+            return@inventoryPlan
         }
         if (!canBeStored(screen)) {
-            return@handler
+            return@inventoryPlan
         }
 
-        if (screen.syncId != currentSyncId) {
-            currentSyncId = screen.syncId
-            depositedAnything = false
-        }
-
-        val matching = matchingSlots(inventory = true)
-        if (matching.isNotEmpty()) {
-            depositedAnything = true
-        }
-
-        // Only click items the container can still absorb; a full container would otherwise be
-        // re-clicked forever since the server rejects the move without changing the inventory.
         val containerSlots = screen.getSlotsInContainer()
-        val targets = matching.filter { containerSlots.mergeableCapacityFor(it.itemStack) > 0 }
 
-        if (targets.isNotEmpty()) {
-            for (slot in targets) {
-                event.schedule(inventoryConstraints, InventoryAction.Click.performQuickMove(screen, slot))
+        for (slot in matchingSlots(inventory = true)) {
+            // Only click items the container can still absorb; a full container would otherwise be
+            // re-clicked forever since the server rejects the move without changing the inventory.
+            if (containerSlots.mergeableCapacityFor(slot.itemStack) > 0) {
+                perform(InventoryAction.Click.performQuickMove(screen, slot))
+                depositedSyncId = screen.syncId
             }
-        } else if (autoClose && depositedAnything) {
-            event.schedule(inventoryConstraints, InventoryAction.CloseScreen(screen))
-            currentSyncId = -1
+        }
+
+        if (autoClose && depositedSyncId == screen.syncId) {
+            perform(InventoryAction.CloseScreen(screen))
+            depositedSyncId = -1
         }
     }
 

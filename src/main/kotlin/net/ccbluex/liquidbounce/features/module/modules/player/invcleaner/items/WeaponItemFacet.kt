@@ -117,7 +117,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             val baseDamage = estimateDamage(ItemStackTemplate(Items.STICK, 1))
             val itemDamage = estimateDamage(stack)
 
-            return itemDamage > baseDamage || SECONDARY_VALUE_ESTIMATOR.estimateValue(stack) > 0.0F
+            return itemDamage > baseDamage
         }
     }
 

@@ -73,7 +73,6 @@ public abstract class MixinPacketWrapper {
         if (packetType == ServerboundPackets1_16_2.CONTAINER_CLICK && this.get(Types.BYTE, 0) == 0
             || packetType == ServerboundPackets1_21_4.CONTAINER_CLICK && this.get(Types.VAR_INT, 0) == 0) {
             // Note: this doesn't cover all handlers of PacketEvent
-            InventoryManager.onClickOccurs();
             InventoryManager.INSTANCE.setInventoryOpenServerSide(true);
         }
 
