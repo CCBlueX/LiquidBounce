@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -138,7 +138,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     }
 
     private fun isLandingWithin(ticks: Int) =
-        FallingPlayer.fromPlayer(player, RotationManager.movementYaw).findCollision(ticks) != null
+        player.fallingPlayer(RotationManager.movementYaw).findCollision(ticks) != null
 
     private fun aim(rotation: Rotation) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)

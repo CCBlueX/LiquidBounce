@@ -16,18 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.entity
+package net.ccbluex.liquidbounce.gametest.server
 
-import net.minecraft.world.phys.Vec3
+import net.ccbluex.gametest.harness.ServerGameTest
+import net.ccbluex.liquidbounce.gametest.autoBuildSchematic
 
-interface PlayerSimulation {
-    val pos: Vec3
-
-    fun tick()
-
-    data class Rigid(override val pos: Vec3) : PlayerSimulation {
-        override fun tick() {
-            // Do nothing.
-        }
-    }
+/** [autoBuildSchematic] on the server, where the anticheat watches the build. */
+class AutoBuildSchematicGameTest : ServerGameTest(autoBuildSchematic) {
+    override val retries = 0
 }

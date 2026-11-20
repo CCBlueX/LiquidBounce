@@ -103,7 +103,7 @@ private fun GameTestScope.checkTeleport(y: Int) {
     input.holdKeyFor({ it.keyPickItem }, 3)
     awaitClient("the teleport", WAIT_TICKS) { client ->
         val position = client.player?.position() ?: return@awaitClient false
-        position.x > start.x + 4 && !TeleportManager.isMoving
+        position.x > start.x + 4 && !TeleportManager.teleports.isMoving
     }
 
     val landed = context.playerPosition()
@@ -178,7 +178,8 @@ private fun GameTestScope.click(y: Int, target: BlockPos, key: (Options) -> KeyM
 
 private fun GameTestScope.awaitReturn(y: Int) {
     awaitClient("the player back", WAIT_TICKS) {
-        !TeleportManager.holds(ModuleTeleportReach) && !TeleportManager.isMoving
+        val teleports = TeleportManager.teleports
+        !teleports.holds(TeleportManager.owner(ModuleTeleportReach)) && !teleports.isMoving
     }
     awaitServerAt(origin(y), timeout = WAIT_TICKS)
 }

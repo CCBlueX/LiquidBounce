@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.ccbluex.liquidbounce.utils.block.BlockExtensionsKt;
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
+import net.ccbluex.agent.simulation.SimulatedPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

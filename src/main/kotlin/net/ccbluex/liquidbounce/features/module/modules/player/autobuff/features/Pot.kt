@@ -30,14 +30,14 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
-import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
@@ -82,7 +82,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
                 return false
             }
 
-            val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
+            val collisionBlock = player.fallingPlayer().findCollision(20)?.pos
             val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
 
             // Do not check for health pass requirements, because this is already done in the potion check

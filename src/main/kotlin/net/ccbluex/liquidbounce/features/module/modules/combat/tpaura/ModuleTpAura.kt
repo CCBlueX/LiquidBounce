@@ -19,6 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
+import net.ccbluex.agent.math.BlockPos
+import net.ccbluex.agent.navigation.teleport.Teleport
+import net.ccbluex.agent.pathfinder.route.Outcome
+import net.ccbluex.agent.pathfinder.teleport.Route
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.terrain.reachPositions
+import net.ccbluex.agent.v26_3.live
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -38,19 +47,16 @@ import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.teleport.Route
 import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
-import net.ccbluex.liquidbounce.utils.navigation.teleport.Teleport
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
-import net.ccbluex.liquidbounce.utils.navigation.teleport.Trip
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
-import net.ccbluex.liquidbounce.utils.navigation.terrain.reachPositions
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
-import net.minecraft.core.BlockPos
+import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
+import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
+import net.ccbluex.agent.math.Vec3 as AgentVec3
 
 /**
  * TpAura
@@ -70,11 +76,16 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
     private val steps = tree(StepsValueGroup())
 
-    private val trip = Trip(this, steps)
-    private val view = trip.view
+    private val view = RouteView().apply {
+        ghost = { partialTicks ->
+            TeleportManager.teleports.serverPosition(TeleportManager.owner(this@ModuleTpAura), partialTicks)
+                ?.toMinecraft()
+        }
+    }
+    private val trip = TeleportManager.trip(this, steps, RouteEvents(view))
 
     init {
-        tree(trip.renderer)
+        tree(RouteRenderer(this, view))
     }
 
     private enum class AfterAttack(override val tag: String) : Tagged {
@@ -108,7 +119,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         get() = engagement?.takeIf { targetSelector.validate(it.target) }
 
     override fun onDisabled() {
-        TeleportManager.undo(this)
+        TeleportManager.teleports.undo(TeleportManager.owner(this))
         reset()
         restUntil = 0
         unreachable.clear()
@@ -145,8 +156,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         val engagement = engagement ?: return@handler
         val feet = when (phase) {
-            Phase.READY, Phase.APPROACH -> engagement.route?.destination
-            Phase.ATTACK -> trip.feet
+            Phase.READY, Phase.APPROACH -> engagement.route?.destination?.toMinecraft()
+            Phase.ATTACK -> trip.position.toMinecraft()
             else -> null
         } ?: return@handler
 
@@ -167,7 +178,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return
         }
 
-        val origin = trip.feet
+        val origin = trip.position
         val target = targetSelector.targets().firstOrNull { unreachable.getOrDefault(it.id, 0) <= ticks }
         engagement = target?.let(::Engagement)
         if (target == null) {
@@ -176,7 +187,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.target = target
-        if (isInReach(origin, target)) {
+        if (isInReach(origin.toMinecraft(), target)) {
             startAttack()
             return
         }
@@ -189,7 +200,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
     }
 
-    private fun requestRoute(origin: Vec3, goals: List<BlockPos>) {
+    private fun requestRoute(origin: AgentVec3, goals: List<BlockPos>) {
+        trip.options = steps.options()
         trip.request(origin, goals, maxLength = range * ROUTE_DETOUR)
         phase = Phase.ROUTING
     }
@@ -197,18 +209,18 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private fun route() {
         val engagement = liveEngagement ?: return leave()
         when (val result = trip.poll()) {
-            RouteResult.Searching -> {}
-            RouteResult.AlreadyThere -> startAttack()
-            is RouteResult.Found -> {
+            Outcome.Searching -> {}
+            Outcome.AlreadyThere -> startAttack()
+            is Outcome.Found -> {
                 val route = result.value
                 engagement.route = route
                 engagement.waited = 0
-                view.active(route.path)
-                view.attackPosition = route.destination
+                view.active(route.path.map { it.toMinecraft() })
+                view.attackPosition = route.destination.toMinecraft()
                 phase = Phase.READY
                 launch()
             }
-            is RouteResult.Failed -> fail(engagement.target)
+            is Outcome.Failed -> fail(engagement.target)
         }
     }
 
@@ -216,11 +228,11 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private fun launch() {
         val engagement = liveEngagement ?: return leave()
         val route = engagement.route ?: return leave()
-        if (!isInReach(route.destination, engagement.target)) {
+        if (!isInReach(route.destination.toMinecraft(), engagement.target)) {
             return replan()
         }
 
-        val arrival = route.batches(steps.packetsPerTick).size
+        val arrival = steps.ticks(route)
         if (!clicker.willClickAt(arrival) && engagement.waited++ < MAX_WAIT) {
             return
         }
@@ -260,7 +272,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val engagement = liveEngagement?.takeUnless { it.attacked && afterAttack == AfterAttack.RETURN }
             ?: return leave()
         val target = engagement.target
-        val feet = trip.feet
+        val feet = trip.position.toMinecraft()
         if (!isInReach(feet, target)) {
             return if (engagement.retries++ < MAX_RETRIES) replan() else leave()
         }
@@ -284,7 +296,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     /** Routes again from where the server has the player, because the target moved. */
     private fun replan() {
         val target = engagement?.target ?: return leave()
-        val origin = trip.feet
+        val origin = trip.position
         val goals = attackPositions(target, origin)
         if (goals.isEmpty()) {
             return leave()
@@ -300,6 +312,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return
         }
 
+        view.engaged = false
         phase = if (trip.comeBack()) Phase.RETURN else Phase.IDLE
         engagement = null
     }
@@ -343,8 +356,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     /** Standable positions around [target] that see it within reach, closest to [from] first. */
-    private fun attackPositions(target: LivingEntity, from: Vec3) =
-        Terrain.live().reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
+    private fun attackPositions(target: LivingEntity, from: AgentVec3) =
+        Terrain.live(world).reachPositions(target.boundingBox.toAgent(), reach - TARGET_MOVEMENT_MARGIN, from)
 
     private const val REACH_MARGIN = 0.1
     private const val TARGET_MOVEMENT_MARGIN = 0.4

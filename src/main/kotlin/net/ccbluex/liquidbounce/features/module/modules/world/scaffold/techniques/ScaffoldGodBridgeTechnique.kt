@@ -91,9 +91,9 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         // but we hope it does not. :)
         val snapshotOne = simulatedPlayerCache.getSnapshotAt(1)
 
-        debugParameter("Snapshot Ledged") { snapshotOne.clipLedged }
+        debugParameter("Snapshot Ledged") { snapshotOne.hasBackedOffEdge }
 
-        return if (snapshotOne.clipLedged) {
+        return if (snapshotOne.hasBackedOffEdge) {
             val cameraPosition = snapshotOne.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
             val currentCrosshairTarget = traceFromPoint(start = cameraPosition, direction = rotation.directionVector)
 

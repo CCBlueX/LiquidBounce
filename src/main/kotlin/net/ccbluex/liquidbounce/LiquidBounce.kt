@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import net.ccbluex.agent.v26_3.defineGameTypes
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -104,7 +105,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
-import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -291,7 +291,6 @@ object LiquidBounce : EventListener {
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
         TeleportManager
-        SectionCache
         InteractionTracker
         CombatManager
         TotemPopTracker
@@ -527,6 +526,9 @@ object LiquidBounce : EventListener {
 
             // Initialize event manager
             EventManager
+
+            // Minecraft Agent's blocks and items, from the frozen registries
+            defineGameTypes()
 
             // Register resource reloader
             val resourceManager = mc.resourceManager

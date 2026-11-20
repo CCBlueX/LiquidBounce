@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParame
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 
@@ -143,7 +143,7 @@ object CriticalsJump : Mode("Jump") {
             }
 
             // If cooldown is not ready yet during fall, check if cooldown will recover before landing
-            val collision = FallingPlayer.fromPlayer(player).findCollision((nextPossibleCrit + 1.0f).toInt())
+            val collision = player.fallingPlayer().findCollision((nextPossibleCrit + 1.0f).toInt())
             return collision == null || collision.tick >= nextPossibleCrit.toInt()
         }
 
@@ -157,18 +157,9 @@ object CriticalsJump : Mode("Jump") {
 
         // Check whether player will hit the ground before reaching falling critical state
         val simulatedFallingPlayer = if (onGround) {
-            FallingPlayer(
-                player,
-                player.x,
-                player.y,
-                player.z,
-                player.deltaMovement.x,
-                player.deltaMovement.y + initialMotionY,
-                player.deltaMovement.z,
-                player.yRot
-            )
+            player.fallingPlayer(motion = player.deltaMovement.add(0.0, initialMotionY, 0.0))
         } else {
-            FallingPlayer.fromPlayer(player)
+            player.fallingPlayer()
         }
 
         val collision = simulatedFallingPlayer.findCollision((ticksTillCrit + 5.0f).toInt())
@@ -196,15 +187,8 @@ object CriticalsJump : Mode("Jump") {
         val ticksTillFall = initialMotion / LivingEntity.DEFAULT_BASE_GRAVITY.toFloat()
         val nextPossibleCrit = calculateTicksUntilNextCrit()
 
-        var ticksTillNextOnGround = FallingPlayer(
-            player,
-            player.x,
-            player.y,
-            player.z,
-            player.deltaMovement.x,
-            player.deltaMovement.y + initialMotion,
-            player.deltaMovement.z,
-            player.yRot
+        var ticksTillNextOnGround = player.fallingPlayer(
+            motion = player.deltaMovement.add(0.0, initialMotion.toDouble(), 0.0)
         ).findCollision((ticksTillFall * 3.0f).toInt())?.tick
 
         if (ticksTillNextOnGround == null) {

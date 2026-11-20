@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.BlockTags
@@ -39,10 +38,6 @@ import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
 import net.minecraft.world.level.block.state.BlockState
 
-private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
-    return pos.below().getBlock() is T && pos.below(2).getBlock() !is T
-}
-
 /**
  * @see BonemealableBlock
  */
@@ -54,47 +49,15 @@ internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     }
 }
 
-enum class HarvestAction {
-    /**
-     * Break the block to harvest it. e.g. Melon, Pumpkin, Cactus
-     */
-    BREAK,
-    /**
-     * Use the item in hand to harvest the block. e.g. Sweet Berry Bush
-     */
-    USE,
-}
-
 /**
- * Get the harvest action for the block. The block itself might be not ready for harvest!
- * Call [BlockPos.readyForHarvest] before performing the harvest action.
+ * Whether the block grows something to harvest once ripe, see [net.ccbluex.agent.skills.farm.Crops.isRipe].
  */
-val Block.harvestAction: HarvestAction?
+private val Block.isHarvestable: Boolean
     get() = when (this) {
-        is PumpkinBlock, is CropBlock, is NetherWartBlock, is CocoaBlock,
-        is SugarCaneBlock, is CactusBlock, is KelpPlantBlock, is BambooStalkBlock, Blocks.MELON -> HarvestAction.BREAK
-        is SweetBerryBushBlock -> HarvestAction.USE
-        else -> null
-    }
-
-/**
- * Check if [this@shouldBeDestroyed] with [state] is ready for harvest
- */
-fun BlockPos.readyForHarvest(state: BlockState): Boolean {
-    return when (val block = state.block) {
-        is PumpkinBlock -> true
-        Blocks.MELON -> true
-        is CropBlock -> block.isMaxAge(state)
-        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE
-        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE
-        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE
-        is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(this)
-        is CactusBlock -> isAboveLast<CactusBlock>(this)
-        is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(this)
-        is BambooStalkBlock -> isAboveLast<BambooStalkBlock>(this)
+        is PumpkinBlock, is CropBlock, is NetherWartBlock, is CocoaBlock, is SweetBerryBushBlock,
+        is SugarCaneBlock, is CactusBlock, is KelpPlantBlock, is BambooStalkBlock, Blocks.MELON -> true
         else -> false
     }
-}
 
 inline val BlockState.supportsCrops: Boolean get() = `is`(BlockTags.SUPPORTS_CROPS)
 
@@ -109,7 +72,7 @@ inline val BlockState.supportsNetherWart: Boolean get() = `is`(BlockTags.SUPPORT
  * relies on, which this predicate matches instead.
  */
 fun BlockState.isAutoFarmCandidate(): Boolean =
-    block.harvestAction != null ||
+    block.isHarvestable ||
         block is StemBlock ||
         supportsCrops ||
         supportsNetherWart ||

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.additions.forceSneak
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -31,15 +33,14 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
-import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
 
 /**
@@ -167,11 +168,10 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
     }
 
     private fun isOnMagmaBlock(directionalInput: DirectionalInput): Boolean {
-        val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
-        simulatedInput.set(jump = false)
+        val simulatedInput = SimulatedInput.fromClientPlayer(directionalInput, jump = false)
 
         // Doesn't keep the player stuck at the edge of a magma block while sneaking
-        simulatedInput.ignoreClippingAtLedge = true
+        simulatedInput.ignoresEdgeBackOff = true
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
         simulatedPlayer.setPos(player.position())

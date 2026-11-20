@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.world.phys.Vec3
 
@@ -103,7 +103,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         val range = player.blockInteractionRange().toFloat()
         val inReach = player.eyePosition.searchBlocksInRangeSorted(range) { _, state -> !state.canBeReplaced() }
         return inReach.isNotEmpty() || withoutShapeChanges {
-            FallingPlayer.fromPlayer(player).findCollision(MAX_FALL_TICKS) != null
+            player.fallingPlayer().findCollision(MAX_FALL_TICKS) != null
         }
     }
 
@@ -115,7 +115,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         }
 
         // Blocks other modules only make up, such as AntiVoid's ghost blocks, would make the fall look like a landing
-        return withoutShapeChanges { FallingPlayer.fromPlayer(player).fallPath(minFallDistance, MAX_FALL_TICKS) }
+        return withoutShapeChanges { player.fallingPlayer().fallPath(minFallDistance, MAX_FALL_TICKS) }
     }
 
     /**

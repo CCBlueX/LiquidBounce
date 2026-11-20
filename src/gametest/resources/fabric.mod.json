@@ -7,6 +7,9 @@
   "entrypoints": {
     "fabric-client-gametest": [
       "net.ccbluex.liquidbounce.gametest.AsyncCommandProgressGameTest",
+      "net.ccbluex.liquidbounce.gametest.AutoBuildSchematicGameTest",
+      "net.ccbluex.liquidbounce.gametest.AutoFarmGameTest",
+      "net.ccbluex.liquidbounce.gametest.AutoFarmServerGameTest",
       "net.ccbluex.liquidbounce.gametest.AutoRodRequirementsGameTest",
       "net.ccbluex.liquidbounce.gametest.CommandGameTest",
       "net.ccbluex.liquidbounce.gametest.ConfigPersistenceGameTest",
@@ -21,6 +24,7 @@
       "net.ccbluex.liquidbounce.gametest.server.HarnessGameTest",
       "net.ccbluex.liquidbounce.gametest.server.LegitMovementGameTest",
       "net.ccbluex.liquidbounce.gametest.server.SprintGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.AutoBuildSchematicGameTest",
       "net.ccbluex.liquidbounce.gametest.server.AutoWindChargeGameTest",
       "net.ccbluex.liquidbounce.gametest.server.ChatReceiveTypeGameTest",
       "net.ccbluex.liquidbounce.gametest.server.ClutchGameTest",

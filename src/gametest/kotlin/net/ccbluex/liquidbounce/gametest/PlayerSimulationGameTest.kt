@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.agent.simulation.FallingPlayer
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.liquidbounce.event.EventListener
@@ -25,9 +29,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.KeyMapping
@@ -82,7 +85,7 @@ private fun GameTestScope.assertLevelStaysUntouched(ground: Int) {
 
     val (reached, lit) = client { client ->
         val simulation = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayerInput(DirectionalInput.FORWARDS, jumping = false, sprinting = true, sneaking = false)
+            SimulatedInput(DirectionalInput.FORWARDS.toInput(sprint = true).toAgent())
         )
         repeat(ORE_WALK_TICKS) { simulation.tick() }
 
@@ -181,11 +184,9 @@ private class Scenario(
     val cleanUp: GameTestScope.() -> Unit = {},
     val build: (Lane) -> Unit,
 ) {
-    fun input() = SimulatedPlayerInput(
-        DirectionalInput(forwards = Key.FORWARD in keys, backwards = false, left = Key.LEFT in keys, right = false),
-        jumping = Key.JUMP in keys,
-        sprinting = Key.SPRINT in keys,
-        sneaking = Key.SNEAK in keys,
+    fun input() = SimulatedInput(
+        DirectionalInput(forwards = Key.FORWARD in keys, backwards = false, left = Key.LEFT in keys, right = false)
+            .toInput(jump = Key.JUMP in keys, sneak = Key.SNEAK in keys, sprint = Key.SPRINT in keys).toAgent(),
     )
 }
 
@@ -196,7 +197,7 @@ private data class Step(val pos: Vec3, val onGround: Boolean) {
 private class Recording(val scenario: Scenario) {
     var beforeTick: List<Step>? = null
     var duringTick: List<Step>? = null
-    var landing: FallingPlayer.CollisionResult? = null
+    var landing: FallingPlayer.Landing? = null
 
     val steps = ArrayList<Step>()
     val supports = ArrayList<BlockPos?>()
@@ -266,7 +267,7 @@ private object Recorder : EventListener {
 
         recording.duringTick = recording.predict()
         if (recording.scenario.landing) {
-            recording.landing = FallingPlayer.fromPlayer(player).findCollision(recording.scenario.ticks)
+            recording.landing = player.fallingPlayer().findCollision(recording.scenario.ticks)
         }
     }
 

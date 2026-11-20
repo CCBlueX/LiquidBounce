@@ -81,13 +81,10 @@ fun getDirectionalInputForDegrees(
     return DirectionalInput(forwards, backwards, left, right)
 }
 
-/** Keys that move towards [direction] when the input is applied relative to [frameYaw]. */
-fun getDirectionalInputTowards(direction: Vec3, frameYaw: Float): DirectionalInput {
-    if (direction.horizontalDistanceSqr() < 1.0E-6) {
-        return DirectionalInput.NONE
-    }
-
-    return getDirectionalInputForDegrees(DirectionalInput.NONE, getDegreesRelativeToView(direction, frameYaw))
+/** The yaw the movement keys act relative to: the rotation under strict movement correction, else the view. */
+fun inputFrameYaw(): Float {
+    val strict = RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.STRICT
+    return if (strict && RotationManager.currentRotation != null) RotationManager.movementYaw else player.yRot
 }
 
 /** Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. */

@@ -21,6 +21,8 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
@@ -276,11 +278,7 @@ fun LocalPlayer.isCloseToEdge(
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {
-    val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
-    simulatedInput.set(
-        jump = false,
-        sneak = false
-    )
+    val simulatedInput = SimulatedInput.fromClientPlayer(directionalInput, jump = false, sneaking = false)
 
     val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
         simulatedInput
@@ -304,7 +302,7 @@ fun LocalPlayer.isCloseToEdge(
         return true
     }
 
-    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.copy(y = 0.0))
+    val playerPosInTwoTicks = simulatedPlayer.position().add(nextVelocity.copy(y = 0.0))
 
     return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }

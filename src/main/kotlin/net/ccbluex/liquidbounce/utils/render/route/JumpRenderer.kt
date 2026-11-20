@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.render.route
 
+import net.ccbluex.agent.navigation.walk.AssistedJump
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -31,7 +33,6 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
 import net.minecraft.world.entity.Avatar.DEFAULT_EYE_HEIGHT
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -58,10 +59,10 @@ internal class JumpRenderer(
         val noDepthTest = !canBeCovered
 
         event.renderEnvironment {
-            drawAim(target.aim, noDepthTest)
+            drawAim(target.aim.toMinecraft(), noDepthTest)
             for (index in assisted.arcs.indices) {
                 val arc = assisted.arcs[index]
-                val path = arc.path
+                val path = arc.path.map { it.toMinecraft() }
                 drawLanding(arc.target, path.lastOrNull(), noDepthTest)
                 if (path.size < 2) {
                     continue
@@ -77,7 +78,7 @@ internal class JumpRenderer(
 
     /** The top of the block landed on, and the spot inside it the feet come down on. */
     private fun WorldRenderEnvironment.drawLanding(
-        target: AssistedJump.Target,
+        target: AssistedJump.Landing,
         touchdown: Vec3?,
         noDepthTest: Boolean,
     ) {

@@ -80,6 +80,7 @@ class PlayerNetworkMovementTickEvent(
 @Tag("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
+
 @AddonApi
 @Tag("playerMove")
 class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()

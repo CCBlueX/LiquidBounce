@@ -20,6 +20,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.agent.math.AABB
+import net.ccbluex.agent.simulation.PlayerSimulation
+import net.ccbluex.agent.simulation.SimulatedArrow
+import net.ccbluex.agent.v26_3.toAgent
+import net.ccbluex.agent.v26_3.toMinecraft
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -33,10 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -45,7 +47,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.SpectralArrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
@@ -81,7 +82,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
     val tickRep = handler<MovementInputEvent> { event ->
         val arrows = world.findFlyingArrows()
 
-        val simulatedPlayer = CachedPlayerSimulation(PlayerSimulationCache.getSimulationForLocalPlayer())
+        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer().asSimulation()
 
         val inflictedHit =
             getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = DodgePlanner.SAFE_DISTANCE_WITH_PADDING)
@@ -120,14 +121,14 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
         val simulatedArrows = arrows.mapToArray {
-            SimulatedArrow(it.level(), it.position(), it.deltaMovement, false)
+            SimulatedArrow(it.level().toAgent(), it.position().toAgent(), it.deltaMovement.toAgent(), false)
         }
 
         for (i in 0 until maxTicks) {
             simulatedPlayer.tick()
 
             simulatedArrows.forEachIndexed { arrowIndex, arrow ->
-                if (arrow.inGround) {
+                if (arrow.isInGround) {
                     return@forEachIndexed
                 }
 
@@ -138,11 +139,17 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
                 val playerHitBox =
                     AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
                         .inflate(hitboxExpansion)
-                        .move(simulatedPlayer.pos)
+                        .move(simulatedPlayer.predictedPos)
                 val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
 
-                raycastResult.orElse(null)?.let { hitPos ->
-                    return HitInfo(i, arrows[arrowIndex], hitPos, lastPos, arrow.velocity)
+                raycastResult?.let { hitPos ->
+                    return HitInfo(
+                        i,
+                        arrows[arrowIndex],
+                        hitPos.toMinecraft(),
+                        lastPos.toMinecraft(),
+                        arrow.deltaMovement.toMinecraft(),
+                    )
                 }
             }
         }
@@ -205,7 +212,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
 
     fun getInflictedHit(pos: Vec3): HitInfo? {
         val arrows = world.findFlyingArrows()
-        val playerSimulation = PlayerSimulation.Rigid(pos)
+        val playerSimulation = PlayerSimulation.Rigid(pos.toAgent())
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
     }

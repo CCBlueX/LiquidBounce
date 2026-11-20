@@ -25,6 +25,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.Window;
+import net.ccbluex.agent.v26_3.fabric.ClientHooks;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -420,7 +421,9 @@ public abstract class MixinMinecraft {
     @ModifyExpressionValue(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0))
     private boolean injectMultiActionsAttackingWhileUsingAndEnforcedBlockingState(boolean isUsingItem) {
         if (isUsingItem) {
-            if (!this.options.keyUse.isDown() && !(KillAuraAutoBlock.INSTANCE.getRunning() && KillAuraAutoBlock.INSTANCE.getEnforcedBlockingHand() != null)) {
+            // A navigation eating or blocking keeps its use going without the key, as Minecraft Agent's own hook says
+            if (!this.options.keyUse.isDown() && !ClientHooks.keepsUsing()
+                && !(KillAuraAutoBlock.INSTANCE.getRunning() && KillAuraAutoBlock.INSTANCE.getEnforcedBlockingHand() != null)) {
                 this.gameMode.releaseUsingItem(this.player);
             }
 

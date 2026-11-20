@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -28,8 +30,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -58,9 +60,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
 
     private val unwantedBlocksBelow: Boolean
         get() {
-            val collision = FallingPlayer
-                .fromPlayer(player)
-                .findCollision(20)?.pos ?: return false
+            val collision = player.fallingPlayer().findCollision(20)?.pos ?: return false
             return collision.getBlock() in UNWANTED_BLOCKS
         }
 
@@ -90,7 +90,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                     return@handler
                 }
 
-                val simInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput.NONE)
+                val simInput = SimulatedInput.fromClientPlayer(DirectionalInput.NONE)
                 val simulatePlayer = SimulatedPlayer.fromClientPlayer(simInput)
 
                 val simulationQueue = mutableListOf<ServerboundMovePlayerPacket>()
@@ -104,15 +104,15 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                             simulationQueue.forEach(network::send)
                         }
 
-                        player.setPos(simulatePlayer.pos)
+                        player.setPos(simulatePlayer.position())
                         break
                     }
 
                     simulatePlayer.tick()
                     if (simulateFalling) {
                         simulationQueue += ServerboundMovePlayerPacket.Pos(
-                            simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround(),
+                            simulatePlayer.position().x,
+                            simulatePlayer.position().y, simulatePlayer.position().z, simulatePlayer.onGround(),
                             simulatePlayer.horizontalCollision
                         )
                     }

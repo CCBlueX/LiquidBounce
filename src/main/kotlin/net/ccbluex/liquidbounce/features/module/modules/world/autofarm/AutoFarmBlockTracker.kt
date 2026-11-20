@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.agent.skills.farm.Crops
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.state.BlockState
@@ -43,7 +46,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
 
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {
         return when {
-            pos.readyForHarvest(state) -> AutoFarmTrackedState.ReadyForHarvest
+            Crops.isRipe(world.toAgent(), pos.toAgent(), state.toAgent()) -> AutoFarmTrackedState.ReadyForHarvest
 
             pos.canUseBoneMeal(state) -> AutoFarmTrackedState.Bonemealable
 
