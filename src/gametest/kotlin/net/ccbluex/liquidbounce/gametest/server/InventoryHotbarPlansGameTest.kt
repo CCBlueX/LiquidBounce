@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.gametest.server
 
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.aim
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.setBlock
@@ -55,7 +56,12 @@ private const val INSTANT_STEW =
  * 3. `AutoTool` takes the tool from the inventory while mining and puts it back afterwards.
  * 4. `AutoBuff` `Soup` moves the empty bowl out of the hotbar.
  */
-class InventoryHotbarPlansGameTest : SingleplayerGameTest({
+class InventoryHotbarPlansGameTest : SingleplayerGameTest(hotbarPlans)
+
+/** The same on the game test server, where the run's anticheat watches the clicks. */
+class InventoryHotbarPlansServerGameTest : ServerGameTest(hotbarPlans)
+
+private val hotbarPlans: GameTestScope.() -> Unit = {
     context.restoring(ModuleOffhand, ModuleReplenish, ModuleAutoTool, ModuleAutoBuff) {
         run("gamemode survival $playerName")
         awaitClient("survival mode") { checkNotNull(it.player).hasInfiniteMaterials().not() }
@@ -65,7 +71,7 @@ class InventoryHotbarPlansGameTest : SingleplayerGameTest({
         autoToolTakesToolFromInventoryAndPutsItBack()
         soupStacksEmptyBowlInInventory()
     }
-})
+}
 
 private fun GameTestScope.offhandTakesTotemFromInventory() {
     resetInventory()
@@ -232,7 +238,7 @@ private fun GameTestScope.checkNoFurtherClicks(clicks: AtomicInteger, module: St
 }
 
 private fun GameTestScope.resetInventory() {
-    run("kill @e[type=item]")
+    run("execute at $playerName run kill @e[type=item,distance=..16]")
     run("clear $playerName")
     awaitClient("an empty inventory") { checkNotNull(it.player).inventory.isEmpty }
 }

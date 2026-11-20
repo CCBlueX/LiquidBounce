@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest.server
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.GameTestScope.Companion.DEFAULT_TIMEOUT
 import net.ccbluex.gametest.harness.SingleplayerGameTest
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.setBlock
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -59,7 +60,12 @@ private const val JUNK_CHEST =
  * 1. `AutoDeposit` moves every stack of its filter into an opened chest and closes it.
  * 2. `ChestCleaner` throws every stack of its filter out of an opened chest and closes it.
  */
-class InventoryContainerPlansGameTest : SingleplayerGameTest({
+class InventoryContainerPlansGameTest : SingleplayerGameTest(containerPlans)
+
+/** The same on the game test server, where the run's anticheat watches the clicks. */
+class InventoryContainerPlansServerGameTest : ServerGameTest(containerPlans)
+
+private val containerPlans: GameTestScope.() -> Unit = {
     context.restoring(ModuleAutoDeposit, ModuleChestCleaner) {
         run("gamemode survival $playerName")
         awaitClient("survival mode") { checkNotNull(it.player).hasInfiniteMaterials().not() }
@@ -67,7 +73,7 @@ class InventoryContainerPlansGameTest : SingleplayerGameTest({
         depositsMatchingStacks()
         cleansSelectedStacks()
     }
-})
+}
 
 private fun GameTestScope.depositsMatchingStacks() {
     resetInventory()

@@ -60,6 +60,10 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private var skipTicks = 0
 
+    override fun enable() {
+        skipTicks = 0
+    }
+
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         skipTicks--

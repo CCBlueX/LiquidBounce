@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest.server
 
+import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
+import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.teleport
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -47,7 +49,12 @@ import net.minecraft.world.item.Items
  * 3. `Vomit` throws everything out.
  * 4. `BookBot` takes a book from the inventory into the hand and signs it.
  */
-class InventoryUsePlansGameTest : SingleplayerGameTest({
+class InventoryUsePlansGameTest : SingleplayerGameTest(usePlans)
+
+/** The same on the game test server, where the run's anticheat watches the clicks. */
+class InventoryUsePlansServerGameTest : ServerGameTest(usePlans)
+
+private val usePlans: GameTestScope.() -> Unit = {
     context.restoring(ModuleElytraSwap, ModuleElytraFly, ModuleVomit, ModuleBookBot) {
         run("gamemode survival $playerName")
         awaitClient("survival mode") { checkNotNull(it.player).hasInfiniteMaterials().not() }
@@ -57,7 +64,7 @@ class InventoryUsePlansGameTest : SingleplayerGameTest({
         vomitEmptiesInventory()
         bookBotSignsBookFromInventory()
     }
-})
+}
 
 private fun GameTestScope.elytraSwapSwapsOncePerEnabling() {
     resetInventory()
@@ -168,7 +175,7 @@ private fun GameTestScope.vomitEmptiesInventory() {
     awaitCondition("everything thrown") { client { checkNotNull(it.player).inventory.isEmpty } }
     // What was thrown can be picked up again after two seconds
     disable(ModuleVomit)
-    run("kill @e[type=item]")
+    run("execute at $playerName run kill @e[type=item,distance=..16]")
 
     ticks(10)
     val left = listOf("minecraft:cobblestone", "minecraft:stick", "minecraft:oak_planks", "minecraft:iron_ingot")
@@ -181,7 +188,8 @@ private fun GameTestScope.bookBotSignsBookFromInventory() {
     resetInventory()
     useFastConstraints(constraintsOf(ModuleBookBot))
     client {
-        ModuleBookBot.settings.getValue("Delay").setByString("0.1")
+        // Paper kicks for a second edit within a second
+        ModuleBookBot.settings.getValue("Delay").setByString("2")
         val mode = (ModuleBookBot.settings.getValue("Mode") as ModeValueGroup<*>).activeMode
         mode.inner.first { it.name == "Pages" }.setByString("2")
         mode.inner.first { it.name == "AsciiOnly" }.setByString("true")
@@ -190,6 +198,19 @@ private fun GameTestScope.bookBotSignsBookFromInventory() {
     setSlot("inventory.0", "minecraft:writable_book")
     awaitClient("stick in hand and book in the inventory") { mc ->
         mc.holdsInFirstSlot(Items.WRITABLE_BOOK) && checkNotNull(mc.player).mainHandItem.`is`(Items.STICK)
+    }
+
+    if (Anticheat.GRIM in anticheats) {
+        // Grim takes no edit of a book the player has not opened, so only the swap can arrive
+        expectViolation("an edit of a book that is not open") {
+            enable(ModuleBookBot)
+            awaitServer("items entity $playerName weapon.mainhand minecraft:writable_book")
+            awaitServer("items entity $playerName inventory.0 minecraft:stick")
+            // The first edit comes after the delay
+            ticks(60)
+            disable(ModuleBookBot)
+        }
+        return
     }
 
     enable(ModuleBookBot)
@@ -222,9 +243,9 @@ private fun GameTestScope.useFastConstraints(constraints: ValueGroup, clickDelay
 }
 
 private fun GameTestScope.resetInventory() {
-    run("kill @e[type=item]")
+    run("execute at $playerName run kill @e[type=item,distance=..16]")
     run("clear $playerName")
-    run("kill @e[type=item]")
+    run("execute at $playerName run kill @e[type=item,distance=..16]")
     awaitClient("an empty inventory") { mc ->
         val player = checkNotNull(mc.player)
         player.inventory.isEmpty && player.containerMenu.carried.isEmpty
