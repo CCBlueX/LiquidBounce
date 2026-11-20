@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.textures.FilterMode
 import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -31,18 +32,25 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
 import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
+import net.minecraft.client.model.Model
 import net.minecraft.client.renderer.RenderBuffers
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
+import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.client.renderer.texture.UvMapping
+import net.minecraft.client.resources.model.geometry.ItemQuads
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.item.ItemDisplayContext
 import org.joml.Vector2f
+import org.joml.Vector4f
 import java.util.Optional
 import java.util.OptionalDouble
 
@@ -98,7 +106,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
      * Tracks an entity render submission while leaving the vanilla render type unchanged.
      *
      * A capture context is only established for entities that should be shown as chams, and only
-     * up until the next submission (or the end of the level entity submissions, see [clearEntityContext]).
+     * up until the next submission or the end of the entity's own submission (see [clearEntityContext]).
      */
     fun trackIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
         entityContext = null
@@ -122,12 +130,13 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     }
 
     /**
-     * Clears the tracked entity context once all level entity submissions are done.
+     * Clears the tracked entity context around each entity submission and once all level
+     * submissions are done.
      *
-     * [entityContext] is set during level entity submission to the last chams target and must not
-     * leak into later submissions that are unrelated to any chams target (e.g. first-person held
-     * items rendered after the level), otherwise they would be mistaken for chams targets and
-     * removed from the main render target.
+     * [entityContext] is set during an entity submission to a chams target and must not leak into
+     * later submissions that are unrelated to any chams target (e.g. other entities, block entities
+     * such as chests, or first-person held items rendered after the level), otherwise they would be
+     * mistaken for chams targets and removed from the main render target.
      *
      * [heldItemEntityContext] needs no clearing: it is a [ScopedValue] that is only bound inside
      * [withHeldItemContext] and restored automatically when that block ends.
@@ -139,27 +148,25 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     /**
      * Captures an entity model submission into the chams storage.
      *
-     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     * @return `true` when the submission was captured (and must be kept out of the main render target),
      *         `false` when the submission should keep flowing into the main render target.
      */
-    @Suppress("UnusedParameter")
     fun captureModel(
-        model: net.minecraft.client.model.Model<*>,
+        model: Model<*>,
         state: Any,
-        poseStack: com.mojang.blaze3d.vertex.PoseStack,
+        poseStack: PoseStack,
         renderType: RenderType,
         lightCoords: Int,
         overlayCoords: Int,
         tintedColor: Int,
-        uvMapping: net.minecraft.client.renderer.texture.UvMapping?,
-        outlineColor: Int,
+        uvMapping: UvMapping?,
     ): Boolean {
         if (!captureTargeted(renderType)) return false
         captureDepth++
         try {
             @Suppress("UNCHECKED_CAST")
             chamsStorage.submitModel(
-                model as net.minecraft.client.model.Model<Any>, state, poseStack, renderType,
+                model as Model<Any>, state, poseStack, renderType,
                 lightCoords, overlayCoords, tintedColor, uvMapping, 0
             )
         } finally {
@@ -171,19 +178,17 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     /**
      * Captures an item submission into the chams storage.
      *
-     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     * @return `true` when the submission was captured (and must be kept out of the main render target),
      *         `false` when the submission should keep flowing into the main render target.
      */
-    @Suppress("UnusedParameter")
     fun captureItem(
-        poseStack: com.mojang.blaze3d.vertex.PoseStack,
-        displayContext: net.minecraft.world.item.ItemDisplayContext,
+        poseStack: PoseStack,
+        displayContext: ItemDisplayContext,
         lightCoords: Int,
         overlayCoords: Int,
-        outlineColor: Int,
         tintLayers: IntArray,
-        quads: net.minecraft.client.resources.model.geometry.ItemQuads,
-        foilType: net.minecraft.client.renderer.item.ItemStackRenderState.FoilType,
+        quads: ItemQuads,
+        foilType: ItemStackRenderState.FoilType,
     ): Boolean {
         if (!captureTargeted()) return false
         captureDepth++
@@ -238,7 +243,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         val frame = chamsFrame ?: return
         target.createRenderPass(
             { "Chams" },
-            Optional.of(org.joml.Vector4f(0f, 0f, 0f, 0f)),
+            Optional.of(Vector4f(0f, 0f, 0f, 0f)),
             OptionalDouble.of(0.0),
         ).use { pass ->
             RenderSystem.bindDefaultUniforms(pass)
@@ -282,6 +287,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsBlit)
+                pass.bindGlobalsUniform()
                 pass.setUniform("InSampler", colorTexture, blitSampler)
                 pass.draw(3, 1, 0, 0)
             }

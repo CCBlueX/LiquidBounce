@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.utils.text.dropPort
+import net.ccbluex.liquidbounce.utils.text.rootDomain
 import net.minecraft.SharedConstants
 import net.minecraft.client.multiplayer.ServerData
 import java.lang.reflect.Type
@@ -31,6 +33,7 @@ object ServerInfoSerializer : JsonSerializer<ServerData> {
     override fun serialize(src: ServerData, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
         addProperty("name", src.name)
         addProperty("address", src.ip)
+        addProperty("rootDomain", src.ip.dropPort().rootDomain())
         addProperty("status", src.state().name)
         add("playerList", context.serialize(src.playerList))
         add("label", context.serialize(src.motd))

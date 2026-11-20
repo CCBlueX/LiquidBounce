@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.cosmetic
 
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
@@ -61,36 +62,32 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
     internal val carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
-    private var task: Job? = null
+    private val refreshing = Mutex()
 
     /**
-     * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
-     * and then call out [done].
-     * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
+     * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set.
+     * It will only refresh when the REFRESH_DELAY has passed or when [force] is true,
+     * and waits for a refresh that is already running.
+     *
+     * @return the failure if the API did not provide the carriers
      */
-    fun refreshCarriers(force: Boolean = false, done: Runnable) {
-        // Check if there is not another task running which could conflict.
-        if (task == null) {
-            // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-            if (lastUpdate.hasElapsed(REFRESH_DELAY) || force) {
-                task = withScope {
-                    runCatching {
-                        carriers = CosmeticApi.getCarriers()
-                        task = null
+    suspend fun refreshCarriers(force: Boolean = false): Result<Unit> = refreshing.withLock {
+        if (!force && !lastUpdate.hasElapsed(REFRESH_DELAY)) {
+            return@withLock Result.success(Unit)
+        }
 
-                        // Reset timer and start once again
-                        lastUpdate.reset()
+        // Reset first, a failed refresh is not repeated before the REFRESH_DELAY has passed either
+        lastUpdate.reset()
 
-                        // Call out done
-                        mc.execute(done)
-                    }.onFailure {
-                        logger.error("Failed to refresh cape carriers due to error.", it)
-                    }
-                }
-            } else {
-                // Call out done immediate because there is no refresh required at the moment
-                done.run()
+        runCatching {
+            carriers = CosmeticApi.getCarriers()
+
+            // The refreshes that lookups start every minute stay out of the log
+            if (force) {
+                logger.info("Successfully loaded ${carriers.size} cosmetics carriers.")
             }
+        }.onFailure {
+            logger.error("Failed to refresh cape carriers due to error.", it)
         }
     }
 
@@ -118,34 +115,41 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
             return
         }
 
-        refreshCarriers {
-            if (uuid.toMD5() !in carriers) {
-                return@refreshCarriers
-            }
+        // Does not wait for the refresh, a later lookup sees the new carriers
+        if (lastUpdate.hasElapsed(REFRESH_DELAY)) {
+            withScope { refreshCarriers() }
+        }
 
-            // Check if we already have the cosmetic
-            carriersCosmetics[uuid]?.let { cosmetics ->
-                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@refreshCarriers)
-                return@refreshCarriers
-            }
+        fetchCarrierCosmetic(uuid, category, done)
+    }
 
-            // Pre-allocate a set to prevent multiple requests
-            carriersCosmetics[uuid] = emptySet()
+    private fun fetchCarrierCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit) {
+        if (uuid.toMD5() !in carriers) {
+            return
+        }
 
-            withScope {
-                runCatching {
-                    val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
-                    carriersCosmetics[uuid] = cosmetics
+        // Check if we already have the cosmetic
+        carriersCosmetics[uuid]?.let { cosmetics ->
+            done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
+            return
+        }
 
-                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runCatching)
-                }.onFailure {
-                    logger.error("Failed to get cosmetics of carrier $uuid", it)
-                }
+        // Pre-allocate a set to prevent multiple requests
+        carriersCosmetics[uuid] = emptySet()
+
+        withScope {
+            runCatching {
+                val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
+                carriersCosmetics[uuid] = cosmetics
+
+                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runCatching)
+            }.onFailure {
+                logger.error("Failed to get cosmetics of carrier $uuid", it)
             }
         }
     }
 
-    private fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
+    fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
         fetchCosmetic(uuid, category)
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
@@ -178,9 +182,7 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
             logger.info("Transferred cape ownership to $uuid")
 
             // Refresh carriers after transfer
-            refreshCarriers(true) {
-                logger.info("Successfully loaded ${carriers.size} cosmetics carriers.")
-            }
+            refreshCarriers(true)
         }.onFailure {
             logger.error("Failed to transfer cosmetic ownership to $uuid", it)
         }

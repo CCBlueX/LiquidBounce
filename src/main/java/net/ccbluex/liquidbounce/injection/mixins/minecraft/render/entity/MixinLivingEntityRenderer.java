@@ -25,13 +25,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
-import kotlin.Pair;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.Model;
@@ -44,11 +43,10 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import org.jspecify.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -66,32 +64,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @Shadow
     public abstract Identifier getTextureLocation(S state);
 
-    @Unique
-    private @Nullable Pair<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
-        if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.isPartAllowed(bodyPart)) {
-            var rotation = ModuleRotations.INSTANCE.getModelRotation();
-            var prevRotation = ModuleRotations.INSTANCE.getPrevModelRotation();
-
-            if (rotation != null && prevRotation != null) {
-                return new Pair<>(prevRotation, rotation);
-            }
-        }
-
-        return null;
-    }
-
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;solveBodyRot(Lnet/minecraft/world/entity/LivingEntity;FF)F"))
     private float hookBodyYaw(float original, LivingEntity entity, S state, float tickDelta) {
         if (entity != Minecraft.getInstance().player) {
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.BODY);
-        if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
-        }
-
-        return original;
+        return RotationManager.INSTANCE.modelYaw(RotationManager.BodyPart.BODY, tickDelta, original);
     }
 
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;rotLerp(FFF)F"))
@@ -100,12 +79,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
-        if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
-        }
-
-        return original;
+        return RotationManager.INSTANCE.modelYaw(RotationManager.BodyPart.HEAD, tickDelta, original);
     }
 
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot(F)F"))
@@ -114,12 +88,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
-        if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().xRot(), overwriteRotation.getSecond().xRot());
-        }
-
-        return original;
+        return RotationManager.INSTANCE.modelPitch(tickDelta, original);
     }
 
     @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"))

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
@@ -43,17 +42,15 @@ object MarketplaceListRevisionsCommand {
             argument("item", ClientStringArgumentType.string(), suggests = marketplaceItemSuggestions) { input ->
                 execSuspend { ctx ->
                     val item = marketplaceItem(ctx.get(input))
-                    val response = request { MarketplaceApi.getMarketplaceItemRevisions(item.id) }
-
-                    val activeRevisions = response.items.filter { it.status != MarketplaceItemStatus.PENDING }
+                    val revisions = request { MarketplaceApi.getMarketplaceItemRevisions(item.id) }.items
 
                     header(t("revisions.list.header", variable(item.address)))
-                    if (activeRevisions.isEmpty()) {
+                    if (revisions.isEmpty()) {
                         chat(regular(t("revisions.list.noRevisions")), metadata = plain)
                         return@execSuspend
                     }
 
-                    for (revision in activeRevisions) {
+                    for (revision in revisions) {
                         chat(
                             regular("⬥ ").withColor(ChatFormatting.BLUE)
                                 .append(variable(revision.version))

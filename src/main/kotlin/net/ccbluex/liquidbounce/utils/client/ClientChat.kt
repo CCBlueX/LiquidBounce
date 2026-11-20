@@ -44,9 +44,11 @@ import net.minecraft.network.chat.TextColor
 import java.io.File
 
 // Chat formatting
-private val clientPrefix: Component = "".asText()
+private val clientPrefix: Component = clientTag("LiquidBounce")
+
+internal fun clientTag(name: String): Component = "".asText()
     .withStyle(ChatFormatting.RESET, ChatFormatting.GRAY)
-    .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
+    .append(gradientText(name, Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(" ▸ ".asText().withStyle(ChatFormatting.RESET, ChatFormatting.GRAY))
 
 @AddonApi
@@ -134,7 +136,7 @@ inline operator fun MutableComponent.plusAssign(other: Component) {
  */
 fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableComponent {
     return text.foldIndexed("".asText()) { index, newText, char ->
-        val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
+        val factor = if (text.length > 1) index / (text.length - 1.0F) else 0.0F
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
@@ -206,10 +208,13 @@ data class MessageMetadata(
     }
 }
 
+private fun Component.withClientPrefix(metadata: MessageMetadata): Component =
+    if (metadata.prefix) clientPrefix.copy().append(this) else this
+
 @AddonApi
 @JvmOverloads
 fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
-    val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
+    val realText = text.withClientPrefix(metadata)
 
     if (mc.player == null) {
         logger.info("(Chat) ${realText.string}")
@@ -231,6 +236,22 @@ fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
 @AddonApi
 fun chat(vararg texts: Component, metadata: MessageMetadata = defaultMessageMetadata) {
     chat(texts.asText(), metadata)
+}
+
+/**
+ * Shows [text] as the message carrying `metadata.id`, replacing its content in place when the chat already
+ * displays it.
+ *
+ * Unlike [chat], a refresh writes no log line and does not move the chat scroll, which is what a message that
+ * updates on its own is drawn with. Outside the game there is no chat to update, so nothing happens.
+ */
+fun updateChat(text: Component, metadata: MessageMetadata) {
+    if (mc.player == null) {
+        return
+    }
+
+    val realText = text.withClientPrefix(metadata)
+    mc.gui.hud.chat.updateMessage(realText, metadata)
 }
 
 @AddonApi

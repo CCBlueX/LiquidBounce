@@ -27,7 +27,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @anticheatVersion 2.7.7
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcan : NoFallMode("Vulcan277") {
+internal object NoFallVulcan : NoFallMode("Vulcan-2.7.7", aliases = listOf("Vulcan277")) {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         if (packet is ServerboundMovePlayerPacket && player.fallDistance > 7.0) {

@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
@@ -40,7 +41,7 @@ object TrapPlayerSimulation {
         val seenPlayers = ReferenceOpenHashSet<Player>()
 
         for (enemy in enemies) {
-            if (enemy !is Player || enemy.distanceToSqr(player) > SIMULATION_DISTANCE * SIMULATION_DISTANCE) {
+            if (enemy !is Player || !enemy.closerThan(player, SIMULATION_DISTANCE)) {
                 continue
             }
 
@@ -114,19 +115,15 @@ object TrapPlayerSimulation {
             .sumOf { vec -> vec.subtract(avg).lengthSqr() }
             .let { sqrt(it / positions.size) }
 
-        ModuleDebug.debugGeometry(
-            ModuleAutoTrap,
-            "PredictedPlayerPos",
-            ModuleDebug.DebuggedBox(target.dimensions.makeBoundingBox(positions.last()), Color4b.RED.with(a = 127))
-        )
-        ModuleDebug.debugGeometry(
-            ModuleAutoTrap,
-            "PredictedPlayerPosStd",
-            ModuleDebug.DebuggedBox(
+        ModuleAutoTrap.debugGeometry("PredictedPlayerPos") {
+            DebuggedBox(target.dimensions.makeBoundingBox(positions.last()), Color4b.RED.with(a = 127))
+        }
+        ModuleAutoTrap.debugGeometry("PredictedPlayerPosStd") {
+            DebuggedBox(
                 EntityDimensions.fixed((target.dimensions.width * std).toFloat(), 0.5F).makeBoundingBox(avg),
                 Color4b.BLUE.with(a = 127)
             )
-        )
+        }
 
         // The simulation is mostly certain that the player will land at that position
         if (std < 1.5) {

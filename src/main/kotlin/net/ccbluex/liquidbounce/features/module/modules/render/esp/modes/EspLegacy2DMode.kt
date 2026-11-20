@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 
@@ -36,7 +36,7 @@ object EspLegacy2DMode : EspMode("Legacy2D") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
-            for (entity in RenderedEntities) {
+            for (entity in ModuleESP.targets) {
                 if (!shouldRender(entity)) continue
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)

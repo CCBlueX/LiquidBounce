@@ -528,9 +528,9 @@ open class ValueGroup @JvmOverloads constructor(
      * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
      */
     @Suppress("unused")
-    fun inventoryPreset(): Value<InventoryPreset> = value(
+    fun inventoryPreset(default: InventoryPreset = InventoryPreset()): Value<InventoryPreset> = value(
         name = "InventoryPreset",
-        defaultValue = InventoryPreset(),
+        defaultValue = default,
         valueType = ValueType.INVENTORY_PRESET,
     )
 

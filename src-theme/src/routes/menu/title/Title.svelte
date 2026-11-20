@@ -6,7 +6,7 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
     import {
-        browse,
+        openLink,
         exitClient,
         getClientUpdate,
         openScreen,
@@ -17,6 +17,8 @@
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
     import {isAnniversary} from "../../../util/utils";
+    import {escapeLayer} from "../../../integration/escape";
+    import {prefetchServers} from "../multiplayer/server_store";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -39,16 +41,15 @@
     function toggleButtons() {
         if (clientButtonsShown) {
             clientButtonsShown = false;
-            setTimeout(() => {
-                regularButtonsShown = true;
-            }, 750);
+            regularButtonsShown = true;
         } else {
             regularButtonsShown = false;
-            setTimeout(() => {
-                clientButtonsShown = true;
-            }, 750);
+            clientButtonsShown = true;
         }
     }
+
+    const layer = escapeLayer(toggleButtons);
+    $: layer.setOpen(clientButtonsShown);
 </script>
 
 <div class="title-screen">
@@ -63,6 +64,7 @@
                             on:click={() => openScreen("singleplayer")}/>
 
                 <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
+                            on:mouseenter={prefetchServers}
                             on:click={() => openScreen("multiplayer")} index={1}>
                     <ChildButton title="Realms" icon="realms" {parentHovered}
                                  on:click={() => openScreen("multiplayer_realms")}/>
@@ -78,7 +80,7 @@
             {/if}
         </div>
 
-        <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="additional-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
                 <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
@@ -86,15 +88,15 @@
             </ButtonContainer>
         </div>
 
-        <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="social-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
-                <IconButton title="Forum" icon="nodebb" on:click={() => browse("MAINTAINER_FORUM")}/>
-                <IconButton title="GitHub" icon="github" on:click={() => browse("MAINTAINER_GITHUB")}/>
-                <IconButton title="Discord" icon="discord" on:click={() => browse("MAINTAINER_DISCORD")}/>
-                <IconButton title="Twitter" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
-                <IconButton title="YouTube" icon="youtube" on:click={() => browse("MAINTAINER_YOUTUBE")}/>
+                <IconButton title="Forum" icon="nodebb" on:click={() => openLink("MAINTAINER_FORUM")}/>
+                <IconButton title="GitHub" icon="github" on:click={() => openLink("MAINTAINER_GITHUB")}/>
+                <IconButton title="Discord" icon="discord" on:click={() => openLink("MAINTAINER_DISCORD")}/>
+                <IconButton title="Twitter" icon="twitter" on:click={() => openLink("MAINTAINER_TWITTER")}/>
+                <IconButton title="YouTube" icon="youtube" on:click={() => openLink("MAINTAINER_YOUTUBE")}/>
                 <IconTextButton title="liquidbounce.net" icon="icon-liquidbounce.net.svg"
-                                on:click={() => browse("CLIENT_WEBSITE")}/>
+                                on:click={() => openLink("CLIENT_WEBSITE")}/>
             </ButtonContainer>
         </div>
     </div>

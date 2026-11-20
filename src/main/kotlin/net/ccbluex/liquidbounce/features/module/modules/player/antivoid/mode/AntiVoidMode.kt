@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.minecraft.world.phys.Vec3
 
 abstract class AntiVoidMode(name: String) : Mode(name) {
@@ -29,9 +30,9 @@ abstract class AntiVoidMode(name: String) : Mode(name) {
     override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
 
-    // Cases in which the AntiVoid protection should not be active.
+    // Cases in which the AntiVoid protection should not be active. It only acts on a fall Clutch failed to catch
     open val isExempt: Boolean
-        get() = player.isDeadOrDying || ModuleFly.running
+        get() = player.isDeadOrDying || ModuleFly.running || ModuleClutch.guarding
 
     open fun discoverRescuePosition(): Vec3? {
         if (!ModuleAntiVoid.isLikelyFalling) {

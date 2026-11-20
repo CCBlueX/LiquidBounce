@@ -24,6 +24,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.StorageEspOutlineContext;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -66,7 +67,7 @@ public abstract class MixinBlockEntityRenderDispatcher {
         if (outlineColor.isTransparent()) {
             original.call(renderer, state, poseStack, submitNodeCollector, camera);
         } else {
-            StorageEspOutlineContext.render(outlineColor.argb(), () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
+            StorageEspOutlineContext.render(OutlineGlow.outlineColor(ModuleStorageESP.GlowMode.INSTANCE, outlineColor.argb()), () -> original.call(renderer, state, poseStack, submitNodeCollector, camera));
         }
     }
 

@@ -83,7 +83,7 @@ internal fun GuiGraphicsExtractor.drawPanel(width: Float, height: Float, panel: 
         }
     }
 
-    val darken = panel.gradient.toDouble()
+    val darken = panel.gradient
     drawRoundedRect(
         x1 = x1,
         y1 = y1,
@@ -96,7 +96,7 @@ internal fun GuiGraphicsExtractor.drawPanel(width: Float, height: Float, panel: 
             tR = darken,
             tG = darken,
             tB = darken,
-            tA = 0.0,
+            tA = 0.0F,
         ),
         outlineColor = panel.outlineColor,
         outlineWidth = BACKGROUND_OUTLINE_WIDTH,

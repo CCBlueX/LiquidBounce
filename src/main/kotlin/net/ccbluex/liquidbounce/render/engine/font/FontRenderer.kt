@@ -31,10 +31,12 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.element.TextRunGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.util.ARGB
 import net.minecraft.util.FormattedCharSequence
 import java.awt.Font
+import kotlin.math.round
 
 @Suppress("TooManyFunctions")
 class FontRenderer(
@@ -75,6 +77,8 @@ class FontRenderer(
     private val underlineThickness: Float = metrics.underlineThickness
     private val strikethroughOffset: Float = metrics.strikethroughOffset
     private val strikethroughThickness: Float = metrics.strikethroughThickness
+
+    private val gridFit = VerticalGridFit(metrics)
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
@@ -157,6 +161,9 @@ class FontRenderer(
         val overrideArgb = overrideColor?.argb
         var x = posX
         var y = posY + this.ascent * scale
+        if (posZ.isNaN()) {
+            y = fitToPixelGrid(ctx as GuiGraphicsExtractor, y, scale)
+        }
 
         // Decorations belong to the characters now, so a run lasts as long as the characters keep
         // sharing their style and colour. No style is negative, so the first character starts a run.
@@ -187,7 +194,11 @@ class FontRenderer(
                 run = it
             }
 
-            current.addQuad(quad, argb)
+            if (gridFit.active) {
+                current.addGridFittedQuad(y, argb)
+            } else {
+                current.addQuad(quad, argb)
+            }
         }
 
         text.forEachIndexed { charIdx, processedChar ->
@@ -311,6 +322,54 @@ class FontRenderer(
                 addVertex(matrix, x1, y0, z).setColor(argb)
             }
         }
+    }
+
+    /**
+     * Puts the baseline at [baseline] on a device pixel row and readies [gridFit] for the text's size
+     * on screen, returning the moved baseline. Rotated or skewed text is left as it is.
+     */
+    private fun fitToPixelGrid(gui: GuiGraphicsExtractor, baseline: Float, scale: Float): Float {
+        val pose = gui.pose()
+        val guiScale = mc.window.guiScale.toFloat()
+        val pixelsPerUnit = pose.m11() * guiScale
+
+        if (pose.m01() != 0f || pose.m10() != 0f || pixelsPerUnit <= 0f) {
+            gridFit.disable()
+            return baseline
+        }
+
+        gridFit.update(pixelsPerUnit, scale)
+
+        val pixelY = (pose.m11() * baseline + pose.m21()) * guiScale
+        return baseline + (round(pixelY) - pixelY) / pixelsPerUnit
+    }
+
+    /**
+     * Adds [quad] cut at the heights [gridFit] bends at, each piece moved by the fit.
+     */
+    private fun TextRunGuiElementRenderState.addGridFittedQuad(baseline: Float, argb: Int) {
+        val quad = this@FontRenderer.quad
+        val top = baseline - quad[1]
+        val bottom = baseline - quad[3]
+        val topV = quad[5]
+        val bottomV = quad[7]
+
+        fun addPiece(upper: Float, lower: Float) {
+            quad[1] = baseline - gridFit.fit(upper)
+            quad[3] = baseline - gridFit.fit(lower)
+            quad[5] = topV + (top - upper) / (top - bottom) * (bottomV - topV)
+            quad[7] = topV + (top - lower) / (top - bottom) * (bottomV - topV)
+            addQuad(quad, argb)
+        }
+
+        var upper = top
+        for (cut in gridFit.cuts) {
+            if (cut < upper && cut > bottom) {
+                addPiece(upper, cut)
+                upper = cut
+            }
+        }
+        addPiece(upper, bottom)
     }
 
     /**

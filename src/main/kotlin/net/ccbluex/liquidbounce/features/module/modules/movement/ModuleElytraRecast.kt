@@ -28,7 +28,7 @@ import net.minecraft.world.entity.EquipmentSlot
 /**
  * Elytra recast module
  *
- * Recasts elytra when holding the jump key
+ * Recasts elytra when holding the jump key, or when the movement input jumps
  *
  * @author Pivo1lovv
  */
@@ -40,7 +40,8 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEME
 
             return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
                 !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying &&
-                itemStack.isGlider && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
+                itemStack.isGlider && !itemStack.nextDamageWillBreak() &&
+                (mc.options.keyJump.isDown || player.input.keyPresses.jump)
         }
 
     /**

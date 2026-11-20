@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
@@ -169,13 +170,13 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator {
 
         val directionOnImpact = getVelocityOnImpact(trajectoryInfo, ticksUntilImpact, finalDirection).normalize()
 
-        ModuleDebug.debugGeometry(
-            ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
+        ModuleProjectileAimbot.debugGeometry("inboundDirection") {
+            DebuggedLineSegment(
                 entityPositionOnImpact,
                 entityPositionOnImpact.add(directionOnImpact.withLength(2.0)),
                 Color4b.BLUE
             )
-        )
+        }
 
         val finalTargetPos = ProjectileTargetPointFinder.findHittablePosition(
             playerHeadPosition,

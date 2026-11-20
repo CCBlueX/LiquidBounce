@@ -21,8 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
@@ -31,13 +30,19 @@ import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparatorMode
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.core.component.DataComponentType
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 
 /**
  * AutoArmor module
@@ -98,32 +103,61 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         tree(AutoArmorSaveArmor)
     }
 
-    @Suppress("unused")
-    private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (player.isSpectator) {
-            return@handler
+    /**
+     * Armor with one of these curses is never put on.
+     */
+    private val skipCursed by multiEnumChoice<Curse>("SkipCursed")
+
+    internal val activeDurabilityThreshold: Int
+        get() = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
+
+    internal val activeComparatorMode: ArmorComparatorMode
+        get() = (modes.activeMode as? RawDefense)?.comparatorMode ?: Smart.comparatorMode
+
+    internal val activeConsiderProjectileProtection: Boolean
+        get() = RawDefense.considerProjectileProtection
+
+    internal fun isAllowedByCurseFilter(slot: ItemSlot): Boolean =
+        slot.slotType == ItemSlot.Type.ARMOR ||
+            skipCursed.none { EnchantmentHelper.has(slot.itemStack, it.effect) }
+
+    /**
+     * The slots armor is picked from. Worn pieces always count, as a bound one cannot be swapped out anyway.
+     */
+    internal val candidateSlots: List<ItemSlot>
+        get() = if (skipCursed.isEmpty() && !InventoryManager.hasServerLockedItems) {
+            Slots.All
+        } else {
+            Slots.All.filter { slot ->
+                (slot.slotType == ItemSlot.Type.ARMOR || !InventoryManager.isServerLocked(slot.itemStack)) &&
+                    isAllowedByCurseFilter(slot)
+            }
         }
 
-        // Filter out already equipped armor pieces
-        val durabilityThreshold = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
-
-        val comparatorMode = (modes.activeMode as? RawDefense)?.comparatorMode ?: Smart.comparatorMode
-        val considerProjectileProtection = RawDefense.considerProjectileProtection
+    @Suppress("unused")
+    private val equip = inventoryPlan(inventoryConstraints) {
+        if (player.isSpectator) {
+            return@inventoryPlan
+        }
 
         val armorToEquip = ArmorEvaluation
             .findBestArmorPieces(
-                durabilityThreshold = durabilityThreshold,
-                mode = comparatorMode,
-                considerProjectileProtection = considerProjectileProtection
+                slots = candidateSlots,
+                durabilityThreshold = activeDurabilityThreshold,
+                mode = activeComparatorMode,
+                considerProjectileProtection = activeConsiderProjectileProtection
             )
             .values.filterNotNull().filter { !it.isAlreadyEquipped }
 
         for (armorPiece in armorToEquip) {
-            event.schedule(
-                inventoryConstraints,
-                equipArmorPiece(armorPiece) ?: continue,
-                Priority.IMPORTANT_FOR_PLAYER_LIFE
-            )
+            val armorSlot = armorPiece.inventorySlot
+            val isWorn = !player.inventory.getItem(armorSlot).isEmpty
+            perform(equipArmorPiece(armorPiece) ?: continue, priority = Priority.IMPORTANT_FOR_PLAYER_LIFE)
+
+            // Still occupied when a hotbar use swapped both pieces or the worn one cannot be taken off
+            if (isWorn && player.inventory.getItem(armorSlot).isEmpty) {
+                perform(equipArmorPiece(armorPiece) ?: continue, priority = Priority.IMPORTANT_FOR_PLAYER_LIFE)
+            }
         }
     }
 
@@ -137,7 +171,10 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
-        if (stackInArmor.isGlider) {
+        if (stackInArmor.isGlider ||
+            InventoryManager.isServerLocked(armorPiece.itemSlot.itemStack) ||
+            InventoryManager.isServerLocked(stackInArmor)
+        ) {
             return null
         }
 
@@ -176,6 +213,11 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         } else {
             InventoryAction.Click.performQuickMove(screen = null, armorPieceSlot)
         }
+    }
+
+    private enum class Curse(override val tag: String, val effect: DataComponentType<*>) : Tagged {
+        BINDING("Binding", EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE),
+        VANISHING("Vanishing", EnchantmentEffectComponents.PREVENT_EQUIPMENT_DROP),
     }
 
 }

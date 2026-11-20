@@ -20,46 +20,43 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.item.ItemStack
 
 object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    fun execute(event: ScheduleInventoryActionEvent) {
-        // Check if we have space in the hotbar
-        if (!findEmptyHotbarOrOffhandSlot()) {
-            return
-        }
-
+    @Suppress("unused")
+    private val refill = inventoryPlan(inventoryConstraints) {
         val validFeatures = ModuleAutoBuff.activeFeatures
-
-        // Find valid items in the inventory
-        val validItems = Slots.Inventory.filter {
-            val itemStack = it.itemStack
-            validFeatures.any { f -> f.isValidItem(itemStack, false) }
-        }
-
-        // Check if we have any valid items
-        if (validItems.isEmpty()) {
-            return
+        val validItems = Slots.Inventory.filter { slot ->
+            validFeatures.any { f -> f.isValidItem(slot.itemStack, false) }
         }
 
         for (slot in validItems) {
-            event.schedule(
-                inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
-                Priority.IMPORTANT_FOR_USAGE_1
-            )
+            // An earlier step may have filled the hotbar
+            if (Slots.Hotbar.any { it.itemStack.isEmpty } || canMergeIntoHotbar(slot.itemStack)) {
+                perform(InventoryAction.Click.performQuickMove(slot = slot), priority = Priority.IMPORTANT_FOR_USAGE_1)
+            }
         }
     }
 
-    private fun findEmptyHotbarOrOffhandSlot(): Boolean {
-        return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
+    // Shift-clicking from the main inventory only moves into hotbar 0..8, never into offhand.
+    private fun canMergeIntoHotbar(stack: ItemStack): Boolean {
+        if (!stack.isStackable) {
+            return false
+        }
+        return Slots.Hotbar.any { slot ->
+            val target = slot.itemStack
+            !target.isEmpty && target.count < target.maxStackSize &&
+                ItemStack.isSameItemSameComponents(target, stack)
+        }
     }
 
 }

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -170,7 +170,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     ) {
         val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
             activeTrajectoryOther &&
-            TrajectoryType.FishingBobber in trajectoryTypes
+            TrajectoryType.FISHING_BOBBER in trajectoryTypes
 
         val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
             if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {
@@ -225,7 +225,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     trajectoryType = shotDescriptor.trajectoryType,
                     colorSource = shotDescriptor.colorSource,
                 ),
-                blockHitColor = Color4b(0, 160, 255, 150),
+                blockHitColor = Color4b.LIQUID_BOUNCE.alpha(150),
                 entityHitColor = Color4b.RED.alpha(100),
                 lineWidth = lineWidth,
             )

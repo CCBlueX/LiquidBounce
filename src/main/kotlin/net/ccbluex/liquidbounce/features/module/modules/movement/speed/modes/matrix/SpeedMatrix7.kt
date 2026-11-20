@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
  *
  * @author XeContrast
  */
-class SpeedMatrix7(parent : ModeValueGroup<*>) : SpeedBHopBase("Matrix7",parent) {
+class SpeedMatrix7(parent : ModeValueGroup<*>) : SpeedBHopBase("Matrix-7", parent, listOf("Matrix7")) {
 
     @Suppress("unused")
     private val tickHandle = handler<GameTickEvent> {

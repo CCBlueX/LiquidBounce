@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -82,7 +83,11 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
 
             val probabilityAdjustmentFactor = p.pow(ceil(bigT * 0.9))
 
-            val speedAdjustedDamage = attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
+            val speedAdjustedDamage = if (isOlderThanOrEqual1_8) {
+                attackDamage
+            } else {
+                attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
+            }
 
             val damageFromFireAspect = (stack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f - 1)
                     .coerceAtLeast(0.0F) * 0.33F
@@ -112,7 +117,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             val baseDamage = estimateDamage(ItemStackTemplate(Items.STICK, 1))
             val itemDamage = estimateDamage(stack)
 
-            return itemDamage > baseDamage || SECONDARY_VALUE_ESTIMATOR.estimateValue(stack) > 0.0F
+            return itemDamage > baseDamage
         }
     }
 

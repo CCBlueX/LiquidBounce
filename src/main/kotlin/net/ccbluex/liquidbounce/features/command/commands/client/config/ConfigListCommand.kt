@@ -31,9 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.ChatFormatting
 
-/**
- * Lists and searches marketplace configs
- */
 object ConfigListCommand {
 
     fun CmdLiteralScope.list() {
@@ -44,9 +41,10 @@ object ConfigListCommand {
                     if (ctx.get(page) == 1) {
                         MarketplaceConfigs.refresh()
                     }
-                    header(t("list.header"), t("list.page", response.pagination.current, response.pagination.pages))
+                    val pagination = response.pagination
+                    header(t("list.header"), t("list.page", pagination.current, pagination.pages))
                     printItems(response.items)
-                    pageNavigation(response.pagination.current, response.pagination.pages) { "config list $it" }
+                    pageNavigation(pagination.current, pagination.pages) { "config list $it" }
                         ?.let { chat(it, metadata = plain) }
                 }
             }

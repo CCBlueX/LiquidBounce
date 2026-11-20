@@ -25,11 +25,14 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.world.entity.LivingEntity
@@ -53,6 +56,7 @@ object CriticalsJump : Mode("Jump") {
 
     private val checkKillaura by boolean("CheckKillaura", false)
     private val checkAutoClicker by boolean("CheckAutoClicker", false)
+    private val checkTriggerBot by boolean("CheckTriggerBot", false)
     private val canBeSeen by boolean("CanBeSeen", true)
 
     /**
@@ -134,7 +138,7 @@ object CriticalsJump : Mode("Jump") {
         // If player is already falling in the air
         if (!onGround && player.deltaMovement.y <= 0.0) {
             // If already capable of landing a critical hit right now, don't wait!
-            if (player.fallDistance > 0.0 && player.getAttackStrengthScale(0.5f) > 0.9f) {
+            if (player.fallDistance > 0.0 && CombatManager.attackCooldownProgress() > 0.9f) {
                 return false
             }
 
@@ -149,7 +153,7 @@ object CriticalsJump : Mode("Jump") {
         val ticksTillFall = (initialMotionY / gravity).toFloat()
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
 
-        ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
+        ModuleCriticals.debugParameter("timeToCrit") { ticksTillCrit }
 
         // Check whether player will hit the ground before reaching falling critical state
         val simulatedFallingPlayer = if (onGround) {
@@ -178,9 +182,10 @@ object CriticalsJump : Mode("Jump") {
 
     private fun calculateTicksUntilNextCrit(): Float {
         val durationToWait = player.currentItemAttackStrengthDelay * 0.9F - 0.5F
-        val waitedDuration = player.attackStrengthTicker.toFloat()
+        val waitedDuration = CombatManager.attackCooldownTicks().toFloat()
 
-        return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
+        // Server ticks left, which pass slower than ours while the server lags
+        return ((durationToWait - waitedDuration) / ServerObserver.tickSpeed.toFloat()).coerceAtLeast(0.0f)
     }
 
     fun shouldWaitForJump(initialMotion: Float = LivingEntity.BASE_JUMP_POWER): Boolean {
@@ -218,13 +223,14 @@ object CriticalsJump : Mode("Jump") {
             return false
         }
 
-        // if both module checks are disabled, we can safely say that we are active
-        if (!checkKillaura && !checkAutoClicker) {
+        // if all module checks are disabled, we can safely say that we are active
+        if (!checkKillaura && !checkAutoClicker && !checkTriggerBot) {
             return true
         }
 
         return (ModuleKillAura.running && checkKillaura) ||
-            (ModuleAutoClicker.running && checkAutoClicker)
+            (ModuleAutoClicker.running && checkAutoClicker) ||
+            (ModuleTriggerBot.running && checkTriggerBot)
     }
 
 }

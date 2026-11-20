@@ -96,6 +96,7 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     internal val registeredNodes = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     internal val registeredCategories = mutableListOf<ModuleCategory>()
     internal val registeredModes = mutableListOf<Pair<ModeValueGroup<*>, Mode>>()
+    internal val registeredValueGroups = mutableListOf<Pair<ValueGroup, ValueGroup>>()
     internal val registeredConfigs = mutableListOf<Config>()
     internal val registeredItemHandlers = mutableListOf<Pair<MarketplaceItemType, MarketplaceItemHandler>>()
     internal val registeredBrowserBackends = mutableListOf<BrowserBackendProvider>()
@@ -181,6 +182,21 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     fun <T : Mode> registerMode(parent: ModeValueGroup<T>, mode: T) {
         parent.addMode(mode)
         registeredModes += parent to mode
+    }
+
+    /**
+     * Attaches [group] to [parent], e.g. a sub-group of a core module. Must run in [onInitialize] for
+     * its settings to be restored.
+     */
+    fun <T : ValueGroup> registerValueGroup(parent: ValueGroup, group: T): T {
+        require(parent.inner.none { it.name.equals(group.name, ignoreCase = true) }) {
+            "ValueGroup '${parent.name}' already has a value named '${group.name}'"
+        }
+
+        parent.tree(group)
+        parent.key?.let { group.walkKeyPath(it) }
+        registeredValueGroups += parent to group
+        return group
     }
 
     /**

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowHypixel20240525
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
@@ -58,6 +58,6 @@ internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
         }
 
     @Suppress("unused")
-    private val noBlockInteract = tree(NoSlowNoBlockInteract(this, animations::contains))
+    private val noBlockInteract = tree(NoSlowHypixel20240525(this, animations::contains))
 
 }

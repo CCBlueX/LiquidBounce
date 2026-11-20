@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -79,7 +80,7 @@ private fun Route.logoutUser() = post("/logout") {
     ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
     ConfigSystem.store(ClientAccountManager)
     EventManager.callEvent(UserLoggedOutEvent)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.userRoutes() = route("/user") {

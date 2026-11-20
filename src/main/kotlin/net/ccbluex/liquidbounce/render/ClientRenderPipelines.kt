@@ -58,14 +58,13 @@ object ClientRenderPipelines {
             }
     }
 
+    /**
+     * Built on the vanilla snippet so that resource packs replacing `core/position_tex_color`
+     * get the same uniforms (e.g. `Globals`) as in vanilla's GUI pipelines.
+     */
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
-        withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
-        withBindGroupLayout(BindGroupLayouts.PROJECTION)
-        withVertexShader("core/position_tex_color")
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
-        withBindGroupLayout(BindGroupLayouts.SAMPLER0)
-        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-        withPrimitiveTopology(PrimitiveTopology.QUADS)
     }
 
     inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
@@ -110,6 +109,18 @@ object ClientRenderPipelines {
         withPrimitiveTopology(mode)
     }
 
+    /**
+     * Chromium on Windows blends text through Skia's mask gamma, sRGB with contrast 1 (`skia/BUILD.gn`).
+     * On Linux Skia skips it for grayscale text, and macOS text comes out of CoreText's own smoothing.
+     */
+    private fun RenderPipeline.Builder.fontMaskSnippet() {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
+        if (Util.getPlatform() == Util.OS.WINDOWS) {
+            withShaderDefine("TEXT_CONTRAST", 1f)
+        }
+    }
+
     // Browsers paint with premultiplied alpha
     object BROWSER {
         @JvmField
@@ -149,6 +160,19 @@ object ClientRenderPipelines {
             withPrimitiveTopology(PrimitiveTopology.QUADS)
         }
 
+        /**
+         * Anti-aliased indicator arrow. [ClientVertexFormats.GUI_ROUNDED_RECT]'s slots carry its own parameters: UV0
+         * the local position, UV1 the size, LineWidth the tail notch.
+         */
+        @JvmField
+        val Arrow = newPipeline("gui/arrow") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexShader(ClientShaders.Vertex.GuiArrow)
+            withFragmentShader(ClientShaders.Fragment.GuiArrow)
+            withVertexBinding(0, ClientVertexFormats.GUI_ROUNDED_RECT)
+            withPrimitiveTopology(PrimitiveTopology.QUADS)
+        }
+
         private val Lines = newPipeline("gui/lines") {
             guiPosColorSnippet(PrimitiveTopology.DEBUG_LINES)
         }
@@ -182,8 +206,7 @@ object ClientRenderPipelines {
 
         @JvmField
         val FontMask = newPipeline("gui/font_mask") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withFragmentShader(ClientShaders.Fragment.FontMask)
+            fontMaskSnippet()
         }
 
         @JvmStatic
@@ -352,8 +375,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {
-        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        withFragmentShader(ClientShaders.Fragment.FontMask)
+        fontMaskSnippet()
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
@@ -422,25 +444,6 @@ object ClientRenderPipelines {
     fun heart(noDepthTest: Boolean) = if (noDepthTest) HeartNoDepthTest else Heart
 
     // Special
-
-    /**
-     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-     * @see RenderPipelines.OUTLINE_SNIPPET
-     */
-    @JvmField
-    val Outline = newPipeline("outline") {
-        screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-        withColorTargetState(
-            ColorTargetState(
-                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
-                GpuFormat.RGBA8_UNORM,
-                ColorTargetState.WRITE_COLOR,
-            )
-        )
-        withDepthStencilState(optional())
-    }
 
     @JvmField
     val ChamsImage = newPipeline("chams/image_blit") {
@@ -522,6 +525,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         screenQuadSnippet()
         withFragmentShader("core/blit_screen")
         withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
@@ -562,6 +566,7 @@ object ClientRenderPipelines {
      */
     @JvmField
     val GuiBlurBlit = newPipeline("blur_blit") {
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         screenQuadSnippet()
         withFragmentShader("core/blit_screen")
         withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)

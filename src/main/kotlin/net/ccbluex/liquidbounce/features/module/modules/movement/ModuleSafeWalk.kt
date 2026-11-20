@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -113,7 +113,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
                     if (center != null) {
                         val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(1)
                         debugGeometry("Center") {
-                            ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
+                            DebuggedPoint(center, Color4b.BLUE, 0.05)
                         }
 
                         val currentDistance = center.subtract(player.position()).horizontalDistanceSqr()

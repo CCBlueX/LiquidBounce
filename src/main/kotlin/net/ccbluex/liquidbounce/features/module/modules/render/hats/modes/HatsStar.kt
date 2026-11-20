@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.minecraft.util.Mth
 import kotlin.math.abs
@@ -80,12 +79,7 @@ internal object HatsStar : HatsMode("Star") {
                         1.75F,
                     )
 
-                    val color = if (!isHurt) {
-                        colors
-                            .getCurrentStepColor(outerCurAngleStar)
-                    } else {
-                        Color4b(255, 0, 0, colors.firstColor.a)
-                    }
+                    val color = shapeColor(colors.getColor(outerCurAngleStar, isHurt))
                     for (innerI in 0 until innerSegments) {
                         addTorusQuad(
                             matrix,

@@ -59,7 +59,7 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             add("velocity", player.deltaMovement.toJsonObject())
 
             world.getEntitiesInCube<LivingEntity>(player.position(), RANGE) {
-                it.shouldBeAttacked() && it.distanceToSqr(player) < RANGE * RANGE
+                it.shouldBeAttacked() && it.closerThan(player, RANGE)
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {

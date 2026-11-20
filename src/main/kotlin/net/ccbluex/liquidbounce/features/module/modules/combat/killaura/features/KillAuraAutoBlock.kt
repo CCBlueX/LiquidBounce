@@ -38,10 +38,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
@@ -150,25 +149,28 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     var enforcedBlockingHand: InteractionHand? = null
         set(value) {
-            debugParameter(this, "EnforcedBlockingHand", value)
-            debugParameter(this, if (value != null) {
+            debugParameter("EnforcedBlockingHand") { value }
+            debugParameter(if (value != null) {
                 "Block Age"
             } else {
                 "Unblock Age"
-            }, player.tickCount)
+            }) { player.tickCount }
 
             field = value
         }
 
     /**
-     * Visual blocking shows a blocking state, while not actually blocking.
-     * This is useful to make the blocking animation become much smoother.
-     *
-     * @see ItemInHandRenderer.renderPlayerArm
+     * Set while AutoBlock blocks or fakes blocking, and kept between unblocking and blocking again around a hit.
      */
-    var blockVisual = false
-        get() = field && running &&
-            (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
+    private var wantsBlockPose = false
+
+    /**
+     * Whether the sword is drawn in the block pose, blocking or not: a sword that can block by itself, or one that
+     * SwordBlock draws for the shield it blocks with.
+     */
+    val showsBlockPose: Boolean
+        get() = wantsBlockPose && running &&
+            (player.mainHandItem.useAnimation == ItemUseAnimation.BLOCK || ModuleSwordBlock.running)
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -214,7 +216,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             return
         }
 
-        blockVisual = true
+        wantsBlockPose = true
     }
 
     /**
@@ -247,13 +249,13 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         when (blockMode) {
             BlockMode.INTERACT -> if (interactWithFacing(rotation, blockHand)) {
                 reblockTicks = reblockTicksRange.random()
-                blockVisual = true
+                wantsBlockPose = true
                 enforcedBlockingHand = blockHand
                 hasBlockedSinceAttack = true
                 return true
             }
             BlockMode.FAKE -> {
-                blockVisual = true
+                wantsBlockPose = true
                 return false
             }
             else -> { }
@@ -266,7 +268,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             hasBlockedSinceAttack = true
         }
 
-        blockVisual = true
+        wantsBlockPose = true
         return true
     }
 
@@ -301,14 +303,14 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         fun flush(reason: String) {
-            debugParameter(this, "Flush", flushTicks)
-            debugParameter(this, "Flush Reason", reason)
+            debugParameter("Flush") { flushTicks }
+            debugParameter("Flush Reason") { reason }
             flushTicks = 0
         }
 
         when {
             // Not blocking
-            !blockVisual -> flush("Not blocking")
+            !showsBlockPose -> flush("Not blocking")
 
             // Start blocking
             enforcedBlockingHand != null || event.packet is ServerboundUseItemPacket -> flush("Start blocking")
@@ -323,7 +325,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
 
     fun stopBlocking(pauses: Boolean = false): Boolean {
         if (!pauses) {
-            blockVisual = false
+            wantsBlockPose = false
 
             if (mc.options.keyUse.isPressedOnAny) {
                 return false
@@ -386,7 +388,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             (packet is ServerboundPlayerActionPacket &&
             packet.action === ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND)
         ) {
-            blockVisual = false
+            wantsBlockPose = false
             enforcedBlockingHand = null
         }
     }

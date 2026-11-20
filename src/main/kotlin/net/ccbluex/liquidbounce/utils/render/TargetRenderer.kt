@@ -461,13 +461,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     val worldPos = targetPos.add(localOffset)
                     val baseColor = when (heartSlot.type) {
-                        HeartType.Health -> color
-                        HeartType.Absorption -> Color4b(255, 214, 72, color.a)
+                        HeartType.HEALTH -> color
+                        HeartType.ABSORPTION -> Color4b(255, 214, 72, color.a)
                     }
 
                     val renderColor = baseColor.interpolateTo(
                         Color4b.RED.alpha(color.a),
-                        damageFlashStrength.toDouble()
+                        damageFlashStrength
                     )
 
                     drawHeart(worldPos, targetPos, renderColor, heartSlot.fill)
@@ -553,14 +553,14 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 return buildList {
                     if (dynamicCount) {
-                        addSlots(HeartType.Health, target.health)
+                        addSlots(HeartType.HEALTH, target.health)
                     } else {
                         repeat(heartCount) {
-                            add(HeartSlot(HeartType.Health, 1f))
+                            add(HeartSlot(HeartType.HEALTH, 1f))
                         }
                     }
 
-                    addSlots(HeartType.Absorption, target.absorptionAmount)
+                    addSlots(HeartType.ABSORPTION, target.absorptionAmount)
                 }
             }
 
@@ -571,8 +571,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             )
 
             private enum class HeartType {
-                Health,
-                Absorption,
+                HEALTH,
+                ABSORPTION,
             }
 
             @ValueClassCandidate

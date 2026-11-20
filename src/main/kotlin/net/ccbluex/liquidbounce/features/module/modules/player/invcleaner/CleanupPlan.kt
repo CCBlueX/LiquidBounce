@@ -54,7 +54,6 @@ class InventoryCleanupPlan(
     val swaps: List<InventorySwap>,
     val mergeableItems: Map<ItemAndComponents, List<ItemSlot>>,
 ) {
-
     fun findItemsToThrowOut(
         itemSlots: List<ItemSlot>,
     ) = itemSlots.filter { it !in usefulItems }

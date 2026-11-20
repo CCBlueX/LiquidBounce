@@ -19,8 +19,11 @@
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLine
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.utils.VisibilityPredicate
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -111,11 +114,11 @@ object NearestRotationTargetPositionFactory : FaceTargetPositionFactory {
         val pointOnFace = face.nearestPointTo(rotationLine)
 
         PositionFactoryDebug.debugGeometry("targetFace") {
-            ModuleDebug.DebuggedBox(face.asBox().move(targetPos), Color4b.RED)
+            DebuggedBox(face.asBox().move(targetPos), Color4b.RED)
         }
 
         PositionFactoryDebug.debugGeometry("targetPoint") {
-            ModuleDebug.DebuggedPoint(
+            DebuggedPoint(
                 pointOnFace + targetPos,
                 Color4b.BLUE,
                 size = 0.05
@@ -123,7 +126,7 @@ object NearestRotationTargetPositionFactory : FaceTargetPositionFactory {
         }
 
         PositionFactoryDebug.debugGeometry("daLine") {
-            ModuleDebug.DebuggedLine(
+            DebuggedLine(
                 Line(
                     playerLocation.eyePos,
                     rotation.directionVector
@@ -279,7 +282,7 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
         targetPos: BlockPos,
         playerLocation: PlayerLocationOnPlacement
     ): Vec3 {
-        ModuleDebug.debugParameter(PositionFactoryDebug, "TargetPos", targetPos)
+        PositionFactoryDebug.debugParameter("TargetPos") { targetPos }
         val trimmedFace = trimFace(face)
 
         // If the player is not moving, we can just aim at the nearest point
@@ -298,8 +301,8 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
         playerLocation: PlayerLocationOnPlacement
     ): Vec3? {
         if (Mth.equal(face.area, 0.0)) {
-            ModuleDebug.debugParameter(PositionFactoryDebug, "FaceArea", face.area)
-            ModuleDebug.debugParameter(PositionFactoryDebug, "ReturnedPoint", face.from)
+            PositionFactoryDebug.debugParameter("FaceArea") { face.area }
+            PositionFactoryDebug.debugParameter("ReturnedPoint") { face.from }
             return face.from
         }
 
@@ -311,10 +314,10 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
         val highTargetYaw = Mth.wrapDegrees(yaw + angle)
         val lowTargetYaw = Mth.wrapDegrees(yaw - angle)
 
-        ModuleDebug.debugParameter(PositionFactoryDebug, "PlayerYaw", yaw)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "Angle", angle)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "HighTargetYaw", highTargetYaw)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "LowTargetYaw", lowTargetYaw)
+        PositionFactoryDebug.debugParameter("PlayerYaw") { yaw }
+        PositionFactoryDebug.debugParameter("Angle") { angle }
+        PositionFactoryDebug.debugParameter("HighTargetYaw") { highTargetYaw }
+        PositionFactoryDebug.debugParameter("LowTargetYaw") { lowTargetYaw }
 
         val highPlane = NormalizedPlane.fromParams(
             localEye,
@@ -334,8 +337,8 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
         val highLineSegment = runCatching { highIntersectLine?.let { line -> face.coerceInFace(line) } }.getOrNull()
         val lowLineSegment = runCatching { lowIntersectLine?.let { line -> face.coerceInFace(line) } }.getOrNull()
 
-        ModuleDebug.debugParameter(PositionFactoryDebug, "HighLineSegment", highLineSegment)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "LowLineSegment", lowLineSegment)
+        PositionFactoryDebug.debugParameter("HighLineSegment") { highLineSegment }
+        PositionFactoryDebug.debugParameter("LowLineSegment") { lowLineSegment }
 
         if (highLineSegment == null && lowLineSegment == null) {
             return null
@@ -348,16 +351,16 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
             findClosestPointToYaw(segment, lowTargetYaw, localEye)
         }
 
-        ModuleDebug.debugParameter(PositionFactoryDebug, "HighClosestPoint", highClosestPoint)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "LowClosestPoint", lowClosestPoint)
+        PositionFactoryDebug.debugParameter("HighClosestPoint") { highClosestPoint }
+        PositionFactoryDebug.debugParameter("LowClosestPoint") { lowClosestPoint }
 
         val highTolerance = highClosestPoint?.let { point -> calculateYawDifference(point, highTargetYaw, localEye) }
             ?: Float.MAX_VALUE
         val lowTolerance = lowClosestPoint?.let { point -> calculateYawDifference(point, lowTargetYaw, localEye) }
             ?: Float.MAX_VALUE
 
-        ModuleDebug.debugParameter(PositionFactoryDebug, "HighTolerance", highTolerance)
-        ModuleDebug.debugParameter(PositionFactoryDebug, "LowTolerance", lowTolerance)
+        PositionFactoryDebug.debugParameter("HighTolerance") { highTolerance }
+        PositionFactoryDebug.debugParameter("LowTolerance") { lowTolerance }
 
         val result = when {
             highTolerance <= yawTolerance && lowTolerance <= yawTolerance -> {
@@ -368,7 +371,7 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
             else -> null
         }
 
-        ModuleDebug.debugParameter(PositionFactoryDebug, "ReturnedPoint", result)
+        PositionFactoryDebug.debugParameter("ReturnedPoint") { result }
         return result
     }
 
@@ -440,11 +443,11 @@ object EdgePointTargetPositionFactory : FaceTargetPositionFactory {
         } ?: return null
 
         PositionFactoryDebug.debugGeometry("Face") {
-            ModuleDebug.DebuggedBox(box.move(targetPos), Color4b.RED)
+            DebuggedBox(box.move(targetPos), Color4b.RED)
         }
 
         PositionFactoryDebug.debugGeometry("Edge") {
-            ModuleDebug.DebuggedPoint(
+            DebuggedPoint(
                 edge + targetPos,
                 Color4b.BLUE,
                 size = 0.05

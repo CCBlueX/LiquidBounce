@@ -18,46 +18,62 @@
  */
 package net.ccbluex.liquidbounce.api.models.marketplace
 
-import com.google.gson.annotations.SerializedName
-
+/**
+ * A published item, or one its managers read or changed.
+ *
+ * @param dependencies what it needs itself
+ * @param liveRevision the newest published revision, `null` while nothing is published
+ * @param compatibleRevision add-ons: the newest revision that loads in this game, `null` when none does
+ * @param recentReports configs: reports on the live revision in the last 30 days
+ * @param requires everything it needs, a dependency before what needs it. Lists leave it out.
+ * @param shareCode only told to its managers
+ */
 data class MarketplaceItem(
     val id: Int,
-    val uid: String,
     val type: MarketplaceItemType,
     val name: String,
-    val branch: String,
+    val owner: MarketplaceAuthor,
+    val edition: String,
     val description: String,
-    @SerializedName("thumbnail_pid")
-    val thumbnailPid: String?,
-    val featured: Boolean,
-    @SerializedName("created_at")
     val createdAt: String,
-    val status: MarketplaceItemStatus,
-    val author: String? = null,
-    @SerializedName("live_revision_id")
-    val liveRevisionId: Int? = null,
-    val tags: List<MarketplaceTag>? = null,
-    @SerializedName("target_servers")
-    val targetServers: List<String>? = null,
-    @SerializedName("forked_from_item_id")
-    val forkedFromItemId: Int? = null,
-    @SerializedName("forked_from_revision_id")
-    val forkedFromRevisionId: Int? = null,
+    val sourceUrl: String? = null,
+    val communityEditable: Boolean = false,
+    val thumbnailPid: String? = null,
+    val featured: Boolean = false,
+    val visibility: MarketplaceItemVisibility = MarketplaceItemVisibility.PUBLIC,
     val downloads: Int = 0,
     val score: Double = 0.0,
-    val visibility: MarketplaceItemVisibility? = null,
-    @SerializedName("share_code")
-    val shareCode: String? = null,
-    @SerializedName("includes_binds")
-    val includesBinds: Boolean? = null,
-    @SerializedName("updated_at")
-    val updatedAt: String? = null,
-    @SerializedName("protocol_name")
-    val protocolName: String? = null,
-    @SerializedName("protocol_version")
-    val protocolVersion: Int? = null,
-    @SerializedName("recent_works")
-    val recentWorks: Int = 0,
-    @SerializedName("recent_fails")
-    val recentFails: Int = 0
+    val rating: MarketplaceRating? = null,
+    val tags: List<MarketplaceTag> = emptyList(),
+    val targetServers: List<String> = emptyList(),
+    val forkedFrom: MarketplaceItemRef? = null,
+    val contributors: List<MarketplaceAuthor> = emptyList(),
+    val dependencies: List<MarketplaceItemRef> = emptyList(),
+    val liveRevision: MarketplaceItemRevision? = null,
+    val compatibleRevision: MarketplaceItemRevision? = null,
+    val recentReports: MarketplaceReportCounts? = null,
+    val requires: List<MarketplaceItem>? = null,
+    val shareCode: String? = null
 )
+
+/**
+ * @param nickname the account name as the marketplace last saw it
+ */
+data class MarketplaceAuthor(
+    val uid: String,
+    val nickname: String? = null
+)
+
+/**
+ * Enough of an item to name it.
+ */
+data class MarketplaceItemRef(
+    val id: Int,
+    val type: MarketplaceItemType,
+    val name: String,
+    val owner: MarketplaceAuthor
+)
+
+data class MarketplaceRating(val average: Double, val count: Int)
+
+data class MarketplaceReportCounts(val works: Int, val fails: Int)

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import com.google.gson.JsonObject
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.text.StringMatchMode
 import net.minecraft.client.gui.screens.Screen
@@ -58,10 +60,44 @@ import java.util.function.Predicate
  */
 open class InventoryConstraints : ValueGroup("Constraints") {
 
-    internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
-    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
-    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
+    internal val startDelay by intRange("StartDelay", 50..100, 0..1000, "ms")
+    internal val clickDelay by intRange("ClickDelay", 100..200, 0..1000, "ms")
+    internal val closeDelay by intRange("CloseDelay", 50..100, 0..1000, "ms")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
+
+    /**
+     * How much longer a delay gets per slot the cursor has to go to the click: from the middle of the screen for the
+     * start delay, from the slot clicked before for the click delay. A delay of 0 stays 0.
+     */
+    private val slotMultiplier by float("SlotMultiplier", 0.2f, 0f..1f, "x")
+
+    /**
+     * What the way to a click [slots] away adds to [delay].
+     */
+    internal fun travelMillis(delay: IntRange, slots: Float) = (delay.random() * slots * slotMultiplier).toInt()
+
+    /**
+     * Saved since the delays are milliseconds. A config without it holds them in ticks.
+     */
+    @Suppress("unused")
+    private val millisecondDelays by boolean("MillisecondDelays", true).notAnOption()
+
+    override fun prepareDeserialize(jsonObject: JsonObject) {
+        val values = jsonObject.getAsJsonArray("value").map { it.asJsonObject }
+        // What the ClickGUI sends back has a value type and no values that are not options
+        if (jsonObject.has("valueType") || values.any { it["name"].asString == "MillisecondDelays" }) {
+            return
+        }
+
+        for (value in values) {
+            if (value["name"].asString in arrayOf("StartDelay", "ClickDelay", "CloseDelay")) {
+                val range = value.getAsJsonObject("value")
+                // 50 ms to the tick
+                range.addProperty("from", range["from"].asInt * 50)
+                range.addProperty("to", range["to"].asInt * 50)
+            }
+        }
+    }
 
     internal val requirements by multiEnumChoice<InventoryRequirements>(
         "Requires",

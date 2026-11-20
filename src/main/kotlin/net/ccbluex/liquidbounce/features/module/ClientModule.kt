@@ -41,12 +41,7 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.text.withFormat
-import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Style
-import net.minecraft.util.FormattedCharSequence
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -73,12 +68,6 @@ open class ClientModule @JvmOverloads constructor(
             this.inclusionGroup(group)
         }
     }
-
-    override val debugDisplayName: FormattedCharSequence
-        get() = this.name.withFormat(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.BOLD)
-
-    override val debugOwnerId: String
-        get() = "Module$name"
 
     /**
      * If a module is running or not is separated from the enabled state. A module can be paused even when

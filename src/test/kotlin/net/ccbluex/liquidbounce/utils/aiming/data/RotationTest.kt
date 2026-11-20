@@ -62,4 +62,12 @@ class RotationTest {
         assertFalse(first.isRotationDeltaCloseTo(second))
     }
 
+    @Test
+    fun testRotationDeltaPitchDoesNotWrap() {
+        val delta = Rotation(0f, -90f).rotationDeltaTo(Rotation(0f, 90f))
+        assertEquals(180f, delta.deltaPitch, 1e-3f)
+        assertEquals(-180f, Rotation(0f, 90f).rotationDeltaTo(Rotation(0f, -90f)).deltaPitch, 1e-3f)
+        assertEquals(2f, Rotation(179f, 0f).rotationDeltaTo(Rotation(-179f, 0f)).deltaYaw, 1e-3f)
+    }
+
 }

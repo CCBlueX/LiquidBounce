@@ -23,131 +23,66 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.isBrowserDisabled
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.render.splash.SplashExitOverlay
+import net.ccbluex.liquidbounce.render.splash.SplashPhaseScreen
+import net.ccbluex.liquidbounce.render.splash.SplashProgress
+import net.ccbluex.liquidbounce.render.splash.SplashTimeline
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
-import net.ccbluex.liquidbounce.utils.text.withFormat
-import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
-import net.minecraft.util.ARGB
-import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.Component
+import net.minecraft.util.Util
 import java.text.DecimalFormat
 
 /**
- * Screen that displays TaskManager progress
+ * Splash phase while the startup tasks run, with their status below the progress bar.
  */
 class TaskProgressScreen(
-    title: String,
+    title: Component,
     private val taskManager: TaskManager
-) : Screen(title.asPlainText()) {
+) : SplashPhaseScreen(title, SplashTimeline.Phase.TASKS) {
 
-    private val percentFormat = DecimalFormat("0.0")
+    private val percentFormat = DecimalFormat("0")
 
-    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        extractMenuBackground(context)
+    private var completedAt = -1L
 
-        val cx = width / 2.0
-        val cy = height / 2.0
+    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+        val now = Util.getMillis()
+        val progress = if (completedAt == -1L) taskManager.progress else 1f
+        extractSplash(graphics, SplashProgress.afterLoading(progress))
 
-        val progressBarWidth = width / 1.5
+        val fadeIn = ((age - 150f) / 400f).coerceIn(0f, 1f)
+        val fadeOut = if (completedAt == -1L) 1f else 1f - ((now - completedAt) / TEXT_FADE_OUT).coerceIn(0f, 1f)
+        val alpha = fadeIn * fadeOut
 
-        val poseStack = context.pose()
-
-        // Progress
-        val progress = taskManager.progress
-        val textLines = getTaskLines(progress)
-
-        // Draw text
-        val textHeight = textLines.size * (font.lineHeight + 2)
-        var yOffset = (cy - textHeight / 2).toInt() - 40
-
-        // Draw title
-        context.text(
-            font,
-            title.string.withFormat(ChatFormatting.GOLD),
-            (cx - font.width(title.string) / 2).toInt(),
-            yOffset,
-            -1,
-            true
-        )
-
-        yOffset += font.lineHeight + 10
-
-        // Draw task information
-        for (line in textLines) {
-            context.text(
-                font,
-                line,
-                (cx - font.width(line) / 2).toInt(),
-                yOffset,
-                -1,
-                false
-            )
-            yOffset += font.lineHeight + 2
+        var y = contentTop
+        for ((index, line) in statusLines(progress).withIndex()) {
+            val main = index == 0
+            extractCenteredText(graphics, line, y, alpha * if (main) 0.8f else 0.45f, if (main) 1f else 0.85f)
+            y += font.lineHeight * if (main) 1.4f else 1.1f
         }
-
-        val progressBarHeight = 14
-
-        // Draw progress bar
-        poseStack.pushMatrix()
-        poseStack.translate(cx.toFloat(), yOffset.toFloat() + 18.0f)
-        poseStack.translate(progressBarWidth.toFloat() * -0.5f, progressBarHeight.toFloat() * -0.5f)
-
-        // Bar border
-        context.fill(
-            0, 0,
-            progressBarWidth.toInt(), progressBarHeight.toInt(),
-            -1
-        )
-
-        // Bar background
-        context.fill(
-            2, 2,
-            (progressBarWidth - 2).toInt(), (progressBarHeight - 2).toInt(),
-            ARGB.color(255, 24, 26, 27)
-        )
-
-        context.fill(
-            4, 4,
-            ((progressBarWidth - 4) * progress).toInt(), (progressBarHeight - 4).toInt(),
-            -1
-        )
-        poseStack.popMatrix()
     }
 
-    private fun getTaskLines(progress: Float): List<FormattedCharSequence> {
+    private fun statusLines(progress: Float) = buildList {
         val activeTasks = taskManager.getActiveTasks()
-        val speed = formatTotalSpeed(activeTasks)
-
-        // Prepare text to display
-        val textLines = mutableListOf<FormattedCharSequence>()
-        textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".withFormat())
-        textLines.add(FormattedCharSequence.EMPTY)
+        add("${title.string} · ${percentFormat.format(progress * 100)}%${formatTotalSpeed(activeTasks)}")
 
         activeTasks.take(3).forEach { task ->
-            textLines.add(Pools.buildStringPooled {
-                append(task.name)
-                append(": ")
-                append(percentFormat.format(task.progress * 100))
-                append('%')
-                append(formatTotalSpeed(listOf(task)))
-            }.withFormat(ChatFormatting.GRAY))
+            add("${task.name} · ${percentFormat.format(task.progress * 100)}%${formatTotalSpeed(listOf(task))}")
         }
 
         if (activeTasks.size > 3) {
-            textLines.add("... and ${activeTasks.size - 3} more tasks".withFormat(ChatFormatting.GRAY))
+            add(translation("liquidbounce.splash.moreTasks", activeTasks.size - 3).string)
         }
-        return textLines
     }
 
     private fun formatTotalSpeed(tasks: List<Task>): String {
         val total = calculateTotalSpeed(tasks)
 
         return if (total > 0) {
-            " (${total.formatAsCapacity()}/s)"
+            " · ${total.formatAsCapacity()}/s"
         } else {
             ""
         }
@@ -162,13 +97,19 @@ class TaskProgressScreen(
     }
 
     override fun tick() {
-        if (taskManager.isCompleted && (BrowserBackendManager.backend?.isInitialized == true || isBrowserDisabled)) {
+        if (completedAt == -1L) {
+            val browserReady = BrowserBackendManager.backend?.isInitialized == true || isBrowserDisabled
+            if (taskManager.isCompleted && browserReady) {
+                completedAt = Util.getMillis()
+            }
+        } else if (Util.getMillis() - completedAt >= TEXT_FADE_OUT + 100f) {
             mc.gui.setScreen(TitleScreen())
+            mc.gui.setOverlay(SplashExitOverlay())
         }
     }
 
-    override fun shouldCloseOnEsc() = false
-
-    override fun isPauseScreen() = false
+    private companion object {
+        const val TEXT_FADE_OUT = 300f
+    }
 
 }

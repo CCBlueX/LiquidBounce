@@ -57,7 +57,7 @@ data class Color4b(val argb: Int) {
     companion object {
 
         @JvmField
-        val LIQUID_BOUNCE = Color4b(0x00, 0x80, 0xFF, 0xFF)
+        val LIQUID_BOUNCE = Color4b(0x46, 0x77, 0xFF, 0xFF)
         @JvmField
         val WHITE = Color4b(255, 255, 255, 255)
         @JvmField
@@ -190,8 +190,16 @@ data class Color4b(val argb: Int) {
      * @param percentage The percentage of interpolation (0.0 to 1.0)
      * @return The interpolated color
      */
-    fun interpolateTo(other: Color4b, percentage: Double): Color4b =
+    fun interpolateTo(other: Color4b, percentage: Float): Color4b =
         interpolateTo(other, percentage, percentage, percentage, percentage)
+
+    @Deprecated(
+        "Use float overload",
+        ReplaceWith("interpolateTo(other, percentage.toFloat())"),
+        DeprecationLevel.ERROR,
+    )
+    fun interpolateTo(other: Color4b, percentage: Double): Color4b =
+        interpolateTo(other, percentage.toFloat())
 
     /**
      * Interpolates this color with another color using separate factors for each component.
@@ -205,16 +213,29 @@ data class Color4b(val argb: Int) {
      */
     fun interpolateTo(
         other: Color4b,
+        tR: Float,
+        tG: Float,
+        tB: Float,
+        tA: Float,
+    ): Color4b = Color4b(
+        fma(tR, (other.r - r).toFloat(), r.toFloat()).toInt().coerceIn(0, 255),
+        fma(tG, (other.g - g).toFloat(), g.toFloat()).toInt().coerceIn(0, 255),
+        fma(tB, (other.b - b).toFloat(), b.toFloat()).toInt().coerceIn(0, 255),
+        fma(tA, (other.a - a).toFloat(), a.toFloat()).toInt().coerceIn(0, 255),
+    )
+
+    @Deprecated(
+        "Use float overload",
+        ReplaceWith("interpolateTo(other, tR.toFloat(), tG.toFloat(), tB.toFloat(), tA.toFloat())"),
+        DeprecationLevel.ERROR,
+    )
+    fun interpolateTo(
+        other: Color4b,
         tR: Double,
         tG: Double,
         tB: Double,
-        tA: Double
-    ): Color4b = Color4b(
-        fma(tR, (other.r - r).toDouble(), r.toDouble()).toInt().coerceIn(0, 255),
-        fma(tG, (other.g - g).toDouble(), g.toDouble()).toInt().coerceIn(0, 255),
-        fma(tB, (other.b - b).toDouble(), b.toDouble()).toInt().coerceIn(0, 255),
-        fma(tA, (other.a - a).toDouble(), a.toDouble()).toInt().coerceIn(0, 255),
-    )
+        tA: Double,
+    ): Color4b = interpolateTo(other, tR.toFloat(), tG.toFloat(), tB.toFloat(), tA.toFloat())
 
     /**
      * Converts this [Color4b] to a Java AWT Color

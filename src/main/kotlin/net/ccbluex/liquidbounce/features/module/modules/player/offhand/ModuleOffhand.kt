@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
@@ -51,6 +52,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import java.util.function.Predicate
+import kotlin.random.Random
 
 /**
  * Offhand module
@@ -64,7 +66,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         "SwitchMode",
         default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
     )
-    private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
+    private val switchDelay by intRange("SwitchDelay", 0..0, 0..500, "ms")
     private val cycleSlots by key("Cycle", InputConstants.KEY_H)
 
     private object Gapple : ToggleableValueGroup(this, "Gapple", true) {
@@ -109,6 +111,11 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
     private val INVENTORY_HOTBAR_PRIORITY = Slots.Hotbar + Slots.Inventory
     private val chronometer = Chronometer()
+
+    /**
+     * Where in the delay range the delay until the next switch lies.
+     */
+    private var delayRoll = 0f
     private var activeMode: Mode = Mode.NONE
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
@@ -162,11 +169,9 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     }
 
     @Suppress("unused")
-    private val autoTotemHandler = handler<ScheduleInventoryActionEvent>(priority = 100) {
-        activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode
-        if (activeMode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) {
-            activeMode = Mode.BACK
-        }
+    private val equip = inventoryPlan(inventoryConstraints) {
+        val mode = wantedMode()
+        activeMode = mode
 
         if (activeMode != lastTagMode) {
             EventManager.callEvent(RefreshArrayListEvent)
@@ -180,39 +185,54 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
             Totem.switchBackStarted = true
             if (!Totem.switchBack.hasElapsed(Totem.switchBackDelay.toLong())) {
-                return@handler
+                return@inventoryPlan
             }
         }
 
         Totem.switchBackStarted = false
 
-        if (!chronometer.hasElapsed(activeMode.getDelay().toLong())) {
-            return@handler
+        if (!chronometer.hasElapsed(delayOf(activeMode))) {
+            return@inventoryPlan
         }
 
-        val slot = activeMode.getSlot() ?: return@handler
-        lastMode = activeMode
+        val slot = mode.getSlot() ?: return@inventoryPlan
 
         // the item is already located in Off-hand slot
         if (slot == HotbarItemSlot.OFFHAND) {
-            return@handler
+            lastMode = mode
+            return@inventoryPlan
         }
 
-        if (Totem.Health.switchBack) {
-            last = LastSwitch(slot.itemStack.item, slot)
-        }
-
+        val stack = slot.itemStack.copy()
         val actions = switchMode.performSwitch(slot)
-        if (actions.isEmpty()) {
-            chronometer.reset()
-            return@handler
+        if (actions.isNotEmpty() && (mode != Mode.TOTEM || !Totem.send(actions))) {
+            // Once the switch took the item out of its slot, the run has to get to the end
+            requires { wantedMode() == mode || !ItemStack.matches(slot.itemStack, stack) }
+            perform(actions)
         }
 
-        if (activeMode != Mode.TOTEM || !Totem.send(actions)) {
-            it.schedule(inventoryConstraints, actions)
+        lastMode = mode
+        if (Totem.Health.switchBack) {
+            last = LastSwitch(stack.item, slot)
         }
+        resetDelay()
+    }
 
+    private fun wantedMode(): Mode {
+        val mode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode
+        return if (mode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) Mode.BACK else mode
+    }
+
+    private fun delayOf(mode: Mode): Long {
+        val range = mode.getDelay()
+        val delay = range.first + (range.last - range.first) * delayRoll
+        val factor = if (mode == Mode.TOTEM) Totem.Urgency.delayFactor() else 1f
+        return (delay * factor).toLong()
+    }
+
+    private fun resetDelay() {
         chronometer.reset()
+        delayRoll = Random.nextFloat()
     }
 
     private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {

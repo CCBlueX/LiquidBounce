@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
@@ -29,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
+import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.world.anyMatched
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
@@ -59,6 +60,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -284,7 +286,7 @@ fun LocalPlayer.isCloseToEdge(
         simulatedInput
     )
 
-    simulatedPlayer.pos = pos
+    simulatedPlayer.setPos(pos)
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.deltaMovement
@@ -330,6 +332,12 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     return this.level().getBlockCollisions(this, stepBox).allEmpty()
         && this.level().getBlockCollisions(this, offsetBox).anyNotEmpty()
 }
+
+fun LocalPlayer.isGroundWithin(height: Double): Boolean =
+    level().getBlockCollisions(this, boundingBox.move(0.0, -height, 0.0)).anyNotEmpty()
+
+/** Effect amplifier plus one, 0 without the effect. */
+fun LivingEntity.effectLevel(effect: Holder<MobEffect>): Int = getEffect(effect)?.amplifier?.plus(1) ?: 0
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = DirectionalInput(player.input)): Float {
     var actualYaw = facingYaw
@@ -614,9 +622,7 @@ fun LivingEntity.getDamageFromExplosion(
         return 0f
     }
 
-    try {
-        ShapeFlag.noShapeChange = true
-
+    return withoutShapeChanges {
         val useTweakedMethod = exclude != null ||
             maxBlastResistance != null ||
             include != null ||
@@ -635,9 +641,7 @@ fun LivingEntity.getDamageFromExplosion(
 
         val actualDamageSource = damageSource
             ?: DamageSource(this.level().damageSources().explosion(null).typeHolder(), pos)
-        return getEffectiveDamage(actualDamageSource, preprocessedDamage.toFloat())
-    } finally {
-        ShapeFlag.noShapeChange = false
+        getEffectiveDamage(actualDamageSource, preprocessedDamage.toFloat())
     }
 }
 
@@ -769,6 +773,17 @@ private fun LivingEntity.getHealthFromScoreboard(): Float? {
 fun Entity.getBoundingBoxAt(pos: Vec3): AABB {
     return boundingBox.move(pos - this.position())
 }
+
+fun Entity.getEyePositionAt(feet: Vec3): Vec3 = feet.add(0.0, eyeHeight.toDouble(), 0.0)
+
+/**
+ * Where the server last placed this entity. [Entity.position] only catches up while the entity ticks, so it falls
+ * behind while ticks are held back.
+ */
+val Entity.serverPosition: Vec3
+    get() = positionCodec.base
+
+fun Entity.serverBox(): AABB = getBoundingBoxAt(serverPosition)
 
 /**
  * Check if the entity collides with anything below his bounding box.

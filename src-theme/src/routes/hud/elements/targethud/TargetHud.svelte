@@ -29,7 +29,7 @@
 </script>
 
 {#if visible && target != null}
-    <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
+    <div class="targethud" transition:fly={{ y: -10, duration: 150 }}>
         <div class="main-wrapper">
             <div class="avatar">
                 <img src="{REST_BASE}/api/v1/client/resource/skin?uuid={target.uuid}" alt="avatar" />
@@ -143,11 +143,12 @@
         border-radius: 5px;
         overflow: hidden;
 
+        // Face is the 8x8 square at (8, 8) of a 64-wide skin, at whatever resolution the texture has.
         img {
             position: absolute;
-            scale: 6.25;
-            left: 118px;
-            top: 118px;
+            width: 800%;
+            left: -100%;
+            top: -100%;
         }
     }
 </style>

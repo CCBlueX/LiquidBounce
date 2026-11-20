@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawCircleOutline
+import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -146,6 +148,27 @@ class BlinkEspWireframe(
         wireframePlayer.swimAmount = (entity as? LivingEntity)?.getSwimAmount(it.partialTicks) ?: 0f
         wireframePlayer.setRotation(rotation)
         wireframePlayer.render(it, color, outlineColor)
+    }
+}
+
+class BlinkEspRing(
+    override val parent: ModeValueGroup<*>,
+    getEspData: Supplier<BlinkEspData?>,
+) : BlinkEspMode("Ring", getEspData) {
+    private val radius by float("Radius", 0.5f, 0.1f..2f)
+    private val color by color("Color", Color4b(36, 32, 147, 87))
+    private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        val pos = this.getEspData.get()?.pos ?: return@handler
+
+        event.renderEnvironment {
+            withPositionRelativeToCamera(pos) {
+                drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT)
+                drawCircleOutline(radius, outlineColor)
+            }
+        }
     }
 }
 

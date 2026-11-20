@@ -18,6 +18,7 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
+import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import java.time.Duration
@@ -101,6 +102,14 @@ loom {
 // Client game tests: `src/gametest` is a separate source set/mod, never part of the main jar.
 // Run with `./gradlew runClientGameTest`. Headless, SDL needs EGL, since Xvfb has no sRGB GLX visual:
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
+// `-PgameTestNavigation=false` skips the slow navigation tests. The client starts without the browser, theme, deep
+// learning, LiquidChat, Discord and API requests, which none of its tests need; `-PgameTestFull` starts them too.
+//
+// A test's class says where it plays. `ServerGameTest`s play on the game test server (https://github.com/CCBlueX/gametest)
+// with GAMETEST_API_TOKEN, or on a server of one's own at GAMETEST_SERVER_ADDRESS, against the anticheat in
+// GAMETEST_SERVER_ANTICHEAT. Without it, `SingleplayerGameTest`s play on the integrated server and `ClientGameTest`s
+// need no world.
+// `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -111,19 +120,70 @@ fabricApi {
     }
 }
 
+// What LiquidBounce adds to the game test harness is a source set and mod of its own, so it cannot lean on the
+// client's tests. Add-ons test with it as well: it is published as `net.ccbluex:liquidbounce-gametest`.
+val gametestHarness: SourceSet = sourceSets.create("gametestHarness") {
+    compileClasspath += sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().output
+}
+
+dependencies {
+    "gametestHarnessImplementation"(libs.gametest.harness)
+    "gametestImplementation"(libs.gametest.harness)
+}
+
+configurations.named(gametestHarness.compileClasspathConfigurationName) {
+    extendsFrom(configurations.compileClasspath.get())
+}
+configurations.named(gametestHarness.runtimeClasspathConfigurationName) {
+    extendsFrom(configurations.runtimeClasspath.get())
+}
+
+sourceSets.named("gametest") {
+    compileClasspath += gametestHarness.output
+    runtimeClasspath += gametestHarness.output
+}
+
+loom.mods.register("liquidbounce-gametest-harness") {
+    sourceSet(gametestHarness)
+}
+
+tasks.named<ProcessResources>(gametestHarness.processResourcesTaskName) {
+    val modVersion = providers.gradleProperty("mod_version")
+    inputs.property("version", modVersion)
+
+    filesMatching("fabric.mod.json") {
+        expand("version" to modVersion.get())
+    }
+}
+
 // JCEF and the deep learning engine outlive the run directory, which is wiped before every run
 val gameTestLibraries = gradle.gradleUserHomeDir.resolve("liquidbounce-gametest")
 
 loom.runs.named("clientGameTest") {
-    // Keeps the vanilla screens the test API waits for; the browser still starts. Drop it to test the theme UI.
+    // Keeps the vanilla screens the test API waits for while -PgameTestFull starts the theme
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
+    systemProperties.put(
+        "net.ccbluex.liquidbounce.gametest.navigation",
+        providers.gradleProperty("gameTestNavigation").getOrElse("true"),
+    )
+    providers.gradleProperty("gameTestServerOnly").orNull?.let {
+        systemProperties.put("gametest.only", it)
+    }
+    // Add-on test runs set none of these and keep the browser and theme
+    if (!providers.gradleProperty("gameTestFull").map { it != "false" }.getOrElse(false)) {
+        for (part in listOf("browser", "interop", "deeplearning", "chat", "api", "discord")) {
+            systemProperties.put("net.ccbluex.liquidbounce.$part.skip", "true")
+        }
+    }
 }
 
 tasks.named("runClientGameTest") {
-    // A game that cannot start may wait on an error dialog forever
-    timeout = Duration.ofMinutes(10)
+    // A game that cannot start may wait on an error dialog forever. The server tests wait up to two minutes for
+    // a game test server that is restarting, and up to three for a free session.
+    timeout = Duration.ofMinutes(30)
 }
 
 dependencies {
@@ -161,6 +221,9 @@ dependencies {
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
+
+    // LiquidChat protocol client
+    jij(libs.axochat.client)
 
     // TheAltening alt service
     jij(libs.thealtening)
@@ -224,6 +287,7 @@ tasks.processResources {
     }
 
     val modVersion = providers.gradleProperty("mod_version")
+    val modEdition = providers.gradleProperty("mod_edition")
     val minecraftVersion = providers.gradleProperty("mod_mc_version")
     val fabricVersion = libs.versions.fabric.api
     val loaderVersion = libs.versions.fabric.loader
@@ -247,6 +311,7 @@ tasks.processResources {
     val contributors = provider { contributorsJson }
 
     inputs.property("version", modVersion)
+    inputs.property("edition", modEdition)
     inputs.property("minecraft_version", minecraftVersion)
     inputs.property("fabric_version", fabricVersion)
     inputs.property("loader_version", loaderVersion)
@@ -259,6 +324,7 @@ tasks.processResources {
         expand(
             mapOf(
                 "version" to modVersion.get(),
+                "edition" to modEdition.get(),
                 "minecraft_version" to minecraftVersion.get(),
                 "fabric_version" to fabricVersion.get(),
                 "loader_version" to loaderVersion.get(),
@@ -363,7 +429,18 @@ detekt {
     buildUponDefaultConfig = true
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
     // Defaults only cover src/{main,test}/{java,kotlin}.
-    source.from("src/gametest/kotlin")
+    source.from("src/gametest/kotlin", "src/gametestHarness/kotlin")
+}
+
+val detektTypeResolutionTasks = listOf("detektMain", "detektTest", "detektGametest", "detektGametestHarness")
+
+tasks.withType<Detekt>().matching { it.name in detektTypeResolutionTasks }.configureEach {
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt-type-resolution.yml"))
+    buildUponDefaultConfig.set(false)
+}
+
+tasks.check {
+    dependsOn(detektTypeResolutionTasks)
 }
 
 tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
@@ -409,6 +486,11 @@ kotlin {
         freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
     }
 
+    // Game tests check internals, as unit tests do
+    target.compilations.named("gametest") {
+        associateWith(target.compilations.getByName("main"))
+    }
+
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation {
@@ -451,6 +533,36 @@ val publishVersion: String = providers.gradleProperty("publish.version").orNull 
     if (isRelease) base else "$base-SNAPSHOT"
 }
 
+val gametestHarnessJar = tasks.register<Jar>("gametestHarnessJar") {
+    archiveBaseName = "liquidbounce-gametest"
+    from(gametestHarness.output)
+    from("LICENSE") {
+        rename { "${it}_liquidbounce-gametest" }
+    }
+}
+
+val gametestHarnessSourcesJar = tasks.register<Jar>("gametestHarnessSourcesJar") {
+    archiveBaseName = "liquidbounce-gametest"
+    archiveClassifier = "sources"
+    from(gametestHarness.allSource)
+}
+
+fun MavenPom.liquidBounceProject() {
+    url = "https://liquidbounce.net/"
+
+    licenses {
+        license {
+            name = "GNU General Public License v3.0"
+            url = "https://www.gnu.org/licenses/gpl-3.0.txt"
+        }
+    }
+
+    scm {
+        url = "https://github.com/CCBlueX/LiquidBounce"
+        connection = "scm:git:https://github.com/CCBlueX/LiquidBounce.git"
+    }
+}
+
 publishing {
     publications {
         create<MavenPublication>("mod") {
@@ -466,18 +578,44 @@ publishing {
                 name = "LiquidBounce"
                 description = "A free mixin-based injection hacked-client for Minecraft " +
                     "using the Fabric modding toolchain."
-                url = "https://liquidbounce.net/"
+                liquidBounceProject()
+            }
+        }
 
-                licenses {
-                    license {
-                        name = "GNU General Public License v3.0"
-                        url = "https://www.gnu.org/licenses/gpl-3.0.txt"
-                    }
-                }
+        create<MavenPublication>("gametest") {
+            // Only the harness: none of the client's own game tests and none of their entrypoints
+            artifact(gametestHarnessJar)
+            artifact(gametestHarnessSourcesJar)
 
-                scm {
-                    url = "https://github.com/CCBlueX/LiquidBounce"
-                    connection = "scm:git:https://github.com/CCBlueX/LiquidBounce.git"
+            val clientGroup = providers.gradleProperty("maven_group").get()
+            val clientName = providers.gradleProperty("archives_base_name").get()
+            val clientVersion = publishVersion
+            val harness = libs.gametest.harness.get()
+            val harnessGroup = harness.group
+            val harnessName = harness.name
+            val harnessVersion = harness.version!!
+
+            groupId = clientGroup
+            artifactId = "liquidbounce-gametest"
+            version = clientVersion
+
+            pom {
+                name = "LiquidBounce Game Test Harness"
+                description = "Game tests of LiquidBounce and its add-ons on the game test server."
+                liquidBounceProject()
+
+                // Compiled against the client it was built with, on top of the game test harness
+                withXml {
+                    val dependencies = asNode().appendNode("dependencies")
+                    fun dependency(group: String, name: String, version: String) =
+                        dependencies.appendNode("dependency").apply {
+                            appendNode("groupId", group)
+                            appendNode("artifactId", name)
+                            appendNode("version", version)
+                            appendNode("scope", "compile")
+                        }
+                    dependency(clientGroup, clientName, clientVersion)
+                    dependency(harnessGroup, harnessName, harnessVersion)
                 }
             }
         }

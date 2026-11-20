@@ -28,20 +28,19 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
  * Automatically adjusts breaking speed when in negatively affecting situations.
  */
 object ModuleNoSlowBreak : ClientModule("NoSlowBreak", ModuleCategories.WORLD) {
-    @Suppress("ObjectPropertyNaming")
-    private val `when` by multiEnumChoice("When",
+    private val conditions by multiEnumChoice("When",
         When.MINING_FATIGUE,
         When.ON_AIR
     )
 
     @JvmStatic
-    val miningFatigue get() = running && When.MINING_FATIGUE in `when`
+    val miningFatigue get() = running && When.MINING_FATIGUE in conditions
 
     @JvmStatic
-    val onAir get() = running && When.ON_AIR in `when`
+    val onAir get() = running && When.ON_AIR in conditions
 
     @JvmStatic
-    val water get() = running && When.UNDERWATER in `when`
+    val water get() = running && When.UNDERWATER in conditions
 
     @Suppress("unused")
     private enum class When(override val tag: String) : Tagged {

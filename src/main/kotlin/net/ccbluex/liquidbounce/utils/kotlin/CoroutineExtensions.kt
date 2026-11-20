@@ -56,3 +56,17 @@ internal class CommonCoroutineExceptionHandler(
         val Default = CommonCoroutineExceptionHandler(logger)
     }
 }
+
+/**
+ * Handles following throwable types
+ *
+ * - [CancellationException], [InterruptedException]: rethrow
+ * - [ReportedException]: call [ErrorHandler.fatal]
+ */
+internal fun <T> Result<T>.handleUnrecoverable(): Result<T> =
+    when (val e = exceptionOrNull()) {
+        null -> this
+        is CancellationException, is InterruptedException -> throw e
+        is ReportedException -> ErrorHandler.fatal(e)
+        else -> this
+    }

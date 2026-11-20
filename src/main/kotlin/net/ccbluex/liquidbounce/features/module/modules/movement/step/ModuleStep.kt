@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
@@ -53,7 +53,7 @@ import net.minecraft.stats.Stats
 
 object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
-    private val modes = choices("Mode", Instant, arrayOf(
+    internal val modes = choices("Mode", Instant, arrayOf(
         Instant,
         Legit,
         Vulcan286,
@@ -138,7 +138,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private val stepSuccessEvent = handler<PlayerStepSuccessEvent> { event ->
             val stepHeight = event.adjustedVec.y
 
-            ModuleDebug.debugParameter(ModuleStep, "StepHeight", stepHeight)
+            ModuleStep.debugParameter("StepHeight") { stepHeight }
 
             if (stepHeight <= 0.5) {
                 return@handler
@@ -180,7 +180,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    private object Vulcan286 : Mode("Vulcan286") {
+    private object Vulcan286 : Mode("Vulcan-2.8.6", aliases = listOf("Vulcan286")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -225,6 +225,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
+    @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
     private object BlocksMC : Mode("BlocksMC") {
 
         override val parent: ModeValueGroup<Mode>
@@ -275,7 +276,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    private object Hypixel : Mode("Hypixel") {
+    private object Hypixel : Mode("Hypixel-2025-03-11", aliases = listOf("Hypixel")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes

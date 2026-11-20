@@ -54,7 +54,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
             abstract fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot)
 
             object Border : Mode("Border") {
-                val color by color("Color", Color4b.GREEN)
+                val color by color("Color", Color4b.LIQUID_BOUNCE)
 
                 override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.drawBorder(
@@ -118,6 +118,14 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
     init {
         tree(ContainerItemView)
     }
+
+    private val moveCursor by boolean("MoveCursor", true)
+
+    /**
+     * Whether the cursor goes to the slots the inventory modules click while a screen shows them.
+     */
+    val shouldMoveCursor
+        get() = running && moveCursor
 
     fun GuiGraphicsExtractor.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return

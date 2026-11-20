@@ -58,7 +58,13 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
 
         @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.vsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
+
+        @JvmField
+        val ScreenQuad = "screenquad"("shaders/screenquad.vert")
 
     }
 
@@ -101,9 +107,6 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val ItemChamsTrail = "item_chams_trail"("shaders/item_chams/trail.frag")
 
         @JvmField
-        val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
-
-        @JvmField
         val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
 
         @JvmField
@@ -113,10 +116,52 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
 
         @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.fsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
 
         @JvmField
         val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
+
+        @JvmField
+        val EffectRows = "effect/rows"("shaders/effect/field_rows.frag")
+
+        @JvmField
+        val EffectColumns = "effect/columns"("shaders/effect/field_columns.frag")
+
+        @JvmField
+        val EffectMask = "effect/mask"("shaders/effect/mask.frag")
+
+        @JvmField
+        val EffectCombine = "effect/combine"("shaders/effect/combine.frag")
+
+        @JvmField
+        val EffectSmooth = "effect/smooth"("shaders/effect/styles/smooth.frag")
+
+        @JvmField
+        val EffectOutline = "effect/outline"("shaders/effect/styles/outline.frag")
+
+        @JvmField
+        val EffectNeon = "effect/neon"("shaders/effect/styles/neon.frag")
+
+        @JvmField
+        val EffectRainbow = "effect/rainbow"("shaders/effect/styles/rainbow.frag")
+
+        @JvmField
+        val EffectRipple = "effect/ripple"("shaders/effect/styles/ripple.frag")
+
+        @JvmField
+        val EffectHologram = "effect/hologram"("shaders/effect/styles/hologram.frag")
+
+        @JvmField
+        val EffectHalftone = "effect/halftone"("shaders/effect/styles/halftone.frag")
+
+        @JvmField
+        val EffectChromatic = "effect/chromatic"("shaders/effect/styles/chromatic.frag")
+
+        @JvmField
+        val EffectAura = "effect/aura"("shaders/effect/styles/aura.frag")
 
     }
 
@@ -139,14 +184,27 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
     override fun close() = Unit
 
     companion object Source : ShaderSource {
+        private val includes = mapOf(include("effect/effect.glsl"))
+
         override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
             ShaderType.VERTEX -> Vertex.getShader(identifier, shaderType)
             ShaderType.FRAGMENT -> Fragment.getShader(identifier, shaderType)
         }
 
-        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = includes[id]?.value
 
         override fun close() = Unit
+
+        /**
+         * Shaders reach it as `#include <liquidbounce:[path]>`. The compiler keeps using the source once handed out,
+         * so it is never freed.
+         */
+        private fun include(path: String): Pair<Identifier, Lazy<ShaderSource.CachedIncludeSource>> {
+            val id = LiquidBounce.identifier(path)
+            return id to lazy {
+                ShaderSource.CachedIncludeSource.create(id, LiquidBounce.resourceToString("shaders/$path"))
+            }
+        }
     }
 
 }

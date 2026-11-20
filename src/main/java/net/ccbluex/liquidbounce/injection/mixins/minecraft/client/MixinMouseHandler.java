@@ -79,9 +79,11 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
+        if (EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical)).isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSpectator()Z", shift = At.Shift.BEFORE), cancellable = true)

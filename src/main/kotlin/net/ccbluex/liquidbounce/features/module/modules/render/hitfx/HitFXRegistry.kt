@@ -22,15 +22,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
+import net.ccbluex.liquidbounce.utils.client.FileSounds
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.resources.sounds.Sound
 import net.minecraft.client.sounds.WeighedSoundEvents
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.Resource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.valueproviders.ConstantFloat
 
 @Suppress("unused")
 enum class HitFXRegistry(
@@ -85,31 +83,22 @@ enum class HitFXRegistry(
             }
         }
 
+        private val files = FileSounds()
+
         fun registerSounds(
             registry: MutableMap<Identifier, WeighedSoundEvents>,
             cache: MutableMap<Identifier, Resource>
         ) {
+            files.forget()
             if (SelfDestruct.isDestructed) {
                 return
             }
 
             for ((location, id) in allCustomSoundIds) {
-                val sound = Sound(
-                    location, ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, false, false, 16
-                )
-
-                registry.putIfAbsent(location, WeighedSoundEvents(location, null).apply { addSound(sound) })
-                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources.fullResources()) {
-                    LiquidBounce.resource("sounds/$id.ogg")
-                })
+                files.add(registry, cache, location) { LiquidBounce.resource("sounds/$id.ogg") }
             }
         }
 
-        fun unregisterSounds() {
-            val registry = mc.soundManager.registry
-            for ((location, _) in allCustomSoundIds) {
-                registry.remove(location)
-            }
-        }
+        fun unregisterSounds() = files.remove()
     }
 }

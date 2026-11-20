@@ -44,7 +44,7 @@ object BoxDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Box
 
         recordPacket(JsonObject().apply {
             world.getEntitiesInCube<LivingEntity>(player.position(), RANGE) {
-                it.shouldBeAttacked() && it.distanceToSqr(player) < RANGE * RANGE
+                it.shouldBeAttacked() && it.closerThan(player, RANGE)
                     && crosshairTarget.entity.id == it.id
             }.minByOrNull {
                 it.distanceToSqr(player)

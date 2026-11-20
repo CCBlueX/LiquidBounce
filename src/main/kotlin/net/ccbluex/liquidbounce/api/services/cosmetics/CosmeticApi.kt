@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.api.services.cosmetics
 
+import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
+import net.ccbluex.liquidbounce.api.models.cosmetics.Carrier
+import net.ccbluex.liquidbounce.api.models.cosmetics.CarrierHashes
 import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -27,18 +29,31 @@ import java.util.UUID
 
 object CosmeticApi {
 
-    private val service = config.retrofitApiV3.create<Service>()
+    private val service = config.retrofit.create<Service>()
 
-    suspend fun getCarriers() = service.carriers()
+    suspend fun getCarriers() = service.carriers().hashes
 
-    suspend fun getCarrierCosmetics(uuid: UUID) = service.carrierCosmetics(uuid.toString())
+    suspend fun getCarrierCosmetics(uuid: UUID) = service.carrier(uuid.toString()).cosmetics
+
+    /**
+     * The texture of a cape or an elytra.
+     */
+    suspend fun getCape(style: String) = service.cape(style)
+
+    suspend fun getEars(style: String) = service.ears(style)
 
     internal interface Service {
         @GET("cosmetics/carriers")
-        suspend fun carriers(): Set<String>
+        suspend fun carriers(): CarrierHashes
 
-        @GET("cosmetics/carrier/{uuid}")
-        suspend fun carrierCosmetics(@Path("uuid") uuid: String): Set<Cosmetic>
+        @GET("cosmetics/carriers/{uuid}")
+        suspend fun carrier(@Path("uuid") uuid: String): Carrier
+
+        @GET("cosmetics/capes/{style}")
+        suspend fun cape(@Path("style") style: String): NativeImage
+
+        @GET("cosmetics/ears/{style}")
+        suspend fun ears(@Path("style") style: String): NativeImage
     }
 
 }

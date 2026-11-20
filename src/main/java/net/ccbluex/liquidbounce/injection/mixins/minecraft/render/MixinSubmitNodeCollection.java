@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.StorageEspOutlineContext;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams;
@@ -44,10 +47,10 @@ public abstract class MixinSubmitNodeCollection {
     }
 
     /**
-     * Captures the entity submission into the chams storage and removes it from the vanilla
-     * submit node storage, so the entity only appears on the chams render target.
+     * Captures the entity submission into the chams storage, so the entity only appears on the chams
+     * render target. Its outline submission stays in this storage to keep glow working.
      */
-    @Inject(method = "submitModel", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "submitModel", at = @At("HEAD"))
     private <S> void captureChamsModel(
         Model<? super S> model,
         S state,
@@ -58,20 +61,27 @@ public abstract class MixinSubmitNodeCollection {
         int tintedColor,
         UvMapping uvMapping,
         int outlineColor,
-        CallbackInfo ci
+        CallbackInfo ci,
+        @Share("chamsCaptured") LocalBooleanRef chamsCaptured
     ) {
-        if (ModuleChams.INSTANCE.captureModel(
-            model, state, poseStack, renderType, lightCoords, overlayCoords, tintedColor, uvMapping, outlineColor
-        )) {
-            ci.cancel();
-        }
+        chamsCaptured.set(ModuleChams.INSTANCE.captureModel(
+            model, state, poseStack, renderType, lightCoords, overlayCoords, tintedColor, uvMapping
+        ));
     }
 
     /**
-     * Captures the item submission into the chams storage and removes it from the vanilla
-     * submit node storage, so the item only appears on the chams render target.
+     * Captured models count as outline render types, for which vanilla only submits the outline.
      */
-    @Inject(method = "submitItem", at = @At("HEAD"), cancellable = true)
+    @ModifyExpressionValue(method = "submitModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderType;isOutline()Z"))
+    private boolean skipChamsModel(boolean isOutline, @Share("chamsCaptured") LocalBooleanRef chamsCaptured) {
+        return isOutline || chamsCaptured.get();
+    }
+
+    /**
+     * Captures the item submission into the chams storage, so the item only appears on the chams
+     * render target. Its outline submission stays in this storage to keep glow working.
+     */
+    @Inject(method = "submitItem", at = @At("HEAD"))
     private void captureChamsItem(
         PoseStack poseStack,
         ItemDisplayContext displayContext,
@@ -81,13 +91,20 @@ public abstract class MixinSubmitNodeCollection {
         int[] tintLayers,
         ItemQuads quads,
         ItemStackRenderState.FoilType foilType,
-        CallbackInfo ci
+        CallbackInfo ci,
+        @Share("chamsCaptured") LocalBooleanRef chamsCaptured
     ) {
-        if (ModuleChams.INSTANCE.captureItem(
-            poseStack, displayContext, lightCoords, overlayCoords, outlineColor, tintLayers, quads, foilType
-        )) {
-            ci.cancel();
-        }
+        chamsCaptured.set(ModuleChams.INSTANCE.captureItem(
+            poseStack, displayContext, lightCoords, overlayCoords, tintLayers, quads, foilType
+        ));
+    }
+
+    /**
+     * Captured items count as having no quads, so vanilla only submits their outline.
+     */
+    @ModifyExpressionValue(method = "submitItem", at = @At(value = "INVOKE", target = "Ljava/util/List;isEmpty()Z"))
+    private boolean skipChamsItem(boolean isEmpty, @Share("chamsCaptured") LocalBooleanRef chamsCaptured) {
+        return isEmpty || chamsCaptured.get();
     }
 
 }

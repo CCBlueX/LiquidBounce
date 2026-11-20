@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScr
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
+import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.PauseScreen
 import net.minecraft.client.gui.screens.Screen
@@ -127,6 +128,10 @@ enum class CustomScreenType(
     CONTAINER(
         "container",
         recognizer = { it is ContainerScreen }
+    ),
+
+    CONNECTING("connecting",
+        recognizer = { it is ConnectScreen }
     ),
 
     DISCONNECTED("disconnected",

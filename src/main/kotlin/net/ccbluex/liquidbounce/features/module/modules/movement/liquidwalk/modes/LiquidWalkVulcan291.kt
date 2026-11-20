@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * @tested eu.loyisa.cn
  * @note May cause occasional step flags if player is in a 1x1 water hole.
  */
-internal object LiquidWalkVulcan291 : Mode("Vulcan291") {
+internal object LiquidWalkVulcan291 : Mode("Vulcan-2.9.1", aliases = listOf("Vulcan291")) {
 
     private val motion by float("Motion", 0.8f, 0.2f..1.4f)
 

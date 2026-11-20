@@ -47,6 +47,8 @@ object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), Transla
 
     private val translationCache by translationLazyCache
 
+    var languageCode by text("LanguageCode", "en")
+
     private val providers = modes(this, "Provider", 0) {
         arrayOf(
             GoogleTranslateApi(it),

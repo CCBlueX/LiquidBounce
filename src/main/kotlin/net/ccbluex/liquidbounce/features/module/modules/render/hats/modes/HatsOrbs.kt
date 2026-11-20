@@ -38,7 +38,7 @@ import kotlin.math.sin
  */
 internal object HatsOrbs : HatsMode("Orbs") {
 
-    val color by color("color", Color4b(0, 0, 255, 125))
+    val color by color("color", Color4b.LIQUID_BOUNCE.alpha(125))
 
     private object HatOrbsSettings : ValueGroup("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)
@@ -93,7 +93,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val dx = x - cosA
                 val dz = z + sinA
 
-                val color = if (!isHurt) color else Color4b(255, 0, 0, color.a)
+                val color = shapeColor(if (!isHurt) color else Color4b(255, 0, 0, color.a))
                 // Rendering of the top part of the rhombus (4 faces/8 triangles).
                 addVertex(matrix, x, top, z).setColor(color)
                 addVertex(matrix, dx, y, dz).setColor(color)

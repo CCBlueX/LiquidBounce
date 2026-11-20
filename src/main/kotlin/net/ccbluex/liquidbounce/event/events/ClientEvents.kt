@@ -20,15 +20,18 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.axochat.protocol.Channel
+import net.ccbluex.axochat.user.Author
+import net.ccbluex.axochat.user.LegacyUser
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -36,10 +39,6 @@ import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
-import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Block
@@ -136,9 +135,16 @@ class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
 
 @Tag("clientChatMessage")
 class ClientChatMessageEvent(
-    val user: AxoUser,
+    val user: LegacyUser,
     val message: String,
     val chatGroup: ChatGroup,
+    /**
+     * `null` on protocol 1, as are [author] and [id]. The theme tells channels apart by [chatGroup].
+     */
+    @field:ProtocolExclude
+    val channel: Channel? = null,
+    val author: Author? = null,
+    val id: Long? = null,
 ) : Event(), WebSocketEvent {
     enum class ChatGroup(override val tag: String) : Tagged {
         @SerializedName("public")
@@ -150,11 +156,7 @@ class ClientChatMessageEvent(
 }
 
 @Tag("clientChatError")
-class ClientChatErrorEvent(val error: String) : Event(), WebSocketEvent
-
-@Tag("clientChatJwtToken")
-// Do not define as WebSocket event, because it contains sensitive data
-class ClientChatJwtTokenEvent(val jwt: String) : Event()
+class ClientChatErrorEvent(val error: String, val code: String? = null) : Event(), WebSocketEvent
 
 @Tag("accountManagerMessage")
 class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
@@ -223,34 +225,6 @@ object ResourceReloadEvent : Event()
 
 @Tag("scaleFactorChange")
 class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
-
-@Tag("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        action: InventoryAction,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, listOf(action), priority))
-    }
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        vararg actions: InventoryAction,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, actions.unmodifiable(), priority))
-    }
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        actions: List<InventoryAction>,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, actions, priority))
-    }
-}
 
 @Tag("selectHotbarSlotSilently")
 class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()

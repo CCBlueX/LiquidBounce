@@ -19,15 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.MatrixAntiBotMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotHorizon20211018
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotIntave20220728
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotMatrix20211018
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
@@ -35,13 +36,23 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(
         CustomAntiBotMode,
-        MatrixAntiBotMode,
-        IntaveHeavyAntiBotMode,
-        HorizonAntiBotMode
+        AntiBotMatrix20211018,
+        AntiBotIntave20220728,
+        AntiBotHorizon20211018
     ))
 
     private val literalNPC by boolean("LiteralNPC", false)
-    private val notInTabList by boolean("NotInTabList", false)
+
+    private object NotInTabList : ToggleableValueGroup(ModuleAntiBot, "NotInTabList", false) {
+        /**
+         * How long after spawning a player may be missing from the tab list.
+         */
+        val grace by int("Grace", 0, 0..200, "ticks")
+    }
+
+    init {
+        tree(NotInTabList)
+    }
 
     @Suppress("unused")
     private val tagHandler = handler<TagEntityEvent> {
@@ -96,7 +107,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
             return true
         }
 
-        if (notInTabList && isMissingFromTabList(player)) {
+        if (NotInTabList.enabled && player.tickCount >= NotInTabList.grace && isMissingFromTabList(player)) {
             return true
         }
 

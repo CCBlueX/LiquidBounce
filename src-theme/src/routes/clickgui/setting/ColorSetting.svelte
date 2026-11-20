@@ -6,6 +6,7 @@
     import Pickr from "@simonwep/pickr";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {intToRgba, rgbaToHex, rgbaToInt} from "../../../integration/util";
+    import {escapeLayer} from "../../../integration/escape";
 
     export let setting: ModuleSetting;
 
@@ -18,6 +19,9 @@
     let hidden = true;
 
     let hex = rgbaToHex(intToRgba(cSetting.value));
+
+    const layer = escapeLayer(() => hidden = true);
+    $: layer.setOpen(!hidden);
 
     onMount(() => {
         pickr = Pickr.create({

@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSp
  * TODO: Detection for how many blocks you've gone up. Anything over 40ish seems to flag for Invalid (C)
  *   Proper implementation if there's something above you needs to be added.
  */
-internal object SpiderVulcan288 : Mode("Vulcan288") {
+internal object SpiderVulcan288 : Mode("Vulcan-2.8.8", aliases = listOf("Vulcan288")) {
 
     override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes

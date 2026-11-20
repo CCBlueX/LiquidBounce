@@ -99,7 +99,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                     // to the end.
                     // If we do not reach this point, this means we will go out of the loop by reaching the tick limit
                     // and therefore lose the simulation.
-                    if (simulatePlayer.onGround) {
+                    if (simulatePlayer.onGround()) {
                         if (simulationQueue.isNotEmpty()) {
                             simulationQueue.forEach(network::send)
                         }
@@ -112,7 +112,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                     if (simulateFalling) {
                         simulationQueue += ServerboundMovePlayerPacket.Pos(
                             simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround,
+                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround(),
                             simulatePlayer.horizontalCollision
                         )
                     }

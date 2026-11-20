@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.minecraft.client.Camera
@@ -59,8 +60,18 @@ class WorldRenderEvent(
         batchCollector = batchCollector,
     )
 
+    /**
+     * The shader layers drawn into during this frame.
+     */
+    internal val layers = ArrayList<ShaderLayer>()
+
     override fun close() {
-        batchCollector.flush(renderTarget, getDynamicTransformsUniform())
+        batchCollector.flush(
+            renderTarget.colorTextureView!!,
+            renderTarget.depthTextureView.takeIf { renderTarget.hasDepth() },
+            getDynamicTransformsUniform(),
+        )
+        ShaderLayer.finish(layers, renderTarget)
     }
 
 }
@@ -74,29 +85,6 @@ class WorldFeatureSubmitEvent(
     val camera: Camera,
     val submitNodeStorage: SubmitNodeStorage,
 ) : Event()
-
-/**
- * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
- * in order to do so.
- *
- * Note: After writing to the outline framebuffer [markDirty] must be called.
- */
-@Tag("drawOutlines")
-class DrawOutlinesEvent(
-    val renderTarget: RenderTarget,
-    val pose: PoseStack,
-    val partialTicks: Float,
-) : Event() {
-    var dirtyFlag: Boolean = false
-        private set
-
-    /**
-     * Called when the framebuffer was edited.
-     */
-    fun markDirty() {
-        this.dirtyFlag = true
-    }
-}
 
 @AddonApi
 @Tag("overlayRender")

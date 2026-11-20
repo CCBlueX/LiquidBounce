@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 
 /**
@@ -67,8 +67,8 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     }
 
     private fun isCooldownOver(): Boolean {
-        ModuleDebug.debugParameter(this, "HitsUntilJump", hitsUntilJump)
-        ModuleDebug.debugParameter(this, "UntilJump", ticksUntilJump)
+        debugParameter("HitsUntilJump") { hitsUntilJump }
+        debugParameter("UntilJump") { ticksUntilJump }
 
         return when {
             JumpByReceivedHits.enabled -> limitUntilJump >= hitsUntilJump

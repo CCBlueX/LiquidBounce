@@ -18,16 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_EDITION
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceAuthor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRef
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 
-/**
- * Resolves names, share codes and server addresses to marketplace configs.
- */
 object MarketplaceConfigs {
 
     private val logger = clientLogger("MarketplaceConfigs")
@@ -37,7 +36,7 @@ object MarketplaceConfigs {
     const val PAGE_LIMIT = 10
 
     /**
-     * Top configs by score. Only feeds suggestions; every load resolves against the API.
+     * Top configs by score, for suggestions only.
      */
     @Volatile
     var index: List<MarketplaceItem> = emptyList()
@@ -62,40 +61,41 @@ object MarketplaceConfigs {
         author: String? = null,
         targetServer: String? = null,
         featured: Boolean? = null,
+        sort: MarketplaceApi.Sort = MarketplaceApi.Sort.SCORE,
     ) = MarketplaceApi.getMarketplaceItems(
         page = page,
         limit = limit,
         query = query,
         type = MarketplaceItemType.CONFIG,
-        branch = API_BRANCH,
+        edition = API_EDITION,
         filter = MarketplaceApi.Filter(
             name = name,
             author = author,
             featured = featured,
             tags = tags,
             targetServer = targetServer,
-            sort = MarketplaceApi.Sort.SCORE
+            sort = sort
         )
     )
 
     /**
-     * Configs [input] names: a share code, an item id, `author/name` or a bare name. More than
-     * one result means the bare name is ambiguous.
+     * [input] is a share code, an item id, `author/name` or a bare name. More than one result means the
+     * bare name is ambiguous.
      */
-    suspend fun find(input: String): List<MarketplaceItem> = lookup(input, listOf(MarketplaceItemType.CONFIG))
+    suspend fun find(input: String): List<MarketplaceItem> = findItems(input, listOf(MarketplaceItemType.CONFIG))
 
     /**
-     * Like [find], for anything a config can depend on: configs first, then add-ons and scripts.
+     * Like [find], for anything a config can depend on.
      */
-    suspend fun findDependency(input: String): List<MarketplaceItem> = lookup(
+    suspend fun findDependency(input: String): List<MarketplaceItem> = findItems(
         input,
         listOf(MarketplaceItemType.CONFIG, MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT)
     )
 
     /**
-     * Items of [types] that [input] names, like [find]. A bare name goes to the first of [types] that has it.
+     * Like [find]. A bare name goes to the first of [types] that has it.
      */
-    internal suspend fun lookup(input: String, types: List<MarketplaceItemType>) = runCatching {
+    internal suspend fun findItems(input: String, types: List<MarketplaceItemType>) = runCatching {
         when {
             input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
                 listOf(MarketplaceApi.getMarketplaceItemByCode(input))
@@ -103,29 +103,31 @@ object MarketplaceConfigs {
             else -> {
                 val author = input.substringBefore('/', "").takeIf(String::isNotEmpty)
                 val name = input.substringAfter('/')
-                types.firstNotNullOfOrNull { type -> byName(type, name, author).takeIf(List<*>::isNotEmpty) }
+                types.firstNotNullOfOrNull { findByName(it, name, author).takeIf(List<*>::isNotEmpty) }
                     .orEmpty()
             }
         }.filter { it.type in types }
     }.onFailure { logger.info("Nothing found for $input", it) }.getOrDefault(emptyList())
 
-    private suspend fun byName(type: MarketplaceItemType, name: String, author: String?) =
+    private suspend fun findByName(type: MarketplaceItemType, name: String, author: String?) =
         MarketplaceApi.getMarketplaceItems(
             limit = PAGE_LIMIT,
             type = type,
-            branch = API_BRANCH.takeIf { type == MarketplaceItemType.CONFIG },
-            filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE)
+            edition = API_EDITION.takeIf { type == MarketplaceItemType.CONFIG },
+            filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE),
         ).items
 
     /**
-     * How commands name an item: `author/name`, or its name while the author is unknown.
+     * `author/name`, or the name while the author is unknown.
      */
     val MarketplaceItem.address: String
-        get() = author?.let { "$it/$name" } ?: name
+        get() = address(owner, name)
 
-    /**
-     * The best ranked config for [address], featured ones first.
-     */
+    val MarketplaceItemRef.address: String
+        get() = address(owner, name)
+
+    private fun address(owner: MarketplaceAuthor, name: String) = owner.nickname?.let { "$it/$name" } ?: name
+
     suspend fun findForServer(address: String, onlyFeatured: Boolean): MarketplaceItem? =
         list(limit = 1, targetServer = address, featured = if (onlyFeatured) true else null).items.firstOrNull()
 

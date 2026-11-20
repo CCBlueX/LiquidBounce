@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.renderer;
 
+import com.mojang.renderpearl.api.pipeline.ShaderSource;
 import com.mojang.renderpearl.api.pipeline.ShaderType;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.render.ClientShaders;
 import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -39,8 +41,23 @@ public abstract class MixinShaderManagerConfigs {
         ShaderType type,
         CallbackInfoReturnable<String> cir
     ) {
-        if (id.getNamespace().equals(LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT))) {
+        if (isClientShader(id)) {
             cir.setReturnValue(ClientShaders.Source.getShader(id, type));
         }
+    }
+
+    @Inject(method = "getInclude", at = @At("HEAD"), cancellable = true)
+    private void getLiquidBounceInclude(
+        Identifier id,
+        CallbackInfoReturnable<ShaderSource.CachedIncludeSource> cir
+    ) {
+        if (isClientShader(id)) {
+            cir.setReturnValue(ClientShaders.Source.getInclude(id));
+        }
+    }
+
+    @Unique
+    private static boolean isClientShader(Identifier id) {
+        return id.getNamespace().equals(LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT));
     }
 }

@@ -26,15 +26,12 @@
       border-radius: 5px;
       align-items: center;
       overflow: hidden;
-      background: linear-gradient(to left, var(--menu-icon-text-button-background-color) 50%, var(--menu-icon-text-button-accent-color) 50%);
-      background-size: 200% 100%;
-      background-position: right bottom;
-      will-change: background-position;
-      transition: ease opacity .2s, background-position .2s ease-out;
+      background: linear-gradient(var(--menu-icon-text-button-accent-color), var(--menu-icon-text-button-accent-color)) left / 0 100% no-repeat var(--menu-icon-text-button-background-color);
+      transition: ease opacity .2s, background-size .2s ease-out;
 
       &:not([disabled]):hover {
         &:hover {
-          background-position: left bottom;
+          background-size: 100% 100%;
           cursor: pointer;
         }
       }

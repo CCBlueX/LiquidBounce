@@ -22,10 +22,12 @@ import com.google.gson.annotations.SerializedName
 
 @Suppress("SpellCheckingInspection")
 enum class CosmeticCategory {
-    @SerializedName("Cape")
+    @SerializedName("cape")
     CAPE,
-    @SerializedName("Deadmau5Ears")
+    @SerializedName("deadmau5_ears")
     DEADMAU5_EARS,
-    @SerializedName("Dinnerbone")
+    @SerializedName("dinnerbone")
     DINNERBONE,
+    @SerializedName("elytra")
+    ELYTRA,
 }

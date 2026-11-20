@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -49,7 +50,7 @@ import java.time.LocalDateTime
 object CommandClientConfigSubcommand {
     private val defaultConfigs
         get() = listOf(
-            net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
+            ModuleManager.modulesConfig
         )
 
     private val configArg = MultiSelectArgumentType(

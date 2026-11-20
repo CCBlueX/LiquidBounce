@@ -87,7 +87,8 @@ object ProxyManager : Config("proxy"), EventListener {
      * Validate if [proxy] is working by sending a query-request to our Minecraft Ping Server.
      * This eliminates proxy that only work for HTTP(S) connections.
      *
-     * This function also automatically adds the proxy to our list, if [index] is not provided.
+     * This function also automatically adds the proxy to our list, if [index] is not provided; a proxy that is
+     * already in the list is updated instead.
      * If [index] is provided, it will swap out the proxy at that index with the new one.
      * If [checkOnly] is true, we will skip adding the proxy to our list.
      */
@@ -100,11 +101,14 @@ object ProxyManager : Config("proxy"), EventListener {
                 return@check
             }
 
-            val isConnected = index != null && this@ProxyManager.proxy == proxies[index]
-            if (index != null) {
-                proxies[index] = proxy
+            val saved = index ?: proxies.indexOfFirst { entry -> entry.isSameAs(proxy) }.takeIf { it >= 0 }
+            val isConnected = saved != null && this@ProxyManager.proxy == proxies[saved]
+            if (saved != null) {
+                if (index == null) {
+                    proxy.favorite = proxies[saved].favorite
+                }
+                proxies[saved] = proxy
             } else {
-                // If no index is provided, we are adding a new proxy
                 proxies.add(proxy)
             }
             ConfigSystem.store(this)

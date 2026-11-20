@@ -29,11 +29,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigLo
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigPublishCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigReportCommand
 
-/**
- * Config Command
- *
- * Loads, publishes and manages configs on the marketplace.
- */
 object CommandConfig : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {

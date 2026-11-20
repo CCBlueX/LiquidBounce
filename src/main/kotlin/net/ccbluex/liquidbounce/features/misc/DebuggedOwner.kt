@@ -19,14 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.misc
 
-import net.ccbluex.liquidbounce.utils.text.withFormat
-import net.minecraft.ChatFormatting
-import net.minecraft.util.FormattedCharSequence
-
 interface DebuggedOwner {
-    val debugDisplayName: FormattedCharSequence
-        get() = this.javaClass.simpleName.withFormat(ChatFormatting.BLUE)
-
-    val debugOwnerId: String
-        get() = this.javaClass.name
+    val debugName: String
+        get() = javaClass.simpleName.ifEmpty { javaClass.name.substringAfterLast('.') }
 }

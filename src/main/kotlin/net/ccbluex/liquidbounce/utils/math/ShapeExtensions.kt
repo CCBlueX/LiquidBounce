@@ -32,6 +32,7 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.optionals.toList
+import kotlin.math.abs
 
 @OptIn(ExperimentalContracts::class)
 inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
@@ -668,4 +669,4 @@ private data class FaceComponent(
     val mask: PlaneMask,
 )
 
-private fun approximatelyEquals(a: Double, b: Double): Boolean = kotlin.math.abs(a - b) <= SHAPE_EPSILON
+private fun approximatelyEquals(a: Double, b: Double): Boolean = abs(a - b) <= SHAPE_EPSILON

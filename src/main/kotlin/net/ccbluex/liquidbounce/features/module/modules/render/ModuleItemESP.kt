@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -230,6 +231,10 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
     object GlowMode : Mode("Glow") {
         override val parent: ModeValueGroup<Mode>
             get() = modes
+
+        init {
+            OutlineGlow.styles(this)
+        }
     }
 
     object OutlineMode : Mode("Outline") {

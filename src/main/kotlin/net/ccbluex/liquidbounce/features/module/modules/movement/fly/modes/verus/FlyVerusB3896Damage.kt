@@ -38,7 +38,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @testedOn eu.loyisa.cn
  * @note it gives you ~2 flags for damage
  */
-internal object FlyVerusB3896Damage : Mode("VerusB3896Damage") {
+internal object FlyVerusB3896Damage : Mode("Verus-b3896-Damage", aliases = listOf("VerusB3896Damage")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

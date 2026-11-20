@@ -99,6 +99,10 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     fun free(glyph: FontGlyph): RasterizedGlyph? {
         val (renderInfo, sliceHandle) = this.glyphMap.remove(glyph) ?: return null
 
+        // font_mask.frag reads a few texels past a slot, so the next glyph placed nearby must not find this one
+        renderInfo.atlasLocation?.pixelBoundingBox?.let { slot ->
+            texture.clearPixels(slot.xMin.toInt(), slot.yMin.toInt(), slot.width.toInt(), slot.height.toInt())
+        }
         this.allocator.free(sliceHandle)
 
         return renderInfo

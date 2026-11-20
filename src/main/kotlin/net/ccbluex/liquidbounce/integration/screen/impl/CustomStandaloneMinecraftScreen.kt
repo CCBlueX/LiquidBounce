@@ -24,14 +24,13 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 
 class CustomStandaloneMinecraftScreen(
-    val screenType: CustomScreenType
-) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()), AutoCloseable {
+    screenType: CustomScreenType
+) : CustomMinecraftScreen(screenType), AutoCloseable {
 
     val browser = ThemeManager.openInputAwareImmediate(
         screenType,

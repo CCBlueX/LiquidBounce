@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.ccbluex.liquidbounce.utils.item.isMergeable
@@ -94,7 +95,7 @@ fun useHotbarSlotOrOffhand(
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): InteractionResult {
     SilentHotbar.selectSlotSilently(requester, slot, ticksUntilReset)
-    return net.ccbluex.liquidbounce.utils.entity.useItem(slot.useHand, yRot, xRot, swingMode)
+    return useItem(slot.useHand, yRot, xRot, swingMode)
 }
 
 internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =

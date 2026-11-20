@@ -192,9 +192,9 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
     private fun getColor(distance: Float?, range: Float): Color4b = when (colorMode) {
         ColorMode.RAINBOW -> rainbow(alpha = 0.5f)
         ColorMode.DISTANCE -> distance?.let {
-            activeColor.interpolateTo(idleColor, (it / range).coerceIn(0f, 1f).toDouble())
+            activeColor.interpolateTo(idleColor, (it / range).coerceIn(0f, 1f))
         } ?: idleColor
-        ColorMode.STATIC -> idleColor.interpolateTo(activeColor, colorFactor.toDouble())
+        ColorMode.STATIC -> idleColor.interpolateTo(activeColor, colorFactor)
     }
 
 }

@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
-import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -148,7 +148,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     private static boolean liquid_bounce$shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
-        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
+        } else if (EspGlowMode.INSTANCE.getRunning() && ModuleESP.INSTANCE.shouldShow(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof PrimedTnt) {
             return true;
@@ -167,16 +167,17 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
      */
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getTeamColor()I"))
     private int injectTeamColor(Entity entity, Operation<Integer> operation) {
-        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
-            return ModuleESP.INSTANCE.getColor(livingEntity).argb();
+        if (EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(entity)
+            && (entity instanceof LivingEntity || ModuleESP.INSTANCE.isObject(entity))) {
+            return OutlineGlow.outlineColor(EspGlowMode.INSTANCE, ModuleESP.INSTANCE.getColor(entity).argb());
         } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-            return ModuleItemESP.INSTANCE.getColor().argb();
+            return OutlineGlow.outlineColor(ModuleItemESP.GlowMode.INSTANCE, ModuleItemESP.INSTANCE.getColor().argb());
         } else if (entity instanceof PrimedTnt tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
             return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).argb();
         } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             if (category != null && category.shouldRender(entity)) {
-                return category.getColor().argb();
+                return OutlineGlow.outlineColor(ModuleStorageESP.GlowMode.INSTANCE, category.getColor().argb());
             }
         }
 

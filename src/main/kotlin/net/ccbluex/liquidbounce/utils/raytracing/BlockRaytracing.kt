@@ -94,7 +94,7 @@ fun Entity.isFacingBlock(
     if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.direction != expectedSide)) {
         return false
     }
-    if (expectedMaxRange != null && searchedPos.location.distanceToSqr(eyes) > expectedMaxRange * expectedMaxRange) {
+    if (expectedMaxRange != null && !searchedPos.location.closerThan(eyes, expectedMaxRange)) {
         return false
     }
 

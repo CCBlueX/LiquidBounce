@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
-object ScaffoldTowerKarhu : ScaffoldTower("Karhu") {
+object ScaffoldTowerKarhu : ScaffoldTower("Karhu-2024-05-10", aliases = listOf("Karhu")) {
 
     private val timerSpeed by float("Timer", 5f, 0.1f..10f)
     private val triggerMotion by float("Trigger", 0.06f, 0.0f..0.2f, "Y/v")

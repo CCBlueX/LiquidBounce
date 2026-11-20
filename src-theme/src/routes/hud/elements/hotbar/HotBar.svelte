@@ -66,13 +66,13 @@
 {#if playerData && playerData.gameMode !== "spectator"}
     <div class="hotbar">
         {#if overlayMessage !== null}
-            <div class="overlay-message" out:fade={{duration: 200}}
+            <div class="overlay-message" out:fade={{duration: 150}}
                  style="max-width: {slotsElement?.offsetWidth ?? 0}px">
                 <TextComponent fontSize={14} textComponent={overlayMessage.text} allowPreformatting={true} />
             </div>
         {/if}
         {#if showItemStackName && itemStackName !== null}
-            <div class="item-name" out:fade={{duration: 200}}>
+            <div class="item-name" out:fade={{duration: 150}}>
                 <TextComponent fontSize={14} textComponent={itemStackName}/>
             </div>
         {/if}

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
+import okio.Buffer
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -41,7 +42,7 @@ class ZipExtensionsTest {
 
     /** Builds a zip in memory; a `null` content marks a directory entry (name must end with `/`). */
     private fun zip(vararg entries: Pair<String, String?>): InputStream {
-        val buffer = okio.Buffer()
+        val buffer = Buffer()
         ZipArchiveOutputStream(buffer.outputStream()).use { aos ->
             for ((name, content) in entries) {
                 aos.putArchiveEntry(ZipArchiveEntry(name))

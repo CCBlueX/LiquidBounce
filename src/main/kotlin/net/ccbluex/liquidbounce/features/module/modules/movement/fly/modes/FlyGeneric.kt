@@ -77,10 +77,12 @@ internal object FlyVanilla : Mode("Vanilla") {
         val vSpeed =
             if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
+        // Read from the movement input like the strafe, so navigation can fly up and down.
+        val keys = player.input.keyPresses
         player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
-            mc.options.keyJump.isDown && !mc.options.keyShift.isDown -> vSpeed.toDouble()
-            mc.options.keyShift.isDown && !mc.options.keyJump.isDown -> (-vSpeed).toDouble()
+            keys.jump && !keys.shift -> vSpeed.toDouble()
+            keys.shift && !keys.jump -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 

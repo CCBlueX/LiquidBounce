@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -120,12 +120,12 @@ class AiAngleSmooth(
         }
 
         val entity = rotationTarget.entity as? LivingEntity
-        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevRotation = RotationManager.lastRotation ?: player.lastRotation
         val totalDelta = currentRotation.rotationDeltaTo(targetRotation)
         val velocityDelta = prevRotation.rotationDeltaTo(currentRotation)
 
-        ModuleDebug.debugParameter(this, "DeltaYaw", totalDelta.deltaYaw)
-        ModuleDebug.debugParameter(this, "DeltaPitch", totalDelta.deltaPitch)
+        debugParameter("DeltaYaw") { totalDelta.deltaYaw }
+        debugParameter("DeltaPitch") { totalDelta.deltaPitch }
 
         val input = CombatSample(
             currentVector = currentRotation.directionVector,
@@ -151,9 +151,9 @@ class AiAngleSmooth(
         if (output.size < 2 || !output[0].isFinite() || !output[1].isFinite()) {
             return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
-        ModuleDebug.debugParameter(this, "Output [0]", output[0])
-        ModuleDebug.debugParameter(this, "Output [1]", output[1])
-        ModuleDebug.debugParameter(this, "Time", "${time.toString(DurationUnit.MILLISECONDS, 2)} ms")
+        debugParameter("Output [0]") { output[0] }
+        debugParameter("Output [1]") { output[1] }
+        debugParameter("Time") { "${time.toString(DurationUnit.MILLISECONDS, 2)} ms" }
 
         val modelOutput = Rotation(
             currentRotation.yaw + output[0] * outputMultiplier.yawMultiplier,

@@ -29,7 +29,10 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
  * Bypassing Grim 2.3.71
  * @from https://github.com/GrimAnticheat/Grim/issues/2216
  */
-internal class NoSlowSharedGrim2371(override val parent: ModeValueGroup<*>) : Mode("Grim2371") {
+internal class NoSlowSharedGrim2371(override val parent: ModeValueGroup<*>) : Mode(
+    "Grim-2.3.71",
+    aliases = listOf("Grim2371"),
+) {
 
     companion {
         var shouldPreventNoSlow = false

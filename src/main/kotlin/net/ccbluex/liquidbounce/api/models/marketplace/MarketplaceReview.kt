@@ -18,15 +18,12 @@
  */
 package net.ccbluex.liquidbounce.api.models.marketplace
 
-import com.google.gson.annotations.SerializedName
-
 data class MarketplaceReview(
     val id: Int,
-    @SerializedName("item_id")
     val itemId: Int,
     val uid: String,
+    val nickname: String?,
     val rating: Int,
-    val review: String?,
-    @SerializedName("created_at")
+    val comment: String?,
     val createdAt: String
 )

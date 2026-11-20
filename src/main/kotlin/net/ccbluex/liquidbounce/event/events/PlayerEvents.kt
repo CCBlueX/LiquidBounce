@@ -41,6 +41,21 @@ class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float,
 @Tag("death")
 object DeathEvent : Event(), WebSocketEvent
 
+/**
+ * The player killed [victim], going by the death message in chat.
+ */
+@AddonApi
+@Tag("playerKill")
+class PlayerKillEvent(val victim: String) : Event()
+
+/**
+ * A death message in chat names the player as the victim. Unlike [DeathEvent] this also covers minigames,
+ * which never really kill a player.
+ */
+@AddonApi
+@Tag("playerDeath")
+class PlayerDeathEvent(val killer: String?) : Event()
+
 @AddonApi
 @Tag("playerTick")
 class PlayerTickEvent : CancellableEvent()

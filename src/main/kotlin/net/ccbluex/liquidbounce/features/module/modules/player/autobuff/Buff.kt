@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.minecraft.world.item.ItemStack
@@ -38,7 +37,7 @@ abstract class Buff(
 ) : ToggleableValueGroup(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
-        get() = enabled && !InventoryManager.isInventoryOpen
+        get() = enabled && !ModuleAutoBuff.isInventoryBlocking
 
     private var forceUseKey = false
 
@@ -68,6 +67,11 @@ abstract class Buff(
     }
 
     /**
+     * Whether [slot] still has an item this buff can use, for waits between finding the slot and using it.
+     */
+    protected fun isUsable(slot: HotbarItemSlot) = isValidItem(slot.itemStack, true)
+
+    /**
      * Try to run feature if possible, otherwise return false
      */
     internal suspend fun runIfPossible(): Boolean {
@@ -88,10 +92,21 @@ abstract class Buff(
             // Check if we should auto swap
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
-            waitTicks(AutoSwap.delayIn.random())
-            execute(slot)
-            waitTicks(AutoSwap.delayOut.random())
-            SilentHotbar.resetSlot(ModuleAutoBuff)
+            try {
+                waitTicks(AutoSwap.delayIn.random())
+                // The buff's own waits go on after the item is used up, so this is not required of the whole run
+                if (passesRequirements && isUsable(slot)) {
+                    execute(slot)
+                }
+            } finally {
+                // DelayOut outlives the run as long as the module does: the next buff waits, then the hotbar goes back
+                if (ModuleAutoBuff.running) {
+                    ModuleAutoBuff.waitBeforeNextBuff(AutoSwap.delayOut.random())
+                    if (SilentHotbar.isSlotModifiedBy(ModuleAutoBuff)) {
+                        SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ModuleAutoBuff.ticksUntilNextBuff)
+                    }
+                }
+            }
             return true
         } else {
             return false

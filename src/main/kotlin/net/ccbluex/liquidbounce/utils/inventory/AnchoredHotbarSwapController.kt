@@ -19,10 +19,9 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.minecraft.world.item.ItemStack
 import java.util.function.IntSupplier
 
 /**
@@ -43,15 +42,12 @@ class AnchoredHotbarSwapController(
     private var requestedSourceSlot: ItemSlot? = null
     private var anchorSwapAction: InventoryAction? = null
     private var anchorHotbarSlot: HotbarItemSlot? = null
-    private var pendingRestore = false
-    private var restoreDue = false
-    private var waitingTicks = 0
-    private var lastSwitchScheduledEvent: ScheduleInventoryActionEvent? = null
+    private var idleTicks = 0
 
     override fun parent() = owner
 
     /**
-     * Request swapping [sourceSlot] into the anchored hotbar slot on next inventory scheduling pass.
+     * Request swapping [sourceSlot] into the anchored hotbar slot as soon as the inventory allows it.
      *
      * Call this whenever the desired item is currently in inventory (not hotbar).
      */
@@ -73,9 +69,7 @@ class AnchoredHotbarSwapController(
      * Call this while your module is actively using the temporarily swapped item.
      */
     fun touchActiveSwitching() {
-        if (!pendingRestore) return
-        waitingTicks = 0
-        restoreDue = false
+        idleTicks = 0
     }
 
     /**
@@ -87,58 +81,44 @@ class AnchoredHotbarSwapController(
         requestedSourceSlot = null
         anchorSwapAction = null
         anchorHotbarSlot = null
-        pendingRestore = false
-        restoreDue = false
-        waitingTicks = 0
-        lastSwitchScheduledEvent = null
+        idleTicks = 0
     }
 
     @Suppress("unused")
-    private val inventorySwapHandler = handler<ScheduleInventoryActionEvent> { event ->
-        val source = requestedSourceSlot ?: return@handler
-        val slotToSwap = anchorHotbarSlot ?: anchorHotbarSlotResolver().also { anchorHotbarSlot = it }
+    private val swap = inventoryPlan(inventoryConstraints) {
+        val source = requestedSourceSlot
+        if (source != null) {
+            val anchor = anchorHotbarSlot ?: anchorHotbarSlotResolver()
+            val swapAction = InventoryAction.Click.performSwap(from = source, to = anchor)
 
-        val swapAction = InventoryAction.Click.performSwap(
-            from = source,
-            to = slotToSwap,
-        )
+            val stack = source.itemStack.copy()
+            // The request is withdrawn once the item is in the hotbar, the run has to remember the swap then
+            requires { requestedSourceSlot == source || !ItemStack.matches(source.itemStack, stack) }
+            perform(swapAction)
 
-        event.schedule(inventoryConstraints, swapAction)
-        lastSwitchScheduledEvent = event
-
-        if (anchorSwapAction == null) {
-            anchorSwapAction = swapAction
-            pendingRestore = true
+            anchorHotbarSlot = anchor
+            if (anchorSwapAction == null) {
+                anchorSwapAction = swapAction
+            }
+            idleTicks = 0
+            requestedSourceSlot = null
+            return@inventoryPlan
         }
 
-        requestedSourceSlot = null
-    }
+        val restoreAction = anchorSwapAction ?: return@inventoryPlan
+        val anchor = anchorHotbarSlot ?: return@inventoryPlan
 
-    @Suppress("unused")
-    private val restoreHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (lastSwitchScheduledEvent === event) return@handler
-        if (!restoreDue || requestedSourceSlot != null) return@handler
-
-        val restoreAction = anchorSwapAction ?: run {
-            reset()
-            return@handler
+        // A run that has nothing to do ends at once, so this counts ticks
+        if (++idleTicks <= swapDelayProvider.asInt) {
+            return@inventoryPlan
         }
 
-        if (!restoreAction.canPerformAction(inventoryConstraints)) {
-            return@handler
+        val stack = anchor.itemStack.copy()
+        requires {
+            idleTicks > swapDelayProvider.asInt && requestedSourceSlot == null ||
+                !ItemStack.matches(anchor.itemStack, stack)
         }
-
-        event.schedule(inventoryConstraints, restoreAction)
+        perform(restoreAction)
         reset()
-    }
-
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        if (!pendingRestore || restoreDue) return@handler
-
-        waitingTicks++
-        if (waitingTicks <= swapDelayProvider.asInt) return@handler
-
-        restoreDue = true
     }
 }

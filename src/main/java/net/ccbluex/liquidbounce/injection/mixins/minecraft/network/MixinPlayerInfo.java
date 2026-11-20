@@ -44,9 +44,11 @@ public abstract class MixinPlayerInfo {
     private GameProfile profile;
 
     @Unique
-    private boolean capeTextureLoading = false;
+    private boolean cosmeticTexturesLoading = false;
     @Unique
     private Identifier capeTexture = null;
+    @Unique
+    private Identifier elytraTexture = null;
 
     @ModifyReturnValue(method = "getSkin", at = @At("RETURN"))
     @SuppressWarnings({"ConstantConditions", "EqualsBetweenInconvertibleTypes", "RedundantCast"})
@@ -68,13 +70,18 @@ public abstract class MixinPlayerInfo {
             }
         }
 
-        if (capeTexture != null) {
-            return new PlayerSkin(original.body(), new ClientAsset.ResourceTexture(capeTexture, capeTexture),
-                    original.elytra(), original.model(), original.secure());
+        liquid_bounce$fetchCosmeticTextures();
+        if (capeTexture == null && elytraTexture == null) {
+            return original;
         }
 
-        liquid_bounce$fetchCapeTexture();
-        return original;
+        return new PlayerSkin(
+                original.body(),
+                capeTexture != null ? new ClientAsset.ResourceTexture(capeTexture, capeTexture) : original.cape(),
+                elytraTexture != null ? new ClientAsset.ResourceTexture(elytraTexture, elytraTexture) : original.elytra(),
+                original.model(),
+                original.secure()
+        );
     }
 
     @ModifyExpressionValue(method = "createSkinLookup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isLocalPlayer(Ljava/util/UUID;)Z"))
@@ -83,13 +90,14 @@ public abstract class MixinPlayerInfo {
     }
 
     @Unique
-    private void liquid_bounce$fetchCapeTexture() {
-        if (capeTextureLoading) {
+    private void liquid_bounce$fetchCosmeticTextures() {
+        if (cosmeticTexturesLoading) {
             return;
         }
 
-        capeTextureLoading = true;
+        cosmeticTexturesLoading = true;
         CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile, id -> capeTexture = id);
+        CapeCosmeticsManager.INSTANCE.loadPlayerElytra(this.profile, id -> elytraTexture = id);
     }
 
 }

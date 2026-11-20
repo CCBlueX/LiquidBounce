@@ -14,6 +14,7 @@
     import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
     import None from "./routes/none/None.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
+    import Connecting from "./routes/menu/connecting/Connecting.svelte";
     import BasicMenu from "./routes/menu/basicmenu/BasicMenu.svelte";
     import Browser from "./routes/browser/Browser.svelte";
     import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
@@ -36,6 +37,7 @@
         "/hud": Hud,
         "/inventory": Inventory,
         "/none": None,
+        "/connecting": Connecting,
         "/disconnected": Disconnected,
         "/basicmenu": BasicMenu,
         "/browser": Browser
@@ -107,12 +109,21 @@
             return;
         }
 
-        listenAlways("socketReady", async () => {
+        let screenRevision = 0;
+
+        async function syncVirtualScreen() {
+            const revision = ++screenRevision;
             const virtualScreen = await getVirtualScreen();
-            await changeRoute(virtualScreen.name || "none");
-        });
+            // A screen event can arrive while the snapshot is in flight.
+            if (revision === screenRevision) {
+                await changeRoute(virtualScreen.name || "none");
+            }
+        }
+
+        listenAlways("socketReady", syncVirtualScreen);
 
         listenAlways("virtualScreen", async (event: any) => {
+            ++screenRevision;
             console.log(`[Router] Virtual screen change to ${event.screenName}`);
             const action = event.action;
 
@@ -126,8 +137,7 @@
             }
         });
 
-        const virtualScreen = await getVirtualScreen();
-        await changeRoute(virtualScreen.name || "none");
+        await syncVirtualScreen();
     });
 </script>
 

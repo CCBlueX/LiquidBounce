@@ -2,6 +2,7 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     import {portal} from "../../../../integration/util";
+    import {escapeLayer} from "../../../../integration/escape";
 
     export let title: string;
     export let visible: boolean;
@@ -12,11 +13,14 @@
         dispatch("close");
         visible = false;
     }
+
+    const layer = escapeLayer(handleClick);
+    $: layer.setOpen(visible);
 </script>
 
 {#if visible}
-    <div class="modal-wrapper" transition:fade|global={{duration: 200}} use:portal>
-        <div class="modal" in:fly|global={{duration: 300, y: -100}} out:fly|global={{duration: 300, y: -100}}>
+    <div class="modal-wrapper" transition:fade|global={{duration: 140}} use:portal>
+        <div class="modal" in:fly|global={{duration: 180, y: -20}} out:fade|global={{duration: 120}}>
             <button class="button-modal-close" on:click={handleClick}>
                 <img src="img/menu/icon-close.svg" alt="close">
             </button>

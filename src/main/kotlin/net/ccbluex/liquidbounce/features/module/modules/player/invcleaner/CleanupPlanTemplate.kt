@@ -52,6 +52,11 @@ class CleanupPlanTemplate(
      * Items that are never part of the plan, therefore they end up as trash.
      */
     val itemBlacklist: Set<Item> = emptySet(),
+    /**
+     * Whether items nothing is known about stay in the inventory. Those with a custom name always do: the name marks
+     * what a server handed out, such as a lobby menu item or a tracker.
+     */
+    val keepsUnknownItems: Boolean = true,
 ) {
 
     data class SlotContentPreference(

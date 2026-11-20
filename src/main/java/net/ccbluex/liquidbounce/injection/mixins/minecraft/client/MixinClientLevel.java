@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ExplosionParticleInfo;
@@ -86,6 +87,13 @@ public abstract class MixinClientLevel {
     private void injectNoExplosionParticles(ParticleOptions parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ, CallbackInfo ci) {
         var type = parameters.getType();
         if (!ModuleAntiBlind.canRender(DoRender.EXPLOSION_PARTICLES) && (type == ParticleTypes.EXPLOSION || type == ParticleTypes.EXPLOSION_EMITTER)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "doAddParticle", at = @At("HEAD"), cancellable = true)
+    private void keepSimulationFromShowingParticles(CallbackInfo ci) {
+        if (SimulatedPlayer.isTicking()) {
             ci.cancel();
         }
     }

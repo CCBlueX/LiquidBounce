@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.minecraft.client.DeltaTracker;
 import org.objectweb.asm.Opcodes;
@@ -38,10 +39,16 @@ public abstract class MixinRenderTickCounter {
      */
     @Inject(method = "advanceGameTime(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/DeltaTracker$Timer;deltaTicks:F", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookTimer(CallbackInfoReturnable<Integer> callback) {
-        float customTimer = Timer.INSTANCE.getTimerSpeed();
-        if (customTimer > 0) {
-            deltaTicks *= customTimer;
-        }
+        deltaTicks = Timer.INSTANCE.scaleFrame(deltaTicks);
+    }
+
+    /**
+     * Like a game frozen by the tick rate manager, a held back game is drawn as it is. In between two ticks it
+     * would replay the tick before every frame, which shakes the camera and everything moving.
+     */
+    @ModifyReturnValue(method = "getGameTimeDeltaPartialTick", at = @At("RETURN"))
+    private float hookHeldPartialTick(float original) {
+        return Timer.INSTANCE.isHeld() ? 1f : original;
     }
 
 }

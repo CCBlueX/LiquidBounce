@@ -35,6 +35,7 @@ import java.awt.image.ComponentSampleModel
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferInt
 import java.awt.image.SinglePixelPackedSampleModel
+import java.nio.ByteBuffer
 import java.util.function.Supplier
 
 class GlyphAtlasTexture(
@@ -79,6 +80,20 @@ class GlyphAtlasTexture(
 
     private fun upload(source: NativeImage) {
         gpuDevice.createCommandEncoder().writeToTexture(getTexture(), source)
+    }
+
+    /**
+     * Zeroes a rectangle of the retained pixels. [uploadRows] sends it to the GPU.
+     */
+    fun clearPixels(x: Int, y: Int, width: Int, height: Int) {
+        val pixels = requireNotNull(pixels) { "Glyph atlas has no retained pixel data" }
+        require(x >= 0 && y >= 0 && width <= pixels.width - x && height <= pixels.height - y) {
+            "Rectangle is outside the glyph atlas"
+        }
+
+        for (row in y until y + height) {
+            MemoryUtil.memSet(pixels.pointer + row.toLong() * pixels.width + x, 0, width.toLong())
+        }
     }
 
     override fun close() {
@@ -202,7 +217,7 @@ private fun copyCoverageRows(
     source: ByteArray,
     sourceOffset: Int,
     sourceStride: Int,
-    target: java.nio.ByteBuffer,
+    target: ByteBuffer,
     targetOffset: Int,
     targetStride: Int,
     width: Int,
@@ -221,7 +236,7 @@ private fun copyAlphaRows(
     source: IntArray,
     sourceOffset: Int,
     sourceStride: Int,
-    target: java.nio.ByteBuffer,
+    target: ByteBuffer,
     targetOffset: Int,
     targetStride: Int,
     width: Int,

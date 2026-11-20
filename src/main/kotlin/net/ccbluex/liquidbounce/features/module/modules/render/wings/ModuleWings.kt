@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.wings.modes.Wings
 
 object ModuleWings : ClientModule("Wings", ModuleCategories.RENDER) {
 
-    object WingsPosition : ValueGroup("wingsPosition") {
-        val wingsHeight by float("wingsHeight", 0.3f, -1f..1f)
+    object WingsPosition : ValueGroup("Position") {
+        val wingsHeight by float("Height", 0.3f, -1f..1f)
         val behindScale by float("BackOffset", 0.25f, 0f..0.5f)
-        val equipmentOffset by float("equipmentOffset", 0.1f, 0f..1f)
+        val equipmentOffset by float("EquipmentOffset", 0.1f, 0f..1f)
     }
 
     init {

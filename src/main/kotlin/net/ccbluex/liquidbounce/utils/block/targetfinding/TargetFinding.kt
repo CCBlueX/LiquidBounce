@@ -63,12 +63,15 @@ enum class AimMode(override val tag: String) : Tagged {
 
 /**
  * Parameters used when generating a targeting plan for a block placement.
+ *
+ * @param range how far from the eye of [playerLocationOnPlacement] a click may be
  */
 data class BlockPlacementTargetFindingOptions(
     val offsetOptions: BlockOffsetOptions,
     val faceHandlingOptions: FaceHandlingOptions,
     val stackToPlaceWith: ItemStack,
-    val playerLocationOnPlacement: PlayerLocationOnPlacement
+    val playerLocationOnPlacement: PlayerLocationOnPlacement,
+    val range: Double = Double.MAX_VALUE,
 ) {
     companion object {
         @JvmStatic
@@ -209,9 +212,10 @@ private fun findBestTargetPlan(
         val plan = findTargetPlan(clickedBlockPos, direction, posToInvestigate, outlineShape, options) ?: return
 
         val toEye = eyePos.subtract(plan.interactionPoint)
-        val facing = toEye.dot(plan.direction.unitVec3) / toEye.length()
+        val distance = toEye.length()
+        val facing = toEye.dot(plan.direction.unitVec3) / distance
 
-        if (!considerFacingAwayFaces && facing < 0.0) {
+        if (distance > options.range || !considerFacingAwayFaces && facing < 0.0) {
             return
         }
 
@@ -352,20 +356,15 @@ private fun findTargetPointOnFace(
     outlineShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
         val face = AlignedFace.get(direction, minX, minY, minZ, maxX, maxY, maxZ)
 
-        var searchFace = face
+        // TODO: stair/slab should have a stable half (up/down) of side face to click
 
-        // Try to aim at the upper portion of the block which makes it easier to switch from full blocks to half blocks
-        if (searchFace.to.y >= 0.9) {
-            searchFace = searchFace.truncateY(0.51).requireNonEmpty() ?: face
-        }
-
-        if (rejectFacingAway && eyeNormal - searchFace.from.dot(normal) < 0.0) {
+        if (rejectFacingAway && eyeNormal - face.from.dot(normal) < 0.0) {
             return@forAllBoxes
         }
 
         val targetPos =
             options.faceHandlingOptions.facePositionFactory.producePositionOnFace(
-                searchFace,
+                face,
                 clickedBlockPos,
                 options.playerLocationOnPlacement,
             ) ?: return@forAllBoxes

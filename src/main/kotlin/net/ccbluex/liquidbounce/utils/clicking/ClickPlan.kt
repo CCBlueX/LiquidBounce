@@ -30,6 +30,7 @@ import kotlin.math.abs
  * Tick `n` consumes the presses in `(tickTime + (n - 1) * 50, tickTime + n * 50]`,
  * so [clicksAt] is what that tick will consume.
  */
+@Suppress("TooManyFunctions")
 class ClickPlan(
     private val timing: ClickTiming,
     private val random: Random = Random(),
@@ -168,6 +169,50 @@ class ClickPlan(
     }
 
     /**
+     * The player pressed the key. The press takes the place of our next planned one,
+     * so the presses keep our rhythm and CPS instead of adding up.
+     */
+    fun pressedByPlayer() {
+        if (next >= times.size) {
+            return
+        }
+
+        val interval = intervals.size - (times.size - next)
+        if (interval >= 0) {
+            intervals.removeLong(interval)
+        }
+        times.removeLong(next)
+    }
+
+    /**
+     * Another clicker on the same key pressed at [time]. It counts as one of this tick's presses, and the presses
+     * after it follow the plan of [leader]: drawing our own would race it, and the earlier of two random presses
+     * comes faster than either plan's CPS.
+     */
+    fun pressedBy(leader: ClickPlan, time: Long) {
+        if (times.isEmpty) {
+            return
+        }
+
+        if (consumed < due) {
+            consumed++
+        }
+
+        replan()
+        if (time >= times.getLong(times.size - 1)) {
+            append(time)
+        }
+        next = times.size
+
+        for (i in leader.next until leader.times.size) {
+            val planned = leader.times.getLong(i)
+            if (planned > time) {
+                append(planned)
+            }
+        }
+    }
+
+    /**
      * Drops the presses planned after this tick, so they are planned again with changed settings.
      */
     private fun replan() {
@@ -193,7 +238,11 @@ class ClickPlan(
             time = maxOf(time, times.getLong(times.size - maxPerTick) + TICK_MS)
         }
 
-        intervals.add(time - last)
+        append(time)
+    }
+
+    private fun append(time: Long) {
+        intervals.add(time - times.getLong(times.size - 1))
         if (intervals.size > HISTORY) {
             intervals.removeLong(0)
         }

@@ -37,9 +37,15 @@ import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.phys.Vec3
 
-object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
-
-    private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
+/**
+ * Walks to the closest crop or item while nothing is within reach to farm, onto items to pick them up.
+ */
+object AutoFarmAutoWalk : NavigationBaseValueGroup<AutoFarmAutoWalk.WalkTarget?>(
+    ModuleAutoFarm,
+    "AutoWalk",
+    true,
+    rotations = ModuleAutoFarm.rotations,
+) {
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
@@ -59,10 +65,12 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         tree(ToItems)
     }
 
-    private var invHadSpace = true
+    class WalkTarget(val position: Vec3, val radius: Double)
 
-    var walkTarget: Vec3? = null
-        private set
+    private const val BLOCK_RADIUS = 1.5
+    private const val ITEM_RADIUS = 0.75
+
+    private var invHadSpace = true
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
         // we should only walk to farmland/soulsand blocks if we have plantable items
@@ -95,20 +103,17 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         return closestBlockPos
     }
 
-    private fun findWalkTarget(invHasSpace: Boolean): Vec3? {
-        val blockTarget = findWalkToBlock()
-
-        if (ToItems.enabled && invHasSpace) {
-            val playerPos = player.position()
-            val itemTarget = findWalkToItem() ?: return blockTarget
-            blockTarget ?: return itemTarget
-
-            val blockTargetDistSq = blockTarget.distanceToSqr(playerPos)
-            val itemTargetDistSq = itemTarget.distanceToSqr(playerPos)
-            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
-        } else {
-            return blockTarget
+    private fun findWalkTarget(invHasSpace: Boolean): WalkTarget? {
+        val block = findWalkToBlock()?.let { WalkTarget(it, BLOCK_RADIUS) }
+        if (!ToItems.enabled || !invHasSpace) {
+            return block
         }
+
+        val item = findWalkToItem()?.let { WalkTarget(it, ITEM_RADIUS) } ?: return block
+        block ?: return item
+
+        val position = player.position()
+        return if (block.position.distanceToSqr(position) < item.position.distanceToSqr(position)) block else item
     }
 
     private fun findWalkToItem(): Vec3? = world.entityGetter
@@ -116,7 +121,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         .weightedMinByOrNullAtMost(ToItems.rangeSquared.toDouble(), player::distanceToSqr)
         ?.position()
 
-    override fun createNavigationContext(): Vec3? {
+    override fun createNavigationContext(): WalkTarget? {
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && ToItems.enabled) {
             notification(
@@ -132,14 +137,15 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         return findWalkTarget(invHasSpace)
     }
 
-    override fun calculateGoalPosition(context: Vec3?): Vec3? {
-        val target = ModuleAutoFarm.currentTarget?.center ?: context
-        if (target != null && player.distanceToSqr(target) < minimumDistance.sq()) {
-            this.walkTarget = null
+    override fun calculateGoalPosition(context: WalkTarget?): Vec3? {
+        // Stand still while farming what is within reach
+        if (ModuleAutoFarm.currentTarget != null) {
             return null
         }
 
-        return target.also { this.walkTarget = it }
+        return context?.position
     }
+
+    override fun goalRadius(context: WalkTarget?) = context?.radius ?: BLOCK_RADIUS
 
 }

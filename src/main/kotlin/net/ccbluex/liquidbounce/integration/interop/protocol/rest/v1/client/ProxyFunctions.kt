@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -49,7 +50,7 @@ private fun Route.getProxyInfo() = get {
         call.respond(interopGson.toJsonTree(proxy).asJsonObject.apply {
             addProperty("id", ProxyManager.proxies.indexOf(proxy))
         })
-    } ?: call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    } ?: call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxy
@@ -63,13 +64,13 @@ private fun Route.postProxy() = post {
     }
 
     ProxyManager.proxy = ProxyManager.proxies[body.id]
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxy
 private fun Route.deleteProxy() = delete {
     ProxyManager.proxy = Proxy.NONE
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/proxies
@@ -112,7 +113,7 @@ private fun Route.postAddProxy() = post {
         host, port, Proxy.credentials(username, password), type, forwardAuthentication,
         proxyResourcePacks, proxyDns
     ))
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/add/clipboard
@@ -121,14 +122,21 @@ private fun Route.postClipboardProxy() = post("/clipboard") {
         try {
             val clipboardText = mc.keyboardHandler.clipboard
             if (clipboardText.isBlank()) {
+                // Nothing to import is a user mistake, not a failure worth a stack trace
+                EventManager.callEvent(ProxyCheckResultEvent(
+                    null,
+                    error = "Clipboard is empty. Copy a proxy address before importing."
+                ))
                 return@execute
             }
 
             val proxy = try {
                 Proxy.parse(clipboardText.trim())
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException(
-                    "Invalid proxy format. Expected format: host:port:username:password or host:port",
+                    "Invalid proxy format. Use host:port, host:port:username:password, " +
+                        "username:password:host:port, or username:password@host:port. " +
+                        "IPv6 hosts require [brackets] and ports must be in 1..65535.",
                     e
                 )
             }
@@ -140,7 +148,7 @@ private fun Route.postClipboardProxy() = post("/clipboard") {
         }
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/edit
@@ -173,7 +181,7 @@ private fun Route.postEditProxy() = post("/edit") {
         proxyResourcePacks, proxyDns
     )
     ProxyManager.validateProxy(proxy, index = id)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/proxies/check
@@ -187,7 +195,7 @@ private fun Route.postCheckProxy() = post("/check") {
     }
 
     ProxyManager.validateProxy(ProxyManager.proxies[body.id], checkOnly = true)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/remove
@@ -203,7 +211,7 @@ private fun Route.deleteRemoveProxy() = delete("/remove") {
     if (ProxyManager.proxies.removeAt(body.id) == ProxyManager.proxy) {
         ProxyManager.proxy = Proxy.NONE
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/proxies/favorite
@@ -218,7 +226,7 @@ private fun Route.putFavoriteProxy() = put {
 
     ProxyManager.proxies[body.id].favorite = true
     ConfigSystem.store(ProxyManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/proxies/favorite
@@ -233,7 +241,7 @@ private fun Route.deleteFavoriteProxy() = delete {
 
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.store(ProxyManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.proxyRoutes() {

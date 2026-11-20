@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderPolar29thMarch2025
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderPolar20250329
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVulcan288
 
@@ -28,7 +28,7 @@ object ModuleSpider : ClientModule("Spider", ModuleCategories.MOVEMENT, aliases 
 
     internal val modes = choices("Mode", SpiderVanilla, arrayOf(
         SpiderVanilla,
-        SpiderPolar29thMarch2025,
+        SpiderPolar20250329,
         SpiderVulcan288
     ))
 }

@@ -18,6 +18,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.ParseResults
 import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.command.arguments.BooleanArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.Vec3ArgumentType
@@ -81,7 +82,7 @@ class CommandTreeTest {
         )
     }
 
-    private fun hasExecutableCommand(parse: com.mojang.brigadier.ParseResults<ClientCommandSource>): Boolean {
+    private fun hasExecutableCommand(parse: ParseResults<ClientCommandSource>): Boolean {
         var context = parse.context
         while (context != null) {
             if (context.command != null) return true

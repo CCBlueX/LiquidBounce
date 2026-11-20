@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.rawInput

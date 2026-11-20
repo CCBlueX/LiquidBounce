@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -68,11 +69,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
 
         val base = FULL_BOX.move(target.blockPosition().below())
         mc.execute {
-            ModuleDebug.debugGeometry(
-                ModuleCrystalAura,
-                "predictedBlock",
-                ModuleDebug.DebuggedBox(base, Color4b.GREEN.fade(0.4f))
-            )
+            ModuleCrystalAura.debugGeometry("predictedBlock") { DebuggedBox(base, Color4b.GREEN.fade(0.4f)) }
         }
 
         val eyePos = player.eyePosition

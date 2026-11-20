@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.c
 
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowHypixel20240525
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
@@ -32,7 +32,7 @@ import net.minecraft.world.item.ItemUseAnimation
 object NoSlowConsume : NoSlowUseActionHandler("Consume") {
 
     @Suppress("unused")
-    private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
+    private val noBlockInteract = tree(NoSlowHypixel20240525(this) { action ->
         action == ItemUseAnimation.EAT || action == ItemUseAnimation.DRINK
     })
 
@@ -45,7 +45,7 @@ object NoSlowConsume : NoSlowUseActionHandler("Consume") {
             NoSlowSharedInvalidHand(it),
             NoSlowSharedGrim2371(it),
             NoSlowConsumeJump(it),
-            NoSlowConsumeIntave14(it),
+            NoSlowConsumeIntave1484(it),
             NoSlowConsumeRelease(it)
         )
     }

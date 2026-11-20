@@ -70,8 +70,8 @@ public abstract class MixinChatListener {
     }
 
     @Inject(method = "handleSystemMessage", at = @At(value = "HEAD"), cancellable = true)
-    private void injectGameMessage(Component message, boolean overlay, CallbackInfo ci) {
-        var result = liquid_bounce$emitChatEvent(null, message, overlay ? ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE : ChatReceiveEvent.ChatType.GAME_MESSAGE);
+    private void injectGameMessage(Component message, boolean remote, CallbackInfo ci) {
+        var result = liquid_bounce$emitChatEvent(null, message, ChatReceiveEvent.ChatType.GAME_MESSAGE);
         if (result) {
             previousMessageTime = Util.getMillis();
             ci.cancel();

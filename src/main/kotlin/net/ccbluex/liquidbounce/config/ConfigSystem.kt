@@ -31,11 +31,12 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
 import java.io.File
 import java.io.Reader
 import java.io.Writer
+import java.nio.file.Files
 import java.util.zip.ZipFile
 
 /**
@@ -153,7 +154,9 @@ object ConfigSystem {
             zipFile = File(backupFolder, "${fileName}_${suffix++}.zip")
         }
 
-        groups.map { valueGroup -> valueGroup.jsonFile }.createZipArchive(zipFile)
+        zipFile.toPath().atomicWrite {
+            groups.map { valueGroup -> valueGroup.jsonFile }.createZipArchive(it.toFile())
+        }
     }
 
     /**
@@ -217,17 +220,12 @@ object ConfigSystem {
      * The config should be known to the config system.
      */
     fun store(config: Config) {
-        config.jsonTmpFile.runCatching {
-            // Write to temp file
-            logger.debug("Writing config ${config.loweredName}...")
-            if (!exists()) {
-                createNewFile().let { logger.debug("Created new file (status: $it)") }
+        runCatching {
+            config.jsonFile.toPath().atomicWrite { tmp ->
+                Files.newBufferedWriter(tmp).use {
+                    serializeValueGroup(config, it)
+                }
             }
-            serializeValueGroup(config, bufferedWriter())
-            logger.debug("Writing config ${config.loweredName}... done")
-
-            // Replace in one move, keeping the previous config until the new file is ready.
-            toPath().atomicMoveTo(config.jsonFile.toPath())
             logger.info("Successfully stored config '${config.loweredName}'.")
         }.onFailure {
             logger.error("Unable to store config ${config.loweredName}", it)

@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebugCollection
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
@@ -176,10 +179,10 @@ fun findVisiblePointFromVirtualEye(
     val points = projectPointsOnBox(virtualEyes, box) ?: return null
 
     ModuleProjectileAimbot.debugGeometry("points") {
-        ModuleDebug.DebugCollection(points.map { ModuleDebug.DebuggedPoint(it, Color4b.BLUE, 0.01) })
+        DebugCollection(points.map { DebuggedPoint(it, Color4b.BLUE, 0.01) })
     }
 
-    val rays = ArrayList<ModuleDebug.DebuggedGeometry>()
+    val rays = ArrayList<DebuggedGeometry>()
 
     val center = box.center
     points.sortBy { it.distanceToSqr(center) }
@@ -193,15 +196,15 @@ fun findVisiblePointFromVirtualEye(
 
         val visible = visibilityPredicate.isVisible(rayStart, spotOnBox)
 
-        rays.add(ModuleDebug.DebuggedLineSegment(rayStart, spotOnBox, if (visible) Color4b.GREEN else Color4b.RED))
+        rays.add(DebuggedLineSegment(rayStart, spotOnBox, if (visible) Color4b.GREEN else Color4b.RED))
 
         if (visible) {
-            ModuleProjectileAimbot.debugGeometry("rays") { ModuleDebug.DebugCollection(rays) }
+            ModuleProjectileAimbot.debugGeometry("rays") { DebugCollection(rays) }
             return spotOnBox
         }
     }
 
-    ModuleProjectileAimbot.debugGeometry("rays") { ModuleDebug.DebugCollection(rays) }
+    ModuleProjectileAimbot.debugGeometry("rays") { DebugCollection(rays) }
 
     return null
 }

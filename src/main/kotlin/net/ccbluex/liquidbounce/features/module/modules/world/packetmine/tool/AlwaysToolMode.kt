@@ -35,7 +35,7 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         mc.execute {
-            val target = ModulePacketMine._target ?: return@execute
+            val target = ModulePacketMine.currentTarget ?: return@execute
             if (!abortOnSwitch || !target.started) {
                 return@execute
             }
@@ -46,14 +46,14 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
             val clientInitiatedSwitch = packet is ServerboundSetCarriedItemPacket &&
                     packet.slot == getSlot(target.blockState)?.inventorySlot
             if (serverInitiatedSwitch || clientInitiatedSwitch) {
-                ModulePacketMine._resetTarget()
+                ModulePacketMine.resetTarget()
             }
         }
     }
 
     @Suppress("unused")
     private val silentSwitchHandler = handler<SelectHotbarSlotSilentlyEvent> { event ->
-        val target = ModulePacketMine._target ?: return@handler
+        val target = ModulePacketMine.currentTarget ?: return@handler
 
         val requester = event.requester
         val fromPacketMine = requester === ModulePacketMine

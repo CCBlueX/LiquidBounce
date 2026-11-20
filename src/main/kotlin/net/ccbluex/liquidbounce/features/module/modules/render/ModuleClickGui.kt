@@ -30,10 +30,11 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.waitSeconds
+import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -128,7 +129,7 @@ object ModuleClickGui :
             return@sequenceHandler
         }
 
-        waitSeconds(1)
+        waitMillis(1000)
         if (updateStandaloneScreen()) {
             standaloneScreen?.sync()
         }
@@ -150,7 +151,10 @@ object ModuleClickGui :
         // Standalone Screen Cache
         if (useStandaloneScreen) {
             if (standaloneScreen == null) {
-                standaloneScreen = CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI)
+                // Nothing to cache while the browser is loading or skipped
+                if (BrowserBackendManager.isInitialized) {
+                    standaloneScreen = CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI)
+                }
             } else {
                 // Used in [worldChangeHandler] to determine if we need to sync.
                 return true

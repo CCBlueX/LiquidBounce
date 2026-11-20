@@ -32,6 +32,9 @@ import org.joml.Vector2f
 
 internal object HatsImage : HatsMode("Image") {
 
+    override val textured get() = true
+
+
     private val image by file("Image", supportedExtensions = PNG_AND_JPG)
         .toTextureProperty(this, printErrorToChat = true)
     private val colorModulator by color("ColorModulator", Color4b.WHITE)

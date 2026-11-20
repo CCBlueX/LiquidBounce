@@ -115,13 +115,14 @@ object CriticalsPacket : Mode("Packet") {
         })
     }
 
-    enum class Mode(override val tag: String) : Tagged {
+    enum class Mode(override val tag: String, override val tagAliases: List<String> = emptyList()) : Tagged {
         VANILLA("Vanilla"),
-        NO_CHEAT_PLUS("NoCheatPlus"),
+        NO_CHEAT_PLUS("NCP-2024-01-25", listOf("NoCheatPlus")),
         FALLING("Falling"),
         LOW("Low"),
         DOWN("Down"),
-        GRIM("Grim"),
+        GRIM("Grim-2.3.59", listOf("Grim")),
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
         BLOCKSMC("BlocksMC"),
     }
 }

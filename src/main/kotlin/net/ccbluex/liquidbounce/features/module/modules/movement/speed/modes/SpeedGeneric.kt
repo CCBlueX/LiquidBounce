@@ -60,7 +60,11 @@ class SpeedSpeedYPort(parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent
 
 class SpeedLegitHop(parent: ModeValueGroup<*>) : SpeedBHopBase("LegitHop", parent)
 
-abstract class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
+abstract class SpeedBHopBase(
+    name: String,
+    override val parent: ModeValueGroup<*>,
+    aliases: List<String> = emptyList()
+) : Mode(name, aliases) {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
@@ -109,7 +113,7 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
             .maxWithOrNull(COMPARING_LUNGE_AND_SPEED) ?: return@tickHandler
         val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
 
-        SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
+        SilentHotbar.selectSlotSilently(this@SpeedPiercingAttack, slot, ticksUntilReset = holdTime.random())
         interaction.piercingAttack(slot.itemStack.attackAnimation, piercingWeapon)
 
         if (waitForCooldown) {

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer

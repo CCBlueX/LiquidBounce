@@ -57,7 +57,7 @@ object ScaffoldStabilizeMovementFeature : ToggleableValueGroup(ScaffoldNormalTec
                 MAX_CENTER_DEVIATION
             }
 
-        if (nearestPointOnLine.distanceToSqr(player.position()) < maxDeviation * maxDeviation) {
+        if (nearestPointOnLine.closerThan(player.position(), maxDeviation)) {
             return@handler
         }
 

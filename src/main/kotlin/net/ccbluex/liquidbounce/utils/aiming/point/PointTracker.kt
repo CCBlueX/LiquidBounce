@@ -20,8 +20,9 @@ package net.ccbluex.liquidbounce.utils.aiming.point
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebugCollection
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBestHitVector
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
@@ -92,14 +93,14 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
         }
 
         parent.debugGeometry("Points") {
-            ModuleDebug.DebugCollection(points.map { point ->
+            DebugCollection(points.map { point ->
                 val percentage = calculateDistancePercentage(point, eyes, bestHitVector, worstHitVector)
                 val color = if (point !in pointsWithExempts) {
                     Color4b.MAGENTA
                 } else {
                     Color4b.GREEN.interpolateTo(Color4b.RED, percentage)
-                }.fade(1.0f - percentage.toFloat())
-                ModuleDebug.DebuggedPoint(point, color, 0.05)
+                }.fade(1.0f - percentage)
+                DebuggedPoint(point, color, 0.05)
             })
         }
 
@@ -136,11 +137,11 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
     // For debug visuals
     private fun calculateDistancePercentage(point: Vec3, eyes: Vec3, bestHitVector: Vec3,
                                             worstHitVector: Vec3
-    ): Double {
+    ): Float {
         val pointDistance = point.distanceTo(eyes)
         val bestDistance = bestHitVector.distanceTo(eyes)
         val worstDistance = worstHitVector.distanceTo(eyes)
-        return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).coerceIn(0.0, 1.0)
+        return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).toFloat().coerceIn(0.0F, 1.0F)
     }
 
 }

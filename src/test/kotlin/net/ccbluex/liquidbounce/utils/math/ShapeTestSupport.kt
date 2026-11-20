@@ -22,6 +22,7 @@ import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
+import kotlin.math.abs
 import kotlin.test.assertEquals
 import kotlin.math.roundToLong
 
@@ -173,4 +174,4 @@ private fun comesBefore(first: DoubleArray, second: DoubleArray): Boolean {
 
 private fun Double.normalizedKeyPart(): String = (this / TEST_EPSILON).roundToLong().toString()
 
-private fun Double.closeTo(other: Double): Boolean = kotlin.math.abs(this - other) <= TEST_EPSILON
+private fun Double.closeTo(other: Double): Boolean = abs(this - other) <= TEST_EPSILON

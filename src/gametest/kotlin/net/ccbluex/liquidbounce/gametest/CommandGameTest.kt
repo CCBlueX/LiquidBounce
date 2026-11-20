@@ -18,17 +18,11 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.ccbluex.gametest.harness.ClientGameTest
 
 /**
  * Boots the real client and runs a LiquidBounce command on the client thread.
  */
-class CommandGameTest : FabricClientGameTest {
-
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-        context.command("help")
-    }
-
-}
+class CommandGameTest : ClientGameTest({ context ->
+    context.command("help")
+})

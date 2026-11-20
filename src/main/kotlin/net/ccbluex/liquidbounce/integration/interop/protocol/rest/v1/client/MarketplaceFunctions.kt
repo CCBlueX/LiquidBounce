@@ -30,7 +30,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -39,33 +38,22 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
 
-/**
- * Extract a required integer path parameter or respond with 403 Forbidden
- */
-private suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
-    return parameters[parameter]?.toIntOrNull() ?: this.forbidden("Invalid $parameter: ${parameters[parameter]}")
-}
+internal suspend fun ApplicationCall.requireId(parameter: String = "id"): Int =
+    parameters[parameter]?.toIntOrNull() ?: forbidden("Invalid $parameter: ${parameters[parameter]}")
 
 /**
  * GET /api/v1/client/marketplace
- *
- * Lists marketplace items with optional filtering
  */
 private fun Route.getMarketplaceItems() = get {
     val page = call.queryParameters["page"]?.toIntOrNull() ?: 1
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 12
     val query = call.queryParameters["query"]
-    val typeStr = call.queryParameters["type"]
-    val type = typeStr?.let { name ->
+    val type = call.queryParameters["type"]?.let { name ->
         MarketplaceItemType.entries.find { it.tag.equals(name, ignoreCase = true) }
-            ?: return@get call.respondText(
-                "Unknown marketplace item type '$name'",
-                status = HttpStatusCode.BadRequest,
-            )
+            ?: return@get call.respondText("Unknown marketplace item type '$name'", status = HttpStatusCode.BadRequest)
     }
-    val featured = call.queryParameters["featured"]?.toBoolean() ?: true
 
-    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)
+    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type)
 
     val items = response.items.map { item ->
         JsonObject().apply {
@@ -108,7 +96,7 @@ private fun Route.getMarketplaceItemRevisions() = get {
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
     val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, limit)
-    call.respond(response)
+    call.respond(PageData(response.items, response.pagination))
 }
 
 /**
@@ -118,8 +106,7 @@ private fun Route.getMarketplaceItemRevision() = get("/{revisionId}") {
     val id = call.requireId()
     val revisionId = call.requireId("revisionId")
 
-    val response = MarketplaceApi.getMarketplaceItemRevision(id, revisionId)
-    call.respond(response)
+    call.respond(MarketplaceApi.getMarketplaceItemRevision(id, revisionId))
 }
 
 /**
@@ -139,13 +126,9 @@ private fun Route.subscribeMarketplaceItem() = post("/subscribe") {
         call.forbidden("Failed to subscribe: ${e.message}")
     }
 
-    if (item.status != MarketplaceItemStatus.ACTIVE) {
-        call.forbidden("Item is not active")
-    }
-
     try {
         MarketplaceManager.subscribe(item)
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     } catch (e: Exception) {
         logger.error("Failed to subscribe to marketplace item", e)
         call.forbidden("Failed to subscribe: ${e.message}")
@@ -164,7 +147,7 @@ private fun Route.unsubscribeMarketplaceItem() = post("/unsubscribe") {
 
     try {
         MarketplaceManager.unsubscribe(id)
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     } catch (e: Exception) {
         logger.error("Failed to unsubscribe from marketplace item", e)
         call.forbidden("Failed to unsubscribe: ${e.message}")
@@ -180,17 +163,14 @@ private fun Route.getMarketplaceItemReviews() = get {
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
     val response = MarketplaceApi.getReviews(id, page, limit)
-    call.respond(response)
+    call.respond(PageData(response.items, response.pagination))
 }
 
 /**
  * POST /api/v1/client/marketplace/{id}/reviews
  */
 private fun Route.postMarketplaceItemReview() = post {
-    data class MarketplaceReview(
-        val rating: Int,
-        val comment: String
-    )
+    data class MarketplaceReview(val rating: Int, val comment: String)
 
     val id = call.requireId()
     val review = call.receive<MarketplaceReview>()
@@ -200,8 +180,7 @@ private fun Route.postMarketplaceItemReview() = post {
         call.forbidden("Not logged in")
     }
 
-    val response = MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment)
-    call.respond(response)
+    call.respond(MarketplaceApi.createReview(clientAccount.takeSession(), id, review.rating, review.comment))
 }
 
 internal fun Route.marketplaceRoutes() = route("/marketplace") {

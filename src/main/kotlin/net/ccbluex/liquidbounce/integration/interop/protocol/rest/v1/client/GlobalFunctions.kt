@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -38,7 +39,7 @@ private fun Route.getGlobalConfig() = get {
 private fun Route.putGlobalConfig() = put {
     ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText())
     ConfigSystem.store(GlobalManager)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.globalRoutes() = route("/global") {

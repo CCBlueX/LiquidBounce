@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 
-object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
+object ScaffoldTowerHypixel : ScaffoldTower("Hypixel-2026-07-12", aliases = listOf("Hypixel")) {
     private var notifiedWrongProtocol = false
     private var notifiedStationary = false
 

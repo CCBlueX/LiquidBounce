@@ -24,11 +24,6 @@ import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceListCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions.MarketplaceRevisionsCommand
 
-/**
- * Marketplace command
- *
- * Allows interacting with the LiquidBounce Marketplace
- */
 object CommandMarketplace : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {

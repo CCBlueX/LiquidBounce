@@ -24,6 +24,7 @@ import kotlin.test.assertNull
 import kotlin.test.Test
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
+import kotlin.test.assertTrue
 
 class NormalizedPlaneTest {
 
@@ -65,7 +66,7 @@ class NormalizedPlaneTest {
         for (parameter in doubleArrayOf(-1.0, 0.0, 1.0)) {
             val point = line.pointAt(parameter)
             val signedDistance = point.dot(plane.normalVec) - plane.pos.dot(plane.normalVec)
-            kotlin.test.assertTrue(
+            assertTrue(
                 abs(signedDistance) <= tolerance,
                 "Expected point $point on plane ${plane.normalVec} @ ${plane.pos}, got signed distance $signedDistance",
             )

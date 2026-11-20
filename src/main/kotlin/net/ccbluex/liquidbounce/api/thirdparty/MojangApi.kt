@@ -21,10 +21,11 @@ package net.ccbluex.liquidbounce.api.thirdparty
 
 import com.mojang.util.UndashedUuid
 import net.ccbluex.liquidbounce.api.core.HttpClient.mojangApiClient
+import retrofit2.HttpException
 import java.util.UUID
 
 internal suspend fun lookupUuidByName(username: String): UUID? = try {
     UndashedUuid.fromString(mojangApiClient.mcServicesApi.lookupUuidByName(username).id)
-} catch (e: retrofit2.HttpException) {
+} catch (e: HttpException) {
     if (e.code() == 404) null else throw IllegalStateException("Failed to execute profile lookup", e)
 }

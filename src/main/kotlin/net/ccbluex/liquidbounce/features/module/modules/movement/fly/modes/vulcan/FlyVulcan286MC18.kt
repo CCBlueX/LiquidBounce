@@ -43,7 +43,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @note ONLY WORKS ON 1.8 SERVERS
  * @author Nullable
  */
-internal object FlyVulcan286MC18 : Mode("Vulcan286-18") {
+internal object FlyVulcan286MC18 : Mode("Vulcan-2.8.6-MC1.8", aliases = listOf("Vulcan286-18")) {
 
 
     // 2.5 is the maximum timer tested.

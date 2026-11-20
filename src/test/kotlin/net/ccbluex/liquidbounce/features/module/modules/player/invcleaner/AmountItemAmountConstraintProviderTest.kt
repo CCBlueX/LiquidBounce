@@ -91,12 +91,12 @@ class AmountItemAmountConstraintProviderTest {
     }
 
     private fun facet(type: GenericItemType): ItemFacet =
-        PrimitiveItemFacet(EMPTY_SLOT, ItemCategory(type))
+        PrimitiveItemFacet(emptySlot, ItemCategory(type))
 
-    private fun foodFacet(foodPoints: Int): ItemFacet = object : ItemFacet(EMPTY_SLOT) {
+    private fun foodFacet(foodPoints: Int): ItemFacet = object : ItemFacet(emptySlot) {
         override val providedItemFunctions = listOf(ProvidedFunction(ItemFunction.FOOD, foodPoints))
     }
 
-    private val EMPTY_SLOT: ItemSlot = VirtualItemSlot(ItemStack.EMPTY, ItemSlot.Type.INVENTORY, 0)
+    private val emptySlot: ItemSlot = VirtualItemSlot(ItemStack.EMPTY, ItemSlot.Type.INVENTORY, 0)
 
 }

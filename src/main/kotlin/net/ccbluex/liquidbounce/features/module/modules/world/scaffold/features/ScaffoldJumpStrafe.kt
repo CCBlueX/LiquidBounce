@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -55,7 +55,7 @@ object ScaffoldJumpStrafe : ToggleableValueGroup(ModuleScaffold, "StrafeOnJump",
 
         val speed = if (isMovingStraight) straightSpeed else diagonalSpeed
         player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.random().toDouble())
-        ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.horizontalSpeed))
+        ModuleScaffold.debugParameter("Telly-Speed") { player.horizontalSpeed }
     }
 
 }

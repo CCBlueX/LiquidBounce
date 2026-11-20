@@ -33,9 +33,11 @@ import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.gson.util.toJsonArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsInventory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -83,14 +85,46 @@ object AutoConfig {
     }
 
     /**
+     * Configs longer than this many characters are rejected unread. Exported configs are below 1 MiB.
+     */
+    const val MAX_CONFIG_CHARS = 8 shl 20
+
+    /**
+     * Configs nesting objects and arrays deeper than this are rejected while parsing. Exported configs stay below 30.
+     */
+    const val MAX_CONFIG_DEPTH = 64
+
+    /**
      * Deserialize module configurable from a reader
      */
     fun loadAutoConfig(
         reader: Reader,
         modules: Collection<ValueGroup> = []
     ) {
-        publicGson.newJsonReader(reader).use { reader ->
-            loadAutoConfig(reader.parseTree().asJsonObject, modules)
+        loadAutoConfig(readAutoConfig(reader), modules)
+    }
+
+    /**
+     * Reads an auto config from [reader] and closes it. Fails when it is longer than [MAX_CONFIG_CHARS] characters
+     * or nests deeper than [MAX_CONFIG_DEPTH] levels.
+     */
+    fun readAutoConfig(reader: Reader): JsonObject {
+        val text = reader.use { it.readLimited() }
+        return publicGson.newJsonReader(Reader.of(text)).use {
+            it.nestingLimit = MAX_CONFIG_DEPTH
+            it.parseTree().asJsonObject
+        }
+    }
+
+    private fun Reader.readLimited() = buildString {
+        val buffer = CharArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = read(buffer)
+            if (read == -1) {
+                break
+            }
+            appendRange(buffer, 0, read)
+            require(length <= MAX_CONFIG_CHARS) { "Config is larger than ${MAX_CONFIG_CHARS shr 20} MiB" }
         }
     }
 
@@ -119,6 +153,10 @@ object AutoConfig {
                 // Deserialize Spoofer Configurable
                 jsonObject.obj("spoofers")?.let { spooferObject ->
                     deserializeValueGroup(SpooferManager, spooferObject)
+                }
+
+                jsonObject.obj("inventory")?.let { inventoryObject ->
+                    deserializeValueGroup(GlobalSettingsInventory, inventoryObject)
                 }
             }
             "modules" -> deserializeModuleValueGroup(jsonObject, modules)
@@ -233,7 +271,8 @@ object AutoConfig {
     /**
      * Created an auto config, which stores the moduleConfigur
      *
-     * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers].
+     * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers]. The inventory
+     * settings go along with every module that clicks in the inventory.
      * Loading such a config leaves everything it does not name untouched.
      *
      * [marketplaceItemId] is the marketplace config the settings come from, kept so loading them back
@@ -271,6 +310,13 @@ object AutoConfig {
         jsonObject.add("modules", moduleTree.asJsonObject)
         if (includeSpoofers) {
             jsonObject.add("spoofers", spooferTree.asJsonObject)
+        }
+        val clicksInventory = ModuleManager.modulesConfig.inner.any { module ->
+            module is ValueGroup && (modules == null || module.name in modules) &&
+                module.collectValueGroupsRecursively().any { it is InventoryConstraints }
+        }
+        if (clicksInventory) {
+            jsonObject.add("inventory", ConfigSystem.serializeValueGroup(GlobalSettingsInventory, publicGson))
         }
 
         val author = mc.user.name

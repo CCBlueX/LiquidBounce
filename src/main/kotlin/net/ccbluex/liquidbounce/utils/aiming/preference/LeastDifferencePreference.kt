@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Ray
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -54,7 +53,7 @@ class LeastDifferencePreference(
 
         val look = Ray(eyesPos, preferredSpot - eyesPos)
         return look.firstIntersectionWith(box)
-            ?.takeIf { it.distanceToSqr(eyesPos) <= range.sq() }
+            ?.takeIf { it.closerThan(eyesPos, range) }
             ?: preferredSpot
     }
 

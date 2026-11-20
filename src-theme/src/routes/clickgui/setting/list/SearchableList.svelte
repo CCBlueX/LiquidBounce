@@ -1,6 +1,7 @@
 <script lang="ts">
     import VirtualList from "./VirtualList.svelte";
     import type {NamedItem} from "../../../../integration/types.ts";
+    import {escapeLayer} from "../../../../integration/escape";
 
     export let items: NamedItem[];
 
@@ -15,6 +16,9 @@
             return queryParts.every(part => name.includes(part));
         });
     }
+
+    const layer = escapeLayer(() => searchQuery = "");
+    $: layer.setOpen(searchQuery !== "");
 </script>
 
 <div class="list-item-list">
