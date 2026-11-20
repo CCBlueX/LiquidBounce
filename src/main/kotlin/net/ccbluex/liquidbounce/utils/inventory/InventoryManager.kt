@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsInventory
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.interaction
@@ -147,18 +148,21 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Takes the cursor to the slot [action] clicks, which takes the time [travel] gives the way.
+     * Takes the cursor to the slot [action] clicks, which makes the delay before it longer the further that is.
      */
-    private suspend fun moveCursor(action: InventoryAction, travel: CursorTravel) {
-        if (action !is InventoryAction.Click || !travel.enabled) {
+    private suspend fun moveCursor(action: InventoryAction, constraints: InventoryConstraints) {
+        if (action !is InventoryAction.Click) {
             return
         }
 
         val menu = action.screen?.menu ?: player.inventoryMenu
         val slot = menu.slots.getOrNull(action.slot.getIdForServer(action.screen) ?: return) ?: return
-        val screen = (mc.gui.screen() as? AbstractContainerScreen<*>)
-            ?.takeIf { it.menu === menu && travel.moveCursor && !mc.mouseHandler.isMouseGrabbed }
+        val screen = (mc.gui.screen() as? AbstractContainerScreen<*>)?.takeIf {
+            it.menu === menu && ModuleBetterInventory.shouldMoveCursor && !mc.mouseHandler.isMouseGrabbed
+        }
         val scale = mc.window.screenWidth.toFloat() / mc.window.guiScaledWidth
+        // Nothing was clicked since opening
+        val delay = if (cursor == null) constraints.startDelay else constraints.clickDelay
 
         val from = if (screen != null) {
             Vector2f(
@@ -171,7 +175,7 @@ object InventoryManager : EventListener {
         // Somewhere on the slot, nobody hits the middle every time
         val to = Vector2f(slot.x + 2f + Random.nextFloat() * 12f, slot.y + 2f + Random.nextFloat() * 12f)
         // Slots are 18 pixels apart
-        val millis = travel.millis(from.distance(to) / 18f)
+        val millis = constraints.travelMillis(delay, from.distance(to) / 18f)
         cursor = to
 
         if (screen == null) {
@@ -488,7 +492,7 @@ object InventoryManager : EventListener {
                 pause(constraints.closeDelay.random())
             }
 
-            moveCursor(action, constraints.cursorTravel)
+            moveCursor(action, constraints)
 
             // The waits may outlive the chain, e.g. when its menu closes meanwhile
             if (!chain.canPerformAction()) {

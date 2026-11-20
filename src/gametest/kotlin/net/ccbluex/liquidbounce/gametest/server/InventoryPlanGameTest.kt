@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.gametest.server
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
-import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory
+import net.ccbluex.liquidbounce.gametest.harness.disable
+import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryPlan
@@ -55,7 +57,6 @@ private class Sorter(
     private val priority: Priority = Priority.NORMAL,
     private val pause: Int = 0,
     private val performed: MutableList<Item> = CopyOnWriteArrayList(),
-    constraints: PlayerInventoryConstraints = PlayerInventoryConstraints(),
 ) : EventListener {
 
     @Volatile
@@ -69,7 +70,7 @@ private class Sorter(
         get() = isActive
 
     @Suppress("unused")
-    private val sort = inventoryPlan(constraints) {
+    private val sort = inventoryPlan(PlayerInventoryConstraints()) {
         val swaps = moves.mapNotNull { (item, to) -> Slots.Inventory.findSlot(item)?.let { Triple(item, it, to) } }
         if (swaps.isEmpty()) {
             return@inventoryPlan
@@ -94,12 +95,9 @@ private inline fun GameTestScope.withSorters(vararg sorters: Sorter, block: () -
 
 private fun GameTestScope.movesCursorToClickedSlot() {
     giveIngots()
-    val sorter = client {
-        val constraints = PlayerInventoryConstraints()
-        (constraints.inner.first { it.name == "CursorTravel" } as ToggleableValueGroup).enabled = true
-        Sorter(INGOT_SLOTS, constraints = constraints)
-    }
+    val sorter = client { Sorter(INGOT_SLOTS) }
     withSorters(sorter) {
+        enable(ModuleBetterInventory)
         client { it.gui.setScreen(InventoryScreen(checkNotNull(it.player))) }
         try {
             sorter.isActive = true
@@ -115,6 +113,7 @@ private fun GameTestScope.movesCursorToClickedSlot() {
             check(isOnSlot) { "the cursor did not end on the slot clicked last" }
         } finally {
             client { it.gui.setScreen(null) }
+            disable(ModuleBetterInventory)
         }
     }
 }
