@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.integration.screen.ScreenTweak
 
 @JvmRecord
 data class ThemeMetadata(
@@ -38,8 +39,8 @@ data class ThemeMetadata(
     val nativeFont: String? = null,
     /** Names of the sounds the theme ships as `sounds/<name>.ogg`, played through [ThemeSounds]. */
     val sounds: List<String>? = null,
-    /** Hides the Minecraft logo of the title screen the theme overlays, for themes that draw their own there. */
-    val hideMinecraftLogo: Boolean = false,
+    /** Tweaks to the Minecraft screens the theme overlays, such as hiding the title screen logo. */
+    val screenTweaks: List<ScreenTweak>? = null,
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {

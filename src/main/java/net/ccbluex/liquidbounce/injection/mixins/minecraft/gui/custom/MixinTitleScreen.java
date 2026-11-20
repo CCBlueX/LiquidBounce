@@ -21,10 +21,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.integration.screen.CustomScreenType;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.integration.screen.ScreenTweak;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.LogoRenderer;
+import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,15 +35,13 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinTitleScreen {
 
     @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IF)V"))
-    private boolean hideMinecraftLogo(LogoRenderer logoRenderer, GuiGraphicsExtractor graphics, int width, float alpha) {
-        if (!LiquidBounce.INSTANCE.isInitialized()) {
-            return true;
-        }
+    private boolean hookLogo(LogoRenderer logoRenderer, GuiGraphicsExtractor graphics, int width, float alpha) {
+        return !LiquidBounce.INSTANCE.isInitialized() || !ScreenManager.isTweakEnabled(ScreenTweak.DISABLE_LOGO);
+    }
 
-        var screen = ScreenManager.INSTANCE.getScreen();
-        var theme = ScreenManager.INSTANCE.getTheme();
-        return screen == null || screen.getType() != CustomScreenType.TITLE
-            || theme == null || !theme.getMetadata().hideMinecraftLogo();
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;ILnet/minecraft/client/gui/Font;F)V"))
+    private boolean hookSplash(SplashRenderer splashRenderer, GuiGraphicsExtractor graphics, int width, Font font, float alpha) {
+        return !LiquidBounce.INSTANCE.isInitialized() || !ScreenManager.isTweakEnabled(ScreenTweak.DISABLE_SPLASH);
     }
 
 }
