@@ -51,7 +51,8 @@ object SchematicMode : ModuleAutoBuild.AutoBuildMode("Schematic") {
     override fun enabled() {
         val blocks = Placements.blocks()
         if (blocks.isEmpty()) {
-            chat(markAsError(ModuleAutoBuild.message("noPlacement")), ModuleAutoBuild)
+            val reason = if (Placements.isAvailable) "noPlacement" else "noLitematica"
+            chat(markAsError(ModuleAutoBuild.message(reason)), ModuleAutoBuild)
             // The enabled value is committed after onEnabled returns, so defer the disable.
             mc.schedule { ModuleAutoBuild.enabled = false }
             return
