@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.activeGuards
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
@@ -114,7 +114,7 @@ class InventoryPlan internal constructor(
     private fun originOf(slot: ItemSlot) = moved.entries.find { it.value == slot }?.key ?: slot
 
     private fun expectCurrent() {
-        val menu = mc.player?.containerMenu ?: return
+        val menu = player.containerMenu
         expected = Expected(
             menu.containerId,
             menu.slots.map { it.item.copy() },
@@ -124,7 +124,7 @@ class InventoryPlan internal constructor(
     }
 
     private fun matchesExpected(): Boolean {
-        val menu = mc.player?.containerMenu ?: return false
+        val menu = player.containerMenu
         val expected = expected ?: return true
 
         return menu.containerId == expected.containerId &&

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.Reentry
 import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -159,7 +158,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
 
             trackedHotbarItems[slot] = ItemAndComponents(itemStack)
             chronometer.reset()
-            waitMillis(delay, Reentry.GAME_TICK)
+            waitMillis(delay)
         }
     }
 

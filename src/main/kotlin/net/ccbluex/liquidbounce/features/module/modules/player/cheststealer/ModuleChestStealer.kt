@@ -65,8 +65,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
 
     private val selectionMode = choices(
         "SelectionMode",
-        Distance,
-        arrayOf(Distance, Value, Index, Random),
+        Value,
+        arrayOf(Value, Distance, Index, Random),
     ).apply(::tagBy)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
@@ -104,9 +104,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
             isByValue -> cleanupPlan.swaps.sortedByDescending { it.priority }
             else -> cleanupPlan.swaps
         }
-        // By value, the swaps wait for the items worth more than all of them
+        // By value, the swaps wait for the items worth more than all of them. What a swap brings is not picked up.
         val itemsBeforeSwaps = if (isByValue) {
-            itemsToCollect.takeWhile { item -> swaps.any() && swaps.all { valueOf(item) > it.priority } }
+            itemsToCollect.takeWhile { item ->
+                swaps.any() && swaps.all { it.from != item && valueOf(item) > it.priority }
+            }
         } else {
             emptyList()
         }

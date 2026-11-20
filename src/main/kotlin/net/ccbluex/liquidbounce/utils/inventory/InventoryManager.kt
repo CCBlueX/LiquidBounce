@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.additions.setPosition
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventListenerNotListeningException
@@ -34,8 +36,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.Reentry
-import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsInventory
@@ -51,6 +51,7 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.core.registries.BuiltInRegistries
@@ -105,6 +106,16 @@ object InventoryManager : EventListener {
         internal set
 
     private var recentInventoryOpen = false
+
+    /**
+     * Waits [millis] and continues right then, between two ticks. A wait that continues on a tick would round every
+     * click delay up to the next one.
+     */
+    private suspend fun pause(millis: Int) {
+        if (millis > 0) {
+            withContext(Dispatchers.Minecraft) { delay(millis.toLong()) }
+        }
+    }
 
     /**
      * Where the cursor is taken to be while no screen shows it, in pixels of the menu. Null in the middle, where
@@ -164,7 +175,7 @@ object InventoryManager : EventListener {
         cursor = to
 
         if (screen == null) {
-            waitMillis(millis, Reentry.RENDER_THREAD)
+            pause(millis)
             return
         }
 
@@ -183,7 +194,7 @@ object InventoryManager : EventListener {
             )
             if (progress < 1f) {
                 // Short enough for every frame to show a new position
-                waitMillis(5, Reentry.RENDER_THREAD)
+                pause(5)
             }
         } while (progress < 1f && mc.gui.screen() === screen)
     }
@@ -372,7 +383,7 @@ object InventoryManager : EventListener {
 
                 // A plan may ask for its next chain during the wait
                 maximumCloseDelay > 0 -> {
-                    waitMillis(maximumCloseDelay, Reentry.RENDER_THREAD)
+                    pause(maximumCloseDelay)
                     maximumCloseDelay = 0
                 }
 
@@ -444,17 +455,17 @@ object InventoryManager : EventListener {
             // First action to be executed will be the start delay
             if (recentInventoryOpen) {
                 recentInventoryOpen = false
-                waitMillis(constraints.startDelay.random(), Reentry.RENDER_THREAD)
+                pause(constraints.startDelay.random())
             }
 
             // Handle player inventory open requirements
             if (action.requiresPlayerInventoryOpen()) {
                 if (!isInventoryOpen) {
                     network.send1_11_1OpenInventory()
-                    waitMillis(constraints.startDelay.random(), Reentry.RENDER_THREAD)
+                    pause(constraints.startDelay.random())
                 }
             } else if (canCloseMainInventory && isInventoryOpen) {
-                waitMillis(constraints.closeDelay.random(), Reentry.RENDER_THREAD)
+                pause(constraints.closeDelay.random())
                 network.sendCloseInventory()
             }
 
@@ -469,12 +480,12 @@ object InventoryManager : EventListener {
                 // Simulate a miss click (this is only possible for container-type slots)
                 // TODO: Add support for inventory slots
                 if (action.performMissClick()) {
-                    waitMillis(constraints.clickDelay.random(), Reentry.RENDER_THREAD)
+                    pause(constraints.clickDelay.random())
                 }
             }
 
             if (action is InventoryAction.CloseScreen) {
-                waitMillis(constraints.closeDelay.random(), Reentry.RENDER_THREAD)
+                pause(constraints.closeDelay.random())
             }
 
             moveCursor(action, constraints.cursorTravel)
@@ -503,7 +514,7 @@ object InventoryManager : EventListener {
                 if (action is InventoryAction.CloseScreen) {
                     waitTicks(1)
                 } else {
-                    waitMillis(constraints.clickDelay.random(), Reentry.RENDER_THREAD)
+                    pause(constraints.clickDelay.random())
                 }
             }
         }
