@@ -37,7 +37,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECIS
 import net.ccbluex.liquidbounce.utils.render.route.RouteEvents
 import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
 import net.ccbluex.liquidbounce.utils.render.route.RouteView
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.agent.navigation.Navigator as AgentNavigator
 import net.ccbluex.agent.skills.Agent
@@ -149,18 +153,26 @@ class Navigator(
 
     @Suppress("unused")
     private val blockChangeHandler = handler<BlockChangeEvent> { event ->
-        mc.execute {
-            val pos = event.blockPos.toAgent()
-            navigator.blockChanged(pos)
-            navigator.blockConfirmed(pos, event.newState.toAgent())
+        mc.execute { navigator.blockChanged(event.blockPos.toAgent()) }
+    }
+
+    // Only the server's own updates judge a placed block or a used door; the client's prediction comes first
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.origin != TransferOrigin.INCOMING) {
+            return@handler
+        }
+        when (val packet = event.packet) {
+            is ClientboundPlayerPositionPacket -> mc.execute(navigator::positionCorrected)
+            is ClientboundBlockUpdatePacket -> confirm(packet.pos, packet.blockState)
+            is ClientboundSectionBlocksUpdatePacket -> packet.runUpdates { pos, state -> confirm(pos, state) }
         }
     }
 
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin == TransferOrigin.INCOMING && event.packet is ClientboundPlayerPositionPacket) {
-            mc.execute(navigator::positionCorrected)
-        }
+    private fun confirm(pos: BlockPos, state: BlockState) {
+        val agentPos = pos.toAgent()
+        val agentState = state.toAgent()
+        mc.execute { navigator.blockConfirmed(agentPos, agentState) }
     }
 
     @Suppress("unused")
