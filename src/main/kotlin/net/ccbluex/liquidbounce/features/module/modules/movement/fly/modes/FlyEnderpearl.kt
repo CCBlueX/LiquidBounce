@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -42,6 +43,7 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
+import java.util.concurrent.ThreadLocalRandom
 
 internal object FlyEnderpearl : Mode("Enderpearl") {
 
@@ -85,12 +87,11 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
         if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
 
-        // If there isn't a pearl, return
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+        val slot by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
 
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(
-                Rotation(player.yRot, (80f..90f).random()),
+                Rotation(player.yRot, ThreadLocalRandom.current().nextFloat(80f, 90f)),
                 valueGroup = rotations,
                 provider = ModuleFastUse,
                 priority = Priority.IMPORTANT_FOR_USAGE_2
@@ -98,7 +99,7 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
         }
 
         waitTicks(2)
-        SilentHotbar.selectSlotSilently(this, slot, 1)
+        SilentHotbar.selectSlotSilently(this@FlyEnderpearl, slot, 1)
         interaction.startPrediction(world) { sequence ->
             ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
         }
@@ -114,8 +115,8 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
     }
 
     fun isABitAboveGround(): Boolean {
+        val boundingBox = player.box
         for (y in 0..5) {
-            val boundingBox = player.box
             val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
             if (detectionBox.isBlockAtPosition { it is Block }) return true

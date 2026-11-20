@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {GroupedModules, Module} from "../../integration/types";
     import Panel from "./Panel.svelte";
+    import GlobalSettings from "./GlobalSettings.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
@@ -30,7 +31,7 @@
             class="clickgui"
             class:grid={$showGrid}
             style="background-size: {$gridSize}px {$gridSize}px;"
-            transition:fade|global={{duration: 200}}
+            transition:fade|global={{duration: 140}}
     >
         <Description/>
         <Search modules={structuredClone($state.snapshot(modules))}/>
@@ -38,6 +39,16 @@
         {#each Object.entries(categories) as [category, modules], panelIndex (category)}
             <Panel {category} {modules} {panelIndex} icon={icons[category]}/>
         {/each}
+
+        {#if Object.keys(categories).length > 0}
+            <Panel
+                    category="Settings"
+                    panelIndex={Object.keys(categories).length}
+                    icon="img/clickgui/icon-client.svg"
+            >
+                <GlobalSettings/>
+            </Panel>
+        {/if}
     </div>
 </ScaledClickGuiContent>
 

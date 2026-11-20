@@ -121,7 +121,7 @@
         <ExpandArrow bind:expanded/>
     </div>
     {#if expanded}
-        <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
+        <div in:slide|global={{duration: 150, axis: "y"}} out:slide|global={{duration: 120, axis: "y"}}>
             <div class="selected-items">
                 {#key sortableRenderKey}
                     <SortableList class="" forceFallback={true} fallbackOnBody={true} animation={150} onEnd={handleSort}>

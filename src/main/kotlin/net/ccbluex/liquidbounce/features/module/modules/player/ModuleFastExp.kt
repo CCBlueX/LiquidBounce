@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.Required
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -145,28 +147,21 @@ object ModuleFastExp : ClientModule(
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = tickHandler(onCancellation = { resetRepair() }) {
+        // A screen only pauses the repair, ending the run by it would reset the count
         if (InventoryManager.isHandledScreenOpen) {
-            // doesn't throw exp bottles when an inventory is open
-            // yet doesn't stop the repairing process either
-            // allowing to refill the hotbar with exp bottles, if needed.
             return@tickHandler
         }
 
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE)
-        if (slot == null || player.isDeadOrDying) {
-            bottlesUsed = 0
-            bottlesRequired = 0
-            repairing = false
-            return@tickHandler
-        }
+        requires { !player.isDeadOrDying }
+        val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
         if (!NoWaste.enabled) {
             action(slot)
             return@tickHandler
         }
 
-        val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot)
+        val bottlesRequiredCurrently = getRequiredExperienceBottleCount(slot.value)
 
         if (bottlesRequiredCurrently < 1) {
             bottlesUsed = 0
@@ -192,6 +187,12 @@ object ModuleFastExp : ClientModule(
         }
     }
 
+    private fun resetRepair() {
+        bottlesUsed = 0
+        bottlesRequired = 0
+        repairing = false
+    }
+
     private fun anyExpOrbMovingToPlayer(): Boolean =
         world.entityGetter.any(EntityTypes.EXPERIENCE_ORB) {
             (it as MixinExperienceOrbAccessor).followingPlayer === player
@@ -209,7 +210,7 @@ object ModuleFastExp : ClientModule(
         }
     }
 
-    private suspend fun action(slot: HotbarItemSlot) {
+    private suspend fun action(slot: Required<HotbarItemSlot>) {
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
         if (Rotate.enabled) {
@@ -231,7 +232,7 @@ object ModuleFastExp : ClientModule(
         val pitch = if (Rotate.enabled) RotationManager.serverRotation.pitch else 90f
         repeat(times) {
             useHotbarSlotOrOffhand(
-                slot,
+                slot.value,
                 slotResetDelay.random(),
                 xRot = pitch
             )

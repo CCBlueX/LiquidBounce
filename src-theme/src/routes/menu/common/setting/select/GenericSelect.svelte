@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {quintOut} from "svelte/easing";
     import {fade} from "svelte/transition";
     import {escapeLayer} from "../../../../../integration/escape";
 
@@ -43,7 +42,7 @@
         <img src="img/menu/icon-select-arrow.svg" alt="expand">
     </div>
     {#if expanded}
-        <div class="options" transition:fade|global={{ duration: 200, easing: quintOut }}>
+        <div class="options" transition:fade|global={{ duration: 140 }}>
             <slot name="options"></slot>
         </div>
     {/if}

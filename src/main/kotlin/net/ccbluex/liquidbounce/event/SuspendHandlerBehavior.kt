@@ -20,16 +20,14 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import java.util.function.Consumer
 import kotlin.coroutines.CoroutineContext
+
+private typealias OnCancellation = Consumer<in Throwable>
 
 sealed interface SuspendHandlerBehavior {
 
@@ -44,7 +42,7 @@ sealed interface SuspendHandlerBehavior {
      * Starts a new job for each event.
      */
     @JvmRecord
-    data class Parallel(val start: CoroutineStart, val onCancellation: Runnable?) :
+    data class Parallel(val start: CoroutineStart, val onCancellation: OnCancellation?) :
         SuspendHandlerBehavior {
         override fun <T : Event> EventListener.createEventHook(
             eventClass: Class<T>,
@@ -64,105 +62,102 @@ sealed interface SuspendHandlerBehavior {
     }
 
     /**
-     * Suspends the new event if a job is active. Thus, all events will be handled one by one.
-     */
-    object Suspend : SuspendHandlerBehavior {
-        override fun <T : Event> EventListener.createEventHook(
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: SuspendableEventHandler<T>
-        ): EventHook<T> {
-            val channelRef = atomic<Channel<T>?>(null)
-
-            return handler(eventClass, priority) { event ->
-                val channel = channelRef.updateAndGet { old ->
-                    old ?: Channel<T>(
-                        capacity = Channel.BUFFERED,
-                        onBufferOverflow = BufferOverflow.SUSPEND,
-                    ).also { channel ->
-                        eventListenerScope.launch {
-                            channel.consumeEach { handler(it) }
-                        }.invokeOnCompletion {
-                            channelRef.getAndSet(null)?.close(it)
-                        }
-                    }
-                }
-
-                eventListenerScope.launch(wrappedContext) {
-                    channel!!.send(event)
-                }
-            }
-        }
-    }
-
-    /**
-     * Cancels the previous job if it's active.
-     */
-    object CancelPrevious : SuspendHandlerBehavior {
-        override fun <T : Event> EventListener.createEventHook(
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: SuspendableEventHandler<T>
-        ): EventHook<T> {
-            val jobRef = atomic<Job?>(null)
-            return handler(eventClass, priority) { event ->
-                jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
-                    handler(event)
-                })?.cancel()
-            }
-        }
-    }
-
-    /**
-     * Discards the new event if a job is active.
+     * Handles one event at a time: an event arriving while a run is active does what [whenBusy] says.
      */
     @JvmRecord
-    data class DiscardLatest(val onCancellation: Runnable? = null) : SuspendHandlerBehavior {
+    data class Exclusive(
+        val whenBusy: WhenBusy,
+        val onCancellation: OnCancellation?,
+    ) : SuspendHandlerBehavior {
+
         override fun <T : Event> EventListener.createEventHook(
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
             priority: Short,
             handler: SuspendableEventHandler<T>
-        ): EventHook<T> {
-            val jobRef = atomic<Job?>(null)
-            return handler(eventClass, priority) { event ->
-                var newJob: Job? = null
+        ): EventHook<T> = ExclusiveHandler(
+            this, eventClass, wrappedContext, priority, whenBusy, onCancellation, handler
+        ).hook
 
+        companion object {
+            /**
+             * Discards the new event.
+             */
+            @JvmField
+            val Drop = Exclusive(WhenBusy.DROP, null)
+
+            /**
+             * Cancels the run of the event before, the new one takes over.
+             */
+            @JvmField
+            val LatestWins = Exclusive(WhenBusy.CANCEL_PREVIOUS, null)
+        }
+    }
+
+    enum class WhenBusy {
+        /** The new event is discarded. */
+        DROP,
+
+        /** The run of the event before is cancelled. */
+        CANCEL_PREVIOUS,
+    }
+}
+
+/**
+ * Handles one event at a time on the scope of [listener].
+ */
+private class ExclusiveHandler<T : Event>(
+    private val listener: EventListener,
+    eventClass: Class<T>,
+    private val context: CoroutineContext,
+    priority: Short,
+    private val whenBusy: SuspendHandlerBehavior.WhenBusy,
+    private val onCancellation: OnCancellation?,
+    private val handler: SuspendableEventHandler<T>,
+) : Consumer<T> {
+
+    private val jobRef = atomic<Job?>(null)
+
+    @JvmField
+    val hook: EventHook<T> = listener.handler(eventClass, priority, this)
+
+    override fun accept(event: T) {
+        when (whenBusy) {
+            SuspendHandlerBehavior.WhenBusy.DROP -> {
                 while (true) {
                     val currentJob = jobRef.value
+                    // nothing to do, and no job worth creating
                     if (currentJob?.isActive == true) break
 
-                    if (newJob == null) {
-                        newJob = eventListenerScope.launch(wrappedContext, start = CoroutineStart.LAZY) {
-                            handler(event)
-                        }.onCancellation(onCancellation)
-                    }
+                    val newJob = newRun(event)
 
                     if (jobRef.compareAndSet(currentJob, newJob)) {
                         newJob.start()
                         break
-                    } else {
-                        newJob.cancel()
                     }
+
+                    // lost the race against another event: this run was never started, try again with a fresh one
+                    newJob.cancel()
                 }
             }
-        }
 
-        companion object {
-            @JvmField
-            val Default = DiscardLatest(null)
+            SuspendHandlerBehavior.WhenBusy.CANCEL_PREVIOUS -> {
+                jobRef.getAndSet(newRun(event).also { it.start() })?.cancel()
+            }
         }
     }
+
+    private fun newRun(event: T) = listener.eventListenerScope.launch(context, CoroutineStart.LAZY) {
+        handler(event)
+    }.onCancellation(onCancellation)
+
 }
 
-private fun Job.onCancellation(runnable: Runnable?) = apply {
-    runnable?.let {
-        this.invokeOnCompletion { t ->
-            if (t is CancellationException) {
-                it.run()
-            }
+private fun Job.onCancellation(callback: OnCancellation?) = apply {
+    callback ?: return@apply
+    invokeOnCompletion { cause ->
+        if (cause is CancellationException) {
+            callback.accept(cause)
         }
     }
 }

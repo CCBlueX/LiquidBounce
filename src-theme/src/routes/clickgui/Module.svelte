@@ -8,7 +8,6 @@
     import type {ConfigurableSetting} from "../../integration/types";
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import {slide} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
@@ -27,10 +26,7 @@
 
     onMount(async () => {
         await fetchModuleSettings();
-
-        setTimeout(() => {
-            expanded = localStorage.getItem(path) === "true"
-        }, 500);
+        expanded = localStorage.getItem(path) === "true";
     });
 
     highlightModuleName.subscribe((m) => {
@@ -46,7 +42,7 @@
                 behavior: "smooth",
                 block: "center",
             });
-        }, 1000);
+        }, 150);
     });
 
     async function fetchModuleSettings() {
@@ -107,8 +103,6 @@
 <div
         class="module"
         class:expanded
-        in:slide={{ duration: 500, easing: quintOut }}
-        out:slide={{ duration: 500, easing: quintOut }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
@@ -136,7 +130,7 @@
     </div>
 
     {#if expanded && configurable}
-        <div class="settings">
+        <div class="settings" in:slide|global={{ duration: 150 }} out:slide|global={{ duration: 120 }}>
             {#each configurable.value as setting (setting.name)}
                 <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
             {/each}
@@ -150,8 +144,8 @@
 
     .name {
       cursor: pointer;
-      transition: ease background-color 0.2s,
-      ease color 0.2s;
+      transition: ease background-color 0.12s,
+      ease color 0.12s;
 
       color: var(--clickgui-text-dimmed-color);
       text-align: center;
@@ -208,7 +202,7 @@
       background-repeat: no-repeat;
       opacity: 0.5;
       transform: rotate(-90deg);
-      transition: ease opacity 0.2s, ease transform 0.4s;
+      transition: ease opacity 0.15s, cubic-bezier(0.23, 1, 0.32, 1) transform 0.2s;
     }
 
     &.expanded .expand-arrow-icon {

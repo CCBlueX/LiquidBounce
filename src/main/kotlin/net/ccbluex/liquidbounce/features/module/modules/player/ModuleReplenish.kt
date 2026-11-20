@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.waitMillis
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
@@ -31,9 +31,11 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
 import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryPlan
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
@@ -79,14 +81,18 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     }
 
     @Suppress("unused")
-    private val inventoryScheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (!chronometer.hasElapsed(delay.toLong()) || !player.containerMenu.carried.isEmpty) {
-            return@handler
+    private val replenish = inventoryPlan(constraints) {
+        if (!chronometer.hasElapsed(delay.toLong())) {
+            return@inventoryPlan
         }
 
         chronometer.reset()
 
         HotbarItemSlot.entries.forEach { slot ->
+            if (!player.containerMenu.carried.isEmpty) {
+                return@inventoryPlan
+            }
+
             val currentStack = slot.itemStack
             val currentStackNotEmpty = !currentStack.isEmpty
 
@@ -137,18 +143,12 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
                 Features.USE_SWAP in features &&
                     slot.canBeSwapTarget &&
                     slotWithMaxCount.itemStack.count.let { it > itemStack.count && it > itemThreshold } ->
-                    event.schedule(
-                        constraints,
-                        Click.performSwap(from = slotWithMaxCount, to = slot)
-                    )
+                    perform(Click.performSwap(from = slotWithMaxCount, to = slot))
 
                 Features.USE_PICKUP_ALL in features && currentStackNotEmpty ->
-                    event.schedule(
-                        constraints,
-                        Click.performMergeStack(slot = slot),
-                    )
+                    perform(Click.performMergeStack(slot = slot))
 
-                else -> event.scheduleNormalRefill(
+                else -> performNormalRefill(
                     itemStack,
                     if (currentStackNotEmpty) itemStack.count else 0,
                     inventorySlots,
@@ -157,11 +157,12 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
             }
 
             trackedHotbarItems[slot] = ItemAndComponents(itemStack)
-            return@handler
+            chronometer.reset()
+            waitMillis(delay)
         }
     }
 
-    private fun ScheduleInventoryActionEvent.scheduleNormalRefill(
+    private suspend fun InventoryPlan.performNormalRefill(
         itemStack: ItemStack,
         count: Int,
         inventorySlots: List<InventoryItemSlot>,
@@ -178,7 +179,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
                 actions += Click.performPickup(slot = slot)
             }
 
-            schedule(constraints, actions)
+            perform(actions)
 
             if (neededToRefill <= 0) {
                 break

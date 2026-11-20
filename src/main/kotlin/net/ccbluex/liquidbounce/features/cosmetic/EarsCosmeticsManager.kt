@@ -45,10 +45,10 @@ object EarsCosmeticsManager {
      */
     fun earsTexture(uuid: UUID): Identifier? {
         val cosmetic = CosmeticService.getCosmetic(uuid, CosmeticCategory.DEADMAU5_EARS) ?: return null
-        val name = when (val extra = cosmetic.extra) {
+        val name = when (val style = cosmetic.style) {
             null, MATCH_CAPE ->
-                "cape_" + (CosmeticService.getCosmetic(uuid, CosmeticCategory.CAPE)?.extra ?: DEFAULT_CAPE)
-            else -> extra
+                "cape_" + (CosmeticService.getCosmetic(uuid, CosmeticCategory.CAPE)?.style ?: DEFAULT_CAPE)
+            else -> style
         }
 
         textures[name]?.let { return it }

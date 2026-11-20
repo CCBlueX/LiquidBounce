@@ -16,16 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.api.models.marketplace
+package net.ccbluex.liquidbounce.event
 
-import com.google.gson.annotations.SerializedName
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
+import java.util.function.BooleanSupplier
 
 /**
- * An item as another one depends on it.
+ * A [Ticker] advanced by hand, put into a coroutine context in place of [CoroutineTicker].
  */
-data class MarketplaceLinkedItem(
-    val item: MarketplaceItem,
-    val author: String?,
-    @SerializedName("live_revision")
-    val liveRevision: MarketplaceItemRevision?
-)
+internal class ManualTicker : Ticker {
+    private val runningList = ReferenceArrayList<BooleanSupplier>()
+    private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    val taskCount: Int
+        get() = runningList.size + pendingList.size
+
+    override fun register(task: BooleanSupplier) {
+        pendingList.add(task)
+    }
+
+    override fun tick() {
+        runningList.addAll(pendingList)
+        pendingList.clear()
+        runningList.removeIf { it.asBoolean }
+    }
+
+    fun tick(times: Int) = repeat(times) { tick() }
+}

@@ -16,7 +16,6 @@
         getModule,
         getProtocols,
         getSelectedProtocol,
-        getServers,
         getSpooferSettings,
         openScreen,
         orderServers,
@@ -26,7 +25,6 @@
         setSpooferSettings
     } from "../../../integration/rest";
     import type {ClientInfo, ConfigurableSetting, Protocol, Server} from "../../../integration/types";
-    import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
@@ -34,11 +32,17 @@
     import AddServerModal from "./AddServerModal.svelte";
     import DirectConnectModal from "./DirectConnectModal.svelte";
     import EditServerModal from "./EditServerModal.svelte";
-    import type {ServerPingedEvent} from "../../../integration/events";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import Divider from "../common/optionbar/Divider.svelte";
     import WrappedSetting from "../common/setting/WrappedSetting.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
+    import {
+        clearServerPrefetch,
+        lanServersStore,
+        prefetchServers,
+        refreshServersStore,
+        serversStore
+    } from "./server_store";
 
     let onlineOnly = false;
     let searchQuery = "";
@@ -62,8 +66,8 @@
     let clientInfo: ClientInfo | null = null;
     let autoConfig = false;
     let spooferConfigurable: ConfigurableSetting | null = null;
-    let servers: Server[] = [];
-    let lanServers: Server[] = [];
+    $: servers = $serversStore;
+    $: lanServers = $lanServersStore;
     let renderedServers: Server[] = [];
     let protocols: Protocol[] = [];
     let selectedProtocol: Protocol = {
@@ -74,47 +78,39 @@
     let lanPollInterval: ReturnType<typeof setInterval> | null = null;
 
     onMount(async () => {
-        clientInfo = await getClientInfo();
-        spooferConfigurable = await getSpooferSettings();
-        autoConfig = (await getModule("AutoConfig")).enabled;
-        await refreshServers();
-        await refreshLanServers();
-        renderedServers = [...servers, ...lanServers];
-        protocols = await getProtocols();
-        selectedProtocol = await getSelectedProtocol();
+        prefetchServers();
+
+        const [info, spoofer, autoConfigModule, loadedProtocols, currentProtocol] = await Promise.all([
+            getClientInfo(),
+            getSpooferSettings(),
+            getModule("AutoConfig"),
+            getProtocols(),
+            getSelectedProtocol()
+        ]);
+
+        clientInfo = info;
+        spooferConfigurable = spoofer;
+        autoConfig = autoConfigModule.enabled;
+        protocols = loadedProtocols;
+        selectedProtocol = currentProtocol;
 
         // Poll for LAN servers every 3 seconds
         lanPollInterval = setInterval(refreshLanServers, 3000);
     });
 
-    listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
-        const server = pingedEvent.server;
-        servers = servers.map((s) => {
-            if (s.address === server.address) {
-                const clone = structuredClone(server);
-                clone.id = s.id;
-                clone.name = s.name;
-                clone.resourcePackPolicy = s.resourcePackPolicy;
-                return clone;
-            } else {
-                return s;
-            }
-        });
-    });
-
     async function refreshServers() {
-        servers = await getServers();
-        await refreshLanServers();
+        await refreshServersStore();
     }
 
     async function refreshLanServers() {
-        lanServers = await getLanServers();
+        lanServersStore.set(await getLanServers());
     }
 
     onDestroy(() => {
         if (lanPollInterval !== null) {
             clearInterval(lanPollInterval);
         }
+        clearServerPrefetch();
     });
 
     async function removeServer(index: number) {
@@ -218,7 +214,7 @@
                       on:dblclick={() => connectToServer(server.address)}>
             <TextComponent allowPreformatting={true} preFormattingMonospace={false} slot="subtitle"
                            fontSize={18}
-                           textComponent={server.ping <= 0 ? "§CCan't connect to server" : server.label}/>
+                           textComponent={server.label}/>
 
             <svelte:fragment slot="tag">
                 {#if server.lan}

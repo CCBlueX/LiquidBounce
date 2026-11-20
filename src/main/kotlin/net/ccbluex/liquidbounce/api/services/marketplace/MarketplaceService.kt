@@ -16,23 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.api.services.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceConfigReport
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceConfigReportSummary
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceReview
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceRevisionDependency
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -44,168 +39,140 @@ import retrofit2.http.QueryMap
 @Suppress("TooManyFunctions")
 internal interface MarketplaceService {
 
-    @GET("marketplace")
-    suspend fun items(
-        @QueryMap query: Map<String, String>,
-        @Header("Authorization") authorization: String? = null,
-    ): PaginatedResponse<MarketplaceItem>
+    @GET("marketplace/items")
+    suspend fun items(@QueryMap query: Map<String, String>): PaginatedResponse<MarketplaceItem>
 
     @GET("marketplace/tags")
     suspend fun tags(): List<MarketplaceTag>
 
-    @POST("marketplace")
+    @POST("marketplace/items")
     suspend fun createItem(
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceItem
 
-    @PATCH("marketplace/{id}")
+    @PATCH("marketplace/items/{id}")
     suspend fun updateItem(
         @Path("id") id: Int,
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceItem
 
-    @DELETE("marketplace/{id}")
+    @DELETE("marketplace/items/{id}")
     suspend fun deleteItem(
         @Path("id") id: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @GET("marketplace/{id}")
+    @GET("marketplace/items/{id}")
     suspend fun item(
         @Path("id") id: Int,
-        @Header("Authorization") authorization: String? = null,
+        @QueryMap game: Map<String, String>,
     ): MarketplaceItem
 
-    @GET("marketplace/code/{code}")
+    @GET("marketplace/share-codes/{code}")
     suspend fun itemByCode(
         @Path("code") code: String,
-        @Header("Authorization") authorization: String? = null,
+        @QueryMap game: Map<String, String>,
     ): MarketplaceItem
 
-    @GET("marketplace/{id}/revisions")
+    @GET("me/marketplace/items/{id}")
+    suspend fun ownItem(
+        @Path("id") id: Int,
+        @Header("Authorization") authorization: String,
+    ): MarketplaceItem
+
+    @GET("marketplace/items/{id}/revisions")
     suspend fun revisions(
         @Path("id") id: Int,
-        @Query("page") page: Int,
         @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
         @Query("minecraft") minecraft: String? = null,
         @Query("liquidbounce") liquidbounce: String? = null,
     ): PaginatedResponse<MarketplaceItemRevision>
 
-    @GET("marketplace/{id}/revisions/{revisionId}")
+    @GET("marketplace/items/{id}/revisions/{revisionId}")
     suspend fun revision(
         @Path("id") id: Int,
         @Path("revisionId") revisionId: Int,
     ): MarketplaceItemRevision
 
-    @POST("marketplace/{id}/revisions")
+    @POST("marketplace/items/{id}/revisions")
     suspend fun createRevision(
         @Path("id") id: Int,
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceItemRevision
 
-    @DELETE("marketplace/{id}/revisions/{revisionId}")
+    @DELETE("marketplace/items/{id}/revisions/{revisionId}")
     suspend fun deleteRevision(
         @Path("id") id: Int,
         @Path("revisionId") revisionId: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @GET("marketplace/{id}/dependencies")
-    suspend fun dependencies(@Path("id") id: Int): List<MarketplaceLinkedItem>
-
-    @POST("marketplace/{id}/dependencies")
+    @PUT("marketplace/items/{id}/dependencies/{dependencyId}")
     suspend fun addDependency(
         @Path("id") id: Int,
-        @Body body: RequestBody,
+        @Path("dependencyId") dependencyId: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @DELETE("marketplace/{id}/dependencies/{dependencyItemId}")
+    @DELETE("marketplace/items/{id}/dependencies/{dependencyId}")
     suspend fun removeDependency(
         @Path("id") id: Int,
-        @Path("dependencyItemId") dependencyItemId: Int,
+        @Path("dependencyId") dependencyId: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @GET("marketplace/{id}/revisions/{revisionId}/dependencies")
-    suspend fun revisionDependencies(
-        @Path("id") id: Int,
-        @Path("revisionId") revisionId: Int,
-    ): List<MarketplaceRevisionDependency>
-
-    @POST("marketplace/{id}/revisions/{revisionId}/dependencies")
-    suspend fun addRevisionDependency(
-        @Path("id") id: Int,
-        @Path("revisionId") revisionId: Int,
-        @Body body: RequestBody,
-        @Header("Authorization") authorization: String,
-    )
-
-    @HTTP(method = "DELETE", path = "marketplace/{id}/revisions/{revisionId}/dependencies", hasBody = true)
-    suspend fun removeRevisionDependency(
-        @Path("id") id: Int,
-        @Path("revisionId") revisionId: Int,
-        @Body body: RequestBody,
-        @Header("Authorization") authorization: String,
-    )
-
-    @GET("marketplace/{id}/reviews")
+    @GET("marketplace/items/{id}/reviews")
     suspend fun reviews(
         @Path("id") id: Int,
-        @Query("page") page: Int,
         @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
     ): PaginatedResponse<MarketplaceReview>
 
-    @POST("marketplace/{id}/reviews")
+    @POST("marketplace/items/{id}/reviews")
     suspend fun createReview(
         @Path("id") id: Int,
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceReview
 
-    @DELETE("marketplace/{id}/reviews/{reviewId}")
+    @DELETE("marketplace/items/{id}/reviews/{reviewId}")
     suspend fun deleteReview(
         @Path("id") id: Int,
         @Path("reviewId") reviewId: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @PUT("marketplace/{id}/revisions/{revisionId}/report")
+    @PUT("me/marketplace/reports/{revisionId}")
     suspend fun putConfigReport(
-        @Path("id") id: Int,
         @Path("revisionId") revisionId: Int,
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceConfigReport
 
-    @GET("marketplace/{id}/revisions/{revisionId}/report")
+    @GET("me/marketplace/reports/{revisionId}")
     suspend fun configReport(
-        @Path("id") id: Int,
         @Path("revisionId") revisionId: Int,
         @Header("Authorization") authorization: String,
     ): MarketplaceConfigReport
 
-    @DELETE("marketplace/{id}/revisions/{revisionId}/report")
+    @DELETE("me/marketplace/reports/{revisionId}")
     suspend fun deleteConfigReport(
-        @Path("id") id: Int,
         @Path("revisionId") revisionId: Int,
         @Header("Authorization") authorization: String,
     )
 
-    @GET("marketplace/{id}/reports")
-    suspend fun configReports(@Path("id") id: Int): List<MarketplaceConfigReportSummary>
-
-    @POST("marketplace/{id}/thumbnail")
-    suspend fun uploadThumbnail(
+    @PUT("marketplace/items/{id}/thumbnail")
+    suspend fun setThumbnail(
         @Path("id") id: Int,
         @Body body: RequestBody,
         @Header("Authorization") authorization: String,
     ): MarketplaceItem
 
-    @DELETE("marketplace/{id}/thumbnail")
+    @DELETE("marketplace/items/{id}/thumbnail")
     suspend fun deleteThumbnail(
         @Path("id") id: Int,
         @Header("Authorization") authorization: String,

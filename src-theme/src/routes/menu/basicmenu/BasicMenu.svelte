@@ -6,7 +6,7 @@
 </script>
 
 <!-- Clicks also reach the vanilla screen below, so this stays in its empty left strip. -->
-<div class="basic-menu" transition:fly|global={{duration: 700, x: -100}}>
+<div class="basic-menu" in:fly|global={{duration: 180, x: -24}}>
     <div class="buttons">
         <ButtonContainer vertical>
             <IconButton title="Full Mode" icon="liquidbounce" on:click={toggleBasicMode}/>

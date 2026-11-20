@@ -55,8 +55,13 @@ data class ClientAccount(
         userInformation = UserApi.getUserInformation(takeSession())
     }
 
-    suspend fun updateCosmetics(): Unit = withContext(Dispatchers.IO) {
-        cosmetics = UserApi.getCosmetics(takeSession())
+    /**
+     * Stored cosmetics show while they are enabled and the account holds the permission to wear them.
+     */
+    suspend fun updateCosmetics() {
+        updateInfo()
+        cosmetics = userInformation?.takeIf { "cosmetics" in it.permissions }?.cosmetics.orEmpty()
+            .filterTo(hashSetOf()) { it.enabled != false }
     }
 
     suspend fun transferTemporaryOwnership(uuid: UUID): Unit = withContext(Dispatchers.IO) {

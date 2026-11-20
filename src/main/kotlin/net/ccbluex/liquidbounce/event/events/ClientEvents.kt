@@ -39,10 +39,6 @@ import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
-import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Block
@@ -229,34 +225,6 @@ object ResourceReloadEvent : Event()
 
 @Tag("scaleFactorChange")
 class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
-
-@Tag("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        action: InventoryAction,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, listOf(action), priority))
-    }
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        vararg actions: InventoryAction,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, actions.unmodifiable(), priority))
-    }
-
-    fun schedule(
-        constrains: InventoryConstraints,
-        actions: List<InventoryAction>,
-        priority: Priority = Priority.NORMAL
-    ) {
-        this.schedule.add(InventoryAction.Chain(constrains, actions, priority))
-    }
-}
 
 @Tag("selectHotbarSlotSilently")
 class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()

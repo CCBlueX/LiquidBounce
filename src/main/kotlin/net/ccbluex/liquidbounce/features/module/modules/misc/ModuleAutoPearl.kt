@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -127,7 +128,8 @@ object ModuleAutoPearl : ClientModule(
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
         val rotation = queue.removeFirstOrNull() ?: return@tickHandler
-        val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+
+        val itemSlot by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
 
         if (Rotate.enabled) {
             fun isRotationSufficient(): Boolean {

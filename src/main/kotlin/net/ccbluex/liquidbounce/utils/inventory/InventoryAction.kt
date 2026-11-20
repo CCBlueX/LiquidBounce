@@ -119,6 +119,11 @@ sealed interface InventoryAction {
                 return false
             }
 
+            val requiresEmptyCursor = actionType != ContainerInput.PICKUP && actionType != ContainerInput.PICKUP_ALL
+            if (requiresEmptyCursor && !player.containerMenu.carried.isEmpty) {
+                return false
+            }
+
             if (actionType == ContainerInput.SWAP &&
                 button == Inventory.SLOT_OFFHAND &&
                 !HotbarItemSlot.OFFHAND.canBeSwapTarget
@@ -126,11 +131,10 @@ sealed interface InventoryAction {
                 return false
             }
 
-            // Screen is null, which means we are targeting the player inventory
-            if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
-                !interaction.isServerControlledInventory
-            ) {
-                return true
+            // Screen is null, which means we are targeting the player inventory. Falling through would let an open
+            // InventoryScreen (also container 0) skip the checks of canClickPlayerInventory.
+            if (requiresPlayerInventoryOpen()) {
+                return InventoryManager.canClickPlayerInventory
             }
 
             // Check if current screen is the same as the screen we want to interact with
@@ -224,7 +228,9 @@ sealed interface InventoryAction {
 
             // Screen is null, which means we are targeting the player inventory
             if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
-                !interaction.isServerControlledInventory
+                !interaction.isServerControlledInventory &&
+                !InventoryManager.isContainerOpenPending &&
+                !InventoryManager.isUseItemPending
             ) {
                 return true
             }

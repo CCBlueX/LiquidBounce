@@ -37,16 +37,20 @@ import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.error.stackTraceText
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.text.DelegatedComponent
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
 import okio.appendingSink
 import okio.buffer
 import java.io.File
@@ -62,18 +66,6 @@ object CommandExecutor : EventListener {
     private var isShuttingDown: Boolean = false
 
     /**
-     * Wraps a suspend handler into a Brigadier [Command], keeping the scheduling,
-     * re-entrance guard and progress-message behavior of the previous meta-model
-     * `suspendHandler`.
-     *
-     * @param allowParallel allow or prevent duplicated executions
-     */
-    fun wrapSuspend(
-        allowParallel: Boolean = false,
-        handler: KAsyncCommand.Handler<ClientCommandSource>,
-    ): Command<ClientCommandSource> = KAsyncCommand(allowParallel, commandCoroutineScope, handler)
-
-    /**
      * Handling exceptions for suspend handlers
      */
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -87,7 +79,7 @@ object CommandExecutor : EventListener {
     /**
      * Render thread scope
      */
-    private val commandCoroutineScope = CoroutineScope(
+    internal val commandCoroutineScope = CoroutineScope(
         Dispatchers.Main + SupervisorJob() + coroutineExceptionHandler
     )
 
@@ -117,13 +109,15 @@ object CommandExecutor : EventListener {
                 }
             }
             else -> {
+                val hoverText = DelegatedComponent.lazy(e::stackTraceText)
+
                 chat(
                     markAsError(
                         translation(
                             "liquidbounce.commandManager.exceptionOccurred",
                             e.javaClass.simpleName ?: "Class name missing", e.message ?: "No message"
                         )
-                    ),
+                    ).onHover(HoverEvent.ShowText(hoverText)),
                     metadata = MessageMetadata(id = "CommandManager#error")
                 )
                 logger.error("An exception occurred while executing a command", e)

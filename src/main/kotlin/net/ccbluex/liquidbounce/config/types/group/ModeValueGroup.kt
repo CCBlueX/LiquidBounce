@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import java.util.function.ToIntFunction
@@ -56,6 +57,8 @@ class ModeValueGroup<T : Mode>(
         if (state) {
             this.activeMode.enable()
         } else {
+            // A suspended sequence would otherwise live on into the next enable.
+            this.activeMode.removeEventListenerScope()
             this.activeMode.disable()
         }
     }
@@ -65,6 +68,7 @@ class ModeValueGroup<T : Mode>(
             return
         }
 
+        this.activeMode.removeEventListenerScope()
         if (this.activeMode.running) {
             this.activeMode.disable()
         }

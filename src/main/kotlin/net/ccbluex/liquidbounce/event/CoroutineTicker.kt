@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -28,11 +29,17 @@ import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.TimeSource
 
-/** A queue of callbacks advanced once per tick. */
-interface Ticker {
+/**
+ * A queue of callbacks advanced once per tick.
+ *
+ * Suspension helpers use the ticker in their coroutine context, or [CoroutineTicker] when there is none.
+ */
+interface Ticker : CoroutineContext.Element {
 
     /**
      * Registers a task to be ticked.
@@ -42,7 +49,15 @@ interface Ticker {
     fun register(task: BooleanSupplier)
 
     fun tick()
+
+    override val key: CoroutineContext.Key<*>
+        get() = Key
+
+    companion object Key : CoroutineContext.Key<Ticker>
 }
+
+internal val CoroutineContext.ticker: Ticker
+    get() = this[Ticker] ?: CoroutineTicker
 
 object CoroutineTicker : Ticker {
 
@@ -117,17 +132,24 @@ object CoroutineTicker : Ticker {
  *
  * Exceptions thrown by [stopAt] are delivered to the waiting coroutine.
  *
+ * What the run [requires] is checked each tick before [stopAt]; when it fails,
+ * [stopAt] is not called again and the run ends here.
+ *
  * @param stopAt the callback of elapsed ticks. Will be called on game tick.
  * @return the times of [stopAt] to be executed (equals to elapsed ticks)
  */
 suspend fun tickUntil(
     stopAt: IntPredicate,
-): Int = suspendCancellableCoroutine { continuation ->
-    CoroutineTicker.register(TickUntilCallback(continuation, stopAt))
+): Int {
+    val context = currentCoroutineContext()
+    return suspendCancellableCoroutine { continuation ->
+        context.ticker.register(TickUntilCallback(continuation, context.activeGuards(), stopAt))
+    }
 }
 
-internal class TickUntilCallback(
+private class TickUntilCallback(
     private val continuation: CancellableContinuation<Int>,
+    private val guards: Guards?,
     private val stopAt: IntPredicate,
 ) : BooleanSupplier {
     private var elapsedTicks = 0
@@ -138,6 +160,11 @@ internal class TickUntilCallback(
         }
 
         val finished = try {
+            val broken = guards?.broken()
+            if (broken != null) {
+                continuation.resumeWithException(broken)
+                return true
+            }
             stopAt.test(++elapsedTicks)
         } catch (e: Throwable) {
             continuation.resumeWithException(e)
@@ -182,9 +209,14 @@ suspend fun waitTicks(ticks: Int) {
 }
 
 /**
- * Waits a fixed amount of seconds on tick level before continuing.
- * Re-entry at the game tick.
- *
- * Note: When TPS is not 20, this won't be actual `seconds`.
+ * Waits [millis] of real time, however long the ticks take, before continuing.
+ * Re-entry at the game tick, as with every wait here.
  */
-suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
+suspend fun waitMillis(millis: Int) {
+    if (millis <= 0) {
+        return
+    }
+
+    val start = TimeSource.Monotonic.markNow()
+    tickUntil { start.elapsedNow().inWholeMilliseconds >= millis }
+}

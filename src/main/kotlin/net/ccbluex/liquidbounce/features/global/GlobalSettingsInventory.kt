@@ -16,18 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.api.models.marketplace
 
-import com.google.gson.annotations.SerializedName
+package net.ccbluex.liquidbounce.features.global
 
-data class MarketplaceRevisionDependency(
-    val id: Int,
-    @SerializedName("revision_id")
-    val revisionId: Int,
-    @SerializedName("dependency_revision_id")
-    val dependencyRevisionId: Int,
-    @SerializedName("created_at")
-    val createdAt: String,
-    @SerializedName("dependency_revision")
-    val dependencyRevision: MarketplaceItemRevision?
-)
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+
+/** How the inventory manager deals with a server that answers late, or puts clicked items back. */
+object GlobalSettingsInventory : ValueGroup(name = "Inventory") {
+
+    /**
+     * How long the server gets to answer: to open a container, to put a clicked item back, or to take that back
+     * again. Inventory clicks wait this long wherever an answer may still change what they act on.
+     */
+    val responseTime by int("ResponseTime", 400, 50..2000, "ms")
+
+    /**
+     * How often the server may put an item back before it is left alone until the next world.
+     */
+    val lockAfterRejections by int("LockAfterRejections", 3, 1..10)
+
+}

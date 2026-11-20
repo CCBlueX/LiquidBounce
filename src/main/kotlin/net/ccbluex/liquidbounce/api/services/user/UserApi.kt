@@ -23,14 +23,13 @@ import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.authorization
-import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import okhttp3.RequestBody
 import retrofit2.create
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
-import retrofit2.http.PUT
+import retrofit2.http.PATCH
 import java.util.UUID
 
 /**
@@ -38,26 +37,21 @@ import java.util.UUID
  */
 object UserApi {
 
-    private val service = config.retrofitApiV3.create<Service>()
+    private val service = config.retrofit.create<Service>()
 
-    suspend fun getUserInformation(session: OAuthSession) = service.userInformation(session.authorization)
+    suspend fun getUserInformation(session: OAuthSession) = service.account(session.authorization)
 
-    suspend fun getCosmetics(session: OAuthSession) = service.cosmetics(session.authorization)
-
-    suspend fun transferTemporaryOwnership(session: OAuthSession, uuid: UUID) = service.transferOwnership(
-        JsonObject().apply { addProperty("uuid", uuid.toString()) }.toRequestBody(),
+    suspend fun transferTemporaryOwnership(session: OAuthSession, uuid: UUID) = service.updateMinecraftLink(
+        JsonObject().apply { addProperty("temporaryUuid", uuid.toString()) }.toRequestBody(),
         session.authorization,
     )
 
     internal interface Service {
-        @GET("oauth/user")
-        suspend fun userInformation(@Header("Authorization") authorization: String): UserInformation
+        @GET("me")
+        suspend fun account(@Header("Authorization") authorization: String): UserInformation
 
-        @GET("cosmetics/self?all=true")
-        suspend fun cosmetics(@Header("Authorization") authorization: String): Set<Cosmetic>
-
-        @PUT("cosmetics/self")
-        suspend fun transferOwnership(
+        @PATCH("me/minecraft")
+        suspend fun updateMinecraftLink(
             @Body body: RequestBody,
             @Header("Authorization") authorization: String,
         )

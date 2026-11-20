@@ -16,10 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.api.models.pagination
 
 data class PaginatedResponse<T>(
     val items: List<T>,
+    val total: Int,
+    val limit: Int,
+    val offset: Int
+) {
     val pagination: Pagination
-)
+        get() = Pagination(offset / limit + 1, (total + limit - 1) / limit, total)
+}

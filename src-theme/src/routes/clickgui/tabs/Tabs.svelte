@@ -15,7 +15,7 @@
     const Active = $derived(tabs[activeTab]?.content);
 </script>
 
-<div class="tabs" transition:fly={{duration: 200, y: -20}}>
+<div class="tabs" transition:fly={{duration: 150, y: -15}}>
     <div class="available-tabs">
         {#each tabs as tab, index (tab.title)}
             <button
