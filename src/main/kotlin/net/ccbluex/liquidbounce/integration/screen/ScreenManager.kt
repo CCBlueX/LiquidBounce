@@ -417,4 +417,11 @@ object ScreenManager : EventListener {
         || screen is InternetExplorerScreen
         || screen is MicrosoftLoginScreen
 
+    /**
+     * Whether the theme overlaying the current screen applies [tweak] to it.
+     */
+    @JvmStatic
+    fun isTweakEnabled(tweak: ScreenTweak) = screen?.type == tweak.screenType &&
+        theme?.metadata?.screenTweaks?.contains(tweak) == true
+
 }
