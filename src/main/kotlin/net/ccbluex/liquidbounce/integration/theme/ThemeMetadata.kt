@@ -38,6 +38,8 @@ data class ThemeMetadata(
     val nativeFont: String? = null,
     /** Names of the sounds the theme ships as `sounds/<name>.ogg`, played through [ThemeSounds]. */
     val sounds: List<String>? = null,
+    /** Hides the Minecraft logo of the title screen the theme overlays, for themes that draw their own there. */
+    val hideMinecraftLogo: Boolean = false,
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {
