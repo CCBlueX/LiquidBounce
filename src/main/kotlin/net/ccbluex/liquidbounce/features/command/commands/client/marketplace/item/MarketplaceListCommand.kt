@@ -124,7 +124,7 @@ object MarketplaceListCommand {
     private fun CmdI18n.addressText(item: MarketplaceItem, subscribed: Boolean): MutableComponent {
         val action = if (subscribed) "unsubscribe" else "subscribe"
         return regular("")
-            .apply { item.author?.let { append(regular("$it/")) } }
+            .apply { item.owner.nickname?.let { append(regular("$it/")) } }
             .append(variable(item.name))
             .onClick(
                 ClickEvent.SuggestCommand(

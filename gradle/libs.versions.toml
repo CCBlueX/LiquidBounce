@@ -20,8 +20,8 @@ gametest-harness = "2.0.0+26.3"
 
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
-# https://github.com/CCBlueX/axochat/tree/master/client
-axochat-client = "1.1.0"
+# https://github.com/CCBlueX/axochat/tree/main/client
+axochat-client = "1.2.0"
 # TheAltening
 thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit

@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceAuthor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
+import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -30,31 +31,37 @@ class ConfigEditorTest {
 
     private val config = MarketplaceItem(
         id = 12,
-        uid = "owner",
         type = MarketplaceItemType.CONFIG,
         name = "Config",
-        branch = "nextgen",
+        owner = MarketplaceAuthor("owner", "Owner"),
+        edition = "nextgen",
         description = "",
-        thumbnailPid = null,
-        featured = false,
-        createdAt = "2026-10-01T12:00:00",
-        status = MarketplaceItemStatus.ACTIVE,
-        author = "Owner",
-        visibility = MarketplaceItemVisibility.PUBLIC
+        createdAt = "2026-10-01T12:00:00Z"
+    )
+
+    private fun user(uid: String, vararg permissions: String) = UserInformation(
+        uid = uid,
+        email = "",
+        name = null,
+        nickname = uid,
+        roles = emptyList(),
+        permissions = permissions.toSet(),
+        premium = false,
+        cosmetics = emptySet()
     )
 
     @Test
     fun `community editing opens public configs to signed-in users`() {
-        assertTrue(config.isEditableBy("owner"))
-        assertFalse(config.isEditableBy("other"))
-        assertTrue(config.copy(communityEditable = true).isEditableBy("other"))
+        assertTrue(config.isEditableBy(user("owner")))
+        assertFalse(config.isEditableBy(user("other")))
+        assertTrue(config.copy(communityEditable = true).isEditableBy(user("other")))
         assertFalse(config.copy(communityEditable = true).isEditableBy(null))
     }
 
     @Test
     fun `community editing does not open unlisted configs`() {
         val unlisted = config.copy(communityEditable = true, visibility = MarketplaceItemVisibility.UNLISTED)
-        assertFalse(unlisted.isEditableBy("other"))
-        assertTrue(unlisted.copy(canEdit = true).isEditableBy("other"))
+        assertFalse(unlisted.isEditableBy(user("other")))
+        assertTrue(unlisted.isEditableBy(user("other", "moderate")))
     }
 }

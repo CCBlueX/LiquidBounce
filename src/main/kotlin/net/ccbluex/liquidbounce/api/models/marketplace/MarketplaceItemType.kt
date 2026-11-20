@@ -25,25 +25,28 @@ import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 
+/**
+ * Saved and told to themes by its [tag]. The API names a type in lower case.
+ */
 @AddonApi
 enum class MarketplaceItemType(
     override val tag: String,
     val isListable: Boolean,
     val isSubscribable: Boolean
 ) : Tagged {
-    @SerializedName("Config")
+    @SerializedName("Config", alternate = ["config"])
     CONFIG("Config", false, false),
-    @SerializedName("Theme")
+    @SerializedName("Theme", alternate = ["theme"])
     THEME("Theme", true, true),
-    @SerializedName("Addon")
+    @SerializedName("Addon", alternate = ["addon"])
     ADDON("Addon", true, true),
 
     /**
      * Installed like any item; the ScriptAPI add-on runs them through [MarketplaceManager.registerHandler].
      */
-    @SerializedName("Script")
+    @SerializedName("Script", alternate = ["script"])
     SCRIPT("Script", true, true),
-    @SerializedName("Other")
+    @SerializedName("Other", alternate = ["other"])
     OTHER("Other", false, false);
 
     suspend fun reload() = when (this) {

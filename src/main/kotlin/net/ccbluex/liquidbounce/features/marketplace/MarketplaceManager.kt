@@ -179,7 +179,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
 
         for (item in unknown) {
             runCatching { MarketplaceApi.getMarketplaceItem(item.id) }
-                .onSuccess { item.author = it.author }
+                .onSuccess { item.author = it.owner.nickname }
                 .onFailure { logger.warn("Failed to look up the author of item ${item.id}", it) }
         }
         ConfigSystem.store(this)

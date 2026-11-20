@@ -47,8 +47,7 @@ import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 import net.minecraft.network.chat.MutableComponent
 import java.io.IOException
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.Instant
 
 /**
  * Turns what goes wrong in [block] into an [HttpStatusException]. Themes show no errors for actions, so a
@@ -96,10 +95,10 @@ private fun createStatusException(status: HttpStatusCode, reason: String) =
     HttpStatusException(status, mapOf("reason" to reason))
 
 /**
- * The marketplace answers errors as `{"error": "..."}`.
+ * The API answers errors as `{"code": "...", "message": "..."}`.
  */
 private val HttpException.reason
-    get() = runCatching { JsonParser.parseString(content).asJsonObject["error"].asString }.getOrDefault(content)
+    get() = runCatching { JsonParser.parseString(content).asJsonObject["message"].asString }.getOrDefault(content)
 
 /**
  * Tells the player how an action went, in the chat and as a notification, like the commands do.
@@ -129,11 +128,8 @@ internal suspend fun getSessionOrNull(): OAuthSession? {
 
 internal fun getCurrentServerDomain() = mc.currentServer?.ip?.dropPort()?.rootDomain()
 
-/**
- * The marketplace sends UTC without a zone.
- */
 internal fun parseEpochMillis(dateTime: String?): Long? = dateTime?.let {
-    runCatching { LocalDateTime.parse(it).toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
+    runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
 }
 
 private val LINK = Regex("""https?://[^\s<>"']+""", RegexOption.IGNORE_CASE)

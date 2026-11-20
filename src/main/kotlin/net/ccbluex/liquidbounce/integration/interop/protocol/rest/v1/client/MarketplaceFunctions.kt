@@ -30,7 +30,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -53,9 +52,8 @@ private fun Route.getMarketplaceItems() = get {
         MarketplaceItemType.entries.find { it.tag.equals(name, ignoreCase = true) }
             ?: return@get call.respondText("Unknown marketplace item type '$name'", status = HttpStatusCode.BadRequest)
     }
-    val featured = call.queryParameters["featured"]?.toBoolean() ?: true
 
-    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)
+    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type)
 
     val items = response.items.map { item ->
         JsonObject().apply {
@@ -97,7 +95,8 @@ private fun Route.getMarketplaceItemRevisions() = get {
     val page = call.queryParameters["page"]?.toIntOrNull() ?: 1
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
-    call.respond(MarketplaceApi.getMarketplaceItemRevisions(id, page, limit))
+    val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, limit)
+    call.respond(PageData(response.items, response.pagination))
 }
 
 /**
@@ -125,10 +124,6 @@ private fun Route.subscribeMarketplaceItem() = post("/subscribe") {
     } catch (e: Exception) {
         logger.error("Failed to load marketplace item before subscribing", e)
         call.forbidden("Failed to subscribe: ${e.message}")
-    }
-
-    if (item.status != MarketplaceItemStatus.ACTIVE) {
-        call.forbidden("Item is not active")
     }
 
     try {
@@ -167,7 +162,8 @@ private fun Route.getMarketplaceItemReviews() = get {
     val page = call.queryParameters["page"]?.toIntOrNull() ?: 1
     val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 10
 
-    call.respond(MarketplaceApi.getReviews(id, page, limit))
+    val response = MarketplaceApi.getReviews(id, page, limit)
+    call.respond(PageData(response.items, response.pagination))
 }
 
 /**

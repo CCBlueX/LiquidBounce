@@ -33,7 +33,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.orNotFound
-import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
@@ -68,9 +67,9 @@ private suspend fun findTagIds(names: Collection<String>): List<Int> {
 /**
  * The config and its newest revision, the one loads and reports go to.
  */
-private suspend fun getLiveConfig(id: Int, session: OAuthSession?): Pair<MarketplaceItem, Int> {
-    val item = MarketplaceApi.getMarketplaceItem(id, session)
-    return item to (item.liveRevisionId ?: error("${item.name} has nothing published"))
+private suspend fun getLiveConfig(id: Int): Pair<MarketplaceItem, Int> {
+    val item = MarketplaceApi.getMarketplaceItem(id)
+    return item to (item.liveRevision?.id ?: error("${item.name} has nothing published"))
 }
 
 private fun Route.getTags() = get("/tags") {
@@ -90,7 +89,6 @@ private fun Route.getConfigs() = get {
             return@respondMarketplace findSharedConfig(code)
         }
 
-        val session = getSessionOrNull()
         val tagIds = findTagIds(tags)
         suspend fun page(featured: Boolean?, limit: Int = PAGE_SIZE) = MarketplaceConfigs.list(
             page = list.page,
@@ -99,8 +97,7 @@ private fun Route.getConfigs() = get {
             tags = tagIds,
             targetServer = server,
             featured = featured,
-            sort = list.sort,
-            session = session
+            sort = list.sort
         )
 
         val response = page(featured = if (featuredOnly) true else null)
@@ -128,29 +125,25 @@ private fun Route.getConfig() = get {
 }
 
 private suspend fun getConfigDetail(id: Int): ConfigDetailData = coroutineScope {
-    val session = getSessionOrNull()
-    val item = MarketplaceApi.getMarketplaceItem(id, session)
-    val liveRevisionId = item.liveRevisionId
+    val item = MarketplaceApi.getMarketplaceItem(id)
+    val liveRevisionId = item.liveRevision?.id
     val config = async { item.toConfigData() }
-    val dependencies = async { getDependencies(id) }
-    val configs = async {
-        // Fetched again: a linked item lacks the servers the icon comes from.
-        dependencies.await().configs
-            .map { async { MarketplaceApi.getMarketplaceItem(it.item.id).toLinkedConfigData() } }
-            .awaitAll()
-    }
-    val installs = async { dependencies.await().installables.map { async { it.item.toItemData() } }.awaitAll() }
+    val dependencies = getDependencies(item)
+    val configs = async { dependencies.configs.map { async { it.item.toLinkedConfigData() } }.awaitAll() }
+    val installs = async { dependencies.installables.map { async { it.item.toItemData() } }.awaitAll() }
     val revisions = async { getRevisionHistory(item) }
     val forkOf = async {
-        item.forkedFromItemId?.let { forkedFrom ->
-            runCatching { MarketplaceApi.getMarketplaceItem(forkedFrom).toLinkedConfigData() }.getOrNull()
+        // Fetched for the servers its icon comes from.
+        item.forkedFrom?.let { forkedFrom ->
+            runCatching { MarketplaceApi.getMarketplaceItem(forkedFrom.id).toLinkedConfigData() }.getOrNull()
         }
     }
     val report = async {
+        val session = getSessionOrNull()
         if (session == null || liveRevisionId == null) {
             return@async null
         }
-        orNotFound { MarketplaceApi.getOwnConfigReport(session, id, liveRevisionId) }?.works
+        orNotFound { MarketplaceApi.getOwnConfigReport(session, liveRevisionId) }?.works
     }
     val isOverlay = config.await().overlayOn != null
 
@@ -167,18 +160,16 @@ private suspend fun getConfigDetail(id: Int): ConfigDetailData = coroutineScope 
     )
 }
 
-private suspend fun getRevisionHistory(item: MarketplaceItem): List<ConfigRevisionData> = coroutineScope {
-    val reports = async { MarketplaceApi.getConfigReports(item.id).associateBy { it.revisionId } }
+private suspend fun getRevisionHistory(item: MarketplaceItem): List<ConfigRevisionData> {
     val revisions = MarketplaceApi.getMarketplaceItemRevisions(item.id, 1, HISTORY_SIZE)
-    revisions.items.mapIndexed { index, revision ->
-        val summary = reports.await()[revision.id]
+    return revisions.items.mapIndexed { index, revision ->
         ConfigRevisionData(
             id = revision.id,
             createdAt = parseEpochMillis(revision.createdAt),
             changelog = revision.changelog?.takeIf(String::isNotBlank),
-            works = summary?.works ?: 0,
-            fails = summary?.fails ?: 0,
-            latest = revision.id == item.liveRevisionId,
+            works = revision.reports?.works ?: 0,
+            fails = revision.reports?.fails ?: 0,
+            latest = revision.id == item.liveRevision?.id,
             first = index == revisions.items.lastIndex && revisions.pagination.pages <= 1,
         )
     }
@@ -190,7 +181,7 @@ private suspend fun getRevisionHistory(item: MarketplaceItem): List<ConfigRevisi
 private fun Route.getModules() = get("/modules") {
     val id = call.requireId()
     call.respondMarketplace {
-        val (item, revisionId) = getLiveConfig(id, getSessionOrNull())
+        val (item, revisionId) = getLiveConfig(id)
         ConfigTracker.getLoadableModuleNames(item, revisionId)
     }
 }
@@ -209,7 +200,7 @@ private fun Route.postLoad() = post("/load") {
             call.badRequest("None of these modules exist")
         }
 
-        val (item, revisionId) = getLiveConfig(id, getSessionOrNull())
+        val (item, revisionId) = getLiveConfig(id)
         val result = ConfigTracker.load(item, revisionId, modules)
         sendFeedback(configI18n.t("load.loaded", variable(item.name)))
         mc.execute { configI18n.reportInstalled(result) }
@@ -227,15 +218,15 @@ private fun Route.putReport() = put("/report") {
         val id = call.requireId()
         val works = call.receive<ReportRequest>().works
         val session = call.requireSession()
-        val (item, revisionId) = getLiveConfig(id, session)
+        val (item, revisionId) = getLiveConfig(id)
         if (works == null) {
-            MarketplaceApi.deleteConfigReport(session, id, revisionId)
+            MarketplaceApi.deleteConfigReport(session, revisionId)
         } else {
             val server = mc.currentServer?.ip?.dropPort()
-            MarketplaceApi.putConfigReport(session, id, revisionId, works, LiquidBounce.clientVersion, server)
+            MarketplaceApi.putConfigReport(session, revisionId, works, LiquidBounce.clientVersion, server)
             sendFeedback(configI18n.t("report.reported", variable(item.name)))
         }
-        MarketplaceApi.getMarketplaceItem(id, session).toConfigData()
+        MarketplaceApi.getMarketplaceItem(id).toConfigData()
     }
 }
 
