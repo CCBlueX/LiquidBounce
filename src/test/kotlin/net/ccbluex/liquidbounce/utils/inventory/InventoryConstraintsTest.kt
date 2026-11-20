@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import kotlin.test.Test
@@ -62,6 +63,13 @@ class InventoryConstraintsTest {
     @Test
     fun `a published config keeps its milliseconds`() {
         val ranges = prepared(publicGson.toJson(InventoryConstraints()))
+
+        assertEquals(100..200, ranges["ClickDelay"])
+    }
+
+    @Test
+    fun `settings the ClickGUI sends back keep their milliseconds`() {
+        val ranges = prepared(interopGson.toJson(InventoryConstraints()))
 
         assertEquals(100..200, ranges["ClickDelay"])
     }

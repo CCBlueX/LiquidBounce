@@ -84,7 +84,8 @@ open class InventoryConstraints : ValueGroup("Constraints") {
 
     override fun prepareDeserialize(jsonObject: JsonObject) {
         val values = jsonObject.getAsJsonArray("value").map { it.asJsonObject }
-        if (values.any { it["name"].asString == "MillisecondDelays" }) {
+        // What the ClickGUI sends back has a value type and no values that are not options
+        if (jsonObject.has("valueType") || values.any { it["name"].asString == "MillisecondDelays" }) {
             return
         }
 
