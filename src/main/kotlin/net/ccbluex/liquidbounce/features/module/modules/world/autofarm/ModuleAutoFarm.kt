@@ -118,7 +118,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             canWalkToPlant = AutoFarmAutoWalk.toPlant,
             canUseBoneMeal = AutoUseBoneMeal.enabled,
             shouldUseFortune = fortune,
-            pickUp = if (AutoFarmAutoWalk.ToItems.enabled) ItemMatch { AutoFarmAutoWalk.ToItems.shouldPickUp(it.toMinecraft()) } else null,
+            pickUp = if (AutoFarmAutoWalk.ToItems.enabled) {
+                ItemMatch { AutoFarmAutoWalk.ToItems.shouldPickUp(it.toMinecraft()) }
+            } else {
+                null
+            },
             pickUpRadius = AutoFarmAutoWalk.ToItems.range.toDouble(),
             delayTicks = interactDelay,
             boneMealDelayTicks = boneMealDelay.first / 50..boneMealDelay.last / 50,

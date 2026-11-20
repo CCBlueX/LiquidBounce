@@ -38,8 +38,8 @@ fun placeSchematic(file: Path, origin: BlockPos): SchematicSetup {
     val schematic = checkNotNull(LitematicaSchematic.createFromFile(file.parent, file.fileName.toString())) {
         "Litematica could not read $file"
     }
-    DataManager.getSchematicPlacementManager()
-        .addSchematicPlacement(SchematicPlacement.createFor(schematic, origin, file.nameWithoutExtension, true, true), false)
+    val placement = SchematicPlacement.createFor(schematic, origin, file.nameWithoutExtension, true, true)
+    DataManager.getSchematicPlacementManager().addSchematicPlacement(placement, false)
     val feeders = ArrayList<BlockPos>()
     val disabledSlots = HashMap<BlockPos, IntArray>()
     for ((region, box) in schematic.areas) {
@@ -47,8 +47,10 @@ fun placeSchematic(file: Path, origin: BlockPos): SchematicSetup {
         for ((pos, data) in schematic.getBlockEntityMapForRegion(region) ?: continue) {
             val at = origin.offset(min).offset(pos)
             when (data.getString("id")) {
-                "minecraft:dispenser", "minecraft:dropper" -> if ("minecraft:bone_meal" in data.toString()) feeders += at
-                "minecraft:crafter" -> data.getIntArray("disabled_slots").takeIf { it.isNotEmpty() }?.let { disabledSlots[at] = it }
+                "minecraft:dispenser", "minecraft:dropper" ->
+                    if ("minecraft:bone_meal" in data.toString()) feeders += at
+                "minecraft:crafter" ->
+                    data.getIntArray("disabled_slots").takeIf { it.isNotEmpty() }?.let { disabledSlots[at] = it }
             }
         }
     }

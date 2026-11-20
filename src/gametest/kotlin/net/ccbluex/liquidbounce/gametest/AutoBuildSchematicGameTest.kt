@@ -113,7 +113,8 @@ private fun GameTestScope.buildSchematic(file: Path) {
         val ticks = context.fromClient { checkNotNull(it.level).gameTime } - startTick
         logger.info(
             "Built ${file.name}, ${blocks.size} blocks, in ${ticks / 20} s game time " +
-                "(${"%.2f".format(ticks / 20.0 / blocks.size)} s a block), ${(System.nanoTime() - started) / 1_000_000_000} s wall",
+                "(${"%.2f".format(ticks / 20.0 / blocks.size)} s a block), " +
+                "${(System.nanoTime() - started) / 1_000_000_000} s wall",
         )
         // Liquids flow on for a moment
         ticks(40)
@@ -131,11 +132,14 @@ private fun GameTestScope.buildSchematic(file: Path) {
 private fun wanted(): Map<BlockPos, BlockState> =
     Placements.blocks().entries.associate { it.key.toMinecraft() to it.value.toMinecraft() }
 
-/** The items building [state] takes, as a player gets them: the block, a bucket of a liquid or of the water it holds. */
+/**
+ * The items building [state] takes, as a player gets them: the block, a bucket of a liquid or of the water it holds.
+ */
 private fun itemsFor(state: BlockState): List<Item> = when {
     state.block is LiquidBlock -> if (state.fluidState.isSource) listOf(state.fluidState.type.bucket) else emptyList()
     state.block.asItem() == Items.AIR -> emptyList()
-    state.getValueOrElse(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.LOWER) == DoubleBlockHalf.UPPER -> emptyList()
+    state.getValueOrElse(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.LOWER) == DoubleBlockHalf.UPPER ->
+        emptyList()
     state.getValueOrElse(BlockStateProperties.BED_PART, BedPart.FOOT) == BedPart.HEAD -> emptyList()
     state.getValueOrElse(BlockStateProperties.WATERLOGGED, false) -> listOf(state.block.asItem(), Items.WATER_BUCKET)
     else -> listOf(state.block.asItem())
@@ -152,7 +156,8 @@ private fun GameTestScope.stock(blocks: Map<BlockPos, BlockState>) {
         val pos = origin.offset(-2, 0, -6 + index * 2)
         setBlock(pos, "minecraft:chest[facing=east]")
         chest.forEachIndexed { slot, (item, count) ->
-            run("item replace block ${pos.x} ${pos.y} ${pos.z} container.$slot with ${BuiltInRegistries.ITEM.getKey(item)} $count")
+            val id = BuiltInRegistries.ITEM.getKey(item)
+            run("item replace block ${pos.x} ${pos.y} ${pos.z} container.$slot with $id $count")
         }
     }
     val last = origin.offset(-2, 0, -6 + (stacks.size - 1) / SLOTS_PER_CHEST * 2)
@@ -170,7 +175,8 @@ private fun matches(actual: BlockState, wanted: BlockState): Boolean {
 private fun GameTestScope.checkBuilt(blocks: Map<BlockPos, BlockState>) {
     val wrong = context.fromClient { mc ->
         val level = checkNotNull(mc.level)
-        blocks.filter { (pos, state) -> !matches(level.getBlockState(pos), state) }.mapValues { level.getBlockState(it.key) }
+        blocks.filter { (pos, state) -> !matches(level.getBlockState(pos), state) }
+            .mapValues { level.getBlockState(it.key) }
     }
     check(wrong.isEmpty()) {
         "${wrong.size} of ${blocks.size} blocks wrong:\n" +
@@ -228,10 +234,13 @@ private fun GameTestScope.boneMeal(pos: BlockPos): Int {
 
 /** Walks up to [lever] from a spot of the ground it shows from and flips it with a right-click. */
 private fun GameTestScope.flip(lever: BlockPos, blocks: Map<BlockPos, BlockState>) {
-    val spot = context.fromClient { mc -> standSpot(mc, lever, blocks) } ?: error("Nowhere to flip the lever at $lever from")
+    val spot = context.fromClient { mc -> standSpot(mc, lever, blocks) }
+        ?: error("Nowhere to flip the lever at $lever from")
     travel(spot)
     aim(lever)
-    val powered = context.fromClient { checkNotNull(it.level).getBlockState(lever).getValue(BlockStateProperties.POWERED) }
+    val powered = context.fromClient {
+        checkNotNull(it.level).getBlockState(lever).getValue(BlockStateProperties.POWERED)
+    }
     input.pressKey { it.keyUse }
     awaitClient("the lever at $lever to flip") {
         checkNotNull(it.level).getBlockState(lever).getValue(BlockStateProperties.POWERED) != powered
@@ -248,8 +257,9 @@ private fun standSpot(mc: Minecraft, target: BlockPos, blocks: Map<BlockPos, Blo
         .filter { isFree(it) && isFree(it.above()) && !isFree(it.below()) }
         .filter {
             val eye = Vec3.atBottomCenterOf(it).add(0.0, player.eyeHeight.toDouble(), 0.0)
-            eye.distanceTo(centre) < 4.0 && level.clip(ClipContext(eye, centre, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player))
-                .let { hit -> hit is BlockHitResult && hit.blockPos == target }
+            eye.distanceTo(centre) < 4.0 &&
+                level.clip(ClipContext(eye, centre, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player))
+                    .let { hit -> hit is BlockHitResult && hit.blockPos == target }
         }
         .minByOrNull { it.distSqr(target) }
 }
