@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -29,7 +30,7 @@ import net.minecraft.world.item.enchantment.Enchantments
 
 class BowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
-        private val VALUE_ESTIMATOR =
+        val VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.POWER, 0.25f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PUNCH, 0.33f),
@@ -46,8 +47,11 @@ class BowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
     }
 
+    override val providedItemFunctions: List<ProvidedFunction>
+        get() = listOf(ProvidedFunction(ItemFunction.BOW_LIKE, 1))
+
     override val category: ItemCategory
-        get() = ItemType.BOW.defaultCategory
+        get() = ItemCategory(GenericItemType.BOW)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as BowItemFacet)

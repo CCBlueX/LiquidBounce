@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap
-import it.unimi.dsi.fastutil.objects.Reference2IntMap
-import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.fastutil.objectIntArrayMapOf
-import net.ccbluex.fastutil.referenceIntArrayMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.inventoryPreset.FrontendSlotPreference.GroupSlotPreference
+import net.ccbluex.liquidbounce.features.inventoryPreset.FrontendSlotPreference.GroupSlotPreference.ItemGroupType
+import net.ccbluex.liquidbounce.features.inventoryPreset.FrontendSlotPreference.SingleSlotPreference
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.SlotContentPreference
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
-import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -41,19 +41,40 @@ import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
 import net.ccbluex.liquidbounce.utils.item.canMerge
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.ArrowItem
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
 
 /**
- * InventoryCleaner module
+ * InventoryManager module
  *
  * Automatically throws away useless items and sorts them.
  */
 object ModuleInventoryCleaner : ClientModule(
-    "InventoryCleaner", ModuleCategories.PLAYER,
+    name = "InventoryCleaner",
+    category = ModuleCategories.PLAYER,
     aliases = listOf("InventoryManager")
 ) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
+    // The slots the separate slot settings had before
+    private val inventoryPresets by inventoryPreset(
+        InventoryPreset(
+            arrayOf(
+                listOf(GroupSlotPreference(ItemGroupType.SHIELD)),
+                listOf(GroupSlotPreference(ItemGroupType.WEAPON)),
+                listOf(SingleSlotPreference(Items.BOW)),
+                listOf(GroupSlotPreference(ItemGroupType.PICKAXE_TOOL)),
+                listOf(GroupSlotPreference(ItemGroupType.AXE_TOOL)),
+                emptyList(),
+                listOf(GroupSlotPreference(ItemGroupType.POTION)),
+                listOf(GroupSlotPreference(ItemGroupType.FOOD)),
+                listOf(GroupSlotPreference(ItemGroupType.BLOCK)),
+                listOf(GroupSlotPreference(ItemGroupType.BLOCK)),
+            ),
+        ),
+    )
     private val order by enumChoice("Order", Order.VALUE)
 
     private enum class Order(override val tag: String) : Tagged {
@@ -64,6 +85,9 @@ object ModuleInventoryCleaner : ClientModule(
         DISTANCE("Distance"),
     }
 
+    /**
+     * Limits that are only applied for the categories the preset does not configure.
+     */
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
     private val maxArrows by int("MaximumArrows", 128, 0..2500)
     private val maxThrowables by int("MaximumThrowables", 64, 0..600)
@@ -76,100 +100,88 @@ object ModuleInventoryCleaner : ClientModule(
     private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
     private val throwUnknownItems by boolean("ThrowUnknownItems", false)
 
-    private val isGreedy by boolean("Greedy", true)
+    private fun bucketCategory(fluid: Fluid) =
+        ItemCategory(GenericItemType.BUCKET, ItemSubtype.BucketFluid(fluid))
 
-    private val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD)
-    private val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.WEAPON)
-    private val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW)
-    private val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE)
-    private val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE)
-    private val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE)
-    private val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.POTION)
-    private val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD)
-    private val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK)
-    private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
-
-    private fun buildSlotTargetMap(): Map<HotbarItemSlot, ItemSortChoice> {
-        val slotTargets = enumMapOf<HotbarItemSlot, ItemSortChoice>()
-
-        if (HotbarItemSlot.OFFHAND.canBeSwapTarget) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
-        slotTargets[HotbarItemSlot.SLOT_0] = slotItem1
-        slotTargets[HotbarItemSlot.SLOT_1] = slotItem2
-        slotTargets[HotbarItemSlot.SLOT_2] = slotItem3
-        slotTargets[HotbarItemSlot.SLOT_3] = slotItem4
-        slotTargets[HotbarItemSlot.SLOT_4] = slotItem5
-        slotTargets[HotbarItemSlot.SLOT_5] = slotItem6
-        slotTargets[HotbarItemSlot.SLOT_6] = slotItem7
-        slotTargets[HotbarItemSlot.SLOT_7] = slotItem8
-        slotTargets[HotbarItemSlot.SLOT_8] = slotItem9
-        return slotTargets
-    }
-
-    val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
+    val cleanupTemplateFromSettings: CleanupPlanTemplate
         get() {
-            val slotTargets = buildSlotTargetMap()
-            val blockedSlots = if (InventoryManager.hasServerLockedItems) {
-                findNonEmptySlotsInInventory().filter { InventoryManager.isServerLocked(it.itemStack) }
-            } else {
-                emptyList()
-            }
+            val currentRestrictionMap = hashMapOf<ItemSlot, RestrictionType>()
 
-            val forbiddenSlots = buildSet<ItemSlot> {
-                for ((slot, choice) in slotTargets) {
-                    if (choice == ItemSortChoice.IGNORE) this += slot
+            val mapped = this.inventoryPresets.itemRules
+                .mapIndexed { index, choice ->
+                    val slot = HotbarItemSlot.entries[index]
+
+                    val wishes = choice.mapNotNull {
+                        val representation = it.toBackendRepresentation()
+
+                        currentRestrictionMap.compute(slot) { _, b ->
+                            maxOf(b ?: RestrictionType.NONE, representation.slotRestriction)
+                        }
+
+                        representation.contentPreference
+                    }
+
+                    // Servers up to 1.15.2 cannot swap the off-hand slot, so it is never filled in there.
+                    val targetable = slot != HotbarItemSlot.OFFHAND || HotbarItemSlot.OFFHAND.canBeSwapTarget
+
+                    slot to if (targetable) wishes else emptyList()
                 }
+                .toTypedArray()
 
-                // Disallow tampering with armor slots since auto armor already handles them
-                this += ArmorItemSlot.entries
+            val slotTargets = linkedMapOf<ItemSlot, List<SlotContentPreference>>(*mapped)
 
-                if (ModuleOffhand.isOperating()) {
-                    // Disallow tampering with off-hand slot when AutoTotem is active
-                    this.add(HotbarItemSlot.OFFHAND)
-                }
+            // Disallow tampering with armor slots since auto armor already handles them
+            Slots.Armor.forEach { currentRestrictionMap[it] = RestrictionType.FORBID_TAMPERING }
 
-                this += blockedSlots
-            }
-
-            val forbiddenSlotsToFill = buildSet<ItemSlot> {
+            if (ModuleOffhand.isOperating()) {
                 // Disallow tampering with off-hand slot when AutoTotem is active
-                if (ModuleOffhand.isOperating()) this += HotbarItemSlot.OFFHAND
-
-                this += blockedSlots
+                currentRestrictionMap[HotbarItemSlot.OFFHAND] = RestrictionType.FORBID_REPLACING
             }
 
-            val constraintProvider = AmountConstraintProvider(
-                desiredItemsPerCategory = objectIntArrayMapOf(
-                    ItemType.BLOCK.defaultCategory, maxBlocks,
-                    ItemType.THROWABLE.defaultCategory, maxThrowables,
-                    ItemType.ARROW.defaultCategory, maxArrows,
-                    ItemSortChoice.WATER.category, maxWaterBuckets,
-                    ItemSortChoice.LAVA.category, maxLavaBuckets,
-                    ItemSortChoice.MILK.category, maxMilkBuckets,
-                    ItemType.TOTEM.defaultCategory, maxTotems,
-                    ItemType.JUNK.defaultCategory, 0,
-                    ItemType.NONE.defaultCategory, if (throwUnknownItems) 0 else Int.MAX_VALUE,
+            // What the server keeps putting back stays where it is
+            if (InventoryManager.hasServerLockedItems) {
+                findNonEmptySlotsInInventory()
+                    .filter { InventoryManager.isServerLocked(it.itemStack) }
+                    .forEach { currentRestrictionMap[it] = RestrictionType.FORBID_TAMPERING }
+            }
+
+            val configuredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->
+                val converted = rule.items
+                    .mapNotNull { item -> item.toBackendRepresentation().contentPreference }
+                    .map { ItemCategory(it.itemType, it.subtype) }
+
+                converted to rule.itemCount
+            }
+
+            val constraintProvider = AmountItemAmountConstraintProvider(
+                fallbackAmountPerFunction = mapOf(ItemFunction.FOOD to maxFoods),
+                configuredItemsInSpecificCategories = configuredItemCounts,
+                fallbackItemsInSpecificCategories = listOf(
+                    listOf(ItemCategory(GenericItemType.BLOCK)) to maxBlocks,
+                    listOf(ItemCategory(GenericItemType.ARROW)) to maxArrows,
+                    listOf(ItemCategory(GenericItemType.THROWABLE)) to maxThrowables,
+                    listOf(bucketCategory(Fluids.WATER)) to maxWaterBuckets,
+                    listOf(bucketCategory(Fluids.LAVA)) to maxLavaBuckets,
+                    listOf(ItemCategory(GenericItemType.BUCKET, ItemSubtype.MilkBucket)) to maxMilkBuckets,
+                    listOf(ItemCategory(GenericItemType.TOTEM)) to maxTotems,
+                    listOf(ItemCategory(GenericItemType.JUNK)) to 0,
                 ),
-                desiredValuePerFunction = referenceIntArrayMapOf(
-                    ItemFunction.FOOD, maxFoods,
-                    ItemFunction.WEAPON_LIKE, 1,
-                )
             )
 
-            return CleanupPlanPlacementTemplate(
+            return CleanupPlanTemplate(
                 slotTargets,
-                itemAmountConstraintProvider = constraintProvider::getConstraints,
+                itemAmountConstraintProvider = constraintProvider,
+                restrictions = CleanupPlanRestrictions(currentRestrictionMap),
                 itemBlacklist = itemsBlackList,
-                forbiddenSlots = forbiddenSlots,
-                forbiddenSlotsToFill = forbiddenSlotsToFill,
-                isGreedy = isGreedy,
+                keepsUnknownItems = !throwUnknownItems,
             )
         }
 
     @Suppress("unused")
     private val cleanup = inventoryPlan(inventoryConstraints) {
         val currentInventorySlots = findNonEmptySlotsInInventory()
-        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots)
-            .generatePlan()
+        val template = cleanupTemplateFromSettings
+        val cleanupPlan = CleanupPlanGenerator(template, currentInventorySlots).plan
 
         val swaps = when (order) {
             Order.VALUE -> cleanupPlan.swaps.sortedByDescending { it.priority }
@@ -191,19 +203,17 @@ object ModuleInventoryCleaner : ClientModule(
             }
         }
 
-        // The plan does not say what becomes of the items its swaps push out of the hotbar, the next one does
+        // The slots of the plan are the ones from before its swaps, the next plan has the new ones
         if (hasSwapped) {
             return@inventoryPlan
         }
 
-        val slotsToMerge = cleanupPlan.findSlotsToMerge()
-        val slotsToThrow = (currentInventorySlots.filter { it.itemStack.item in itemsBlackList } +
-            cleanupPlan.findItemsToThrowOut(currentInventorySlots))
-            .distinct()
+        val slotsToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
+        val slotsToThrow = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
             .filterNot { InventoryManager.isServerLocked(it.itemStack) }
             .let { slots -> if (order == Order.DISTANCE) InventoryManager.nearestFirst(slots) { it } else slots }
 
-        for (slot in findHotbarArrows()) {
+        for (slot in findHotbarArrows(template)) {
             perform(InventoryAction.Click.performQuickMove(slot = slot))
         }
 
@@ -223,57 +233,18 @@ object ModuleInventoryCleaner : ClientModule(
     }
 
     /**
-     * Arrows are shot from any slot and no hotbar slot can be set to them, so there they only take one up.
+     * Arrows are shot from any slot, so in a hotbar slot that does not ask for them they only take the slot up.
      */
-    private fun findHotbarArrows(): List<HotbarItemSlot> {
-        val slotTargets = buildSlotTargetMap()
-        return Slots.Hotbar.filter { slot ->
-            val stack = slot.itemStack
-            stack.item is ArrowItem && slotTargets[slot] != ItemSortChoice.IGNORE &&
-                !InventoryManager.isServerLocked(stack) &&
-                // A shift-click that does not fit leaves the rest behind and would be repeated forever.
-                Slots.Inventory.any { it.itemStack.isEmpty || it.itemStack.canMerge(stack) }
-        }
-    }
-
-    private class AmountConstraintProvider(
-        val desiredItemsPerCategory: Object2IntMap<ItemCategory>,
-        val desiredValuePerFunction: Reference2IntMap<ItemFunction>,
-    ) {
-        fun getConstraints(facet: ItemFacet): MutableList<ItemConstraintInfo> {
-            val constraints = mutableListOf<ItemConstraintInfo>()
-
-            if (facet.providedItemFunctions.isEmpty()) {
-                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Int.MAX_VALUE
-                val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
-
-                val info = ItemConstraintInfo(
-                    group = ItemCategoryConstraintGroup(
-                        desiredAmount..Int.MAX_VALUE,
-                        10,
-                        facet.category
-                    ),
-                    amountAddedByItem = facet.itemStack.count
-                )
-
-                constraints.add(info)
-            } else {
-                for ((function, amountAdded) in facet.providedItemFunctions) {
-                    val info = ItemConstraintInfo(
-                        group = ItemFunctionCategoryConstraintGroup(
-                            desiredValuePerFunction.getOrDefault(function, 1)..Int.MAX_VALUE,
-                            10,
-                            function
-                        ),
-                        amountAddedByItem = amountAdded
-                    )
-
-                    constraints.add(info)
-                }
-            }
-
-            return constraints
-        }
+    private fun findHotbarArrows(template: CleanupPlanTemplate): List<HotbarItemSlot> = Slots.Hotbar.filter { slot ->
+        val stack = slot.itemStack
+        stack.item is ArrowItem &&
+            template.restrictions.getRestrictionFor(slot) < RestrictionType.FORBID_TAMPERING &&
+            template.slotContentMap[slot].orEmpty().none {
+                it.itemType == GenericItemType.ARROW || it.subtype == ItemSubtype.SpecificItem(stack.item)
+            } &&
+            !InventoryManager.isServerLocked(stack) &&
+            // A shift-click that does not fit leaves the rest behind and would be repeated forever.
+            Slots.Inventory.any { it.itemStack.isEmpty || it.itemStack.canMerge(stack) }
     }
 
 }

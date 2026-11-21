@@ -24,12 +24,14 @@ import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.SingleplayerGameTest
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.setBlock
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
@@ -39,6 +41,7 @@ import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.core.BlockPos
@@ -103,7 +106,6 @@ private fun GameTestScope.sortsGearMergesBlocksAndCleansJunk() {
     useFastConstraints(ModuleInventoryCleaner)
     client {
         ModuleInventoryCleaner.settings.getValue("ThrowUnknownItems").setByString("false")
-        ModuleInventoryCleaner.settings.getValue("SlotItem-6").setByString("Potion")
     }
 
     setSlot("hotbar.0", "minecraft:stone_sword")
@@ -152,7 +154,7 @@ private fun GameTestScope.autoBuffRefillFullHotbarDoesNotStarveCleaner() {
     resetInventory()
     useFastConstraints(ModuleInventoryCleaner)
     client {
-        ModuleInventoryCleaner.settings.getValue("SlotItem-6").setByString("None")
+        wantNothingInSixthSlot()
         (ModuleAutoBuff.settings.getValue("Pot") as ToggleableValueGroup).enabled = true
         (ModuleAutoBuff.settings.getValue("Refill") as ToggleableValueGroup).enabled = true
     }
@@ -595,6 +597,16 @@ private fun GameTestScope.resetInventory() {
 
 private fun GameTestScope.setSlot(slot: String, item: String, count: Int = 1) {
     run("item replace entity $playerName $slot with $item $count")
+}
+
+/** The sixth hotbar slot keeps whatever is in it instead of asking for a potion. */
+private fun wantNothingInSixthSlot() {
+    @Suppress("UNCHECKED_CAST")
+    val value = ModuleInventoryCleaner.settings.getValue("InventoryPreset") as Value<InventoryPreset>
+    val preset = value.get()
+    val rules = preset.itemRules.copyOf()
+    rules[HotbarItemSlot.SLOT_5.ordinal] = emptyList()
+    value.set(InventoryPreset(rules, preset.itemLimitRules))
 }
 
 private fun GameTestScope.useFastConstraints(module: ClientModule) {

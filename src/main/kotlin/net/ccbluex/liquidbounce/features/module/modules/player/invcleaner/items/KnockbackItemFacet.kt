@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -44,7 +44,7 @@ class KnockbackItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         get() = itemStack.getEnchantment(Enchantments.KNOCKBACK)
 
     override val category: ItemCategory
-        get() = ItemType.KNOCKBACK.defaultCategory
+        get() = ItemCategory(GenericItemType.KNOCKBACK)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as KnockbackItemFacet)
