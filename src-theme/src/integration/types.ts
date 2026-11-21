@@ -358,6 +358,51 @@ export interface World {
     version: string;
 }
 
+export interface LiquidProxyState {
+    status: "LOGGED_OUT" | "UNREACHABLE" | "NO_SUBSCRIPTION" | "EXPIRED" | "UNAVAILABLE" | "ACTIVE";
+    /** Shown in place of the sessions, unless the status is ACTIVE */
+    notice?: {
+        title: string;
+        text: string;
+    };
+    networks: {
+        code: string;
+        name: string;
+    }[];
+    network?: string;
+    forwardAuthentication: boolean;
+    /** Code of the location chosen last */
+    location?: string;
+    /** Code of the location the current proxy goes through */
+    connected?: string;
+}
+
+export interface LiquidProxyLocation {
+    code: string;
+    name: string;
+    latitude?: number;
+    longitude?: number;
+    status: "ONLINE" | "MAINTENANCE" | "UNREACHABLE";
+    /** In milliseconds, while ONLINE */
+    latency?: number;
+}
+
+export interface LiquidProxySession {
+    id: string;
+    player: string;
+    server: string;
+    /** Favicon of the server, as a URL */
+    icon?: string;
+    /** Where the IP of the session is from, as an ISO 3166-1 alpha-2 code */
+    country?: string;
+    ipType?: "hosted" | "isp" | "residential" | "mobile";
+    connected: boolean;
+    startedAt: number;
+    endedAt?: number;
+    /** Whether LiquidProxy keeps the IP of this session for the next join */
+    canChangeIp: boolean;
+}
+
 export interface Proxy {
     id: number;
     host: string;
