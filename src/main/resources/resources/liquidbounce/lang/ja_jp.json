@@ -245,6 +245,8 @@
   "liquidbounce.module.autoWalk.description": "自動的に歩きます: まっすぐ前へ、障害物を避けながら向いている方向へ、目的地へ(.gotoでも設定可能)、またはプレイヤーを追って(.followでも設定可能)。",
   "liquidbounce.module.autoWalk.messages.arrived": "%s, %s, %sに到着しました。",
   "liquidbounce.module.autoWeapon.description": "ホットバーから最適な武器を自動的に選択します。",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "AutoBlock が危険時のみ防御する設定で自分が危険なとき、防御できる剣を優先します。",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "対象が奈落のそばにいるとき、突き落とすためにノックバックが付与された武器を優先します。",
   "liquidbounce.module.autoWindCharge.description": "ジャンプを押している間、ウィンドチャージで自動的に加速します。",
   "liquidbounce.module.avoidHazards.description": "悪意のある可能性のあるブロックに入るのを防ぎます。",
   "liquidbounce.module.backtrack.description": "ターゲットにラグを与え、より効率的に攻撃できるようにします",
