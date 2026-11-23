@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.harness.setting
+import net.ccbluex.liquidbounce.gametest.set
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
@@ -106,9 +107,17 @@ class KillAuraAimGameTest : ServerGameTest({
             "the server looks at $server, the camera at $camera"
         }
 
+        aim("Constant")
         if (anticheats.any { it == Anticheat.INTAVE || it == Anticheat.MX }) {
-            aim("Constant")
             expectViolation("the aim checks to catch the Constant aim") {
+                enable(ModuleKillAura)
+                opponent.fight(600)
+                disable(ModuleKillAura)
+            }
+        } else {
+            // Without aim checks Constant has to pass as well: instant, then slowed down by Dynamic
+            for (dynamic in listOf("false", "true")) {
+                client { KillAuraRotationsValueGroup.set("Aim/Constant/Dynamic/Enabled", dynamic) }
                 enable(ModuleKillAura)
                 opponent.fight(600)
                 disable(ModuleKillAura)
