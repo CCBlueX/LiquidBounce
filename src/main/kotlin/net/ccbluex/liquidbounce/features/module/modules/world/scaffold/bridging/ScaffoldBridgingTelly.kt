@@ -26,12 +26,14 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.airTicks
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
- * Jumps while moving and only aims at the face of the next block (the way [ScaffoldBridgingNormal] does by default)
- * once the jump carried the player off the row, placing that row rather than one under the jump unless SameY says
- * otherwise. Until the first block is down it bridges like Normal, so the aim starts out on the face.
+ * Jumps off the end of the row while moving and only aims at the face of the next block (the way
+ * [ScaffoldBridgingNormal] does by default) once the jump carried the player off it, placing that row rather than one
+ * under the jump unless SameY says otherwise. Until the first block is down it bridges like Normal, so the aim starts
+ * out on the face.
  */
 object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
@@ -69,7 +71,12 @@ object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
         when (resetMode) {
             ResetMode.REVERSE -> event.jump = true
-            ResetMode.RESET -> if (isStraight && ticksUntilJump >= jumpTicks) event.jump = true
+            // Off the end of the row, so the next face is needed right away and the aim has the whole jump to get there
+            ResetMode.RESET -> if (isStraight && ticksUntilJump >= jumpTicks &&
+                player.isCloseToEdge(event.directionalInput, 0.5)
+            ) {
+                event.jump = true
+            }
         }
     }
 
