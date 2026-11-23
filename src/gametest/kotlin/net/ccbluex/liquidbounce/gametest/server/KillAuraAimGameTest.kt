@@ -36,21 +36,25 @@ import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.harness.setting
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import java.util.Locale
 import java.util.Random
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 private const val FIGHT_TICKS = 1200
+private const val DISENGAGES = 20
 private const val HAND_BACK_TICKS = 100
 
 /**
- * KillAura with the Human aim against an opponent that strafes and jumps around the player for a minute: nothing that
- * watches the player may object, and enough hits have to land. Where an anticheat checks aim (Intave, MX), the
- * Constant aim has to be caught first, or a clean run would prove nothing.
+ * KillAura with the Human aim against an opponent that strafes and jumps around the player for a minute, then runs off
+ * again and again while the player turns away: nothing that watches the player may object, and enough hits have to
+ * land. Where an anticheat checks aim (Intave, MX), the Constant aim has to be caught first, or a clean run would
+ * prove nothing.
  */
 class KillAuraAimGameTest : ServerGameTest({
     val saved = client { ConfigSystem.serializeValueGroup(ModuleKillAura) to
@@ -75,10 +79,25 @@ class KillAuraAimGameTest : ServerGameTest({
         aim("Human")
         enable(ModuleKillAura)
         opponent.fight(FIGHT_TICKS)
-        disable(ModuleKillAura)
         val hits = attacks.count
         // Fewer hits in a minute than a person who aims at all would land
         check(hits >= 60) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
+
+        // The opponent gets out of reach and the player turns away, so the view turns back to the camera each time
+        repeat(DISENGAGES) { round ->
+            val degrees = if (round % 2 == 0) 20.0 else -20.0
+            opponent.flee(40) { tick ->
+                if (tick < 6) {
+                    client {
+                        // As the mouse turns it: whole counts, which the game scales by 0.15
+                        val step = RotationUtil.gcd
+                        checkNotNull(it.player).turn((degrees / step).roundToInt() * step / 0.15, 0.0)
+                    }
+                }
+            }
+            opponent.fight(60)
+        }
+        disable(ModuleKillAura)
 
         // The view turns back to the camera and is handed over where the camera looks, without a jump
         awaitClient("the view to be handed back", HAND_BACK_TICKS) { RotationManager.currentRotation == null }
@@ -118,8 +137,8 @@ private class Attacks : EventListener {
 
 /**
  * A villager that strafes around the player 2.2 to 3 blocks away the way a player does in a fight: each strafe at its
- * own speed and length, now and then a short stop, a step in or out, a jump. It is moved by teleports, so it does the
- * same in every run.
+ * own speed and length, now and then a short stop, a step in or out, a jump, or it runs off. It is moved by teleports,
+ * so it does the same in every run.
  */
 private class Opponent(private val scope: GameTestScope) {
     private val tag = scope.unique("opponent")
@@ -141,11 +160,23 @@ private class Opponent(private val scope: GameTestScope) {
 
     fun fight(ticks: Int) = repeat(ticks) {
         step()
+        moveTo(distance, scope.origin.y + height)
+        scope.ticks(1)
+    }
+
+    /** Gets out of reach for [ticks] ticks, calling [each] with the tick it is at. */
+    fun flee(ticks: Int, each: (Int) -> Unit) {
+        moveTo(12.0, scope.origin.y.toDouble())
+        repeat(ticks) { tick ->
+            each(tick)
+            scope.ticks(1)
+        }
+    }
+
+    private fun moveTo(distance: Double, y: Double) {
         val x = scope.origin.x + 0.5 + sin(angle) * distance
         val z = scope.origin.z + 0.5 + cos(angle) * distance
-        val y = scope.origin.y + height
         scope.run(String.format(Locale.ROOT, "tp @e[tag=%s,limit=1] %.3f %.3f %.3f", tag, x, y, z))
-        scope.ticks(1)
     }
 
     private fun step() {
