@@ -631,6 +631,10 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             return true
         }
         val view = RotationManager.currentRotation ?: player.rotation
+        // A view still turning onto the held look may pass over the face for a tick and be gone by the click
+        if (linesUp()) {
+            return true
+        }
         if (click(target, view) != null) {
             return false
         }
