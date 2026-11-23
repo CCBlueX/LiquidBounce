@@ -160,7 +160,7 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
         return delta
     }
 
-    override fun ticksToReach(from: Rotation, to: Rotation): Int {
+    override fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind): Int {
         val delta = from.rotationDeltaTo(to)
         val yaw = abs(delta.deltaYaw)
         val pitch = abs(delta.deltaPitch)

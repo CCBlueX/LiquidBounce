@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
+import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.aim.ConstantAim
 import net.ccbluex.liquidbounce.utils.aiming.aim.HumanAim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -86,8 +87,9 @@ open class RotationsValueGroup(
     )
 
     /**
-     * Ticks it takes at least to turn from the rotation the server has to [rotation].
+     * Ticks it takes at least to turn from the rotation the server has to [rotation], a goal of [kind].
      */
-    fun calculateTicks(rotation: Rotation) = aim.activeMode.ticksToReach(RotationManager.actualServerRotation, rotation)
+    fun calculateTicks(rotation: Rotation, kind: AimGoal.Kind = AimGoal.Kind.BLOCK) =
+        aim.activeMode.ticksToReach(RotationManager.actualServerRotation, rotation, kind)
 
 }

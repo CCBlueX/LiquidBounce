@@ -55,6 +55,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
+import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
@@ -367,7 +368,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         wallsRange: Float
     ): Boolean {
         val (rotation, surface) = findRotation(entity, range, wallsRange) ?: return false
-        val ticks = rotations.calculateTicks(rotation)
+        val ticks = rotations.calculateTicks(rotation, AimGoal.Kind.ENTITY)
         debugParameter("Rotation Ticks") { ticks }
 
         when (rotations.rotationTiming) {

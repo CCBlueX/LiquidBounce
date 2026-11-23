@@ -41,6 +41,7 @@ class HumanAim(parent: ModeValueGroup<*>) : Aim(
     override fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta {
         hand.speed = speed
         hand.reaction = reaction
+        hand.kind = goal.kind
         if (fresh) {
             hand.reset()
         }
@@ -57,14 +58,15 @@ class HumanAim(parent: ModeValueGroup<*>) : Aim(
         )
     }
 
-    override fun ticksToReach(from: Rotation, to: Rotation): Int {
+    override fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind): Int {
         val distance = from.rotationDeltaLengthTo(to)
         if (distance < RotationUtil.gcd / 2) {
             return 0
         }
 
         hand.speed = speed
-        return reaction.first + hand.ticksFor(distance, 0f) - 1
+        hand.reaction = reaction
+        return hand.reactionFor(kind).first + hand.ticksFor(distance, 0f, kind) - 1
     }
 
 }

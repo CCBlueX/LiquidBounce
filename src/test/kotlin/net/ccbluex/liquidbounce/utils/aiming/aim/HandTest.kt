@@ -32,17 +32,21 @@ class HandTest {
     private val step = 0.15f
 
     /**
-     * Runs a hand from [start] against a goal that moves as [goal] says. A box [width] wide counts as reached when the
-     * view is inside it; width 0 is a bare rotation, reached within half a step on each axis.
+     * Runs a hand from [start] against a goal of [kind] that moves as [goal] says. A box [width] wide counts as reached
+     * when the view is inside it; width 0 is a bare rotation, reached within half a step on each axis.
      */
     private fun run(
         seed: Long,
         ticks: Int,
         width: Float,
         start: Pair<Float, Float> = 0f to 0f,
+        kind: AimGoal.Kind = AimGoal.Kind.ENTITY,
         goal: (Int) -> Pair<Float, Float>,
     ): List<Pair<RotationDelta, Boolean>> {
-        val hand = Hand(Random(seed)).apply { reset() }
+        val hand = Hand(Random(seed)).apply {
+            this.kind = kind
+            reset()
+        }
         var (yaw, pitch) = start
         val margin = if (width > 0f) width / 2 else step / 2
         return List(ticks) { tick ->
@@ -59,6 +63,17 @@ class HandTest {
     fun `the same seed turns the same way`() {
         val strafing = { tick: Int -> 30f + tick * 2f to 5f * sin(tick / 9f) }
         assertEquals(run(7, 300, 8f, goal = strafing), run(7, 300, 8f, goal = strafing))
+    }
+
+    @Test
+    fun `a block is turned to without the reaction an entity needs`() {
+        repeat(20) { seed ->
+            fun firstTurn(kind: AimGoal.Kind) = run(seed.toLong(), 20, 2f, kind = kind) { 60f to 30f }
+                .indexOfFirst { (delta, _) -> delta.deltaYaw != 0f }
+            val hand = Hand(Random(0))
+            assertTrue(firstTurn(AimGoal.Kind.ENTITY) >= hand.reaction.first, "seed $seed")
+            assertTrue(firstTurn(AimGoal.Kind.BLOCK) <= hand.reactionFor(AimGoal.Kind.BLOCK).last, "seed $seed")
+        }
     }
 
     @Test

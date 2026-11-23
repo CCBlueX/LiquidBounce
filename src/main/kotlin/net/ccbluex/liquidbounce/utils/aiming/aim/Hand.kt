@@ -49,8 +49,18 @@ class Hand(private val random: RandomGenerator) {
     /** Divides every movement time. */
     var speed = 1f
 
-    /** Ticks before a new or switched goal is acted on. */
+    /** Ticks before a new or switched entity is acted on. */
     var reaction = 2..4
+
+    /** What the goal is: a block was the player's own choice, an entity and letting go of it have to be reacted to. */
+    var kind = AimGoal.Kind.ENTITY
+
+    /** Ticks before a new goal of [kind] is acted on. */
+    fun reactionFor(kind: AimGoal.Kind) = when (kind) {
+        AimGoal.Kind.ENTITY, AimGoal.Kind.CAMERA -> reaction
+        // The module asks ahead of the click, as a player bridging looks before he gets there
+        AimGoal.Kind.BLOCK -> 0..1
+    }
 
     // A hand is not equally quick in every direction; which one is quicker differs between people
     private val slowYaw = anisotropy()
@@ -131,9 +141,13 @@ class Hand(private val random: RandomGenerator) {
         return RotationDelta(yaw.counts(moveYaw, step), pitch.counts(movePitch, step))
     }
 
-    /** Ticks a movement over [distance] degrees onto something [width] degrees wide takes, without the reaction. */
-    fun ticksFor(distance: Float, width: Float): Int {
-        val seconds = (FITTS_A + FITTS_B * log2(distance / max(width, MIN_WIDTH) + 1f)) / speed
+    /**
+     * Ticks a movement over [distance] degrees onto something [width] degrees wide takes, without the reaction. A turn
+     * back to the [camera][AimGoal.Kind.CAMERA] is a loose sweep, about twice as quick as an aimed one.
+     */
+    fun ticksFor(distance: Float, width: Float, kind: AimGoal.Kind = AimGoal.Kind.ENTITY): Int {
+        val pace = if (kind == AimGoal.Kind.CAMERA) speed * RELEASE_SPEED else speed
+        val seconds = (FITTS_A + FITTS_B * log2(distance / max(width, MIN_WIDTH) + 1f)) / pace
         return max(1, (seconds / TICK).roundToInt())
     }
 
@@ -174,7 +188,7 @@ class Hand(private val random: RandomGenerator) {
         val distance = hypot(nowYaw, nowPitch)
         val slow = if (distance > 0f) 1f + (slowYaw * nowYaw + slowPitch * nowPitch) / distance else 1f
         // Fitts' time covers the whole movement, so the main submovement leaves room for a correction
-        val fitts = ticksFor(distance, if (abs(nowYaw) >= abs(nowPitch)) width else height) * PRIMARY_SHARE
+        val fitts = ticksFor(distance, if (abs(nowYaw) >= abs(nowPitch)) width else height, kind) * PRIMARY_SHARE
         val ticks = max(MIN_SUBMOVEMENT.toFloat(), fitts * slow) *
             exp(random.nextGaussian() * DURATION_SPREAD).toFloat()
         val whole = ceil(ticks).toInt()
@@ -192,7 +206,8 @@ class Hand(private val random: RandomGenerator) {
             return
         }
 
-        val along = 1f - (UNDERSHOOT + random.nextGaussian().toFloat() * UNDERSHOOT_SPREAD).coerceIn(-0.03f, 0.15f) +
+        val undershoot = if (kind == AimGoal.Kind.CAMERA) RELEASE_UNDERSHOOT else UNDERSHOOT
+        val along = 1f - (undershoot + random.nextGaussian().toFloat() * UNDERSHOOT_SPREAD).coerceIn(-0.03f, 0.15f) +
             random.nextGaussian().toFloat() * SCATTER_ALONG
         // Even the shortest aimed movement at a box lands a little off, so it does not end on the goal to the count
         val needYaw = abs(errorYaw) > toleranceYaw
@@ -232,7 +247,7 @@ class Hand(private val random: RandomGenerator) {
         (ANISOTROPY.start + random.nextFloat() * (ANISOTROPY.endInclusive - ANISOTROPY.start)) *
             if (random.nextBoolean()) 1f else -1f
 
-    private fun nextReaction() = random.nextInt(reaction.first, reaction.last + 1)
+    private fun nextReaction() = reactionFor(kind).let { random.nextInt(it.first, it.last + 1) }
 
     /**
      * One axis of the hand: a drift velocity that changes smoothly and then fades, plus overlapping submovements.
@@ -393,6 +408,10 @@ class Hand(private val random: RandomGenerator) {
         const val UNDERSHOOT = 0.04f
         const val UNDERSHOOT_SPREAD = 0.03f
         const val SCATTER_ALONG = 0.05f
+
+        /** Players turning away after a fight: 4 to 5 ticks whatever the size, stopping short more often than past. */
+        const val RELEASE_SPEED = 2.2f
+        const val RELEASE_UNDERSHOOT = 0.12f
 
         /** Degrees a movement onto a box lands off at least, however short it is. */
         const val LANDING_FLOOR = 0.25f

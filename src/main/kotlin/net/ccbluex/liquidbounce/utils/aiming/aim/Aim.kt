@@ -41,8 +41,11 @@ abstract class Aim(
      */
     abstract fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta
 
-    /** Ticks after this one it takes at least to turn from [from] to [to], 0 if this tick's turn gets there. */
-    abstract fun ticksToReach(from: Rotation, to: Rotation): Int
+    /**
+     * Ticks after this one it takes at least to turn from [from] to [to], a goal of [kind], 0 if this tick's turn gets
+     * there.
+     */
+    abstract fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind = AimGoal.Kind.BLOCK): Int
 
 }
 
