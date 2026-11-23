@@ -16,23 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging
 
-import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 
 /**
- * Breezily bridging: while the player runs forwards over a bridge, it taps left and right to stay over the blocks.
+ * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a bridge, it
+ * taps left and right to stay over the blocks.
  */
-object ScaffoldBreezilyFeature : ToggleableValueGroup(ModuleScaffold, "Breezily", false) {
+object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
 
     private var lastSideways = 0f
     private var lastAirTime = 0L
@@ -41,6 +42,11 @@ object ScaffoldBreezilyFeature : ToggleableValueGroup(ModuleScaffold, "Breezily"
     private val edgeDistance by floatRange(
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
     )
+
+    override val holdsLook: Boolean
+        get() = true
+
+    override fun look(position: Vec3): Rotation? = ScaffoldBridgingNinja.look(position)
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(

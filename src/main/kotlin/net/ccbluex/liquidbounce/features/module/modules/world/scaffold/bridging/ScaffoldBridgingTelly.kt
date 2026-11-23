@@ -16,9 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging
 
-import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -30,28 +29,22 @@ import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
- * Telly feature
- *
- * This is based on the telly technique and means that the player will jump when moving.
- * That allows for a faster scaffold.
- * Depending on the SameY setting, we might scaffold upwards.
- *
- * @see ModuleScaffold
+ * Jumps while moving and only aims at the face of the next block (the way [ScaffoldBridgingNormal] does by default)
+ * once the jump carried the player off the row. Depending on the SameY setting, it scaffolds upwards.
  */
-object ScaffoldTellyFeature : ToggleableValueGroup(ModuleScaffold, "Telly", false) {
+object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
     val doNotAim: Boolean
         get() = player.airTicks <= straightTicks &&
                 ticksUntilJump >= jumpTicks &&
                 !(ModuleScaffold.isTowering && aimOnTower)
 
-    /** New val to determine if the player is telly bridging */
     val isTellyBridging: Boolean
-        get() = ticksUntilJump >= jumpTicks && player.moving && enabled
+        get() = ticksUntilJump >= jumpTicks && player.moving && running
 
     private var ticksUntilJump = 0
 
-    val resetMode by enumChoice("ResetMode", Mode.RESET)
+    val resetMode by enumChoice("ResetMode", ResetMode.RESET)
     private val straightTicks by int("Straight", 0, 0..5, "ticks")
     private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
     private val aimOnTower by boolean("AimOnTower", true)
@@ -73,8 +66,8 @@ object ScaffoldTellyFeature : ToggleableValueGroup(ModuleScaffold, "Telly", fals
         val isStraight = RotationManager.currentRotation == null || straightTicks == 0
 
         when (resetMode) {
-            Mode.REVERSE -> event.jump = true
-            Mode.RESET -> if (isStraight && ticksUntilJump >= jumpTicks) event.jump = true
+            ResetMode.REVERSE -> event.jump = true
+            ResetMode.RESET -> if (isStraight && ticksUntilJump >= jumpTicks) event.jump = true
         }
     }
 
@@ -84,7 +77,7 @@ object ScaffoldTellyFeature : ToggleableValueGroup(ModuleScaffold, "Telly", fals
         jumpTicks = jumpTicksOpt.random()
     }
 
-    enum class Mode(override val tag: String) : Tagged {
+    enum class ResetMode(override val tag: String) : Tagged {
         REVERSE("Reverse"),
         RESET("Reset")
     }

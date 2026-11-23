@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
@@ -46,10 +45,15 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.considerInventory
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridging
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingBreezily
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingGodBridge
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNinja
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNormal
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingTelly
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAccelerationFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoBlockFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldClutchFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
@@ -62,7 +66,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldTellyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -75,11 +78,11 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
-import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.Visibility
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -140,23 +143,30 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         tree(ScaffoldMovementPrediction)
     }
 
-    /** GodBridge walks over the edges, so choosing it hands them to the SafeWalk mode made for that. */
-    internal val aimMode by enumChoice("RotationMode", AimMode.STABILIZED).onChanged { mode ->
-        if (mode == AimMode.GOD_BRIDGE) {
-            safeWalkMode.setByString("Ledge")
-        }
+    /** How the player bridges. Old configs saved Normal, GodBridge or Breezily as the technique. */
+    val bridging = modes(object : EventListener {
+        override fun parent() = ModuleScaffold
+
+        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
+        override val running: Boolean
+            get() = super.running && ModuleClutch.fall == null
+    }, "Bridging", listOf("Technique"), { 0 }) {
+        arrayOf<ScaffoldBridging>(
+            ScaffoldBridgingNormal,
+            ScaffoldBridgingNinja,
+            ScaffoldBridgingGodBridge,
+            ScaffoldBridgingBreezily,
+            ScaffoldBridgingTelly,
+        )
     }
     internal val visibility by enumChoice("Visibility", Visibility.VISIBLE)
 
     init {
-        tree(ScaffoldEagleFeature)
-        tree(ScaffoldTellyFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldStabilizeMovementFeature)
         tree(ScaffoldCeilingFeature)
         tree(ScaffoldHeadHitterFeature)
         tree(ScaffoldExpandFeature)
-        tree(ScaffoldBreezilyFeature)
     }
 
     private val sameYMode by enumChoice("SameY", SameYMode.OFF)
@@ -236,18 +246,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      */
     override val running: Boolean
         get() = super.running || ModuleClutch.fall != null
-
-    private object SafeWalk : EventListener {
-        override fun parent() = ModuleScaffold
-
-        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
-        override val running: Boolean
-            get() = super.running && ModuleClutch.fall == null
-    }
-
-    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 3) {
-        ModuleSafeWalk.safeWalkChoices(it, ::missesNextBlock) { blockCount }
-    }
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
@@ -429,7 +427,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         val predictedPos = prediction ?: player.position()
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose = when {
-            ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input)) ->
+            ScaffoldEagleFeature.running && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input)) ->
                 Pose.CROUCHING
             // Without a prediction the click comes from where the player is, sneaking at the ledge or not
             prediction == null -> player.pose
@@ -513,11 +511,11 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         else -> ScaffoldPlacement.rotation(target)
     }
 
-    /** What a look has to meet to place [target], see [crosshairTarget]; nothing for the exact GodBridge look. */
+    /** What a look has to meet to place [target], see [crosshairTarget]; nothing for the exact held look. */
     private fun surface(target: BlockPlacementTarget): Surface? = when {
         ModuleClutch.fall != null -> ScaffoldClutchFeature.surface(target) ?: ScaffoldPlacement.surface(target)
         expanding -> ScaffoldExpandFeature.surface(target)
-        ScaffoldPlacement.holdsGodBridgeLook -> null
+        ScaffoldPlacement.holdsBridgingLook -> null
         else -> ScaffoldPlacement.surface(target)
     }
 
@@ -611,7 +609,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      * Whether an edge has to stop the player: no blocks left, or the view doesn't put the next block down before the
      * player walks off.
      */
-    private fun missesNextBlock(): Boolean {
+    internal fun missesNextBlock(): Boolean {
         val target = currentTarget
         if (blockCount <= 0 || target == null) {
             return true
@@ -621,6 +619,16 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             return false
         }
         return ModuleClutch.fall != null || expanding || !ScaffoldPlacement.placesInTime(target, view)
+    }
+
+    /**
+     * Whether the view still turns to the look the bridging holds (bridge start, a corner, stop and go), during which
+     * an edge is only sneaked at, see [ScaffoldBridging.look].
+     */
+    internal fun linesUp(): Boolean {
+        val look = ScaffoldPlacement.heldLook?.takeUnless { expanding } ?: return false
+        val view = RotationManager.currentRotation ?: player.rotation
+        return view.rotationDeltaLengthTo(look) > RotationUtil.gcd
     }
 
     @Suppress("unused")

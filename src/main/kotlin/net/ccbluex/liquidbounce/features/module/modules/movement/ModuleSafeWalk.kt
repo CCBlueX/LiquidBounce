@@ -60,11 +60,13 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     /**
      * [stops] tells the modes whether an edge has to stop the player at all, Scaffold says no while it places the
-     * next block in time. A caller placing blocks passes its [blockCount] and gets [Ledge] as well.
+     * next block in time. A caller placing blocks passes its [blockCount] and gets [Ledge] as well, which only sneaks
+     * while [sneaksOnly].
      */
     fun safeWalkChoices(
         mode: ModeValueGroup<Mode>,
         stops: () -> Boolean = { true },
+        sneaksOnly: () -> Boolean = { false },
         blockCount: (() -> Int)? = null,
     ): Array<Mode> {
         val choices = arrayOf(
@@ -73,7 +75,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
             OnEdge(mode, stops),
             Sneak(mode, stops),
         )
-        return if (blockCount != null) choices + Ledge(mode, stops, blockCount) else choices
+        return if (blockCount != null) choices + Ledge(mode, stops, sneaksOnly, blockCount) else choices
     }
 
     private class Safe(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Safe") {
@@ -111,11 +113,12 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     /**
      * Walks over the edge as if nothing was there and only acts on the last tick before leaving it, when [stops]
-     * says the block won't go down in time: one of the [actions], picked at random.
+     * says the block won't go down in time: one of the [actions], picked at random, or a sneak while [sneaksOnly].
      */
     private class Ledge(
         override val parent: ModeValueGroup<Mode>,
         private val stops: () -> Boolean,
+        private val sneaksOnly: () -> Boolean,
         private val blockCount: () -> Int,
     ) : Mode("Ledge") {
 
@@ -148,7 +151,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
                 return@handler
             }
 
-            val action = if (blockCount() < sneakBelowBlocks) Action.SNEAK else actions.random()
+            val action = if (sneaksOnly() || blockCount() < sneakBelowBlocks) Action.SNEAK else actions.random()
             debugParameter("Action") { action }
             when (action) {
                 Action.JUMP -> event.jump = true

@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNormal
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
-object ScaffoldEagleFeature : ToggleableValueGroup(ModuleScaffold, "Eagle", false) {
+object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldBridgingNormal, "Eagle", false) {
 
     private val blocksToEagle = intRange("BlocksToEagle", 0..0, 0..10).asRefreshable()
     private val edgeDistance = floatRange("EdgeDistance", 0.01f..0.05f, 0.01f..1.3f).asRefreshable()
@@ -64,7 +64,7 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ModuleScaffold, "Eagle", fals
     }
 
     fun onBlockPlacement() {
-        if (!enabled) {
+        if (!running) {
             return
         }
 

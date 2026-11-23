@@ -60,9 +60,6 @@ enum class AimMode(override val tag: String) : Tagged {
     DIAGONAL_YAW("DiagonalYaw"),
     ANGLE_YAW("AngleYaw"),
     EDGE_POINT("EdgePoint"),
-
-    /** The look god bridging players hold against the movement, see [DirectionTargetPositionFactory]. */
-    GOD_BRIDGE("GodBridge"),
 }
 
 /**
