@@ -1281,6 +1281,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     /** Asks the search for one leg of the way home; `pollReturn` picks it up every tick. */
     private fun requestReturnSearch(from: AgentVec3, goal: AgentVec3, leg: ReturnLeg) {
+        // The search runs on batches whatever the dispatch pacing is: `Burst` wraps it in `OneTick`, which
+        // rejects any route that does not fit a single tick, and `Instant` in `DirectSearch`, which refuses
+        // anything past 9.5 blocks. Both are properties of sending, not of planning.
         trip.options = Options(
             steps.options().stepLength,
             Pacing.Batches(Route.MAX_PACKETS_PER_TICK),
@@ -1307,7 +1310,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 if (debug.log) {
                     checkRoute(route, "return-" + returnLeg.name.lowercase())
                 }
-                if (trip.dispatch(route, returnFinish()) == null) {
+                // Dispatched the same way the way out is: the configured pacing decides how the packets go,
+                // so a burst run bursts home too.
+                if (dispatchRoute(route, returnFinish()) == null) {
                     dlog(
                         "RETURN-FAILED",
                         TpAuraLog.details(
