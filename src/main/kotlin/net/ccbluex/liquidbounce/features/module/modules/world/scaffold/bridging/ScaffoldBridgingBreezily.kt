@@ -30,8 +30,8 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 
 /**
- * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a bridge, it
- * taps left and right to stay over the blocks.
+ * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a straight
+ * bridge, it taps left and right to stay over the blocks.
  */
 object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
 
@@ -52,7 +52,9 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.SAFETY_FEATURE
     ) { event ->
-        if (!event.directionalInput.forwards || player.isShiftKeyDown) {
+        // On a diagonal the taps would steer off the row, which the look meets as it is
+        val straight = movement()?.let { it % 90f == 0f } ?: false
+        if (!straight || !event.directionalInput.forwards || player.isShiftKeyDown) {
             return@handler
         }
 
