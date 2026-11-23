@@ -52,16 +52,19 @@ public final class OkHttpUtils {
         return s == null ? null : MediaType.parse(s);
     }
 
+    @SuppressWarnings("deprecation")
     public static RequestBody toRequestBody(String s, MediaType contentType) {
-        return RequestBody.create(s, contentType);
+        return RequestBody.create(contentType, s);
     }
 
+    @SuppressWarnings("deprecation")
     public static RequestBody toRequestBody(byte[] s, MediaType contentType) {
-        return RequestBody.create(s, contentType);
+        return RequestBody.create(contentType, s);
     }
 
+    @SuppressWarnings("deprecation")
     public static RequestBody asRequestBody(File f, MediaType contentType) {
-        return RequestBody.create(f, contentType);
+        return RequestBody.create(contentType, f);
     }
 
 }
