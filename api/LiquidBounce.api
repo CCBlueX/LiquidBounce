@@ -1538,10 +1538,24 @@ public abstract class net/ccbluex/liquidbounce/utils/aiming/aim/Aim : net/ccblue
 
 public final class net/ccbluex/liquidbounce/utils/aiming/aim/AimGoal {
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZ)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZLnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZLnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;F)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FFZLnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDistance ()F
 	public final fun getHeight ()F
+	public final fun getKind ()Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 	public final fun getReached ()Z
 	public final fun getRotation ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public final fun getWidth ()F
+}
+
+public final class net/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind : java/lang/Enum {
+	public static final field BLOCK Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
+	public static final field CAMERA Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
+	public static final field ENTITY Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 }
 
 public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/lang/Record {

@@ -48,7 +48,29 @@ abstract class Aim(
 
 /**
  * Where the view has to go: [rotation] is the point to aim at, [width] and [height] the angular size of what has to be
- * hit (0 for the rotation itself), and [reached] whether the view hits it already.
+ * hit (0 for the rotation itself), [reached] whether the view hits it already, [kind] what it is and [distance] how
+ * many blocks away from the eyes, 0 for a bare rotation.
  */
 @AddonApi
-class AimGoal(val rotation: Rotation, val width: Float, val height: Float, val reached: Boolean)
+class AimGoal @JvmOverloads constructor(
+    val rotation: Rotation,
+    val width: Float,
+    val height: Float,
+    val reached: Boolean,
+    val kind: Kind = Kind.BLOCK,
+    val distance: Float = 0f,
+) {
+
+    @AddonApi
+    enum class Kind {
+        /** An entity, which moves on its own and has to be reacted to. */
+        ENTITY,
+
+        /** A block, or a direction a module picked: it only moves in sight when the player does. */
+        BLOCK,
+
+        /** The player's own camera, once no module turns the view any more. */
+        CAMERA,
+    }
+
+}

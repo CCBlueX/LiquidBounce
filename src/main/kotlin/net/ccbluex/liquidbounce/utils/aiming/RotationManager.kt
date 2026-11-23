@@ -77,6 +77,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * A rotation manager. Will also actively affect our F5 model.
@@ -336,24 +337,35 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     ): AimGoal {
         val owner = yawTarget.takeIf { it === pitchTarget }
         val surface = owner?.hitSurface
+        val kind = when {
+            yawTarget == null && pitchTarget == null -> AimGoal.Kind.CAMERA
+            (yawTarget ?: pitchTarget)?.entity != null -> AimGoal.Kind.ENTITY
+            else -> AimGoal.Kind.BLOCK
+        }
         if (surface != null) {
             val eyes = player.eyePosition
-            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view))
+            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view), kind)
         }
 
         val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
         val margin = max(tolerance, step / 2)
         val delta = view.rotationDeltaTo(goal)
         val reached = abs(delta.deltaYaw) < margin && abs(delta.deltaPitch) < margin
-        return AimGoal(goal, tolerance * 2, tolerance * 2, reached)
+        return AimGoal(goal, tolerance * 2, tolerance * 2, reached, kind)
     }
 
     /**
      * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
      */
-    private fun surfaceGoal(goal: Rotation, eyes: Vec3, surface: Surface, reached: Boolean): AimGoal {
+    private fun surfaceGoal(
+        goal: Rotation,
+        eyes: Vec3,
+        surface: Surface,
+        reached: Boolean,
+        kind: AimGoal.Kind,
+    ): AimGoal {
         if (surface.box.contains(eyes)) {
-            return AimGoal(goal, 180f, 180f, reached)
+            return AimGoal(goal, 180f, 180f, reached, kind)
         }
 
         val corners = surface.corners
@@ -370,7 +382,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             minPitch = min(minPitch, rotation.pitch)
             maxPitch = max(maxPitch, rotation.pitch)
         }
-        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached)
+        val distance = sqrt(surface.box.distanceToSqr(eyes)).toFloat()
+        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached, kind, distance)
     }
 
     private fun release() {

@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.utils.aiming.aim
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.math.Easing
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,6 +45,7 @@ class ConstantAimTest {
         speed: Float? = null,
         easeIn: Easing = Easing.LINEAR,
         easeOut: Easing = Easing.LINEAR,
+        dynamic: Boolean = false,
     ): ConstantAim {
         lateinit var aim: ConstantAim
         ModeValueGroup<Aim>(null, "Aim", { 0 }, { arrayOf(ConstantAim(it).also { constant -> aim = constant }) })
@@ -53,7 +56,23 @@ class ConstantAimTest {
         }
         values.getValue("In").setByString(easeIn.tag)
         values.getValue("Out").setByString(easeOut.tag)
+        (values.getValue("Dynamic") as ToggleableValueGroup).enabled = dynamic
         return aim
+    }
+
+    /** Ticks [this] takes to turn onto [goal] from straight ahead, and the largest yaw step on the way. */
+    private fun ConstantAim.turnOnto(goal: AimGoal): Pair<Int, Float> {
+        var view = Rotation(0f, 0f)
+        var largest = 0f
+        repeat(50) { tick ->
+            if (view.rotationDeltaLengthTo(goal.rotation) < 1e-3f) {
+                return tick to largest
+            }
+            val step = turn(view, goal, tick == 0)
+            largest = max(largest, abs(step.deltaYaw))
+            view = view.add(step.deltaPitch, step.deltaYaw)
+        }
+        error("never got onto ${goal.rotation}")
     }
 
     /**
@@ -100,6 +119,36 @@ class ConstantAimTest {
                 assertTrue(steps.all { abs(it) <= 30f }, "$easeIn/$easeOut: $steps")
             }
         }
+    }
+
+    @Test
+    fun `a dynamic turn goes slower the smaller it is`() {
+        val aim = aim(30f, dynamic = true)
+        assertEquals(3 to 30f, aim.turnOnto(AimGoal(Rotation(90f, 0f), 0f, 0f, false)))
+        // Angle 0.4: halfway to 90 degrees the turn keeps 0.7 of its speed, 21 degrees a tick
+        val (ticks, largest) = aim.turnOnto(AimGoal(Rotation(45f, 0f), 0f, 0f, false))
+        assertEquals(3, ticks)
+        assertTrue(largest <= 21f + 1e-3f, "$largest")
+        aim.yawSteps(Rotation(45f, 0f))
+    }
+
+    @Test
+    fun `a dynamic turn slows down for far targets and once on target`() {
+        val aim = aim(30f, dynamic = true)
+        val goal = Rotation(90f, 0f)
+        fun ticks(reached: Boolean, distance: Float) =
+            aim.turnOnto(AimGoal(goal, 4f, 4f, reached, AimGoal.Kind.ENTITY, distance)).first
+        assertEquals(3, ticks(false, 3f))
+        // Distance 0.6: 24 degrees a tick halfway between 3 and 6 blocks, 18 from 6 on
+        assertEquals(4, ticks(false, 4.5f))
+        assertEquals(5, ticks(false, 9f))
+        // OnTarget 0.3: 9 degrees a tick
+        assertEquals(10, ticks(true, 3f))
+    }
+
+    @Test
+    fun `dynamic is off by default`() {
+        assertEquals(3 to 30f, aim(30f).turnOnto(AimGoal(Rotation(90f, 0f), 4f, 4f, true, AimGoal.Kind.ENTITY, 9f)))
     }
 
 }
