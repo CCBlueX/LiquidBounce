@@ -47,7 +47,7 @@ object CrystalSpawnTrigger : PostPacketTrigger<ClientboundAddEntityPacket>("Crys
                 return@runDestroy
             }
 
-            SubmoduleCrystalDestroyer.tick()
+            SubmoduleCrystalDestroyer.tick(entity)
         }
 
         if (SubmoduleSetDead.enabled) {

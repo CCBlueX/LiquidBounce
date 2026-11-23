@@ -162,12 +162,21 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
             return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
         }, onFinished = {
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            if (!chronometer.hasAtLeastElapsed(delay.toLong()) ||
+                CrystalAuraPlaceTargetFactory.placementTarget != targetPos
+            ) {
                 return@rotate
             }
 
+            val hitResult = raytraceBlock(
+                getMaxRange().toDouble(),
+                RotationManager.serverRotation,
+                targetPos,
+                targetPos.stateOrEmpty
+            )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == targetPos } ?: return@rotate
+
             player.clickBlockWithSlot(
-                blockHitResult?.withDirection(side) ?: return@rotate,
+                hitResult.withDirection(side),
                 getSlot() ?: return@rotate,
                 swingMode,
                 switchMode,
@@ -211,6 +220,13 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
     private fun getSlot(): Int? {
         return Slots.OffhandWithHotbar.findClosestSlot(Items.END_CRYSTAL)?.inventorySlot
+    }
+
+    fun reset() {
+        blockHitResult = null
+        previousRotations.clear()
+        CrystalAuraPlaceTargetFactory.placementTarget = null
+        CrystalAuraPlaceTargetFactory.previousTarget = null
     }
 
     fun getMaxRange() = max(range, wallsRange)

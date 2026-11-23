@@ -103,10 +103,12 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
                     return@rotate
                 }
 
-                val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
+                if (CrystalAuraDestroyTargetFactory.currentTarget != target || target.isRemoved) {
+                    return@rotate
+                }
 
-                attackEntity(target1, swingMode)
-                postAttackHandlers.forEach { it.attacked(target1.id) }
+                attackEntity(target, swingMode)
+                postAttackHandlers.forEach { it.attacked(target.id) }
                 chronometer.reset()
             })
         }

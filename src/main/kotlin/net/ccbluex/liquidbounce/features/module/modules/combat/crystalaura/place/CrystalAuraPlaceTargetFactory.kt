@@ -64,7 +64,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         placementTarget = null
 
         val basePlace = SubmoduleBasePlace.shouldBasePlaceRun()
-        val currentBasePlaceTarget = if (basePlace) null else SubmoduleBasePlace.currentTarget
+        val currentBasePlaceTarget = SubmoduleBasePlace.currentTarget?.takeUnless { basePlace }
 
         val positions = mutableListOf<PlacementPositionCandidate>()
 
@@ -78,7 +78,11 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         val finalPositions = positions.filter(PlacementPositionCandidate::isNotInvalid)
 
         // choose the best available target
-        val bestTarget = selectOptimalCandidate(finalPositions, currentBasePlaceTarget) ?: return
+        val bestTarget = selectOptimalCandidate(finalPositions, currentBasePlaceTarget)
+        if (bestTarget == null) {
+            SubmoduleBasePlace.currentTarget = null
+            return
+        }
 
         // set the base place target
         val notCurrentBasePlaceTarget = bestTarget != currentBasePlaceTarget
@@ -100,7 +104,10 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         excludeIds: IntCollection?,
         positions: MutableList<PlacementPositionCandidate>
     ): Boolean {
-        val target = ModuleCrystalAura.targetTracker.target ?: return true
+        val target = ModuleCrystalAura.targetTracker.target ?: run {
+            SubmoduleBasePlace.currentTarget = null
+            return true
+        }
         val expectedCrystal = if (oldVersion) FULL_BOX.setMaxY(2.0) else FULL_BOX
         val basePlaceLayers = if (basePlace) SubmoduleBasePlace.getBasePlaceLayers(target.y) else IntRange.EMPTY
 
