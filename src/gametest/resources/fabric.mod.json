@@ -42,6 +42,7 @@
       "net.ccbluex.liquidbounce.gametest.server.InventoryPlanGameTest",
       "net.ccbluex.liquidbounce.gametest.server.NoRotateSetGameTest",
       "net.ccbluex.liquidbounce.gametest.server.KillAuraAimGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.ScaffoldGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.NavigationGameTests",
       "net.ccbluex.liquidbounce.gametest.combat.AimbotCrystalsGameTest",
       "net.ccbluex.liquidbounce.gametest.CrystalAuraCrosshairGameTest",

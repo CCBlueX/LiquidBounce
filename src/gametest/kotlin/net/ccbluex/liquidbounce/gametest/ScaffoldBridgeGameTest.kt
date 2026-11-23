@@ -40,8 +40,9 @@ private const val TICKS_PER_SECOND = 20.0
 private const val CLEARANCE = 48
 
 /**
- * Scaffold with its default settings bridges over the void, straight and diagonally, with either aim. It must never
- * let the player fall. Blocks per second, and the ticks it needed a block but placed none, are logged for comparison.
+ * Scaffold bridges over the void, straight and diagonally, with every bridging type and either aim and nothing else
+ * changed. It must never let the player fall. Blocks per second, and the ticks it needed a block but placed none, are
+ * logged for comparison.
  */
 class ScaffoldBridgeGameTest : ClientGameTest(ScaffoldBridge::test)
 
@@ -52,7 +53,7 @@ private object ScaffoldBridge {
         DIAGONAL(-45f),
     }
 
-    private class Run(val aim: String, val course: Course) {
+    private class Run(val bridging: String, val aim: String, val course: Course) {
         var placed = 0
         var firstTick = -1
         var lastTick = -1
@@ -63,9 +64,9 @@ private object ScaffoldBridge {
         val blocksPerSecond
             get() = if (lastTick > firstTick) (placed - 1) * TICKS_PER_SECOND / (lastTick - firstTick) else 0.0
 
-        override fun toString() =
-            "${aim.padEnd(8)} ${course.name.padEnd(8)} placed $placed, %.2f blocks/s, waits $waits, sneaks $sneaks"
-                .format(blocksPerSecond) + (fellAt?.let { ", fell at $it" } ?: "")
+        override fun toString() = "${bridging.padEnd(9)} ${aim.padEnd(8)} ${course.name.padEnd(8)} " +
+            "placed $placed, %.2f blocks/s, waits $waits, sneaks $sneaks".format(blocksPerSecond) +
+            (fellAt?.let { ", fell at $it" } ?: "")
     }
 
     fun test(context: ClientGameTestContext) {
@@ -76,15 +77,17 @@ private object ScaffoldBridge {
 
             val runs = mutableListOf<Run>()
             context.restoring(ModuleScaffold) {
-                for (aim in listOf("Constant", "Human")) {
-                    for (course in Course.entries) {
-                        repeat(3) { runs += bridge(context, world, Run(aim, course)) }
+                for (bridging in listOf("Normal", "Ninja", "GodBridge", "Breezily", "Telly")) {
+                    for (aim in listOf("Constant", "Human")) {
+                        for (course in Course.entries) {
+                            runs += bridge(context, world, Run(bridging, aim, course))
+                        }
                     }
                 }
             }
 
             runs.forEach { logger.info("[ScaffoldBridge] $it") }
-            for ((key, attempts) in runs.groupBy { it.aim to it.course }) {
+            for ((key, attempts) in runs.groupBy { it.bridging to it.aim }) {
                 val blocks = attempts.sumOf { it.placed - 1 }
                 val ticks = attempts.sumOf { it.lastTick - it.firstTick }
                 logger.info(
@@ -113,6 +116,7 @@ private object ScaffoldBridge {
         context.waitTicks(SETTLE_TICKS)
 
         context.onClient { client ->
+            ModuleScaffold.set("Bridging", run.bridging)
             ModuleScaffold.set("Rotations/Aim", run.aim)
             ModuleScaffold.enabled = true
             client.options.keyUp.isDown = true
