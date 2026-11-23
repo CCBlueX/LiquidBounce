@@ -114,6 +114,54 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     private val rangeValue = float("Range", 30f, 6f..100f, "blocks")
     private val range by rangeValue
+
+    private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
+    private val manual = tree(ManualValueGroup())
+
+    /** Armed but holding: the route is planned and drawn, nothing leaves until the player acts. */
+    private class ManualValueGroup : ValueGroup("AttackManually", aliases = listOf("ManualAttack")) {
+        val enabled by boolean("Enabled", false)
+        val trigger by enumChoice("Trigger", ManualTrigger.LEFT_CLICK, aliases = listOf("AttackWhen"))
+        val preventExtraAction by boolean("PreventExtraAction", true)
+        val showRoute by boolean("ShowRoute", true, aliases = listOf("ShowPath"))
+        val refreshInterval by int("RefreshInterval", 8, 1..20, "ticks", aliases = listOf("RerouteInterval"))
+    }
+
+    private enum class ManualTrigger(override val tag: String) : Tagged {
+        LEFT_CLICK("LeftClick"),
+        RIGHT_CLICK("RightClick"),
+        JUMP("Jump"),
+        SNEAK("Sneak"),
+    }
+
+    private val prediction = tree(PredictionValueGroup())
+
+    /**
+     * Aiming at where the target will be when the route arrives, as the module this grew out of did: a switch,
+     * then a ceiling for the *measured* flight. The network round trip is added on top of that ceiling, so the
+     * effective lead may exceed it by one ping.
+     */
+    private class PredictionValueGroup : ValueGroup("Prediction") {
+        val enabled by boolean("Enabled", true)
+
+        /** Ceiling for the measured flight; the ping round trip is added on top and is not capped. */
+        val maxLead by int("MaxLead", 5, 1..10, "ticks")
+
+
+        /**
+         * Covers several future positions in one swing: against a fast flyer a single predicted spot is off by
+         * more than the server's reach, and probing them one tick at a time would arrive after it left.
+         */
+        val spray by boolean("Spray", false, aliases = listOf("Aggressive"))
+
+        /** How many probes one round may send; the chain asks for more than it uses. */
+        val maxProbes by int("MaxProbes", 8, 2..10, "probes")
+
+        /** Draws the probes of the last round: the target's predicted box and the spot tried for it. */
+        val previewProbes by boolean("PreviewProbes", true)
+
+    }
+
     private val afterAttack by enumChoice("AfterAttack", AfterAttack.RETURN)
     private val hold by int("Hold", 1, 1..10, "swings")
 
@@ -140,76 +188,23 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         FLANKS("Flanks"),
     }
 
-    private val hud = tree(HudValueGroup())
 
-    private val manual = tree(ManualValueGroup())
-
-    /** Armed but holding: the route is planned and drawn, nothing leaves until the player acts. */
-    private class ManualValueGroup : ValueGroup("AttackManually", aliases = listOf("ManualAttack")) {
-        val enabled by boolean("Enabled", false)
-        val trigger by enumChoice("Trigger", ManualTrigger.LEFT_CLICK, aliases = listOf("AttackWhen"))
-        val preventExtraAction by boolean("PreventExtraAction", true)
-        val showRoute by boolean("ShowRoute", true, aliases = listOf("ShowPath"))
-        val refreshInterval by int("RefreshInterval", 8, 1..20, "ticks", aliases = listOf("RerouteInterval"))
-    }
-
-    private enum class ManualTrigger(override val tag: String) : Tagged {
-        LEFT_CLICK("LeftClick"),
-        RIGHT_CLICK("RightClick"),
-        JUMP("Jump"),
-        SNEAK("Sneak"),
-    }
-
-    private val prediction = tree(PredictionValueGroup())
-
-    /** Ticks a swing waits for a hurt before it counts as a miss. */
-    private val hitConfirm by int("HitConfirm", 10, 1..40, "ticks")
-
-    private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
     private val clicker = tree(Clicker(this, mc.options.keyAttack))
-    private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
-    private val steps = tree(StepsValueGroup())
-    private val debug = tree(DebugValueGroup())
 
     /**
      * Sends the attack packet straight instead of going through the click plan: no click schedule and no
-     * facing check stand between the arrival and the swing. Ported from TpAuraPlus, where the clicker
-     * gate was the difference between "arrives and hits" and "arrives and leaves".
+     * facing check stand between the arrival and the swing.
      */
     private val attackWithoutLooking by boolean("AttackWithoutLooking", true)
 
+    private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
+    private val steps = tree(StepsValueGroup())
+    private val sfx = tree(SfxValueGroup())
+    private val hud = tree(HudValueGroup())
+    private val debug = tree(DebugValueGroup())
+
     /** Also tries spots in the air around the target, for targets with no standable spot within reach. */
     private val airTargets by targetSelector.boolean("AirTargets", false)
-
-    /**
-     * Aiming at where the target will be when the route arrives, as the module this grew out of did: a switch,
-     * then a ceiling for the *measured* flight. The network round trip is added on top of that ceiling, so the
-     * effective lead may exceed it by one ping.
-     */
-    private class PredictionValueGroup : ValueGroup("Prediction") {
-        val enabled by boolean("Enabled", true)
-
-        /** Ceiling for the measured flight; the ping round trip is added on top and is not capped. */
-        val maxLead by int("MaxLead", 5, 1..10, "ticks")
-
-
-        /**
-         * Covers several future positions in one swing: against a fast flyer a single predicted spot is off by
-         * more than the server's reach, and probing them one tick at a time would arrive after it left.
-         */
-        val spray by boolean("Spray", false, aliases = listOf("Aggressive"))
-
-        /** How many probes one round may send; the chain asks for more than it uses. */
-        val maxProbes by int("MaxProbes", 8, 2..10, "probes")
-
-        /** Draws the probes of the last round: the target's predicted box and the spot tried for it. */
-        val previewProbes by boolean("PreviewProbes", true)
-
-        /** Follows the target while the route is still being searched, at most once every few ticks. */
-        val liveRetarget by boolean("LiveRetarget", true)
-    }
-
-    private val sfx = tree(SfxValueGroup())
 
     /** One hint per stage, each with its own switch and sound, played at most once a tick. */
     private class SfxValueGroup : ValueGroup("SoundHints", aliases = listOf("SFXTips")) {
@@ -255,7 +250,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
     }
 
-    /** Diagnostics only: every stage is written to `logs/tpaura.log` so a failed engagement can be read back. */    private class DebugValueGroup : ValueGroup("Debug") {
+    /** Diagnostics only: every stage is written to `logs/tpaura.log` so a failed engagement can be read back. */
+    private class DebugValueGroup : ValueGroup("Debug") {
         val log by boolean("Log", true)
 
         /**
@@ -269,18 +265,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
          * library path is the behaviour everything else was measured with.
          */
         val goBack by boolean("IReallyWannaGoBack", false)
-
-        /** Skips the library path entirely, so the advanced return can be tested on its own. */
-        val forceGoBack by boolean("ForceGoBack", false)
-
-        /** How many short re-teleports a hold may spend on a target that moved out of reach. */
-        val holdRepins by int("HoldRepins", 2, 0..5, "repins")
-
-        /**
-         * How far the player may walk before a planned route is re-planned instead of dispatched anyway. The
-         * library refuses a route that starts more than two blocks from the server, so this stays below it.
-         */
-        val driftBudget by float("DriftBudget", 1.8f, 0.5f..1.9f, "blocks")
 
         /**
          * Ticks the probe chain covers, from the start of the chain onwards. Wider covers more of a fast target's
@@ -349,13 +333,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         /** Swings this engagement still owes; set once when it is created, not on every arrival. */
         var holdLeft = 0
         var retries = 0
-
-        /** When the search last followed the target, and how often it did. */
-        var retargetTick = 0
-        var retargets = 0
-
-        /** Where the planned goals were built from, to notice the target has moved on. */
-        var planAnchor: AgentVec3? = null
 
         /** Repins spent: short teleports towards a target that moved, without a new route. */
         var repins = 0
@@ -657,7 +634,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 "spray" to prediction.spray,
                 "maxProbes" to prediction.maxProbes,
                 "landingSide" to landingSide,
-                "liveRetarget" to prediction.liveRetarget,
                 "probeLeadStart" to debug.probeLeadStart,
                 "log" to debug.log,
             ),
@@ -737,10 +713,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
         when (phase) {
             Phase.IDLE -> engage()
-            Phase.ROUTING -> {
-                updateDestination()
-                route()
-            }
+            Phase.ROUTING -> route()
             Phase.READY -> launch()
             Phase.APPROACH -> approach()
             Phase.ATTACK -> attack()
@@ -984,8 +957,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         // Geometry first: the A* only exists for terrain that has to be steered around, and it cannot take a
         // goal without a floor or start anywhere it likes.
         val startedAt = System.nanoTime()
-        engagement.planAnchor = predictedBox(engagement.target).center.toAgent()
-        engagement.retargets = 0
         val planned = planRoute(origin, goals)
         val planMs = (System.nanoTime() - startedAt) / 1_000_000
         if (planned != null) {
@@ -1561,48 +1532,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         return true
     }
 
-    /**
-     * While the route is still being searched, follows the target: once its predicted position has drifted far
-     * enough from where the goals were built, the search is pointed at fresh goals. The library cannot steer a
-     * running search, so this restarts it — hence the cooldown and the per-engagement cap.
-     */
-    private fun updateDestination() {
-        val engagement = engagement ?: return
-        if (!prediction.enabled || !prediction.liveRetarget) {
-            return
-        }
-        if (ticks - engagement.retargetTick < RETARGET_COOLDOWN || engagement.retargets >= MAX_RETARGETS) {
-            return
-        }
-
-        val anchor = engagement.planAnchor ?: return
-        val predicted = predictedBox(engagement.target).center.toAgent()
-        val drift = predicted.distanceTo(anchor)
-        val speed = aimTrack.velocity()?.length() ?: 0.0
-        val threshold = max(RETARGET_DRIFT, speed * RETARGET_TICKS)
-        if (drift <= threshold) {
-            return
-        }
-
-        val goals = attackPositions(engagement.target, trip.position)
-        if (goals.isEmpty()) {
-            return
-        }
-
-        engagement.retargetTick = ticks
-        engagement.retargets++
-        dlog(
-            "RETARGET",
-            TpAuraLog.details(
-                "drift" to fmt(drift),
-                "threshold" to fmt(threshold),
-                "goals" to goals.size,
-                "n" to engagement.retargets,
-            ),
-        )
-        requestRoute(trip.position, goals)
-    }
-
     private fun route() {
         val engagement = liveEngagement ?: return leave("target-lost-routing")
         when (val result = trip.poll()) {
@@ -1723,7 +1652,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         // The plan may be older than the player: armed and waiting, or waiting out the weapon. The library
         // refuses a route that starts more than two blocks from the server, which is what turned "walks while
         // attacking" into a dispatch failure in manual mode only — the automatic path dispatches the same tick.
-        val budget = debug.driftBudget.toDouble()
+        val budget = DRIFT_BUDGET
         if (route.start.distanceToSqr(player.position().toAgent()) > budget * budget) {
             requestRoute(player.position().toAgent(), engagement.goals)
             if (phase == Phase.ROUTING) {
@@ -1761,7 +1690,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             // The player may walk while the weapon cools down; a route planned where they stood is then refused
             // for drift, which read as "manual mode cannot attack unless standing still".
             if (route.start.distanceToSqr(player.position().toAgent()) >
-                debug.driftBudget.toDouble() * debug.driftBudget.toDouble()
+                DRIFT_BUDGET * DRIFT_BUDGET
             ) {
                 requestRoute(player.position().toAgent(), engagement.goals)
                 return
@@ -2154,7 +2083,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         // With the spray on nothing is swung from where the player happens to stand: the chain walks the server
         // along the target's path first, a position packet and a swing per spot, all inside this tick.
         if (prediction.enabled && prediction.spray && attackReady() &&
-            engagement.repins <= debug.holdRepins && sprayAt(target)
+            engagement.repins <= HOLD_REPINS && sprayAt(target)
         ) {
             engagement.repins++
             return
@@ -2215,7 +2144,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             engagement.idleTicks = 0
             settlePendingHit("overwritten")
             awaitingHit = target
-            hitWaitUntil = ticks + hitConfirm
+            hitWaitUntil = ticks + HIT_CONFIRM_TICKS
             // Swallowed a little past the swing: the press that triggered it is handled by vanilla on the next
             // tick, and clearing the mute here let that press through to spend the cooldown anyway.
             suppressUntil = ticks + MANUAL_SUPPRESS_TAIL
@@ -2298,9 +2227,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val returning = afterAttack == AfterAttack.RETURN
         // `comeBack()` answers true as soon as the server is away, whether it finds a way home or lands the
         // client on the spot. Ask the same question it does, and take over when the answer is no.
-        val libViable = returning && !debug.forceGoBack && libCanComeBack(serverEnd, home)
+        val libViable = returning && libCanComeBack(serverEnd, home)
         val cameBack = if (libViable) trip.comeBack() else false
-        if (!cameBack && returning && (debug.goBack || debug.forceGoBack)) {
+        if (!cameBack && returning && debug.goBack) {
             startAdvancedReturn(serverEnd, home)
         }
         if (phase != Phase.RETURN) {
@@ -2667,7 +2596,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         engagement.idleTicks = 0
         settlePendingHit("overwritten")
         awaitingHit = target
-        hitWaitUntil = ticks + hitConfirm
+        hitWaitUntil = ticks + HIT_CONFIRM_TICKS
         suppressUntil = ticks + MANUAL_SUPPRESS_TAIL
         dlog(
             "SPRAY-DONE",
@@ -2931,12 +2860,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private const val LEG_BACKOFF = 0.6
     private const val MAX_LEG_ATTEMPTS = 3
 
-    /** How far the target may drift while a search runs, and how often the search may be restarted for it. */
-    private const val RETARGET_DRIFT = 1.5
-    private const val RETARGET_TICKS = 1.5
-    private const val RETARGET_COOLDOWN = 4
-    private const val MAX_RETARGETS = 3
-
     /** Cosine beyond which a spot counts as in front of or behind the target. */
     private const val SIDE_DOT = 0.5
 
@@ -2960,6 +2883,15 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private const val HUD_TEXT = -1
     private const val HUD_DIM = -5592406
     private const val HUD_WARN = -22016
+
+    /** Ticks a swing waits for a hurt before it counts as a miss. */
+    private const val HIT_CONFIRM_TICKS = 10
+
+    /** Short re-teleports a hold may spend on a target that moved out of reach. */
+    private const val HOLD_REPINS = 2
+
+    /** How far the player may walk before a planned route is re-planned; the library refuses beyond two. */
+    private const val DRIFT_BUDGET = 2.0
 
     /** Step length the search's own route is rebuilt with, so a compacted corner cannot become a long line. */
     private const val AGENT_STEP = 2.0
