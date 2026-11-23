@@ -584,6 +584,7 @@
   "liquidbounce.module.consoleSpammer.description": "Spams the server's console with error messages.",
   "liquidbounce.module.criticals.description": "Automatically deals critical damage every time you attack an entity.",
   "liquidbounce.module.crosshair.description": "Changes the style of your crosshair.",
+  "liquidbounce.module.bedAura.description": "Automatically places and detonates beds where they explode.",
   "liquidbounce.module.crystalAura.description": "Automatically places and destroys end crystals.",
   "liquidbounce.module.crystalView.description": "Tweaks how crystal models behave.",
   "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience.",

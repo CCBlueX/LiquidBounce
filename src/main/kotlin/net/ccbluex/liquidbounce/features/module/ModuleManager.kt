@@ -50,6 +50,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleA
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
+import net.ccbluex.liquidbounce.features.module.modules.combat.bedaura.ModuleBedAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
@@ -464,6 +465,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoBuff,
             ModuleAutoRod,
             ModuleAutoWeapon,
+            ModuleBedAura,
             ModuleFakeLag,
             ModuleCriticals,
             ModuleHitbox,
