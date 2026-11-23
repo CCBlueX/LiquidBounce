@@ -251,7 +251,8 @@ internal object ScaffoldPlacement {
         // Built by hand: asking for SafeWalk here would ask scaffold again
         val input = SimulatedInput(
             DirectionalInput(player.input).toInput(
-                jump = player.input.keyPresses.jump,
+                // Scaffold holds a jump back until the bridge has started
+                jump = player.input.keyPresses.jump && ModuleScaffold.hasStarted,
                 // The held key alone does not sprint: walking against the view, movement correction keeps it off
                 sprint = player.isSprinting,
             ).toAgent()

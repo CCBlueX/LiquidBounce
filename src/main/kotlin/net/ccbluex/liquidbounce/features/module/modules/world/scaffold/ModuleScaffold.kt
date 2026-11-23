@@ -391,6 +391,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         aim = null
         planned = null
         cooldown = 0
+        hasStarted = false
         renderer.clearSilently()
     }
 
@@ -569,11 +570,26 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     private fun onPlaced(placed: BlockPos) {
+        hasStarted = true
         ScaffoldMovementPlanner.trackPlacedBlock(placed)
         renderer.addBlock(placed)
         ScaffoldEagleFeature.onBlockPlacement()
         ScaffoldBlinkFeature.onBlockPlacement()
         ScaffoldSprintControlFeature.onBlockPlacement()
+    }
+
+    /**
+     * Whether a block went down since Scaffold was enabled. Until then the aim may still be turning onto the face, so
+     * a jump waits: one from a standing start would leave the ground before a slow aim can place under it.
+     */
+    internal var hasStarted = false
+        private set
+
+    @Suppress("unused")
+    private val jumpHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+        if (!hasStarted && !isTowering && ModuleClutch.fall == null) {
+            event.jump = false
+        }
     }
 
     var currentOptimalLine: Line? = null
@@ -792,6 +808,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             blockPos.offset(0, 3, 0)
         player.input.keyPresses.jump && (!player.moving || player.horizontalCollision) ->
             blockPos.offset(0, -1, 0)
+        // Telly places the row it jumped off, not one under the jump
+        ScaffoldBridgingTelly.running -> sameYMode.getTargetedBlockPos(blockPos) ?: blockPos.copy(y = placementY)
         else -> sameYMode.getTargetedBlockPos(blockPos)
             ?: blockPos.offset(0, -1, 0)
     }

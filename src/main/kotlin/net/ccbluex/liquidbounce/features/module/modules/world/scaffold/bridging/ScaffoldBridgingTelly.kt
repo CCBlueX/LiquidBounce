@@ -30,12 +30,14 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
  * Jumps while moving and only aims at the face of the next block (the way [ScaffoldBridgingNormal] does by default)
- * once the jump carried the player off the row. Depending on the SameY setting, it scaffolds upwards.
+ * once the jump carried the player off the row, placing that row rather than one under the jump unless SameY says
+ * otherwise. Until the first block is down it bridges like Normal, so the aim starts out on the face.
  */
 object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
     val doNotAim: Boolean
-        get() = player.airTicks <= straightTicks &&
+        get() = ModuleScaffold.hasStarted &&
+                player.airTicks <= straightTicks &&
                 ticksUntilJump >= jumpTicks &&
                 !(ModuleScaffold.isTowering && aimOnTower)
 
