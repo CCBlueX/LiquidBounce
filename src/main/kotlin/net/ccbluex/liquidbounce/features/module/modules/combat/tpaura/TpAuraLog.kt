@@ -84,9 +84,22 @@ object TpAuraLog {
             }
         }
         try {
+            // No flush per line: a full session writes thousands of lines and every one of them is a syscall
+            // on the client thread. The tick handler flushes on a schedule, close flushes at the end.
             writer.write(line)
             writer.newLine()
-            writer.flush()
+        } catch (_: IOException) {
+            if (!broken) {
+                broken = true
+                close()
+            }
+        }
+    }
+
+    /** Pushes what has been written so far; called on a schedule rather than per line. */
+    fun flush() {
+        try {
+            writer?.flush()
         } catch (_: IOException) {
             if (!broken) {
                 broken = true

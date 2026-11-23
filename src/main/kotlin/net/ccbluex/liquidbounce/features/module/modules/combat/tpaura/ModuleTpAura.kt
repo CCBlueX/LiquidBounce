@@ -88,6 +88,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.client.KeyMapping
 import net.minecraft.util.Mth
 import kotlin.math.abs
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.ceil
 import kotlin.math.sqrt
 import kotlin.math.atan2
@@ -373,7 +374,26 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
 
-    /** The swing that landed: a hurt for the target inside the window opened when it was sent. */
+    /** A hurt fact taken off the packet thread; the decision is made on the client thread. */
+    private class Hurt(val id: Int, val packet: String)
+
+    /** Holds at most a handful: anything past this is not a confirmation, it is noise. */
+    private val hurts = ConcurrentLinkedQueue<Hurt>()
+
+    /**
+     * The entity whose hurt would count right now. Written on the client thread, only read by the packet
+     * handler — that is the whole reason the confirmation is queued instead of answered in place.
+     */
+    @Volatile
+    private var watchId = 0
+
+    /**
+     * The swing that landed: a hurt for the target inside the window opened when it was sent.
+     *
+     * This runs on the network thread, so it only records what it saw. Counting a hit here would mutate the
+     * HUD's history deque while the render thread is reading it, and would race the tick thread for
+     * `awaitingHit` — which is how one swing could be counted twice, once as a hit and once as a miss.
+     */
     @Suppress("unused")
     private val hurtHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         if (event.origin != TransferOrigin.INCOMING) {
@@ -391,43 +411,55 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             }
             is ClientboundHurtAnimationPacket -> packet.id()
             else -> null
-        }
+        } ?: return@handler
 
-        // Only the target matters here: logging every hurt in the world turns the file into megabytes of noise,
-        // and the interesting case is a packet that arrives when nothing is awaited.
-        val watching = awaitingHit ?: engagement?.target
-        val relevant = hurtId != null && hurtId == watching?.id
-        if (relevant) {
+        val watched = watchId
+        if (watched == 0 || hurtId != watched) {
+            return@handler
+        }
+        if (hurts.size < MAX_PENDING_HURTS) {
+            hurts.add(Hurt(hurtId, packet.javaClass.simpleName))
+        }
+    }
+
+    /** Answers the hurts the packet thread recorded: one confirmation, or one line saying it arrived alone. */
+    private fun drainHurts() {
+        while (true) {
+            val hurt = hurts.poll() ?: return
+            val waiting = awaitingHit
             dlog(
                 "DMG",
                 TpAuraLog.details(
-                    "packet" to packet.javaClass.simpleName,
-                    "entity" to hurtId,
-                    "awaiting" to (awaitingHit?.id ?: "none"),
-                    "mine" to hitFromUs(packet),
+                    "packet" to hurt.packet,
+                    "entity" to hurt.id,
+                    "awaiting" to (waiting?.id ?: "none"),
                     "tick" to ticks,
                 ),
             )
-        }
+            if (waiting == null || hurt.id != waiting.id) {
+                continue
+            }
 
-        val waiting = awaitingHit ?: return@handler
-        if (hurtId == null || hurtId != waiting.id) {
-            return@handler
+            setAwaiting(null)
+            hits++
+            TpAuraHud.onResult(true)
+            sfx(sfx.hitSuccess, SFX_HIT_OK)
+            dlog(
+                "HIT-CONFIRMED",
+                TpAuraLog.details(
+                    "target" to desc(waiting),
+                    "dist" to fmt(targetDist(waiting)),
+                    "lead" to fmt(leadTicks()),
+                    "rate" to hitRate(),
+                ),
+            )
         }
+    }
 
-        awaitingHit = null
-        hits++
-        TpAuraHud.onResult(true)
-        sfx(sfx.hitSuccess, SFX_HIT_OK)
-        dlog(
-            "HIT-CONFIRMED",
-            TpAuraLog.details(
-                "target" to desc(waiting),
-                "dist" to fmt(targetDist(waiting)),
-                "lead" to fmt(leadTicks()),
-                "rate" to hitRate(),
-            ),
-        )
+    /** The one place the awaited target and the packet thread's copy of it are kept in step. */
+    private fun setAwaiting(target: LivingEntity?) {
+        awaitingHit = target
+        watchId = target?.id ?: engagement?.target?.id ?: 0
     }
 
     /**
@@ -442,6 +474,13 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             (packet.sourceCauseId() <= 0 && packet.sourceDirectId() <= 0)
     }
 
+    /** A server correction seen on the network thread, reported on the client one. */
+    @Volatile
+    private var setbackPending = false
+
+    @Volatile
+    private var setbackAt: Vec3? = null
+
     /** The server correcting the movement: how many packets had gone out, and where it put the player. */
     @Suppress("unused")
     private val setbackHandler = handler<PacketEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
@@ -451,12 +490,24 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         if (event.packet !is ClientboundPlayerPositionPacket || trip.run == null) {
             return@handler
         }
+        setbackAt = event.packet.change.position
+        setbackPending = true
+    }
+
+    /** Reports a correction the packet thread saw; sounds and lines belong on this side. */
+    private fun reportSetback() {
+        if (!setbackPending) {
+            return
+        }
+        setbackPending = false
+        val at = setbackAt
+        setbackAt = null
         sfx(sfx.serverSetback, SFX_SETBACK)
         dlog(
             "SETBACK",
             TpAuraLog.details(
                 "lastSent" to (TeleportManager.teleports.serverPosition?.let { fmt(it) } ?: "none"),
-                "server" to fmt(event.packet.change.position),
+                "server" to (at?.let { fmt(it) } ?: "none"),
                 "client" to fmt(player.position()),
                 "state" to (trip.run?.state ?: "none"),
             ),
@@ -675,7 +726,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         TpAuraHud.reqAttack = flightAvg
         TpAuraHud.waypoints = engagement?.route?.points?.size?.minus(1) ?: 0
         TpAuraHud.routeLength = engagement?.route?.length ?: 0.0
-        TpAuraHud.searchTicks = ticks - searchStartedTick
+        TpAuraHud.searchTicks = if (searchStartedTick == 0) 0 else ticks - searchStartedTick
         TpAuraHud.drift = engagement?.route?.start?.distanceTo(player.position().toAgent()) ?: 0.0
         // While a trip holds the position the divergence is the point of the trip, not a warning.
         TpAuraHud.pinGap = if (trip.isAway) {
@@ -687,7 +738,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
         // The preview is computed from the live target, not only from a burst: a round only happens when the
         // target already left the spot, so waiting for one meant the boxes never had anything to show.
-        if (prediction.enabled && prediction.spray && prediction.previewProbes && ticks % 2 == 0) {
+        if (prediction.enabled && prediction.spray && prediction.previewProbes && ticks % 2 == 0 &&
+            phase != Phase.IDLE
+        ) {
             aimTarget?.takeIf { !it.isRemoved }?.let { target ->
                 val box = predictedBox(target).toAgent()
                 val spots = probeSpots(target, prediction.maxProbes)
@@ -709,7 +762,12 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
         // The lead needs a velocity, and the client cannot read one off a remote entity: sample it here.
         aimTarget?.takeIf { !it.isRemoved }?.let { aimTrack.sample(it, ticks) }
+        drainHurts()
+        reportSetback()
         expireHitWait()
+        if (ticks % LOG_FLUSH_TICKS == 0) {
+            TpAuraLog.flush()
+        }
 
         when (phase) {
             Phase.IDLE -> engage()
@@ -721,6 +779,14 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 returnSearching -> pollReturn()
                 // A HOLD leg leaves the server away, so the run's state is what says the leg is over.
                 trip.run?.state != Teleport.State.ACTIVE -> finishReturnLeg()
+                // A leg that never finishes would hold the module in RETURN, where nothing else runs.
+                msSince(returnStartedAt) > RETURN_LEG_TIMEOUT_MS -> {
+                    dlog(
+                        "RETURN-TIMEOUT",
+                        TpAuraLog.details("leg" to returnLeg.name.lowercase(), "ms" to msSince(returnStartedAt)),
+                    )
+                    landedFallback()
+                }
             }
         }
     }
@@ -871,6 +937,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val origin = trip.position
         val target = targetSelector.targets().firstOrNull { unreachable.getOrDefault(it.id, 0) <= ticks }        // The swing budget belongs to the engagement, not to an arrival: a re-route must not top it up.
         engagement = target?.let { Engagement(it).apply { holdLeft = hold } }
+        TpAuraHud.spraySpots = 0
         if (target == null) {
             view.clear()
             return
@@ -1244,8 +1311,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         returnLeg = ReturnLeg.TO_HOME
 
         planReturn(from, home)?.let { route ->
-            trip.options = steps.options()
-            if (trip.dispatch(route, Teleport.Finish.RESYNC) != null) {
+            if (dispatchRoute(route, Teleport.Finish.RESYNC) != null) {
+                returnStartedAt = System.nanoTime()
                 dlog(
                     "RETURN-DISPATCHED",
                     TpAuraLog.details(
@@ -1302,7 +1369,15 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     private fun pollReturn() {
         when (val result = trip.poll()) {
-            Outcome.Searching -> Unit
+            Outcome.Searching -> {
+                if (msSince(returnStartedAt) > RETURN_SEARCH_TIMEOUT_MS) {
+                    dlog(
+                        "RETURN-TIMEOUT",
+                        TpAuraLog.details("leg" to returnLeg.name.lowercase(), "ms" to msSince(returnStartedAt)),
+                    )
+                    landedFallback()
+                }
+            }
             Outcome.AlreadyThere -> finishReturnLeg()
             is Outcome.Found -> {
                 val terrain = Terrain.live(world)
@@ -1338,6 +1413,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 )
                 returnGoal = route.destination
                 returnSearching = false
+                returnStartedAt = System.nanoTime()
             }
             is Outcome.Failed -> {
                 dlog(
@@ -1359,8 +1435,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         if (returnLeg == ReturnLeg.TO_RETREAT && from != null) {
             val home = player.position().toAgent()
             planReturn(from, home)?.let { route ->
-                trip.options = steps.options()
-                if (trip.dispatch(route, returnFinish()) != null) {
+                if (dispatchRoute(route, returnFinish()) != null) {
+                    returnStartedAt = System.nanoTime()
                     dlog(
                         "RETURN-DISPATCHED",
                         TpAuraLog.details(
@@ -1768,6 +1844,10 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
      * the server back.
      */
     private fun dispatchRoute(route: Route, finish: Teleport.Finish): Prepared? {
+        if (route.steps.isEmpty()) {
+            dlog("DISPATCH-EMPTY", TpAuraLog.details("points" to route.points.size, "finish" to finish))
+            return null
+        }
         val base = steps.options()
         val prepared = when {
             steps.isInstant -> {
@@ -2148,7 +2228,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             engagement.attacked = true
             engagement.idleTicks = 0
             settlePendingHit("overwritten")
-            awaitingHit = target
+            setAwaiting(target)
             hitWaitUntil = ticks + HIT_CONFIRM_TICKS
             // Swallowed a little past the swing: the press that triggered it is handled by vanilla on the next
             // tick, and clearing the mute here let that press through to spend the cooldown anyway.
@@ -2241,6 +2321,10 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             phase = if (cameBack) Phase.RETURN else Phase.IDLE
         }
         engagement = null
+        aimTarget = null
+        // A swing that left with `HIT-DEFERRED` is still waiting: keep watching its target, or the answer
+        // arrives after the leave and is dropped as if nothing had been sent.
+        watchId = awaitingHit?.id ?: 0
         hurtWaiting = false
         manualTriggered = false
 
@@ -2277,6 +2361,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         view.invalid()
         view.target = null
         engagement = null
+        aimTarget = null
+        watchId = 0
         restUntil = ticks + FAIL_REST_TICKS
         phase = Phase.IDLE
     }
@@ -2310,6 +2396,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         returnSearching = false
         phase = Phase.IDLE
         engagement = null
+        aimTarget = null
+        watchId = 0
         hurtWaiting = false
         view.clear()
     }
@@ -2373,7 +2461,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
      */
     private fun settlePendingHit(reason: String) {
         val waiting = awaitingHit ?: return
-        awaitingHit = null
+        setAwaiting(null)
         misses++
         TpAuraHud.onResult(false)
         sfx(sfx.hitFail, SFX_HIT_FAIL)
@@ -2597,10 +2685,16 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             attackEntity(target, swingMode, keepSprint = true)
         }
 
+        // The chain moved the server without a run owning the position: hand it back to the client, or the
+        // bookkeeping and the server disagree until something else touches them.
+        if (!trip.isAway) {
+            TeleportManager.teleports.syncPosition()
+        }
+
         engagement.attacked = true
         engagement.idleTicks = 0
         settlePendingHit("overwritten")
-        awaitingHit = target
+        setAwaiting(target)
         hitWaitUntil = ticks + HIT_CONFIRM_TICKS
         suppressUntil = ticks + MANUAL_SUPPRESS_TAIL
         dlog(
@@ -2889,6 +2983,13 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private const val HUD_DIM = -5592406
     private const val HUD_WARN = -22016
 
+    /** How often the buffered log is pushed to disk. */
+    private const val LOG_FLUSH_TICKS = 20
+
+    /** How long a return search or a return leg may run before the fallback takes over. */
+    private const val RETURN_SEARCH_TIMEOUT_MS = 5_000L
+    private const val RETURN_LEG_TIMEOUT_MS = 8_000L
+
     /** Ticks a swing waits for a hurt before it counts as a miss. */
     private const val HIT_CONFIRM_TICKS = 10
 
@@ -2929,6 +3030,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     /** Prediction tuning, same numbers as the module this grew out of. */
     private const val MIN_PREDICT_VELOCITY_SQ = 1.0E-4
     private const val SPEED_WINDOW = 3
+    /** Hurts recorded between two ticks; more than this cannot be a confirmation of anything useful. */
+    private const val MAX_PENDING_HURTS = 8
+
     private const val MAX_SAMPLES = 8
     private const val TURN_DAMP = 0.9
     private const val SHARP_TURN = 0.35
