@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toHttpUrl
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toHttpUrlOrNull
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.loader.api.FabricLoader
 import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.lang3.RandomStringUtils
 import java.util.UUID
 
@@ -42,8 +43,8 @@ class ApiConfig(
          * API URLs for LiquidBounce
          */
         private val API_URLS = arrayOf(
-            "https://api.liquidbounce.net".toHttpUrl(),
-            "https://api.ccbluex.net".toHttpUrl(),
+            toHttpUrl("https://api.liquidbounce.net"),
+            toHttpUrl("https://api.ccbluex.net"),
 
             // Non-secure connection requires additional confirmation from the user,
             // as they are vulnerable to MITM attacks and data leaks.
@@ -51,7 +52,7 @@ class ApiConfig(
             // TODO: Because we cannot request confirmation from the user, we should not use this URL at all.
             //   The only way to use this URL is to set the property `net.ccbluex.liquidbounce.api.url` to
             //   this URL which the LiquidLauncher does when the user has confirmed it.
-            // "http://nossl.api.liquidbounce.net".toHttpUrl(),
+            // toHttpUrl("http://nossl.api.liquidbounce.net"),
         )
 
         const val CLIENT_CDN = "https://cloud.liquidbounce.net/LiquidBounce"
@@ -114,7 +115,7 @@ class ApiConfig(
             logger.info("API Session Token set: ${sessionToken.take(4)}***")
 
             // We trust LiquidLauncher to have found the correct API URL
-            val propertyUrl = System.getProperty("net.ccbluex.liquidbounce.api.url")?.toHttpUrlOrNull()
+            val propertyUrl = toHttpUrlOrNull(System.getProperty("net.ccbluex.liquidbounce.api.url"))
             if (propertyUrl != null) {
                 logger.info("Using API URL from system property: $propertyUrl")
                 return ApiConfig(propertyUrl, sessionToken)
@@ -130,6 +131,8 @@ class ApiConfig(
                     return ApiConfig(url, sessionToken)
                 } catch (e: HttpException) {
                     logger.debug("API endpoint '$url' returned status code: ${e.code}")
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     logger.error("Failed to connect to API endpoint '$url'", e)
                 }

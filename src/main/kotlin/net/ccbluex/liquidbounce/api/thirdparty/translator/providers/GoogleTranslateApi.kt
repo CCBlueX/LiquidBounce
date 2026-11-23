@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorMode
 import net.ccbluex.liquidbounce.config.gson.util.array
 import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toHttpUrl
 
 class GoogleTranslateApi(
     override val parent: ModeValueGroup<*>
@@ -89,6 +89,6 @@ class GoogleTranslateApi(
     }
 
     companion {
-        private val baseUrl = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
+        private val baseUrl = toHttpUrl("https://translate.googleapis.com/translate_a/t?client=gtx&dt=t")
     }
 }
