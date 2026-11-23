@@ -253,7 +253,19 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     /** Diagnostics only: every stage is written to `logs/tpaura.log` so a failed engagement can be read back. */
     private class DebugValueGroup : ValueGroup("Debug") {
-        val log by boolean("Log", true)
+        /** Off by default: a log file per session is a diagnostic, not something every user should pay for. */
+        val logValue = boolean("Log", false)
+        val log by logValue
+
+        init {
+            logValue.onChanged { enabled ->
+                if (enabled) {
+                    TpAuraLog.open()
+                } else {
+                    TpAuraLog.close()
+                }
+            }
+        }
 
         /**
          * A\* requests per route: more than one splits the search into that many legs, each with its own
@@ -672,7 +684,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         get() = engagement?.takeIf { targetSelector.validate(it.target, checkHurtTime = false) }
 
     override fun onEnabled() {
-        TpAuraLog.open()
+        if (debug.log) {
+            TpAuraLog.open()
+        }
         dlog(
             "ENABLE",
             TpAuraLog.details(
