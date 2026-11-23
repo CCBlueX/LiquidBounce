@@ -63,6 +63,7 @@ import com.mojang.blaze3d.platform.cursor.CursorType
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("TooManyFunctions")
 object ScreenManager : EventListener {
 
     private val logger = clientLogger("ScreenManager")
