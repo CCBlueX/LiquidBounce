@@ -667,6 +667,7 @@
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick cannot be enabled in single player.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies around you.",
   "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
+  "liquidbounce.module.respawnAnchorAura.description": "Automatically places, charges and detonates respawn anchors.",
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
   "liquidbounce.module.liquidFiller.description": "Places blocks inside of liquid source blocks within range of you.",
   "liquidbounce.module.liquidFiller.value.placeOrder.description": "Controls the order in which liquid source blocks are queued for placing.",

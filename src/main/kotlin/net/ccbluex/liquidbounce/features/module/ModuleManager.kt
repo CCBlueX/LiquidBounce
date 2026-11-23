@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.respawnanchoraura.ModuleRespawnAnchorAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.spearkill.ModuleSpearKill
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
@@ -468,6 +469,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCriticals,
             ModuleHitbox,
             ModuleKillAura,
+            ModuleRespawnAnchorAura,
             ModuleTpAura,
             ModuleSuperKnockback,
             ModuleTickBase,
