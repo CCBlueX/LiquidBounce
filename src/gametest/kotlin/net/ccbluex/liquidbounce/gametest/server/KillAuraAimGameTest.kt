@@ -84,15 +84,22 @@ class KillAuraAimGameTest : ServerGameTest({
         // Fewer hits in a minute than a person who aims at all would land
         check(hits >= 60) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
 
-        // The opponent gets out of reach and the player turns away, so the view turns back to the camera each time
+        // The opponent runs out of reach and the player turns away, so the view turns back to the camera each time
+        val mouse = Random(7L)
         repeat(DISENGAGES) { round ->
-            val degrees = if (round % 2 == 0) 20.0 else -20.0
-            opponent.flee(40) { tick ->
-                if (tick < 6) {
+            val side = if (round % 2 == 0) 1 else -1
+            opponent.flee { tick ->
+                if (tick in 8 until 14) {
+                    // Mostly sideways and a little up or down, never twice the same: a hand, not a script
+                    val yaw = side * (16.0 + mouse.nextDouble() * 8.0)
+                    val pitch = mouse.nextDouble() * 4.0 - 2.0
                     client {
                         // As the mouse turns it: whole counts, which the game scales by 0.15
                         val step = RotationUtil.gcd
-                        checkNotNull(it.player).turn((degrees / step).roundToInt() * step / 0.15, 0.0)
+                        checkNotNull(it.player).turn(
+                            (yaw / step).roundToInt() * step / 0.15,
+                            (pitch / step).roundToInt() * step / 0.15,
+                        )
                     }
                 }
             }
@@ -173,13 +180,20 @@ private class Opponent(private val scope: GameTestScope) {
         scope.ticks(1)
     }
 
-    /** Gets out of reach for [ticks] ticks, calling [each] with the tick it is at. */
-    fun flee(ticks: Int, each: (Int) -> Unit) {
-        moveTo(12.0, scope.origin.y.toDouble())
-        repeat(ticks) { tick ->
-            each(tick)
+    /**
+     * Runs out of reach at sprinting speed, stays away a second and comes back, calling [each] with the tick it is at.
+     */
+    fun flee(each: (Int) -> Unit) {
+        var tick = 0
+        fun step(to: Double) {
+            distance = to
+            moveTo(distance, scope.origin.y.toDouble())
+            each(tick++)
             scope.ticks(1)
         }
+        while (distance < 9.0) step(distance + 0.28)
+        repeat(20) { step(distance) }
+        while (distance > 3.0) step(distance - 0.28)
     }
 
     private fun moveTo(distance: Double, y: Double) {
