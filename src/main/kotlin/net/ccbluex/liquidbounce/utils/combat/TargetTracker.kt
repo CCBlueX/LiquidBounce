@@ -145,10 +145,22 @@ open class TargetSelector(
         return entities
     }
 
-    open fun validate(entity: LivingEntity) =
+    /** How much hurt time a candidate may still have; `10` accepts every target. */
+    val hurtTimeLimit: Int
+        get() = hurtTime
+
+    open fun validate(entity: LivingEntity) = validate(entity, checkHurtTime = true)
+
+    /**
+     * The same checks, with the hurt-time filter optional. An engagement's liveness passes `false`: a
+     * target that was just hit is still the target, and ending the fight there would cut the hold
+     * sequence short after the first swing. Whether a swing may go out is answered by the caller
+     * against [hurtTimeLimit].
+     */
+    open fun validate(entity: LivingEntity, checkHurtTime: Boolean) =
         entity !== player
             && !entity.isRemoved
-            && entity.hurtTime <= hurtTime
+            && (!checkHurtTime || entity.hurtTime <= hurtTime)
             && validateRange(entity)
             && entity.shouldBeAttacked()
             && isInFov(entity)
