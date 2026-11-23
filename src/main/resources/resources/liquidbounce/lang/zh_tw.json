@@ -158,7 +158,6 @@
   "liquidbounce.command.marketplace.error.fileNotFound": "找不到檔案：%s",
   "liquidbounce.command.marketplace.error.fileReadError": "讀取檔案失敗：%s",
   "liquidbounce.command.marketplace.error.installFailed": "安裝 %s 失敗：%s",
-  "liquidbounce.command.marketplace.error.itemPending": "This item is still pending approval. Please try again later.",
   "liquidbounce.command.marketplace.error.notFound": "找不到與 %s 相符的物品。",
   "liquidbounce.command.marketplace.error.notLoggedIn": "您必須登入才能執行此操作。",
   "liquidbounce.command.marketplace.error.notSubscribed": "您未訂閱 %s。",

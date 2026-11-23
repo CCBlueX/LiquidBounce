@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.SilentMovementKeys
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.effectLevel
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -35,10 +36,10 @@ import net.ccbluex.liquidbounce.utils.math.rangeTo
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-
 
 /**
  * Returns the yaw difference the position is from the player position
@@ -80,13 +81,10 @@ fun getDirectionalInputForDegrees(
     return DirectionalInput(forwards, backwards, left, right)
 }
 
-/** Keys that move towards [direction] when the input is applied relative to [frameYaw]. */
-fun getDirectionalInputTowards(direction: Vec3, frameYaw: Float): DirectionalInput {
-    if (direction.horizontalDistanceSqr() < 1.0E-6) {
-        return DirectionalInput.NONE
-    }
-
-    return getDirectionalInputForDegrees(DirectionalInput.NONE, getDegreesRelativeToView(direction, frameYaw))
+/** The yaw the movement keys act relative to: the rotation under strict movement correction, else the view. */
+fun inputFrameYaw(): Float {
+    val strict = RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.STRICT
+    return if (strict && RotationManager.currentRotation != null) RotationManager.movementYaw else player.yRot
 }
 
 /** Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. */
@@ -222,4 +220,16 @@ inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
 @AddonApi
 fun LocalPlayer.stopXZVelocity() {
     this.deltaMovement = this.deltaMovement.copy(x = 0.0, z = 0.0)
+}
+
+/**
+ * NoCheatPlus' allowed sprint distance per move, scaled by the Speed and Slowness effects.
+ *
+ * @see <a href="https://github.com/CCBlueX/LiquidBounce/blob/03bc91a3c34031d1ea7400ef3b67c00adf6a4c6e/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/speedmodes/ncp/NCPBHop.kt#L119-L126">LiquidBounce Legacy NCPBHop baseMoveSpeed</a>
+ */
+@Suppress("MaxLineLength")
+fun ncpBaseMoveSpeed(base: Double = 0.2873): Double {
+    val speed = player.effectLevel(MobEffects.SPEED)
+    val slowness = player.effectLevel(MobEffects.SLOWNESS)
+    return base * (1.0 + 0.2 * speed) / (1.0 + 0.2 * slowness)
 }

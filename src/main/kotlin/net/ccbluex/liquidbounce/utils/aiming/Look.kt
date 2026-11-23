@@ -59,7 +59,7 @@ suspend fun <T : Any> EventListener.lookAt(
             else -> mc.execute { RotationManager.looks.add(look) }
         }
     }
-    guards?.ensure()
+    guards?.broken()?.let { throw it }
     return result
 }
 

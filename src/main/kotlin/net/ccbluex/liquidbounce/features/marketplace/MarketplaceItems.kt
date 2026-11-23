@@ -40,7 +40,7 @@ object MarketplaceItems {
         private set
 
     suspend fun refresh(): Boolean = runCatching {
-        // A listing without a type leaves add-ons out, so every type is asked for on its own
+        // Asked per type, so the top items of one type do not crowd out the others
         index = subscribable.flatMap { type ->
             MarketplaceApi.getMarketplaceItems(
                 limit = INDEX_LIMIT,

@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isCharged
-import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.isBurrowed
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
@@ -120,7 +119,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                     return 0f
                 }
 
-                val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
+                val collision = player.fallingPlayer().findCollision(20)?.pos
                 val fallDamageMultiplier = collision.fallDamageMultiplier(player)
                 if (fallDamageMultiplier > 0f) {
                     return player.getEffectiveDamage(
@@ -327,7 +326,6 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        InventoryManager.onClickOccurs()
         actions.forEach { it.performAction() }
         return true
     }

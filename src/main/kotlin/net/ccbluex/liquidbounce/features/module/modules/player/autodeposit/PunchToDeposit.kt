@@ -175,7 +175,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
     }
 
     private fun deposit(slot: HotbarItemSlot, hit: BlockHitResult) {
-        SilentHotbar.selectSlotSilently(this, slot, 1)
+        SilentHotbar.selectSlotSilently(this@PunchToDeposit, slot, 1)
         clickStorage(hit)
         swingMode.attackSwing()
     }

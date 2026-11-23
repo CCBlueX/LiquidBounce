@@ -18,6 +18,7 @@
     import {notification} from "../common/header/notification_store";
     import {isAnniversary} from "../../../util/utils";
     import {escapeLayer} from "../../../integration/escape";
+    import {prefetchServers} from "../multiplayer/server_store";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -40,14 +41,10 @@
     function toggleButtons() {
         if (clientButtonsShown) {
             clientButtonsShown = false;
-            setTimeout(() => {
-                regularButtonsShown = true;
-            }, 750);
+            regularButtonsShown = true;
         } else {
             regularButtonsShown = false;
-            setTimeout(() => {
-                clientButtonsShown = true;
-            }, 750);
+            clientButtonsShown = true;
         }
     }
 
@@ -67,6 +64,7 @@
                             on:click={() => openScreen("singleplayer")}/>
 
                 <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
+                            on:mouseenter={prefetchServers}
                             on:click={() => openScreen("multiplayer")} index={1}>
                     <ChildButton title="Realms" icon="realms" {parentHovered}
                                  on:click={() => openScreen("multiplayer_realms")}/>
@@ -82,7 +80,7 @@
             {/if}
         </div>
 
-        <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="additional-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
                 <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
@@ -90,7 +88,7 @@
             </ButtonContainer>
         </div>
 
-        <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
+        <div class="social-buttons" in:fly|global={{duration: 180, y: 20}}>
             <ButtonContainer>
                 <IconButton title="Forum" icon="nodebb" on:click={() => openLink("MAINTAINER_FORUM")}/>
                 <IconButton title="GitHub" icon="github" on:click={() => openLink("MAINTAINER_GITHUB")}/>

@@ -73,7 +73,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     constructor(item: MarketplaceItem) : this(item.name, item.id, item.type) {
         require(item.type.isSubscribable) { "Type ${item.type} is not subscribable" }
-        author = item.author
+        author = item.owner.nickname
     }
 
     /**

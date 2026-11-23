@@ -36,6 +36,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel20250121Flat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraft20240515
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.rewound.FlyRewound
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.rewound.FlyRewoundSetback
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240310
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20240420
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.cubecraft.FlyCubeCraft20251226
@@ -94,7 +96,10 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
             FlyHypixel20250121,
             FlyHypixel20250121Flat,
 
-            FlyHycraft20240515
+            FlyHycraft20240515,
+
+            FlyRewound,
+            FlyRewoundSetback
         )
     ).apply { tagBy(this) }
 

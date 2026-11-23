@@ -23,12 +23,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Predicate
@@ -41,11 +41,14 @@ typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
 
 /**
  * Registers an event hook for events of type [T] and launches a sequence
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
 ) = suspendHandler<T>(
     context = wrapContinuationInterceptor(dispatcher),
@@ -59,17 +62,17 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code on [GameTickEvent].
  *
  * Use plain `handler<GameTickEvent>` if there is no suspend calls inside the block.
+ *
+ * @param onCancellation called with the cause when the run is cancelled, whether the listener stopped or the run
+ * required something that no longer holds.
  */
 inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
+    onCancellation: Consumer<Throwable>? = null,
     crossinline eventHandler: suspend CoroutineScope.() -> Unit,
-) = ExclusiveHandler(
-    this,
-    GameTickEvent::class.java,
-    wrapContinuationInterceptor(dispatcher),
-    priority = 0,
-    onCancellation,
+): EventHook<GameTickEvent> = suspendHandler<GameTickEvent>(
+    context = wrapContinuationInterceptor(dispatcher),
+    behavior = SuspendHandlerBehavior.Exclusive(SuspendHandlerBehavior.WhenBusy.DROP, onCancellation),
 ) {
     eventHandler()
 }
@@ -83,10 +86,7 @@ fun EventListener.launchSequence(running: Job?, block: suspend CoroutineScope.()
         return running
     }
 
-    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED) {
-        beginRun()
-        block()
-    }
+    return eventListenerScope.launch(wrapContinuationInterceptor(), CoroutineStart.UNDISPATCHED, block)
 }
 
 /**
@@ -166,7 +166,6 @@ suspend fun <T : Event> EventListener.waitMatches(
             context.ticker.register(handler)
         }
     }
-    guards?.ensure()
     return event
 }
 
@@ -177,8 +176,8 @@ suspend fun <T : Event> EventListener.waitMatches(
  * - [net.ccbluex.liquidbounce.event.events.PacketEvent]: client Netty IO (EventLoopGroup)
  * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
  *
- * What the run [requires] is checked on every game tick while waiting and once more on the resuming thread before
- * returning.
+ * What the run [requires] is checked on every game tick while waiting, and again right before the
+ * code after the wait runs.
  *
  * @param priority The priority of the event hook.
  * @param predicate The predicate to match the event.
@@ -208,3 +207,10 @@ suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
     priority: Short = 0,
     predicate: Predicate<T>,
 ): T? = withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
+
+/**
+ * Wait until this listener's world is left or replaced.
+ *
+ * The continuation resumes on the thread the world change is handled on, the client render thread.
+ */
+suspend fun EventListener.waitForWorldChange(): WorldChangeEvent = waitMatches { true }

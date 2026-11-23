@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.set
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
@@ -37,11 +38,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
      * Called when the speed mode might jump. Decides if the jump should be delayed.
      */
     fun shouldDelayJump(): Boolean {
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
-
-        input.set(
-            jump = true
-        )
+        val input = SimulatedInput.fromClientPlayer(DirectionalInput(player.input), jump = true)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
@@ -72,7 +69,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
         // Times the player jumped. Starts at 1 because we already jump on the first tick() call.
         var jumpCount = 1
         // Holds the last position where the player was on ground. The player is on ground when the method starts.
-        var lastGroundPos = simulatedPlayer.pos
+        var lastGroundPos = simulatedPlayer.position()
 
         for (tickIdx in 0..65) {
             simulatedPlayer.tick()
@@ -83,7 +80,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                     break
                 }
 
-                lastGroundPos = simulatedPlayer.pos
+                lastGroundPos = simulatedPlayer.position()
             }
 
             if (simulatedPlayer.horizontalCollision) {
@@ -94,7 +91,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                 }
 
                 // Check if it makes sense to try to jump on the block
-                if (!canJumpOnBlock(simulatedPlayer.pos, lastGroundPos)) {
+                if (!canJumpOnBlock(simulatedPlayer.position(), lastGroundPos)) {
                     return null
                 }
 

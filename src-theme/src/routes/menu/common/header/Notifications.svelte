@@ -70,7 +70,7 @@
 <div class="notifications">
     {#if visible && current}
         <div class="notification"
-             transition:fly|global={{duration: 500, y: -100}}
+             transition:fly|global={{duration: 180, y: -20}}
              on:introend={scheduleDismiss}
              on:outroend={showPending}>
             <div class="icon" class:error={current.error}>

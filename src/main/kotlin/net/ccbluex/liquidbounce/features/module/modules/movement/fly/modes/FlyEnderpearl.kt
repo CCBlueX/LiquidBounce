@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -86,9 +85,6 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
         if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
 
-        // If there isn't a pearl, return
-        Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
-
         val slot by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
 
         if (player.xRot <= 80) {
@@ -116,8 +112,8 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
     }
 
     fun isABitAboveGround(): Boolean {
+        val boundingBox = player.box
         for (y in 0..5) {
-            val boundingBox = player.box
             val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
             if (detectionBox.isBlockAtPosition { it is Block }) return true

@@ -58,6 +58,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
 
         @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.vsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
 
         @JvmField
@@ -111,6 +114,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         @JvmField
         val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
+
+        @JvmField
+        val GuiArrow = "gui_arrow"("shaders/gui/arrow.fsh")
 
         @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
@@ -185,19 +191,20 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
             ShaderType.FRAGMENT -> Fragment.getShader(identifier, shaderType)
         }
 
-        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = includes[id]?.value
+        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = includes[id]
 
         override fun close() = Unit
 
         /**
          * Shaders reach it as `#include <liquidbounce:[path]>`. The compiler keeps using the source once handed out,
          * so it is never freed.
+         *
+         * Read eagerly on class initialization: [getInclude] is called from a shaderc callback, and resolving the
+         * source there crashes the JVM in the native to Java transition.
          */
-        private fun include(path: String): Pair<Identifier, Lazy<ShaderSource.CachedIncludeSource>> {
+        private fun include(path: String): Pair<Identifier, ShaderSource.CachedIncludeSource> {
             val id = LiquidBounce.identifier(path)
-            return id to lazy {
-                ShaderSource.CachedIncludeSource.create(id, LiquidBounce.resourceToString("shaders/$path"))
-            }
+            return id to ShaderSource.CachedIncludeSource.create(id, LiquidBounce.resourceToString("shaders/$path"))
         }
     }
 

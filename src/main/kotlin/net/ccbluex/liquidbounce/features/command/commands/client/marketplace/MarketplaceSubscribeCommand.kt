@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -55,14 +54,8 @@ object MarketplaceSubscribeCommand {
             return
         }
 
-        val installed = runCatching {
-            // An item named by its id can still be pending
-            if (item.status != MarketplaceItemStatus.ACTIVE) {
-                throw CommandException(t("error.itemPending"))
-            }
-
-            installedWith(item)
-        }.getOrElse { e -> throw CommandException(failureText(e, item.address)) }
+        val installed = runCatching { installedWith(item) }
+            .getOrElse { e -> throw CommandException(failureText(e, item.address)) }
 
         chat(regular(t("subscribe.success", variable(item.address))))
         val needed = installed.filter { it.id != item.id }

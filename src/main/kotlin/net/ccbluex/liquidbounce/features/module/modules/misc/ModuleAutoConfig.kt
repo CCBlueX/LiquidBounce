@@ -129,7 +129,7 @@ object ModuleAutoConfig : ClientModule(
         val autoConfig = runCatching { MarketplaceConfigs.findForServer(address, onlyFeatured) }
             .onFailure { logger.error("Failed to look up a config for $address.", it) }
             .getOrNull()
-        val revisionId = autoConfig?.liveRevisionId
+        val revisionId = autoConfig?.liveRevision?.id
 
         if (autoConfig == null || revisionId == null) {
             notification(

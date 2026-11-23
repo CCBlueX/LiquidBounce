@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.bindAndDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.toMeshDraw
 import net.ccbluex.liquidbounce.render.setPipeline
-import net.ccbluex.liquidbounce.render.setupRenderTypeScissor
 
 internal class BatchCollector {
 
@@ -111,7 +110,6 @@ internal class BatchCollector {
             builtBuffers.sort()
 
             color.createRenderPass({ "BatchCollector draw" }, depthAttachment = depth).use { pass ->
-                pass.setupRenderTypeScissor()
                 pass.bindDefaultUniforms()
                 dynamicTransforms?.let(pass::bindDynamicTransformsUniform)
 

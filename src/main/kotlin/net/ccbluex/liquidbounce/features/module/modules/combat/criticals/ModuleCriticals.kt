@@ -30,11 +30,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.C
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsPacket
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsRewound
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -61,7 +63,8 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
             CriticalsNoGround,
             CriticalsJump,
             CriticalsBlink,
-            CriticalsTimer
+            CriticalsTimer,
+            CriticalsRewound
         )
     }.apply(::tagBy)
 
@@ -173,8 +176,9 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         }
 
         fun shouldStopSprinting(clicker: Clicker<*>, target: Entity?): Boolean {
-            // If we don't care about critical hits we don't have to stop sprinting.
-            if (this == IGNORE) {
+            // If we don't care about critical hits we don't have to stop sprinting,
+            // and up to 1.8 a sprinting hit can be critical.
+            if (this == IGNORE || isOlderThanOrEqual1_8) {
                 return false
             }
 
@@ -219,7 +223,7 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     fun canDoCriticalHit(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
         allowsCriticalHit(ignoreOnGround) && CombatManager.attackCooldownProgress() > 0.9f &&
-            (!player.isSprinting || ignoreSprint)
+            (!player.isSprinting || ignoreSprint || isOlderThanOrEqual1_8)
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =
         canDoCriticalHit(false, ignoreSprint) && player.fallDistance > 0.0

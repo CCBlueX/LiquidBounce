@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
@@ -33,7 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
@@ -163,15 +166,10 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
          * too: the simulation is off by a little now and then.
          */
         private fun leavesEdge(event: MovementInputEvent): Boolean {
-            val input = SimulatedPlayer.SimulatedPlayerInput(
-                event.directionalInput,
-                jumping = false,
-                sprinting = player.isSprinting,
-                sneaking = false,
-            )
+            val input = SimulatedInput(event.directionalInput.toInput(sprint = player.isSprinting).toAgent())
             val simulation = SimulatedPlayer.fromClientPlayer(input)
             simulation.tick()
-            return simulation.clipLedged || player.wouldBeCloseToFallOff(simulation.pos)
+            return simulation.hasBackedOffEdge || player.wouldBeCloseToFallOff(simulation.position())
         }
 
         override fun disable() {

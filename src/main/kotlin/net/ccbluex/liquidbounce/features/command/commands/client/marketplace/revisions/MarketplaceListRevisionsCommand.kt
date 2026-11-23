@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
@@ -44,7 +43,6 @@ object MarketplaceListRevisionsCommand {
                 execSuspend { ctx ->
                     val item = marketplaceItem(ctx.get(input))
                     val revisions = request { MarketplaceApi.getMarketplaceItemRevisions(item.id) }.items
-                        .filter { it.status != MarketplaceItemStatus.PENDING }
 
                     header(t("revisions.list.header", variable(item.address)))
                     if (revisions.isEmpty()) {

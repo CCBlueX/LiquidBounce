@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -28,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.Av
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.state
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.math.intersects
@@ -116,7 +118,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     ): Boolean {
         val level = mc.level ?: return true
 
-        val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
+        val simulatedInput = SimulatedInput.fromClientPlayer(
             directionalInput = directionalInput,
             jump = jump,
             sprinting = player.isSprinting,
@@ -160,7 +162,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
      * @see isLadderClimbState
      */
     private fun wouldEnterLadderClimbState(simulatedPlayer: SimulatedPlayer): Boolean {
-        return isLadderClimbStateAt(simulatedPlayer.pos.toBlockPos())
+        return isLadderClimbStateAt(simulatedPlayer.position().toBlockPos())
     }
 
     private fun isLadderClimbStateAt(pos: BlockPos): Boolean {

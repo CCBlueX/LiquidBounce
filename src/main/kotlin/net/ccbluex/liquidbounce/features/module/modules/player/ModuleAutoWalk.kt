@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.v26_3.live
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -32,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.navigation.Navigator
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
@@ -145,7 +147,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }
             }
 
-            if (!player.rootVehicle.position().closerThan(goal, radius)) {
+            // The navigator stops walking at the radius itself, so arriving there counts too
+            if (player.rootVehicle.position().distanceToSqr(goal) > radius * radius) {
                 return goal
             }
 
@@ -160,9 +163,9 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
         // The locate button picks the ground to stand on.
         private fun feetAt(pos: BlockPos): BlockPos {
-            val terrain = Terrain.live()
-            val above = pos.above()
-            return if (!terrain.isStandable(pos) && terrain.isStandable(above)) above else pos
+            val terrain = Terrain.live(world)
+            val feet = pos.toAgent()
+            return if (!terrain.isStandable(feet) && terrain.isStandable(feet.above())) pos.above() else pos
         }
     }
 

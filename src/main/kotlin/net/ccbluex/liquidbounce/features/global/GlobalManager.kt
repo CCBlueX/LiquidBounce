@@ -34,22 +34,20 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 object GlobalManager : Config("Settings") {
 
     init {
-        // Managers
-        tree(LanguageManager)
-        tree(BlinkManager)
-        tree(RotationManager)
-
-        // Feature settings
-        tree(GlobalSettingsTarget)
-        tree(GlobalSettingsTeleport)
-        tree(GlobalSettingsRichPresence)
-        tree(GlobalSettingsClientChat)
-        tree(GlobalSettingsAutoTranslate)
-        tree(GlobalSettingsViewModel)
-
-        // Client settings
-        tree(CommandManager.GlobalSettings)
-        tree(GlobalBrowserSettings)
+        treeAll(
+            LanguageManager,
+            BlinkManager,
+            RotationManager,
+            CommandManager.GlobalSettings,
+            GlobalBrowserSettings,
+            GlobalSettingsRichPresence,
+            GlobalSettingsClientChat,
+            GlobalSettingsTarget,
+            GlobalSettingsTeleport,
+            GlobalSettingsAutoTranslate,
+            GlobalSettingsViewModel,
+            GlobalSettingsInventory
+        )
     }
 
 }

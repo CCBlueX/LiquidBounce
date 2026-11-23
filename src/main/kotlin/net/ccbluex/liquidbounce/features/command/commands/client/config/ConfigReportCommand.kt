@@ -55,19 +55,18 @@ object ConfigReportCommand {
     }
 
     private suspend fun CmdI18n.report(works: Boolean, input: String?) {
-        val (itemId, revisionId, name) = if (input == null) {
+        val (revisionId, name) = if (input == null) {
             requireTracked()
-            Triple(ConfigTracker.itemId, ConfigTracker.revisionId, ConfigTracker.itemName)
+            ConfigTracker.revisionId to ConfigTracker.itemName
         } else {
             val item = findConfig(input)
-            val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
-            Triple(item.id, revisionId, item.name)
+            val revision = item.liveRevision ?: throw CommandException(t("load.noRevision", variable(item.name)))
+            revision.id to item.name
         }
 
         request {
             MarketplaceApi.putConfigReport(
                 session(),
-                itemId,
                 revisionId,
                 works,
                 LiquidBounce.clientVersion,

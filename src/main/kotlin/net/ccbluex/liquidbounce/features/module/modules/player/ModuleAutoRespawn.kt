@@ -42,6 +42,10 @@ object ModuleAutoRespawn : ClientModule("AutoRespawn", ModuleCategories.PLAYER) 
             requires { player.isDeadOrDying }
             if (delay > 0) {
                 waitTicks(delay)
+                // Respawning by hand during the delay leaves nothing to do
+                if (mc.gui.screen() !is DeathScreen) {
+                    return@sequenceHandler
+                }
             }
 
             player.respawn()

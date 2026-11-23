@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
@@ -105,7 +106,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
      * Tracks an entity render submission while leaving the vanilla render type unchanged.
      *
      * A capture context is only established for entities that should be shown as chams, and only
-     * up until the next submission (or the end of the level entity submissions, see [clearEntityContext]).
+     * up until the next submission or the end of the entity's own submission (see [clearEntityContext]).
      */
     fun trackIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
         entityContext = null
@@ -129,12 +130,13 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     }
 
     /**
-     * Clears the tracked entity context once all level entity submissions are done.
+     * Clears the tracked entity context around each entity submission and once all level
+     * submissions are done.
      *
-     * [entityContext] is set during level entity submission to the last chams target and must not
-     * leak into later submissions that are unrelated to any chams target (e.g. first-person held
-     * items rendered after the level), otherwise they would be mistaken for chams targets and
-     * removed from the main render target.
+     * [entityContext] is set during an entity submission to a chams target and must not leak into
+     * later submissions that are unrelated to any chams target (e.g. other entities, block entities
+     * such as chests, or first-person held items rendered after the level), otherwise they would be
+     * mistaken for chams targets and removed from the main render target.
      *
      * [heldItemEntityContext] needs no clearing: it is a [ScopedValue] that is only bound inside
      * [withHeldItemContext] and restored automatically when that block ends.
@@ -285,6 +287,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsBlit)
+                pass.bindGlobalsUniform()
                 pass.setUniform("InSampler", colorTexture, blitSampler)
                 pass.draw(3, 1, 0, 0)
             }

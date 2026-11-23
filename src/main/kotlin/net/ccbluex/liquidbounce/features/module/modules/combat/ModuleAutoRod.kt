@@ -219,6 +219,8 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
 
+        requires { slot.itemStack.`is`(Items.FISHING_ROD) }
+
         // 3. timeout / hit entity / no movement / out of range
         tickConditional(hitTimeout) {
             val hook = fishingBobberEntity

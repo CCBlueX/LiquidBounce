@@ -43,7 +43,7 @@ import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
@@ -62,7 +62,7 @@ internal fun header(title: Component, detail: Component? = null) {
 }
 
 internal fun CmdI18n.addressText(item: MarketplaceItem): MutableComponent = regular("")
-    .apply { item.author?.let { append(regular("$it/")) } }
+    .apply { item.owner.nickname?.let { append(regular("$it/")) } }
     .append(variable(item.name))
     .onClick(ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config load ${quoted(item.address)}"))
     .onHover(HoverEvent.ShowText(regular(t("list.hover", variable(item.address)))))
@@ -86,9 +86,9 @@ internal fun CmdI18n.votes(item: MarketplaceItem): MutableComponent =
 private fun CmdI18n.vote(item: MarketplaceItem, works: Boolean): MutableComponent {
     val verdict = if (works) "works" else "broken"
     val button = if (works) {
-        "[✔ ${item.recentWorks}]".asText().withStyle(ChatFormatting.GREEN)
+        "[✔ ${item.recentReports?.works ?: 0}]".asText().withStyle(ChatFormatting.GREEN)
     } else {
-        "[✘ ${item.recentFails}]".asText().withStyle(ChatFormatting.RED)
+        "[✘ ${item.recentReports?.fails ?: 0}]".asText().withStyle(ChatFormatting.RED)
     }
 
     return button
@@ -101,8 +101,9 @@ private fun CmdI18n.vote(item: MarketplaceItem, works: Boolean): MutableComponen
 }
 
 internal fun protocolText(item: MarketplaceItem): Component? {
-    val name = item.protocolName ?: return null
-    val matches = item.protocolVersion == null || item.protocolVersion == protocolVersion.version
+    val revision = item.liveRevision
+    val name = revision?.protocolName ?: return null
+    val matches = revision.protocolVersion == null || revision.protocolVersion == protocolVersion.version
     return name.asPlainText(if (matches) ChatFormatting.GREEN else ChatFormatting.RED)
 }
 
@@ -115,7 +116,7 @@ private const val DAYS_SHOWN_RELATIVE = 28
 internal fun CmdI18n.ago(dateTime: String): MutableComponent {
     val exact = formatDate(dateTime)
     val days = runCatching {
-        ChronoUnit.DAYS.between(LocalDateTime.parse(dateTime).toLocalDate(), LocalDate.now(ZoneOffset.UTC))
+        ChronoUnit.DAYS.between(OffsetDateTime.parse(dateTime).toLocalDate(), LocalDate.now(ZoneOffset.UTC))
     }.getOrNull()
 
     val text = when {
@@ -131,10 +132,10 @@ internal fun CmdI18n.ago(dateTime: String): MutableComponent {
 
 internal fun CmdI18n.details(item: MarketplaceItem): MutableComponent? {
     val parts = listOfNotNull(
-        item.targetServers?.takeIf { it.isNotEmpty() }?.joinToText(DEFAULT_SEPARATOR, ::variable),
+        item.targetServers.takeIf { it.isNotEmpty() }?.joinToText(DEFAULT_SEPARATOR, ::variable),
         protocolText(item),
-        item.tags?.takeIf { it.isNotEmpty() }?.let { tags -> tags.joinToText(DEFAULT_SEPARATOR) { regular(it.name) } },
-        item.updatedAt?.let { regular(t("list.updated", ago(it))) },
+        item.tags.takeIf { it.isNotEmpty() }?.joinToText(DEFAULT_SEPARATOR) { regular(it.name) },
+        item.liveRevision?.let { regular(t("list.updated", ago(it.createdAt))) },
     )
     if (parts.isEmpty()) {
         return null

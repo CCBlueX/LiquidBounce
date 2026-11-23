@@ -63,6 +63,7 @@ import com.mojang.blaze3d.platform.cursor.CursorType
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("TooManyFunctions")
 object ScreenManager : EventListener {
 
     private val logger = clientLogger("ScreenManager")
@@ -416,5 +417,12 @@ object ScreenManager : EventListener {
         || screen is CustomStandaloneMinecraftScreen
         || screen is InternetExplorerScreen
         || screen is MicrosoftLoginScreen
+
+    /**
+     * Whether the theme overlaying the current screen applies [tweak] to it.
+     */
+    @JvmStatic
+    fun isTweakEnabled(tweak: ScreenTweak) = screen?.type == tweak.screenType &&
+        theme?.metadata?.screenTweaks?.contains(tweak) == true
 
 }

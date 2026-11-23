@@ -483,7 +483,7 @@ object AutoMobHeal : ClientModule(
             .minByOrNull { it.distanceSq }
             ?: return@tickHandler
 
-        SilentHotbar.selectSlotSilently(this, plan.slot, slotResetDelay)
+        SilentHotbar.selectSlotSilently(this@AutoMobHeal, plan.slot, slotResetDelay)
 
         val result = interactEntity(
             plan.target,

@@ -61,7 +61,7 @@ object ConfigInfoCommand {
                         findConfig(input).id
                     }
 
-                    val item = request { MarketplaceApi.getMarketplaceItem(id, sessionOrNull()) }
+                    val item = request { MarketplaceApi.getMarketplaceItem(id) }
                     printInfo(item)
                 }
             }
@@ -70,7 +70,7 @@ object ConfigInfoCommand {
 
     private suspend fun CmdI18n.printInfo(item: MarketplaceItem) {
         val byline = regular("").apply {
-            item.author?.let { append(t("list.by", variable(it))) }
+            item.owner.nickname?.let { append(t("list.by", variable(it))) }
             if (isTracked(item)) {
                 val state = t("state.${ConfigTracker.state.tag.lowercase()}")
                 append(regular("  ")).append(state.withColor(ChatFormatting.GREEN))
@@ -83,38 +83,32 @@ object ConfigInfoCommand {
         item.description.lineSequence().firstOrNull { it.isNotBlank() }?.let {
             field(regular(it.take(DESCRIPTION_PREVIEW)).withStyle(ChatFormatting.ITALIC))
         }
-        item.targetServers?.takeIf { it.isNotEmpty() }?.let {
+        item.targetServers.takeIf { it.isNotEmpty() }?.let {
             field(regular(t("info.servers", it.joinToText(DEFAULT_SEPARATOR, ::variable))))
         }
         protocolText(item)?.let { field(regular(t("info.protocol", it))) }
-        item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+        item.tags.takeIf { it.isNotEmpty() }?.let { tags ->
             field(regular(t("info.tags", tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
-        item.contributors?.takeIf { it.isNotEmpty() }?.let { contributors ->
+        item.contributors.takeIf { it.isNotEmpty() }?.let { contributors ->
             val names = contributors.joinToText(DEFAULT_SEPARATOR) { variable(it.nickname ?: it.uid) }
             field(regular(t("info.contributors", names)))
         }
         item.sourceUrl?.let { field(regular(t("info.source", variable(it).copyable()))) }
-        val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
-        if (dependencies.isNotEmpty()) {
-            val names = dependencies.joinToText(DEFAULT_SEPARATOR) { dependency ->
-                val needed = dependency.item
-                val address = dependency.author?.let { "$it/${needed.name}" } ?: needed.address
-                variable("$address (${needed.type.tag})")
-            }
+        if (item.dependencies.isNotEmpty()) {
+            val names = item.dependencies.joinToText(DEFAULT_SEPARATOR) { variable("${it.address} (${it.type.tag})") }
             field(regular(t("info.dependencies", names)))
         }
-        val source = item.forkedFromItemId?.let { runCatching { MarketplaceApi.getMarketplaceItem(it) }.getOrNull() }
-        source?.let {
+        item.forkedFrom?.let {
             val command = "${CommandManager.GlobalSettings.prefix}config info ${quoted(it.address)}"
             field(regular(t("info.forkedFrom", variable(it.address))).onClick(ClickEvent.SuggestCommand(command)))
         }
-        if (item.includesBinds == true) {
+        if (item.liveRevision?.includesBinds == true) {
             field(warning(t("info.binds")))
         }
         field(regular(t("info.reports", votes(item))))
-        item.updatedAt?.let { field(regular(t("info.updated", ago(it)))) }
-        item.shareCode?.let { field(regular(t("info.shareCode", variable(it).copyable()))) }
+        item.liveRevision?.let { field(regular(t("info.updated", ago(it.createdAt)))) }
+        request { item.findShareCode() }?.let { field(regular(t("info.shareCode", variable(it).copyable()))) }
     }
 
 }

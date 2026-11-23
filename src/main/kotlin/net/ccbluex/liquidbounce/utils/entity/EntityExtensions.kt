@@ -21,6 +21,8 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
@@ -48,6 +50,7 @@ import net.ccbluex.liquidbounce.utils.world.anyMatched
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
@@ -59,6 +62,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.Difficulty
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -274,11 +278,7 @@ fun LocalPlayer.isCloseToEdge(
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {
-    val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
-    simulatedInput.set(
-        jump = false,
-        sneak = false
-    )
+    val simulatedInput = SimulatedInput.fromClientPlayer(directionalInput, jump = false, sneaking = false)
 
     val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
         simulatedInput
@@ -302,7 +302,7 @@ fun LocalPlayer.isCloseToEdge(
         return true
     }
 
-    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.copy(y = 0.0))
+    val playerPosInTwoTicks = simulatedPlayer.position().add(nextVelocity.copy(y = 0.0))
 
     return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }
@@ -330,6 +330,12 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     return this.level().getBlockCollisions(this, stepBox).allEmpty()
         && this.level().getBlockCollisions(this, offsetBox).anyNotEmpty()
 }
+
+fun LocalPlayer.isGroundWithin(height: Double): Boolean =
+    level().getBlockCollisions(this, boundingBox.move(0.0, -height, 0.0)).anyNotEmpty()
+
+/** Effect amplifier plus one, 0 without the effect. */
+fun LivingEntity.effectLevel(effect: Holder<MobEffect>): Int = getEffect(effect)?.amplifier?.plus(1) ?: 0
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = DirectionalInput(player.input)): Float {
     var actualYaw = facingYaw

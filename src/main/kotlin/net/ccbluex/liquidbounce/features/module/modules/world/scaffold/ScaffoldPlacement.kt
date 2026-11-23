@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isValidCrosshairTarget
@@ -51,7 +54,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.placementTargetClicked
 import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -222,8 +225,7 @@ internal object ScaffoldPlacement {
         rotation: Rotation,
         stack: ItemStack,
         positions: List<BlockPos>,
-        input: SimulatedPlayer.SimulatedPlayerInput =
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input)),
+        input: SimulatedInput = SimulatedInput.fromClientPlayer(DirectionalInput(player.input)),
         ticks: Int = HOLD_TICKS,
         wellInside: Boolean = false,
     ): Boolean {
@@ -233,7 +235,7 @@ internal object ScaffoldPlacement {
             if (!simulation.onGround()) {
                 return false
             }
-            val eyes = simulation.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
+            val eyes = simulation.position().add(0.0, player.eyeHeight.toDouble(), 0.0)
             val placement = placementTargetClickedBy(rotation, eyes, stack, positions)
             if (placement != null && (!wellInside || placement.isWellInsideFace())) {
                 return true
@@ -255,12 +257,12 @@ internal object ScaffoldPlacement {
             else -> return false
         }
         // Built by hand: asking for SafeWalk here would ask scaffold again
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-            DirectionalInput(player.input),
-            jumping = player.input.keyPresses.jump,
-            // The held key alone does not sprint: walking against the view, movement correction keeps it off
-            sprinting = player.isSprinting,
-            sneaking = false,
+        val input = SimulatedInput(
+            DirectionalInput(player.input).toInput(
+                jump = player.input.keyPresses.jump,
+                // The held key alone does not sprint: walking against the view, movement correction keeps it off
+                sprint = player.isSprinting,
+            ).toAgent()
         )
         return placesSoon(rotation, stack, listOf(target.placedBlock), input, ticks, wellInside = true)
     }

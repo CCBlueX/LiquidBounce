@@ -40,7 +40,7 @@ object ClientUpdate {
             val newestSemVersion = Semver(newestBuild.lbVersion, Semver.SemverType.LOOSE)
 
             val isNewer = if (LiquidBounce.IN_DEVELOPMENT) { // check if new build is newer than current build
-                val newestVersionDate = newestBuild.date
+                val newestVersionDate = newestBuild.committedAt
                 val currentVersionDate = OffsetDateTime.parse(
                     GitInfo.get("git.commit.time"),
                     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")

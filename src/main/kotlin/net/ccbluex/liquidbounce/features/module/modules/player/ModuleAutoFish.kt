@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.FishingRodItem
@@ -101,8 +100,6 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        findFishingRodHand() ?: return@tickHandler
-
         val hand by requires { findFishingRodHand() }
 
         tickUntil {

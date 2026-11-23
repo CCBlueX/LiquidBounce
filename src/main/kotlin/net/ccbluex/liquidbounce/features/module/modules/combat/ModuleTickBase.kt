@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.agent.simulation.Forecast
+import net.ccbluex.agent.simulation.PlayerSnapshot
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -44,12 +48,8 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerSnapshot
 import net.ccbluex.liquidbounce.utils.entity.armorItems
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.ping
@@ -239,9 +239,9 @@ internal object ModuleTickBase : ClientModule(
         /**
          * The snapshots of the boost the balance pays for, up to the hit landing on the last, and that hit.
          */
-        private fun planBoost(): Pair<List<SimulatedPlayerSnapshot>, Hit?> {
+        private fun planBoost(): Pair<List<PlayerSnapshot>, Hit?> {
             val hitAt = hitPointFrom()
-            val path = ArrayList<SimulatedPlayerSnapshot>()
+            val path = ArrayList<PlayerSnapshot>()
 
             for (snapshot in snapshotsFromNow().take(boostTicks() + 1)) {
                 path += snapshot
@@ -414,7 +414,7 @@ internal object ModuleTickBase : ClientModule(
          * The tick of [snapshots] to land the hit on after [walk] normal ticks, shown in the visuals. Null when no
          * hit lands and pays off, or the requirements are not met.
          */
-        private fun plan(snapshots: Sequence<SimulatedPlayerSnapshot>, walk: Int): Int? {
+        private fun plan(snapshots: Sequence<PlayerSnapshot>, walk: Int): Int? {
             val simulated = snapshots.take(walk + maxTicks + 1 + Advantage.knockbackTicks).toList()
             val path = simulated.take(walk + maxTicks + 1)
             val hitAt = hitPointFrom()
@@ -431,10 +431,10 @@ internal object ModuleTickBase : ClientModule(
          * when no hit lands on [path] and pays off, or one lands by just walking without a critical hit to wait for.
          */
         private fun ticksToHit(
-            path: List<SimulatedPlayerSnapshot>,
+            path: List<PlayerSnapshot>,
             hits: List<Hit?>,
             walk: Int,
-            simulated: List<SimulatedPlayerSnapshot>
+            simulated: List<PlayerSnapshot>
         ): Int? {
             val inRange = path.indices.filter { hits[it] != null }
             val first = inRange.firstOrNull() ?: return null
@@ -504,7 +504,7 @@ internal object ModuleTickBase : ClientModule(
          * Whether [hit] pays off when it lands with the player at [landing] of [path], [landingDelay] ticks of real
          * time from now. [path] starts now and goes on past [landing] as far as it was simulated.
          */
-        fun paysOff(hit: Hit, path: List<SimulatedPlayerSnapshot>, landing: Int, landingDelay: Int): Boolean {
+        fun paysOff(hit: Hit, path: List<PlayerSnapshot>, landing: Int, landingDelay: Int): Boolean {
             val enemy = hit.entity as? LivingEntity
             if (!enabled || enemy == null) {
                 return true
@@ -541,12 +541,12 @@ internal object ModuleTickBase : ClientModule(
          */
         private fun rangeAfterKnockback(
             enemy: LivingEntity,
-            path: List<SimulatedPlayerSnapshot>,
+            path: List<PlayerSnapshot>,
             landing: Int,
             landingDelay: Int,
             sprintHit: Boolean
         ): Double {
-            val prediction = PositionExtrapolation.getBestForEntity(enemy)
+            val prediction = PlayerSimulationCache.extrapolate(enemy)
             // The prediction starts where the client draws the enemy, which falls behind the server while ticks
             // are held
             val offset = enemy.serverPosition.subtract(enemy.position())
@@ -574,7 +574,7 @@ internal object ModuleTickBase : ClientModule(
          * Whether the hit is critical: falling, a full enough cooldown, and not sprinting, which KillAura and Criticals
          * stop for a critical hit.
          */
-        private fun isCritical(landing: SimulatedPlayerSnapshot, strength: Float): Boolean {
+        private fun isCritical(landing: PlayerSnapshot, strength: Float): Boolean {
             val canCrit = ModuleCriticals.allowsCriticalHit(ignoreOnGround = true) &&
                 (!player.isSprinting || prefersCritical)
             return landing.falling && strength > 0.9f && canCrit
@@ -686,13 +686,13 @@ internal object ModuleTickBase : ClientModule(
      * Like [snapshotsFromNow], simulated from the current state of the player. While ticks are held, the cached
      * simulation misses what changed in the meantime, such as knockback.
      */
-    private fun currentSnapshotsFromNow() = SimulatedPlayerCache(
-        SimulatedPlayer.fromClientPlayer(SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input)))
+    private fun currentSnapshotsFromNow() = Forecast(
+        SimulatedPlayer.fromClientPlayer(SimulatedInput.fromClientPlayer(DirectionalInput(player.input)))
     ).simulate()
 
-    private fun SimulatedPlayerSnapshot.eyes() = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
+    private fun PlayerSnapshot.eyes() = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
 
-    private val SimulatedPlayerSnapshot.falling
+    private val PlayerSnapshot.falling
         get() = !onGround && fallDistance > 0.0
 
 }

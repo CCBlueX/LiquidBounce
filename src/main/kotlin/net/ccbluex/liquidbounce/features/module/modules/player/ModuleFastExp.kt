@@ -146,22 +146,12 @@ object ModuleFastExp : ClientModule(
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = tickHandler(onCancellation = { resetRepair() }) {
+        // A screen only pauses the repair, ending the run by it would reset the count
         if (InventoryManager.isHandledScreenOpen) {
-            // doesn't throw exp bottles when an inventory is open
-            // yet doesn't stop the repairing process either
-            // allowing to refill the hotbar with exp bottles, if needed.
             return@tickHandler
         }
 
-        if (Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) == null || player.isDeadOrDying) {
-            bottlesUsed = 0
-            bottlesRequired = 0
-            repairing = false
-            return@tickHandler
-        }
-
-        requires { !InventoryManager.isHandledScreenOpen }
         requires { !player.isDeadOrDying }
         val slot = requires { Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) }
 
@@ -194,6 +184,12 @@ object ModuleFastExp : ClientModule(
             bottlesUsed = 0
             bottlesRequired = 0
         }
+    }
+
+    private fun resetRepair() {
+        bottlesUsed = 0
+        bottlesRequired = 0
+        repairing = false
     }
 
     private fun anyExpOrbMovingToPlayer(): Boolean =

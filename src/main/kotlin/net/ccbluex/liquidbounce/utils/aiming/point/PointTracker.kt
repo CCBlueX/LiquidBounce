@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorGaussi
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorHeight
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorLazy
 import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
-import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.minecraft.world.entity.Entity
@@ -74,7 +74,7 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
      */
     fun findPoint(eyes: Vec3, entity: Entity, ticks: Int = 0): PointInsideBox {
         // Predict target position
-        val targetPos = PositionExtrapolation.getBestForEntity(entity)
+        val targetPos = PlayerSimulationCache.extrapolate(entity)
             .getPositionInTicks(ticks.toDouble())
 
         // Project points onto box

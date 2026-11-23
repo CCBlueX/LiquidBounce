@@ -19,6 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.agent.navigation.walk.AssistedJump
+import net.ccbluex.agent.pathfinder.terrain.Terrain
+import net.ccbluex.agent.pathfinder.walk.JumpTargets
+import net.ccbluex.agent.pathfinder.walk.Jumps
+import net.ccbluex.agent.pathfinder.walk.LeapInput
+import net.ccbluex.agent.pathfinder.walk.WalkAbilities
+import net.ccbluex.agent.simulation.MotionTraits
+import net.ccbluex.agent.simulation.PlayerMotion
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.v26_3.live
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -29,20 +41,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.MotionTraits
-import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
-import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
-import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
 import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
 
 /**
@@ -68,11 +71,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     private var aimYaw = Float.NaN
     private var sprint = false
-
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         assisted.target ?: return@handler
-        val yaw = assisted.aimYaw(player.position(), player.deltaMovement, player.onGround())
+        val yaw = assisted.aimYRot(player.position().toAgent(), player.deltaMovement.toAgent(), player.onGround())
         if (!yaw.isNaN()) {
             aimYaw = yaw
         }
@@ -119,16 +121,16 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
         event.directionalInput = getDirectionalInputForMovementYaw(keys.forward, keys.strafe, player.yRot)
         event.jump = keys.jump
-        event.sneak = keys.sneak
+        event.sneak = keys.shift
         sprint = keys.sprint
     }
 
     /** The keys the assist presses this tick, or null when there is nothing to assist. */
     private fun assist(event: MovementInputEvent): LeapInput? {
-        val terrain = Terrain.live()
+        val terrain = Terrain.live(world)
         val abilities = abilities()
         val state = PlayerMotion(terrain, abilities.motion)
-        state.reset(player)
+        state.reset(player.toAgent())
 
         val input = event.directionalInput
         val keys = LeapInput(
@@ -139,7 +141,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
         val heading = getMovementDirectionOfInput(player.yRot, input)
         val yaw = RotationManager.movementYaw
-        val jumps = Jumps(terrain, abilities, holdsYaw = true)
+        val jumps = Jumps(terrain, abilities, holdsYRot = true)
         val targets = JumpTargets(terrain, abilities.motion)
         val assist = assisted.tick(state, yaw, heading, keys, Assist.maxAngle, jumps, targets)
         if (Assist.render.enabled) {
@@ -155,7 +157,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         // The shared simulation of the player is renewed at this priority too, so it may still be the last tick's.
-        val input = SimulatedPlayerInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
+        val input = SimulatedInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
         val simulation = SimulatedPlayer.fromClientPlayer(input)
         simulation.tick()
         if (!simulation.onGround()) {
@@ -168,7 +170,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         aimYaw = Float.NaN
     }
 
-    private fun abilities() = Abilities(
+    private fun abilities() = WalkAbilities(
         canBreak = false,
         canPlace = false,
         placeableBlocks = 0,
@@ -179,7 +181,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         waterFall = WATER_FALL,
         breakTicks = { Double.POSITIVE_INFINITY },
         avoid = LongOpenHashSet(),
-        motion = MotionTraits.capture(player),
+        motion = MotionTraits.capture(player.toAgent()),
     )
 
     override fun onDisabled() {

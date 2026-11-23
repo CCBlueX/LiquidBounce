@@ -127,9 +127,19 @@ val gametestHarness: SourceSet = sourceSets.create("gametestHarness") {
     runtimeClasspath += sourceSets.main.get().output
 }
 
+// `-PgameTestSchematics=<dir>` runs the client with Litematica, and AutoBuild's schematic test builds every
+// .litematic file in that directory
+val gameTestSchematics: String? = providers.gradleProperty("gameTestSchematics").orNull
+
 dependencies {
     "gametestHarnessImplementation"(libs.gametest.harness)
     "gametestImplementation"(libs.gametest.harness)
+    "gametestCompileOnly"(libs.litematica)
+    "gametestCompileOnly"(libs.malilib)
+    if (gameTestSchematics != null) {
+        "gametestRuntimeOnly"(libs.litematica)
+        "gametestRuntimeOnly"(libs.malilib)
+    }
 }
 
 configurations.named(gametestHarness.compileClasspathConfigurationName) {
@@ -172,6 +182,9 @@ loom.runs.named("clientGameTest") {
     providers.gradleProperty("gameTestServerOnly").orNull?.let {
         systemProperties.put("gametest.only", it)
     }
+    gameTestSchematics?.let {
+        systemProperties.put("net.ccbluex.liquidbounce.gametest.schematics", file(it).absolutePath)
+    }
     // Add-on test runs set none of these and keep the browser and theme
     if (!providers.gradleProperty("gameTestFull").map { it != "false" }.getOrElse(false)) {
         for (part in listOf("browser", "interop", "deeplearning", "chat", "api", "discord")) {
@@ -182,8 +195,8 @@ loom.runs.named("clientGameTest") {
 
 tasks.named("runClientGameTest") {
     // A game that cannot start may wait on an error dialog forever. The server tests wait up to two minutes for
-    // a game test server that is restarting, and up to three for a free session.
-    timeout = Duration.ofMinutes(30)
+    // a game test server that is restarting, and up to three for a free session. Building schematics takes longer.
+    timeout = Duration.ofMinutes(if (gameTestSchematics != null) 120 else 30)
 }
 
 dependencies {
@@ -238,6 +251,11 @@ dependencies {
     // brings nothing along.
     include(libs.liquidbounce.cef)
     localRuntime(libs.liquidbounce.cef) { isTransitive = false }
+
+    // Minecraft Agent: player simulation and navigation. Its types are part of the client's API, so add-ons get it
+    // through the POM.
+    api(libs.bundles.minecraft.agent)
+    include(libs.bundles.minecraft.agent)
 
     // Ktor Server
     jij(libs.ktor.server.core)
@@ -527,7 +545,7 @@ tasks.jar {
 }
 
 val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
-    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
+    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.asProvider().get()}"
     val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
 
     if (isRelease) base else "$base-SNAPSHOT"

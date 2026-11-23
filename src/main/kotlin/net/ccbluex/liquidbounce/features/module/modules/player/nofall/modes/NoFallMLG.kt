@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -36,11 +37,11 @@ import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.isInteractable
-import net.ccbluex.liquidbounce.utils.block.state
-import net.ccbluex.liquidbounce.utils.block.liquid.canPlaceStandaloneFluid
-import net.ccbluex.liquidbounce.utils.block.liquid.requiresSneakForAdjacentFluidPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
+import net.ccbluex.liquidbounce.utils.block.liquid.canPlaceStandaloneFluid
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
+import net.ccbluex.liquidbounce.utils.block.liquid.requiresSneakForAdjacentFluidPlacement
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.resolvePlacementAt
 import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
@@ -48,7 +49,8 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.fallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -289,7 +291,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return null
         }
 
-        val collision = FallingPlayer.fromPlayer(player, RotationManager.movementYaw).findCollision(20) ?: return null
+        val collision = player.fallingPlayer(RotationManager.movementYaw).findCollision(20) ?: return null
         val collisionPos = collision.pos ?: return null
 
         if (collisionPos.fallDamageMultiplier(player) <= 0f) {
@@ -344,7 +346,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return false
         }
 
-        return FallingPlayer.fromPlayer(player, RotationManager.movementYaw).willStartTickInBlockBeforeCollision(
+        return player.fallingPlayer(RotationManager.movementYaw).canReachBeforeLanding(
             targetPos,
             ticks = 20,
             forceDescending = true,

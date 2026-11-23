@@ -155,7 +155,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         }
 
         CombatManager.pauseCombatForAtLeast(1)
-        SilentHotbar.selectSlotSilently(this, plan.slot, 1)
+        SilentHotbar.selectSlotSilently(this@ModuleAutoTrap, plan.slot, 1)
 
         var successful = false
         val onSuccess = {

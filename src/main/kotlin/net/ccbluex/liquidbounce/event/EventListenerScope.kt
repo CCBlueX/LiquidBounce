@@ -61,7 +61,7 @@ val EventListener.eventListenerScope: CoroutineScope
                 }
             }
                 + CoroutineName(it.toString()) // Name
-                + Guards() // Copied empty into every coroutine launched on it
+                + Guards(it) // Copied empty into every coroutine launched on it
                 // Render thread + Auto cancel on not listening
                 + it.wrapContinuationInterceptor(Dispatchers.Main)
         )
@@ -78,13 +78,13 @@ fun EventListener.removeEventListenerScope() {
 
 /**
  * Wrap the [original] interceptor and make it auto-detect
- * the listener's running state at suspension
- * to determine whether to resume the continuation.
+ * the listener's running state and what the running coroutine [requires]
+ * at suspension to determine whether to resume the continuation.
  */
 fun EventListener.wrapContinuationInterceptor(
     original: ContinuationInterceptor? = null,
-): ContinuationInterceptor = original as? EventListenerRunningContinuationInterceptor
-    ?: EventListenerRunningContinuationInterceptor(original, this)
+): ContinuationInterceptor = original as? EventListenerContinuationInterceptor
+    ?: EventListenerContinuationInterceptor(original, this)
 
 /**
  * Occurs when the running [Job] is canceled because [EventListener.running] is false
@@ -93,18 +93,21 @@ class EventListenerNotListeningException(val eventListener: EventListener) :
     CancellationException("EventListener $eventListener is not running")
 
 /**
- * Check [EventListener.running] on suspend.
- * If true, continue.
- * If false, cancel the job.
+ * Check [EventListener.running] and the coroutine's [Guards] on every resume.
+ * If they hold, continue; otherwise the continuation gets the failure instead of the result.
  *
  * This means the cancellation will not be **immediate** like [Thread.interrupt].
+ * It also means every suspension is covered, including ones no helper knows about.
+ *
+ * The check is handed to [original] instead of wrapping its result, so it runs on the thread the
+ * continuation continues on and immediately before it, which lets it read game state.
  *
  * @param original The original [ContinuationInterceptor] such as a [CoroutineDispatcher],
  * because one [CoroutineContext] can only contain one value for a same key.
  *
  * @author MukjepScarlet
  */
-private class EventListenerRunningContinuationInterceptor(
+private class EventListenerContinuationInterceptor(
     private val original: ContinuationInterceptor?,
     private val eventListener: EventListener,
 ) : AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
@@ -112,21 +115,31 @@ private class EventListenerRunningContinuationInterceptor(
     override fun <T> interceptContinuation(
         continuation: Continuation<T>
     ): Continuation<T> {
-        // Process with original interceptor
-        val delegate = original?.interceptContinuation(continuation) ?: continuation
-
-        return object : Continuation<T> {
+        val checking = object : Continuation<T> {
             override val context get() = continuation.context
 
             override fun resumeWith(result: Result<T>) {
-                // if the event listener is no longer active, abort the result
-                val result = if (eventListener.running) {
-                    result
-                } else {
-                    Result.failure(EventListenerNotListeningException(eventListener))
+                if (result.isFailure) {
+                    continuation.resumeWith(result)
+                    return
                 }
-                delegate.resumeWith(result)
+
+                // the listener or a requirement of the run may no longer hold, then the result is aborted
+                continuation.resumeWith(
+                    if (!eventListener.running) {
+                        Result.failure(EventListenerNotListeningException(eventListener))
+                    } else {
+                        val broken = try {
+                            continuation.context.activeGuards()?.broken()
+                        } catch (e: Throwable) {
+                            e
+                        }
+                        broken?.let { Result.failure(it) } ?: result
+                    }
+                )
             }
         }
+
+        return original?.interceptContinuation(checking) ?: checking
     }
 }
