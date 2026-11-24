@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import net.ccbluex.liquidbounce.config.gson.apiGson
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.asRequestBody
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.create
 import java.io.File
 
@@ -273,7 +273,7 @@ object MarketplaceApi {
                 .addFormDataPart(
                     "file",
                     thumbnailFile.name,
-                    thumbnailFile.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG),
+                    asRequestBody(thumbnailFile, HttpClient.MediaTypes.IMAGE_PNG),
                 )
                 .build(),
             session.authorization,

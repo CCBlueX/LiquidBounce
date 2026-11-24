@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.api.core
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toRequestBody
 import okhttp3.MediaType
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okio.Buffer
 import okio.BufferedSink
 
@@ -47,4 +47,4 @@ fun Gson.makeRequestBody(data: Any?): RequestBody {
 @JvmOverloads
 fun JsonElement.toRequestBody(gson: Gson = GSON_DEFAULT): RequestBody = gson.makeRequestBody(this)
 
-fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
+fun String.asForm() = toRequestBody(this, HttpClient.MediaTypes.FORM)

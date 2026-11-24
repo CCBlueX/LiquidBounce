@@ -57,8 +57,8 @@ import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.shouldRestartAfterInstall
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toRequestBody
 import net.ccbluex.liquidbounce.utils.io.atomicWrite
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
 import kotlin.io.path.writeBytes
@@ -473,7 +473,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             itemId,
             "config.json",
-            settings.toRequestBody(HttpClient.MediaTypes.OCTET_STREAM),
+            toRequestBody(settings, HttpClient.MediaTypes.OCTET_STREAM),
             version = LiquidBounce.clientVersion,
             changelog = changelog,
             includesBinds = false

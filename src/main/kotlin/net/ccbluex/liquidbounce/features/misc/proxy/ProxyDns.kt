@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 import com.google.common.net.InetAddresses
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.bodyAsJson
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toHttpUrl
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.client.multiplayer.resolver.ServerAddressResolver
 import net.minecraft.client.multiplayer.resolver.ServerRedirectHandler
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import java.net.InetSocketAddress
 import java.util.Optional
@@ -41,7 +41,7 @@ object ProxyDns {
 
     private val logger = clientLogger("ProxyDns")
 
-    private val DOH_URL = "https://cloudflare-dns.com/dns-query".toHttpUrl()
+    private val DOH_URL = toHttpUrl("https://cloudflare-dns.com/dns-query")
     private const val SRV = 33
     private const val DEFAULT_PORT = 25565
 

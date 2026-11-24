@@ -49,6 +49,8 @@ import net.ccbluex.liquidbounce.features.account.AccountService
 import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.asRequestBody
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toRequestBody
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
@@ -59,8 +61,6 @@ import net.minecraft.core.UUIDUtil
 import net.minecraft.world.entity.player.PlayerModelType
 import net.minecraft.world.entity.player.PlayerSkin
 import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.concurrent.CancellationException
@@ -229,11 +229,11 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
 
                 request {
                     uploadSkin(
-                        skinType.type.variant.toRequestBody(HttpClient.MediaTypes.TEXT_PLAIN),
+                        toRequestBody(skinType.type.variant, HttpClient.MediaTypes.TEXT_PLAIN),
                         MultipartBody.Part.createFormData(
                             name = "file",
                             filename = "skin.png",
-                            body = file.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG)
+                            body = asRequestBody(file, HttpClient.MediaTypes.IMAGE_PNG)
                         )
                     )
                 }

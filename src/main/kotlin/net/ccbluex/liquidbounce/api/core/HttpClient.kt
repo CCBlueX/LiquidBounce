@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.apiGson
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
+import net.ccbluex.liquidbounce.utils.client.OkHttpUtils.toMediaType
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
@@ -43,7 +44,6 @@ import okhttp3.Call
 import okhttp3.Dispatcher
 import okhttp3.Headers
 import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -81,19 +81,19 @@ object HttpClient {
 
     object MediaTypes {
         @JvmField
-        val TEXT_PLAIN = "text/plain; charset=utf-8".toMediaType()
+        val TEXT_PLAIN = toMediaType("text/plain; charset=utf-8")
 
         @JvmField
-        val JSON = "application/json; charset=utf-8".toMediaType()
+        val JSON = toMediaType("application/json; charset=utf-8")
 
         @JvmField
-        val FORM = "application/x-www-form-urlencoded".toMediaType()
+        val FORM = toMediaType("application/x-www-form-urlencoded")
 
         @JvmField
-        val IMAGE_PNG = "image/png".toMediaType()
+        val IMAGE_PNG = toMediaType("image/png")
 
         @JvmField
-        val OCTET_STREAM = "application/octet-stream".toMediaType()
+        val OCTET_STREAM = toMediaType("application/octet-stream")
     }
 
     /**
