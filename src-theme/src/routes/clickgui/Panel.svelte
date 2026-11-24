@@ -186,6 +186,30 @@
         }
 
         modulesElement.scrollTop = panelConfig.scrollTop;
+
+        // The GUI scale follows the game window size, which changes the coordinate space of the
+        // ClickGUI. A panel dragged to an edge at one scale can end up outside the visible area
+        // at another, so re-clamp the stored position whenever the viewport or scale changes.
+        let clampFrame = 0;
+        const clampToViewport = () => {
+            cancelAnimationFrame(clampFrame);
+            clampFrame = requestAnimationFrame(() => {
+                const {left, top} = panelConfig;
+                fixPosition();
+                if (panelConfig.left !== left || panelConfig.top !== top) {
+                    void savePanelConfig();
+                }
+            });
+        };
+
+        const unsubscribeScale = scaleFactor.subscribe(clampToViewport);
+        window.addEventListener("resize", clampToViewport);
+
+        return () => {
+            cancelAnimationFrame(clampFrame);
+            unsubscribeScale();
+            window.removeEventListener("resize", clampToViewport);
+        };
     });
 
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
