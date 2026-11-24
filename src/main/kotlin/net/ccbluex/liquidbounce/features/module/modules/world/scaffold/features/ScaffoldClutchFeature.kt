@@ -126,7 +126,7 @@ internal object ScaffoldClutchFeature {
         return null
     }
 
-    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
+    fun hitFor(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
         if (aimsAhead) target?.allowedClick(RotationManager.serverRotation) else target?.verifyClick(rotation)
 
     /**

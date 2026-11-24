@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFi
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.DiagonalYawTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.DirectionTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.EdgePointTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceTargetPositionFactory
@@ -73,7 +72,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.hypot
 import kotlin.math.round
 
-/** Blocks a predicted click has to land inside the edges of its face, see [ScaffoldPlacement.placesInTime]. */
+/** Blocks a predicted click has to land inside the edges of its face, see [ScaffoldPlacement.canPlaceInTime]. */
 private const val FACE_MARGIN = 0.03
 
 /** Ticks ahead a kept look may still place the next block, see [ScaffoldPlacement.findTarget]. */
@@ -151,8 +150,8 @@ internal object ScaffoldPlacement {
             PlayerLocationOnPlacement(
                 position = predictedPos,
                 pose = predictedPose,
-                // Nearest to where scaffold aims rather than to a view still turning there
-                rotation = ModuleScaffold.aim ?: RotationManager.serverRotation,
+                // Nearest to the held look, or to where scaffold aims rather than to a view still turning there
+                rotation = heldLook ?: ModuleScaffold.aim ?: RotationManager.serverRotation,
             ),
         )
         val needed = getTargetedPosition(predictedPos.toBlockPos())
@@ -170,7 +169,13 @@ internal object ScaffoldPlacement {
         } else {
             Direction.Plane.HORIZONTAL.map(needed::relative) + best.placedBlock
         }
-        val now = placementTargetClickedBy(look, player.eyePosition, bestStack, positions)
+        // A hand rests a little off the look it holds, and the view is what clicks
+        val clicking = if (bridging.shouldHoldLook && !ModuleScaffold.isLiningUp()) {
+            RotationManager.currentRotation ?: player.rotation
+        } else {
+            look
+        }
+        val now = placementTargetClickedBy(clicking, player.eyePosition, bestStack, positions)
             ?.takeIf { isValidCrosshairTarget(it.blockHitResult) }
         // The velocity keeps the input's push while an edge holds the player back, the position does not move
         val moved = hypot(player.x - player.xo, player.z - player.zo)
@@ -180,7 +185,7 @@ internal object ScaffoldPlacement {
         } else {
             0
         }
-        keptLook = look.takeIf { now != null || keepsLook(look, bestStack, positions) }
+        keptLook = look.takeIf { now != null || shouldKeepLook(look, bestStack, positions) }
         return now ?: best
     }
 
@@ -189,7 +194,7 @@ internal object ScaffoldPlacement {
      * where scaffold aims already for the modes aiming nearest to it. Modes aiming at a point have none.
      */
     private fun recommendedLook(): Rotation? = when {
-        bridging.holdsLook -> heldLook
+        bridging.shouldHoldLook -> heldLook
         aimMode == AimMode.STABILIZED || aimMode == AimMode.NEAREST_ROTATION -> {
             val view = RotationManager.currentRotation ?: player.rotation
             // Once the hand has settled near the aim, the view on the mouse grid is what clicks, and it may just miss
@@ -200,14 +205,14 @@ internal object ScaffoldPlacement {
 
     /**
      * Whether [look] stays although it does not place right now. A held look meets the face at the latest where
-     * SafeWalk stops the player, so it stays on the ground until the player stood there for [STALL_TICKS]; in the air
-     * it only reaches the row the player left. Any other look stays only while it places one of the next ticks.
+     * SafeWalk stops the player, so it stays on the ground until the player stood there for [STALL_TICKS], and through
+     * a hop that places nothing anyway. Any other look stays only while it places one of the next ticks.
      */
-    private fun keepsLook(look: Rotation, stack: ItemStack, positions: List<BlockPos>) =
-        if (bridging.holdsLook) {
-            player.onGround() && stalledTicks < STALL_TICKS
+    private fun shouldKeepLook(look: Rotation, stack: ItemStack, positions: List<BlockPos>) =
+        if (bridging.shouldHoldLook) {
+            (player.onGround() || ModuleScaffold.isHopping) && stalledTicks < STALL_TICKS
         } else {
-            placesSoon(look, stack, positions)
+            canPlaceSoon(look, stack, positions)
         }
 
     /**
@@ -215,7 +220,7 @@ internal object ScaffoldPlacement {
      * while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [safely] only
      * counts a click that lands clear of the face's edges and leaves the player standing on a block.
      */
-    private fun placesSoon(
+    private fun canPlaceSoon(
         rotation: Rotation,
         stack: ItemStack,
         positions: List<BlockPos>,
@@ -229,10 +234,10 @@ internal object ScaffoldPlacement {
             if (!simulation.onGround()) {
                 return false
             }
-            val eyes = simulation.position().add(0.0, player.eyeHeight.toDouble(), 0.0)
-            val placement = placementTargetClickedBy(rotation, eyes, stack, positions)
+            val placement = placementTargetClickedBy(rotation, simulation.eyePosition, stack, positions)
+                ?.takeIf { isValidCrosshairTarget(it.blockHitResult) }
             if (placement != null &&
-                (!safely || placement.isWellInsideFace() && standsAt(simulation.position(), placement.placedBlock))
+                (!safely || placement.isWellInsideFace() && canStandAt(simulation.position(), placement.placedBlock))
             ) {
                 return true
             }
@@ -244,7 +249,7 @@ internal object ScaffoldPlacement {
      * Whether the player stands on a block at [position] once [placed] is down. Along a diagonal a held look often
      * places the block beside the player's way first, and the one under the player would come a tick too late.
      */
-    private fun standsAt(position: Vec3, placed: BlockPos): Boolean {
+    private fun canStandAt(position: Vec3, placed: BlockPos): Boolean {
         if (!player.wouldBeCloseToFallOff(position)) {
             return true
         }
@@ -257,23 +262,23 @@ internal object ScaffoldPlacement {
      * view that reached the aim stays the same over those ticks. A view resting near the held look barely moves,
      * so its next tick counts as well.
      */
-    fun placesInTime(target: BlockPlacementTarget, rotation: Rotation): Boolean {
+    fun canPlaceInTime(target: BlockPlacementTarget, rotation: Rotation): Boolean {
         val held = ModuleScaffold.aim?.let { aim -> rotation.rotationDeltaLengthTo(aim) <= RotationUtil.gcd } == true
         val ticks = when {
             held -> HOLD_TICKS
-            bridging.holdsLook -> 1
+            bridging.shouldHoldLook -> 1
             else -> return false
         }
         // Built by hand: asking for SafeWalk here would ask scaffold again
         val input = SimulatedInput(
             DirectionalInput(player.input).toInput(
-                // Scaffold holds a jump back until the bridge has started
-                jump = player.input.keyPresses.jump && ModuleScaffold.hasStarted,
+                // Scaffold leaves a jump off the bridge out while no block can go down in the air
+                jump = player.input.keyPresses.jump && ModuleScaffold.canPlaceInAir,
                 // The held key alone does not sprint: walking against the view, movement correction keeps it off
                 sprint = player.isSprinting,
             ).toAgent()
         )
-        return placesSoon(rotation, stack, listOf(target.placedBlock), input, ticks, safely = true)
+        return canPlaceSoon(rotation, stack, listOf(target.placedBlock), input, ticks, safely = true)
     }
 
     fun rotation(target: BlockPlacementTarget?): Rotation? {
@@ -303,8 +308,8 @@ internal object ScaffoldPlacement {
      * Whether scaffold keeps the look the bridging holds, which is where to look exactly. A kept aim of the other modes
      * is only somewhere on the face, and the hand may rest anywhere it still meets it.
      */
-    val holdsBridgingLook
-        get() = keptLook != null && bridging.holdsLook
+    val isHoldingLook
+        get() = keptLook != null && bridging.shouldHoldLook
 
     /** What a look has to meet to place [target]: the face it clicks. */
     fun surface(target: BlockPlacementTarget) = target.surface(throughWalls)
@@ -313,14 +318,14 @@ internal object ScaffoldPlacement {
      * The hit a click with [rotation] places [target] with. Through blocks the ray never gets there, so the planned
      * hit stands in for it once [rotation] meets [surface].
      */
-    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+    fun hitFor(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
         target ?: return null
         return target.verifyClick(rotation)
             ?: target.blockHitResult.takeIf { throughWalls && surface(target).isHitBy(player.eyePosition, rotation) }
     }
 
-    private fun facePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = if (bridging.holdsLook) {
-        heldLook?.let(::DirectionTargetPositionFactory) ?: NearestRotationTargetPositionFactory
+    private fun facePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = if (bridging.shouldHoldLook) {
+        NearestRotationTargetPositionFactory
     } else {
         when (aimMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
@@ -336,15 +341,15 @@ internal object ScaffoldPlacement {
 
 }
 
-    /**
-     * Whether the predicted click lands at least [FACE_MARGIN] inside the edges of its face. A prediction that only
-     * grazes the face often misses for real, and the player walks off without SafeWalk stepping in.
-     */
-    private fun BlockPlacementTarget.isWellInsideFace(): Boolean {
-        val bounds = interactedBlockPos.outlineShape.bounds()
-        val local = blockHitResult.location.subtract(Vec3.atLowerCornerOf(interactedBlockPos))
-        return Direction.Axis.entries.all { axis ->
-            axis == direction.axis ||
-                local.get(axis) in bounds.min(axis) + FACE_MARGIN..bounds.max(axis) - FACE_MARGIN
-        }
+/**
+ * Whether the predicted click lands at least [FACE_MARGIN] inside the edges of its face. A prediction that only
+ * grazes the face often misses for real, and the player walks off without SafeWalk stepping in.
+ */
+private fun BlockPlacementTarget.isWellInsideFace(): Boolean {
+    val bounds = interactedBlockPos.outlineShape.bounds()
+    val local = blockHitResult.location.subtract(Vec3.atLowerCornerOf(interactedBlockPos))
+    return Direction.Axis.entries.all { axis ->
+        axis == direction.axis ||
+            local.get(axis) in bounds.min(axis) + FACE_MARGIN..bounds.max(axis) - FACE_MARGIN
     }
+}

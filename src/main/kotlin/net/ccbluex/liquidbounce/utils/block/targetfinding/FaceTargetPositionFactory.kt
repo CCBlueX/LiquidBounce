@@ -140,24 +140,6 @@ object NearestRotationTargetPositionFactory : FaceTargetPositionFactory {
 }
 
 /**
- * The point on the face nearest to the line [look] makes from the eyes: where that look meets the face, if it does.
- * A look that stays the same while the player moves along keeps meeting the faces of a row at the same spot.
- */
-class DirectionTargetPositionFactory(private val look: Rotation) : FaceTargetPositionFactory {
-
-    override fun producePositionOnFace(
-        face: AlignedFace,
-        targetPos: BlockPos,
-        playerLocation: PlayerLocationOnPlacement
-    ): Vec3 = NearestRotationTargetPositionFactory.aimAtNearestPointToRotationLine(
-        targetPos,
-        trimFace(face),
-        playerLocation.copy(rotation = look),
-    )
-
-}
-
-/**
  * Always targets the point with the nearest rotation angle to the current rotation angle.
  * If you have questions, you have to ask @superblaubeere27 because I am too stupid to explain this without a picture.
  */

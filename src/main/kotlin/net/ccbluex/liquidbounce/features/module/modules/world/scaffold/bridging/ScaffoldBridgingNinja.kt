@@ -26,7 +26,7 @@ import net.minecraft.world.phys.Vec3
  */
 object ScaffoldBridgingNinja : ScaffoldBridging("Ninja", "Sneak") {
 
-    override val holdsLook: Boolean
+    override val shouldHoldLook: Boolean
         get() = true
 
     override fun look(position: Vec3): Rotation? {

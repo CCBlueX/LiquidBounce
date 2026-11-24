@@ -39,15 +39,18 @@ sealed class ScaffoldBridging(name: String, safeWalk: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = bridging
 
+    // An edge is only sneaked at while the view lines up, and where another action would need a block placed in the air
     @Suppress("unused")
     private val safeWalkMode = modes<Mode>(this, "SafeWalk", { modes -> modes.indexOfFirst { it.name == safeWalk } }) {
-        ModuleSafeWalk.safeWalkChoices(it, ModuleScaffold::missesNextBlock, ModuleScaffold::linesUp) {
-            ModuleScaffold.blockCount
-        }
+        ModuleSafeWalk.safeWalkChoices(
+            it,
+            ModuleScaffold::shouldStopAtEdge,
+            { ModuleScaffold.isLiningUp() || !ModuleScaffold.canPlaceInAir },
+        ) { ModuleScaffold.blockCount }
     }
 
     /** Whether this bridging holds [look] rather than aiming at the face, even before it has one. */
-    open val holdsLook: Boolean
+    open val shouldHoldLook: Boolean
         get() = false
 
     /** The look to hold while the player stands at [position], null to aim at the face. */

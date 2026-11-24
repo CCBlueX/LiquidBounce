@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -32,19 +34,19 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 /**
  * Jumps off the end of the row while moving and only aims at the face of the next block (the way
  * [ScaffoldBridgingNormal] does by default) once the jump carried the player off it, placing that row rather than one
- * under the jump unless SameY says otherwise. Until the first block is down it bridges like Normal, so the aim starts
- * out on the face.
+ * under the jump unless SameY has it build up. While no block [can go down in the air][ModuleScaffold.canPlaceInAir],
+ * it bridges like Normal.
  */
 object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
     val doNotAim: Boolean
-        get() = ModuleScaffold.hasStarted &&
+        get() = ModuleScaffold.canPlaceInAir &&
                 player.airTicks <= straightTicks &&
                 ticksUntilJump >= jumpTicks &&
                 !(ModuleScaffold.isTowering && aimOnTower)
 
     val isTellyBridging: Boolean
-        get() = ticksUntilJump >= jumpTicks && player.moving && running
+        get() = ticksUntilJump >= jumpTicks && player.moving && running && ModuleScaffold.canPlaceInAir
 
     private var ticksUntilJump = 0
 
@@ -53,6 +55,12 @@ object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
     private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
     private val aimOnTower by boolean("AimOnTower", true)
     private var jumpTicks = jumpTicksOpt.random()
+
+    override fun enable() {
+        if (!ModuleScaffold.hasInstantAim) {
+            chat(warning(ModuleScaffold.message("telly.slowAim")), ModuleScaffold)
+        }
+    }
 
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent> {
@@ -63,7 +71,7 @@ object ScaffoldBridgingTelly : ScaffoldBridging("Telly", "Sneak") {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
-        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.onGround()) {
+        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.onGround() || !ModuleScaffold.canPlaceInAir) {
             return@handler
         }
 

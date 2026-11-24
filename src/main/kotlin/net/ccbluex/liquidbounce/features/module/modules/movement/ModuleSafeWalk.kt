@@ -59,30 +59,33 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
     private val modes = choices("Mode", 1) { safeWalkChoices(it) } // Default safe mode
 
     /**
-     * [stops] tells the modes whether an edge has to stop the player at all, Scaffold says no while it places the
-     * next block in time. A caller placing blocks passes its [blockCount] and gets [Ledge] as well, which only sneaks
-     * while [sneaksOnly].
+     * [shouldStop] tells the modes whether an edge has to stop the player at all, Scaffold says no while it places
+     * the next block in time. A caller placing blocks passes its [blockCount] and gets [Ledge] as well, which only
+     * sneaks while [shouldOnlySneak].
      */
     fun safeWalkChoices(
         mode: ModeValueGroup<Mode>,
-        stops: () -> Boolean = { true },
-        sneaksOnly: () -> Boolean = { false },
+        shouldStop: () -> Boolean = { true },
+        shouldOnlySneak: () -> Boolean = { false },
         blockCount: (() -> Int)? = null,
     ): Array<Mode> {
         val choices = arrayOf(
             NoneMode(mode),
-            Safe(mode, stops),
-            OnEdge(mode, stops),
-            Sneak(mode, stops),
+            Safe(mode, shouldStop),
+            OnEdge(mode, shouldStop),
+            Sneak(mode, shouldStop),
         )
-        return if (blockCount != null) choices + Ledge(mode, stops, sneaksOnly, blockCount) else choices
+        return if (blockCount != null) choices + Ledge(mode, shouldStop, shouldOnlySneak, blockCount) else choices
     }
 
-    private class Safe(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Safe") {
+    private class Safe(
+        override val parent: ModeValueGroup<Mode>,
+        private val shouldStop: () -> Boolean,
+    ) : Mode("Safe") {
 
         @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
-            event.isSafeWalk = stops()
+            event.isSafeWalk = shouldStop()
         }
 
     }
@@ -90,13 +93,18 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
     /**
      * Sneaks at an edge. Anticheats simulate that, while [Safe] holds the player back without sneaking.
      */
-    private class Sneak(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("Sneak") {
+    private class Sneak(
+        override val parent: ModeValueGroup<Mode>,
+        private val shouldStop: () -> Boolean,
+    ) : Mode("Sneak") {
 
         private var sneaked = false
 
         @Suppress("unused")
         val inputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
-            val sneaks = player.onGround() && player.isCloseToEdge(event.directionalInput) && stops()
+            // A jump off the edge is the player's call, and a sneak would only shorten it
+            val sneaks = player.onGround() && !event.jump && shouldStop() &&
+                player.isCloseToEdge(event.directionalInput)
             // One tick longer, so it doesn't stand up on the edge it just stopped at
             if (sneaks || sneaked) {
                 event.sneak = true
@@ -112,13 +120,14 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
     }
 
     /**
-     * Walks over the edge as if nothing was there and only acts on the last tick before leaving it, when [stops]
-     * says the block won't go down in time: one of the [actions], picked at random, or a sneak while [sneaksOnly].
+     * Walks over the edge as if nothing was there and only acts on the last tick before leaving it, when [shouldStop]
+     * says the block won't go down in time: one of the [actions], picked at random, or a sneak while
+     * [shouldOnlySneak]. A player who jumps off the edge is left alone.
      */
     private class Ledge(
         override val parent: ModeValueGroup<Mode>,
-        private val stops: () -> Boolean,
-        private val sneaksOnly: () -> Boolean,
+        private val shouldStop: () -> Boolean,
+        private val shouldOnlySneak: () -> Boolean,
         private val blockCount: () -> Int,
     ) : Mode("Ledge") {
 
@@ -146,12 +155,12 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
                 return@handler
             }
 
-            val leaves = player.onGround() && event.directionalInput.isMoving && leavesEdge(event)
-            if (!leaves || !stops()) {
+            val leaves = player.onGround() && !event.jump && event.directionalInput.isMoving && leavesEdge(event)
+            if (!leaves || !shouldStop()) {
                 return@handler
             }
 
-            val action = if (sneaksOnly() || blockCount() < sneakBelowBlocks) Action.SNEAK else actions.random()
+            val action = if (shouldOnlySneak() || blockCount() < sneakBelowBlocks) Action.SNEAK else actions.random()
             debugParameter("Action") { action }
             when (action) {
                 Action.JUMP -> event.jump = true
@@ -182,7 +191,10 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
 
     }
 
-    private class OnEdge(override val parent: ModeValueGroup<Mode>, private val stops: () -> Boolean) : Mode("OnEdge") {
+    private class OnEdge(
+        override val parent: ModeValueGroup<Mode>,
+        private val shouldStop: () -> Boolean,
+    ) : Mode("OnEdge") {
 
         private val edgeDistance = floatRange("Distance", 0.1f..0.15f, 0.05f..0.5f).asRefreshable()
         private var center: Vec3? = null
@@ -211,7 +223,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            val shouldBeActive = player.onGround() && !event.sneak && stops()
+            val shouldBeActive = player.onGround() && !event.sneak && shouldStop()
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,

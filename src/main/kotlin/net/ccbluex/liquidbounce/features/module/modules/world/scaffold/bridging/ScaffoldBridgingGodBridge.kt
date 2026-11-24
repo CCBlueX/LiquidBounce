@@ -35,7 +35,7 @@ object ScaffoldBridgingGodBridge : ScaffoldBridging("GodBridge", "Ledge") {
     /** 1 or -1: the side of straight back the look turns to. */
     private var side = 1f
 
-    override val holdsLook: Boolean
+    override val shouldHoldLook: Boolean
         get() = true
 
     fun reset() {

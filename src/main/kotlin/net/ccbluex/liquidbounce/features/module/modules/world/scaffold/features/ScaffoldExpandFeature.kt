@@ -79,7 +79,7 @@ object ScaffoldExpandFeature : ToggleableValueGroup(ModuleScaffold, "Expand", fa
     fun surface(target: BlockPlacementTarget) = Surface(AABB(target.placedBlock), throughWalls = true)
 
     /** A block ahead is behind others, so the planned hit stands in once the look meets [surface]. */
-    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+    fun hitFor(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
         target ?: return null
         return target.verifyClick(rotation)
             ?: target.blockHitResult.takeIf { surface(target).isHitBy(player.eyePosition, rotation) }

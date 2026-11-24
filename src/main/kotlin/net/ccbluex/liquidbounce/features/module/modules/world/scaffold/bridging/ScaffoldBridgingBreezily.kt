@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
-import kotlin.math.floor
 
 /**
  * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a straight
@@ -43,7 +42,7 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
     )
 
-    override val holdsLook: Boolean
+    override val shouldHoldLook: Boolean
         get() = true
 
     override fun look(position: Vec3): Rotation? = ScaffoldBridgingNinja.look(position)
@@ -64,8 +63,10 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
             return@handler
         }
 
-        val modX = player.x - floor(player.x)
-        val modZ = player.z - floor(player.z)
+        // The row is the block that carries the player, which at the side of a bridge is not the one under its middle
+        val row = player.onPos
+        val modX = player.x - row.x
+        val modZ = player.z - row.z
 
         val ma = 1 - currentEdgeDistanceRandom
         var currentSideways = 0f
