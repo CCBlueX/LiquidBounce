@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {Component} from "svelte";
     import {fly} from "svelte/transition";
+    import {scaleFactor} from "../clickgui_store";
 
     type Tab = {
         title: string;
@@ -16,7 +17,11 @@
 </script>
 
 <div class="tabs" transition:fly={{duration: 150, y: -15}}>
-    <div class="available-tabs">
+    <!-- Scaled like ScaledClickGuiContent, so it keeps its distance to the search bar below it -->
+    <div
+            class="available-tabs"
+            style="top: {$scaleFactor * 7.5}px; transform: translateX(-50%) scale({$scaleFactor * 50}%);"
+    >
         {#each tabs as tab, index (tab.title)}
             <button
                     class="tab-button"
@@ -40,9 +45,8 @@
 
   .available-tabs {
     position: fixed;
-    top: 15px;
     left: 50%;
-    transform: translateX(-50%);
+    transform-origin: top;
     display: flex;
     gap: 5px;
     padding: 6px;
