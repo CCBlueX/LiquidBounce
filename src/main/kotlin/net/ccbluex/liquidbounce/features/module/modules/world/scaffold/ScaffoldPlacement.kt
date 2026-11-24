@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -65,6 +66,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -210,8 +212,8 @@ internal object ScaffoldPlacement {
 
     /**
      * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [ticks] ticks
-     * while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [wellInside]
-     * only counts clicks that land clear of the face's edges.
+     * while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [safely] only
+     * counts a click that lands clear of the face's edges and leaves the player standing on a block.
      */
     private fun placesSoon(
         rotation: Rotation,
@@ -219,7 +221,7 @@ internal object ScaffoldPlacement {
         positions: List<BlockPos>,
         input: SimulatedInput = SimulatedInput.fromClientPlayer(DirectionalInput(player.input)),
         ticks: Int = HOLD_TICKS,
-        wellInside: Boolean = false,
+        safely: Boolean = false,
     ): Boolean {
         val simulation = SimulatedPlayer.fromClientPlayer(input)
         repeat(ticks) {
@@ -229,11 +231,25 @@ internal object ScaffoldPlacement {
             }
             val eyes = simulation.position().add(0.0, player.eyeHeight.toDouble(), 0.0)
             val placement = placementTargetClickedBy(rotation, eyes, stack, positions)
-            if (placement != null && (!wellInside || placement.isWellInsideFace())) {
+            if (placement != null &&
+                (!safely || placement.isWellInsideFace() && standsAt(simulation.position(), placement.placedBlock))
+            ) {
                 return true
             }
         }
         return false
+    }
+
+    /**
+     * Whether the player stands on a block at [position] once [placed] is down. Along a diagonal a held look often
+     * places the block beside the player's way first, and the one under the player would come a tick too late.
+     */
+    private fun standsAt(position: Vec3, placed: BlockPos): Boolean {
+        if (!player.wouldBeCloseToFallOff(position)) {
+            return true
+        }
+        val feet = player.dimensions.makeBoundingBox(position).inflate(-0.05, 0.0, -0.05).move(0.0, -0.5, 0.0)
+        return feet.intersects(AABB(placed))
     }
 
     /**
@@ -257,7 +273,7 @@ internal object ScaffoldPlacement {
                 sprint = player.isSprinting,
             ).toAgent()
         )
-        return placesSoon(rotation, stack, listOf(target.placedBlock), input, ticks, wellInside = true)
+        return placesSoon(rotation, stack, listOf(target.placedBlock), input, ticks, safely = true)
     }
 
     fun rotation(target: BlockPlacementTarget?): Rotation? {
