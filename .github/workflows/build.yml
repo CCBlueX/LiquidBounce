@@ -257,8 +257,8 @@ jobs:
     name: gametest (${{ matrix.run }})
     runs-on: ubuntu-latest
     needs: extract-versions
-    # A run with the navigation tests takes about 15 minutes; the Gradle task gives up after 30
-    timeout-minutes: 40
+    # A run with the navigation tests takes about 27 minutes; the Gradle task gives up after 45
+    timeout-minutes: 55
     if: github.event_name == 'pull_request'
     strategy:
       fail-fast: false
