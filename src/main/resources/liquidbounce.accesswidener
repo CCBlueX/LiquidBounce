@@ -191,3 +191,5 @@ accessible field net/minecraft/client/sounds/SoundManager registry Ljava/util/Ma
 accessible field net/minecraft/client/sounds/SoundManager soundCache Ljava/util/Map;
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I
+
+accessible field net/minecraft/server/packs/resources/ReloadableResourceManager listeners Ljava/util/List;

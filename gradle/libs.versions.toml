@@ -22,6 +22,9 @@ gametest-harness = "2.0.0+26.3"
 minecraft-agent = "1.0.0-SNAPSHOT"
 minecraft-agent-26-3 = "1.0.0+26.3-SNAPSHOT"
 
+# https://github.com/CCBlueX/ModLoader
+modloader = "0.1.0-SNAPSHOT"
+
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # https://github.com/CCBlueX/axochat/tree/main/client
@@ -100,6 +103,7 @@ gametest-harness = { group = "net.ccbluex", name = "gametest-harness", version.r
 minecraft-agent-common = { group = "net.ccbluex", name = "minecraft-agent-common", version.ref = "minecraft-agent" }
 minecraft-agent-adapter = { group = "net.ccbluex", name = "minecraft-agent-adapter", version.ref = "minecraft-agent-26-3" }
 minecraft-agent-fabric = { group = "net.ccbluex", name = "minecraft-agent-fabric", version.ref = "minecraft-agent-26-3" }
+modloader-api = { group = "net.ccbluex", name = "modloader-api", version.ref = "modloader" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }

@@ -206,17 +206,19 @@ object LiquidBounce : EventListener {
     fun resourceToString(path: String): String =
         resource(path).use { it.readText() }
 
+    private var initialization: CompletableFuture<Void?>? = null
+
     /**
      * Initializes the client, called when
-     * we reached the last stage of the splash screen.
+     * we reached the last stage of the splash screen. Later calls get the same initialization.
      *
      * The thread should be the main render thread.
      */
     @OptIn(InternalCoroutinesApi::class)
-    private fun initializeClient(
+    internal fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
-    ): CompletableFuture<Void?> = CoroutineScope(
+    ): CompletableFuture<Void?> = initialization ?: CoroutineScope(
         renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
     ).future<Void?> {
         if (isInitialized) {
@@ -262,7 +264,7 @@ object LiquidBounce : EventListener {
         null
     }.exceptionally { throwable ->
         ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
-    }
+    }.also { initialization = it }
 
     /**
      * Initializes managers for Event Listener registration.

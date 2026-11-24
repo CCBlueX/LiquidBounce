@@ -232,6 +232,9 @@ dependencies {
     compileOnly(libs.exploitPreventer.api)
     localRuntime(libs.exploitPreventer)
 
+    // ModLoader, which loads the client into a running game
+    compileOnly(libs.modloader.api)
+
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
 

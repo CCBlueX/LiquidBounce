@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -164,6 +165,11 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
         tree(overlay.browserSettings)
+        // Already in a world when the browser comes up, no screen change follows that would open the overlay.
+        // Before the client finished initializing it would open with what the page reads too early.
+        if (LiquidBounce.isInitialized) {
+            updateOverlayVisibility(mc.gui.screen())
+        }
     }
 
     @Suppress("unused")
