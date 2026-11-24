@@ -42,6 +42,7 @@ import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Dispatcher
 import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -54,11 +55,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.File
 import java.io.IOException
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.Proxy
+import java.net.Socket
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
 
 val renderScope = CoroutineScope(
     Dispatchers.Main + SupervisorJob() + CommonCoroutineExceptionHandler.Default
@@ -78,6 +83,39 @@ object HttpClient {
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
     private fun String.isLocalHost() = this == "localhost" || this == "127.0.0.1"
+
+    /**
+     * OkHttp opens direct-route connections via [SocketFactory.createSocket], which by default
+     * returns a plain [Socket]. Such a socket still honours the JVM-wide `socksProxyHost` system
+     * property, so if proxy software sets it, even requests to localhost (for example the interop
+     * server that serves theme resources) are routed through the SOCKS proxy and time out, which
+     * crashes the client on startup. Force sockets to stay direct on creation.
+     */
+    private object NoProxySocketFactory : SocketFactory() {
+        override fun createSocket(): Socket = Socket(Proxy.NO_PROXY)
+
+        override fun createSocket(host: String, port: Int): Socket =
+            Socket(Proxy.NO_PROXY).apply { connect(InetSocketAddress(host, port)) }
+
+        override fun createSocket(host: String, port: Int, localAddress: InetAddress, localPort: Int): Socket =
+            Socket(Proxy.NO_PROXY).apply {
+                bind(InetSocketAddress(localAddress, localPort))
+                connect(InetSocketAddress(host, port))
+            }
+
+        override fun createSocket(address: InetAddress, port: Int): Socket =
+            Socket(Proxy.NO_PROXY).apply { connect(InetSocketAddress(address, port)) }
+
+        override fun createSocket(
+            address: InetAddress,
+            port: Int,
+            localAddress: InetAddress,
+            localPort: Int
+        ): Socket = Socket(Proxy.NO_PROXY).apply {
+            bind(InetSocketAddress(localAddress, localPort))
+            connect(InetSocketAddress(address, port))
+        }
+    }
 
     object MediaTypes {
         @JvmField
@@ -175,6 +213,20 @@ object HttpClient {
         )
         .build()
 
+    /**
+     * Client for local interop requests. Unlike [client], its sockets explicitly bypass the
+     * JVM-wide SOCKS proxy, which proxy software may set and which otherwise also captures
+     * connections to localhost. External requests keep using [client] and are unaffected.
+     */
+    @get:JvmStatic
+    val localhostClient = client.newBuilder()
+        .socketFactory(NoProxySocketFactory)
+        .build()
+
+    /** Choose the local client only for loopback hosts; all other requests keep their behaviour. */
+    fun clientFor(url: String): OkHttpClient =
+        if (url.toHttpUrl().host.isLocalHost()) localhostClient else client
+
     @get:JvmStatic
     val mojangApiClient = MojangApiClient.Builder()
         .gson(interopGson)
@@ -198,10 +250,12 @@ object HttpClient {
             .header(HttpHeaders.UserAgent, agent)
             .build()
 
+        val selectedClient = clientFor(url)
+
         return if (progressListener == null) {
-            client.newCall(request).executeAsync()
+            selectedClient.newCall(request).executeAsync()
         } else {
-            client.newBuilder()
+            selectedClient.newBuilder()
                 .addNetworkInterceptor(OkHttpProgressInterceptor(progressListener))
                 .build()
                 .newCall(request).executeAsync()
@@ -235,7 +289,7 @@ enum class HttpMethod {
  */
 internal fun apiRetrofit(baseUrl: String): Retrofit = Retrofit.Builder()
     .baseUrl(if (baseUrl.endsWith('/')) baseUrl else "$baseUrl/")
-    .callFactory(HttpClient.client)
+    .callFactory(HttpClient.clientFor(baseUrl))
     .addConverterFactory(ScalarsConverterFactory.create())
     .addConverterFactory(BufferConverterFactory)
     .addConverterFactory(NativeImageConverterFactory)
