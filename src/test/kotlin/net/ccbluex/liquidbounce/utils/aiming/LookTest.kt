@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.Guards
 import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -57,7 +58,7 @@ class LookTest {
 
     private fun yawTarget(yaw: Float) = RotationTarget(yaw, null)
 
-    private fun RotationTarget.near(going: Rotation) = going.takeIf { kotlin.math.abs(it.yaw - yaw!!) < 1f }
+    private fun RotationTarget.near(going: Rotation) = going.takeIf { abs(it.yaw - yaw!!) < 1f }
 
     @Test
     fun `the code after the look runs within the update of the tick the rotation meets the target`() =
