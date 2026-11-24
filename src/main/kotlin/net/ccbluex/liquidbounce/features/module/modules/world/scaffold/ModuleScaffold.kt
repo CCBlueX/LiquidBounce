@@ -79,6 +79,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -123,6 +124,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.round
 
 /**
@@ -477,6 +479,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 rotation,
                 considerInventory = considerInventory,
                 surface = currentTarget?.let(::surface),
+                tolerance = if (ScaffoldPlacement.holdsBridgingLook) HELD_LOOK_TOLERANCE else 0f,
             )
         }) { going ->
             val target = currentTarget
@@ -648,8 +651,15 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     internal fun linesUp(): Boolean {
         val look = ScaffoldPlacement.heldLook?.takeUnless { expanding } ?: return false
         val view = RotationManager.currentRotation ?: player.rotation
-        return view.rotationDeltaLengthTo(look) > RotationUtil.gcd
+        val margin = max(HELD_LOOK_TOLERANCE, RotationUtil.gcd.toFloat())
+        return abs(angleDifference(view.yaw, look.yaw)) > margin || abs(view.pitch - look.pitch) > margin
     }
+
+    /**
+     * Degrees a hand may rest off the held look. Ending a turn exactly on a 45 degree angle is what Intave's placement
+     * analysis reads as a snap, and the look still places from this far off.
+     */
+    private const val HELD_LOOK_TOLERANCE = 1.5f
 
     @Suppress("unused")
     private val timerHandler = handler<GameTickEvent> {
