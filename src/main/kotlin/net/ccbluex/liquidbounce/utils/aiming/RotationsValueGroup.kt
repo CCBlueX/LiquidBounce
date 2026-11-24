@@ -65,7 +65,6 @@ open class RotationsValueGroup(
      * A target with these settings; leave out the axis the module does not care about.
      */
     @AddonApi
-    @JvmOverloads
     @Suppress("LongParameterList")
     fun toRotationTarget(
         yaw: Float? = null,
@@ -87,9 +86,19 @@ open class RotationsValueGroup(
     )
 
     /**
-     * Ticks it takes at least to turn from the rotation the server has to [rotation], a goal of [kind].
+     * Ticks it takes about to turn from [from], by default the rotation the server has, to [rotation], a goal of
+     * [kind].
      */
-    fun calculateTicks(rotation: Rotation, kind: AimGoal.Kind = AimGoal.Kind.BLOCK) =
-        aim.activeMode.ticksToReach(RotationManager.actualServerRotation, rotation, kind)
+    fun calculateTicks(
+        rotation: Rotation,
+        kind: AimGoal.Kind = AimGoal.Kind.BLOCK,
+        from: Rotation = RotationManager.actualServerRotation,
+    ) = aim.activeMode.ticksToReach(from, AimGoal(rotation, 0f, 0f, false, kind))
+
+    /** Ticks it takes about to turn from the rotation the server has onto [target], as large as it is. */
+    fun calculateTicks(target: RotationTarget): Int {
+        val from = RotationManager.actualServerRotation
+        return target.aim?.ticksToReach(from, RotationManager.aimGoal(from, target)) ?: 0
+    }
 
 }

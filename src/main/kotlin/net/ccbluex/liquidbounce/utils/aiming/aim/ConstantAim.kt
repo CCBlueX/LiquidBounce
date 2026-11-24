@@ -40,8 +40,8 @@ import kotlin.math.min
  */
 class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("Linear")) {
 
-    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0f..180f)
-    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0f..180f)
+    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0f..180f, "°/tick")
+    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0f..180f, "°/tick")
     private val easeIn by enumChoice("In", Easing.LINEAR, CURVES)
     private val easeOut by enumChoice("Out", Easing.LINEAR, CURVES)
     private val dynamic = tree(Dynamic())
@@ -53,34 +53,29 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
      */
     private inner class Dynamic : ToggleableValueGroup(this, "Dynamic", false) {
         /** Left for the smallest turns; from 90 degrees on a turn goes at full speed. */
-        private val smallTurns by float("Angle", 0.4f, 0.05f..1f)
+        private val smallTurns by float("Angle", 0.4f, 0.05f..1f, "x")
 
         /** Left for a target 6 or more blocks away; up to 3 blocks it goes at full speed. */
-        private val farTargets by float("Distance", 0.6f, 0.05f..1f)
+        private val farTargets by float("Distance", 0.6f, 0.05f..1f, "x")
 
         /** Left while the view already meets the target. */
-        private val onTarget by float("OnTarget", 0.3f, 0.05f..1f)
+        private val onTarget by float("OnTarget", 0.3f, 0.05f..1f, "x")
 
-        /** The share of the turn speeds a turn of [degrees] onto [goal] may use, without what only the goal tells. */
-        fun share(degrees: Float, goal: AimGoal?): Float {
+        /** The share of the turn speeds a turn of [degrees] onto [goal] may use. */
+        fun share(degrees: Float, goal: AimGoal): Float {
             if (!enabled) {
                 return 1f
             }
 
-            var share = Mth.lerp(min(degrees / 90f, 1f), smallTurns, 1f)
-            if (goal != null) {
-                share *= Mth.lerp(((goal.distance - 3f) / 3f).coerceIn(0f, 1f), 1f, farTargets)
-                if (goal.reached) {
-                    share *= onTarget
-                }
-            }
-            return share
+            val share = Mth.lerp(min(degrees / 90f, 1f), smallTurns, 1f) *
+                Mth.lerp(((goal.distance - 3f) / 3f).coerceIn(0f, 1f), 1f, farTargets)
+            return if (goal.isReached) share * onTarget else share
         }
     }
 
     /**
      * One movement from [start] to the goal in [ticks] ticks, with at most [yawSpeed] and [pitchSpeed] degrees a tick.
-     * Its [pace] is the average step; [reached] whether the view met the target when it was planned.
+     * Its [pace] is the average step; [isReached] whether the view met the target when it was planned.
      */
     private inner class Turn(
         val start: Rotation,
@@ -88,29 +83,30 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
         val yawSpeed: Float,
         val pitchSpeed: Float,
         val pace: Float,
-        val reached: Boolean,
+        val isReached: Boolean,
     ) {
         var tick = 0
         var goal = start
+
+        /** Where the last tick of this turn found the view, and where it sent it. */
+        var from = start
         var view = start
         var step = 0f
 
         /** Whether the next tick from [view] towards [goal] still belongs to this turn rather than starting one. */
-        fun continues(view: Rotation, goal: Rotation): Boolean {
-            // A goal that moved further than the view moves in a tick jumped, so the turn starts over
-            if (tick >= ticks || this.goal.rotationDeltaLengthTo(goal) > max(step, pace)) {
-                return false
-            }
-
-            if (view == this.view) {
-                return true
-            }
-
+        fun continues(view: Rotation, goal: Rotation) = tick < ticks && follows(goal) &&
             // The view lands up to half a mouse step off where it was sent
-            val tolerance = RotationUtil.gcd
-            return abs(angleDifference(view.yaw, this.view.yaw)) <= tolerance &&
-                abs(view.pitch - this.view.pitch) <= tolerance
-        }
+            (view == this.view || isAt(view, this.view, RotationUtil.gcd.toFloat()))
+
+        /** Whether [view] is where the last tick started, so that tick's step towards [goal] is still to arrive. */
+        fun isUnderWay(view: Rotation, goal: Rotation) = tick > 0 && follows(goal) && view != this.view &&
+            isAt(view, from, 1e-3f)
+
+        // A goal that moved further than the view moves in a tick jumped, so the turn starts over
+        private fun follows(goal: Rotation) = this.goal.rotationDeltaLengthTo(goal) <= max(step, pace)
+
+        private fun isAt(view: Rotation, other: Rotation, tolerance: Float) =
+            abs(angleDifference(view.yaw, other.yaw)) <= tolerance && abs(view.pitch - other.pitch) <= tolerance
 
         /** The step from [view] to where the [nth] tick of this turn puts it, before the speeds limit it. */
         fun toward(view: Rotation, goal: Rotation, nth: Int): RotationDelta {
@@ -124,7 +120,10 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
             step.deltaPitch.coerceIn(-pitchSpeed, pitchSpeed),
         )
 
-        /** Ticks after the next one this turn and the one after it need to bring [view] to a [goal] that stays. */
+        /**
+         * Ticks after the next one until [view] is on a [goal] that stays: the rest of this turn, and of another one
+         * where the speeds cut its last step short.
+         */
         fun ticksLeft(view: Rotation, goal: Rotation): Int {
             var at = view
             var cut = RotationDelta(0f, 0f)
@@ -145,34 +144,40 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
         }
     }
 
-    override fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta {
+    override fun turn(view: Rotation, goal: AimGoal, isFresh: Boolean): RotationDelta {
         val target = goal.rotation
         // Reaching the target changes how fast a dynamic turn may go, so it starts over from there
         val turn = this.turn?.takeIf {
-            !fresh && it.continues(view, target) && (!dynamic.enabled || it.reached == goal.reached)
+            !isFresh && it.continues(view, target) && (!dynamic.enabled || it.isReached == goal.isReached)
         } ?: plan(view, goal).also { this.turn = it }
 
         turn.tick++
         val delta = turn.limit(turn.toward(view, target, turn.tick))
         turn.goal = target
+        turn.from = view
         turn.view = view.add(delta.deltaPitch, delta.deltaYaw)
         turn.step = delta.length()
         return delta
     }
 
-    override fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind): Int {
+    override fun ticksToReach(from: Rotation, goal: AimGoal): Int {
+        val to = goal.rotation
         val delta = from.rotationDeltaTo(to)
         val yaw = abs(delta.deltaYaw)
         val pitch = abs(delta.deltaPitch)
-        // Distance and reach of the target are unknown here and only ever slow a turn down
-        val share = dynamic.share(delta.length(), null)
+        val share = dynamic.share(delta.length(), goal)
         val yawSpeed = horizontalTurnSpeed.start * share
         val pitchSpeed = verticalTurnSpeed.start * share
         if (yaw > 0f && yawSpeed == 0f || pitch > 0f && pitchSpeed == 0f) {
-            return Int.MAX_VALUE
+            // Never, as a count callers can still add to
+            return Int.MAX_VALUE / 2
         }
 
         val turn = turn
+        // Asked after this tick's turn, with the view the server still has from before it
+        if (turn != null && turn.isUnderWay(from, to)) {
+            return turn.ticksLeft(turn.view, to) + 1
+        }
         if (turn != null && turn.continues(from, to)) {
             return turn.ticksLeft(from, to)
         }
@@ -186,7 +191,7 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
         val yawSpeed = horizontalTurnSpeed.random() * share
         val pitchSpeed = verticalTurnSpeed.random() * share
         val ticks = ticks(abs(delta.deltaYaw), abs(delta.deltaPitch), yawSpeed, pitchSpeed)
-        return Turn(view, ticks, yawSpeed, pitchSpeed, delta.length() / ticks, goal.reached)
+        return Turn(view, ticks, yawSpeed, pitchSpeed, delta.length() / ticks, goal.isReached)
     }
 
     /**
@@ -197,13 +202,15 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
         val yaw = if (yawSpeed > 0f) yawAngle else 0f
         val pitch = if (pitchSpeed > 0f) pitchAngle else 0f
 
+        // Lets float noise in a step pass as the turn speed itself
+        val slack = 1.0001f
         // The largest step is at least the average one, so no curve gets there in fewer ticks than a linear turn
         val linear = max(
             if (yaw > 0f) yaw / yawSpeed else 0f,
             if (pitch > 0f) pitch / pitchSpeed else 0f,
         )
-        return fewest(max(1, ceil(linear / SLACK).toInt())) { ticks ->
-            val share = largestShare(ticks) / SLACK
+        return fewest(max(1, ceil(linear / slack).toInt())) { ticks ->
+            val share = largestShare(ticks) / slack
             share * yaw <= yawSpeed && share * pitch <= pitchSpeed
         }
     }
@@ -248,9 +255,6 @@ class ConstantAim(parent: ModeValueGroup<*>) : Aim("Constant", parent, listOf("L
     private companion object {
         /** [Easing.NONE] would skip a half of the turn. */
         val CURVES: Set<Easing> = EnumSet.complementOf(EnumSet.of(Easing.NONE))
-
-        /** Lets float noise in a step pass as the turn speed itself. */
-        const val SLACK = 1.0001f
     }
 
 }

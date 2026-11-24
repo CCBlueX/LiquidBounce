@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Guards
 import net.ccbluex.liquidbounce.event.activeGuards
 import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -42,6 +43,7 @@ import kotlin.coroutines.CoroutineContext
  * What the run [requires] is checked every tick before [target] plans and once more before this returns. When it
  * fails, the module stops asking for the rotation and the run ends here.
  */
+@AddonApi
 suspend fun <T : Any> EventListener.lookAt(
     priority: Priority,
     target: () -> RotationTarget,
@@ -66,6 +68,7 @@ suspend fun <T : Any> EventListener.lookAt(
 /**
  * [lookAt] until the rotation going out meets the target itself: its surface, or else its angles within the tolerance.
  */
+@AddonApi
 suspend fun EventListener.lookAt(priority: Priority, target: () -> RotationTarget): Rotation =
     lookAt(priority, target) { going -> going.takeIf { isMetBy(it) } }
 

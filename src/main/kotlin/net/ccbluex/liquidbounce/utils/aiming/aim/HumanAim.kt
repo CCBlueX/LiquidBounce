@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import java.util.Random
+import kotlin.math.abs
 
 /**
  * Turns like a person moves a mouse, see [Hand]: it reacts late, flicks in a few ticks, lands close and corrects.
@@ -33,17 +34,16 @@ class HumanAim(parent: ModeValueGroup<*>) : Aim(
     listOf("Sigmoid", "Interpolation", "Acceleration", "AI", "Minarai"),
 ) {
 
-    private val speed by float("Speed", 1f, 0.3f..3f)
+    private val speed by float("Speed", 1f, 0.3f..3f, "x")
     private val reaction by intRange("Reaction", 2..4, 0..10, "ticks")
 
     private val hand = Hand(Random())
 
-    override fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta {
+    override fun turn(view: Rotation, goal: AimGoal, isFresh: Boolean): RotationDelta {
         hand.speed = speed
         hand.reaction = reaction
-        hand.kind = goal.kind
-        if (fresh) {
-            hand.reset()
+        if (isFresh) {
+            hand.reset(goal.kind)
         }
 
         return hand.step(
@@ -53,20 +53,24 @@ class HumanAim(parent: ModeValueGroup<*>) : Aim(
             goal.rotation.pitch,
             goal.width,
             goal.height,
-            goal.reached,
+            goal.isReached,
+            goal.kind,
             RotationUtil.gcd.toFloat(),
         )
     }
 
-    override fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind): Int {
-        val distance = from.rotationDeltaLengthTo(to)
+    override fun ticksToReach(from: Rotation, goal: AimGoal): Int {
+        val delta = from.rotationDeltaTo(goal.rotation)
+        val distance = delta.length()
         if (distance < RotationUtil.gcd / 2) {
             return 0
         }
 
         hand.speed = speed
         hand.reaction = reaction
-        return hand.reactionFor(kind).first + hand.ticksFor(distance, 0f, kind) - 1
+        // The hand times a movement by how wide the goal is along it
+        val width = if (abs(delta.deltaYaw) >= abs(delta.deltaPitch)) goal.width else goal.height
+        return hand.reactionFor(goal.kind).first + hand.ticksFor(distance, width, goal.kind) - 1
     }
 
 }

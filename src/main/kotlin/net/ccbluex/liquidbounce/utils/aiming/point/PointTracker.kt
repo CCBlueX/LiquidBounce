@@ -65,7 +65,7 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
 
     private val height = tree(PointProcessorHeight(this))
 
-    private val processors = arrayOf(height, delay, lazy, gaussian)
+    private val processors = arrayOf(delay, lazy, gaussian)
 
     /**
      * The point tracker is being used to track a certain point of an entity.
@@ -109,6 +109,12 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
 
         val pos = pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) } ?: bestHitVector
         var point = PointInsideBox(pos, box)
+        if (height.enabled) {
+            // An exempt part of the box stays exempt, also where the view meets it already
+            height.process(point, eyes)
+                .takeIf { kept -> predicates.none { it.predicate(predicateContext, kept.pos) } }
+                ?.let { point = it }
+        }
         for (processor in processors) {
             if (processor.enabled) {
                 point = processor.process(point, eyes)

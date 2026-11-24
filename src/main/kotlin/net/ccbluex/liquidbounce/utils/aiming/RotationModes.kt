@@ -62,7 +62,8 @@ sealed class RotationMode(
     abstract suspend fun <T : Any> look(plan: () -> Rotation, surface: Surface?, hit: (Rotation) -> T?): T?
 
     /**
-     * Waits for the movement packet when [postMove] is set and nothing else rotates, else for the next tick.
+     * With [postMove], waits for the movement packet, which is enough while nothing rotates. Otherwise waits for the
+     * next tick.
      */
     protected suspend fun afterMovementPacket() {
         if (postMove) {

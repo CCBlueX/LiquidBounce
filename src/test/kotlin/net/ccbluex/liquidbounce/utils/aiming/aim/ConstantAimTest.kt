@@ -79,16 +79,22 @@ class ConstantAimTest {
      * Turns to [goal] for as many ticks as [Aim.ticksToReach] predicts and returns the yaw steps, checking that the
      * prediction counts down each tick and the last tick gets there.
      */
-    private fun ConstantAim.yawSteps(goal: Rotation = GOAL): List<Float> {
+    private fun ConstantAim.yawSteps(rotation: Rotation = GOAL): List<Float> {
         var view = Rotation(0f, 0f)
+        val goal = AimGoal(rotation, 0f, 0f, false)
         val ticks = ticksToReach(view, goal) + 1
         val steps = (0 until ticks).map { tick ->
             assertEquals(ticks - 1 - tick, ticksToReach(view, goal), "ticksToReach before tick $tick")
-            val step = turn(view, AimGoal(goal, 0f, 0f, false), tick == 0)
+            val step = turn(view, goal, tick == 0)
+            // A caller that runs after the turn still sees the view from before it, as the server does. A tick that
+            // did not move the view cannot be told from the one before it
+            if (step.deltaYaw != 0f || step.deltaPitch != 0f) {
+                assertEquals(ticks - 1 - tick, ticksToReach(view, goal), "ticksToReach after tick $tick")
+            }
             view = view.add(step.deltaPitch, step.deltaYaw)
             step.deltaYaw
         }
-        assertTrue(view.rotationDeltaLengthTo(goal) < 1e-3f, "ended at $view")
+        assertTrue(view.rotationDeltaLengthTo(rotation) < 1e-3f, "ended at $view")
         return steps
     }
 

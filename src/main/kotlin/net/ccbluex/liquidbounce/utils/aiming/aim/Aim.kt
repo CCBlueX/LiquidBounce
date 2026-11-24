@@ -36,22 +36,21 @@ abstract class Aim(
 ) : Mode(name, aliases) {
 
     /**
-     * Degrees to turn from [view] this tick. [fresh] is true when this aim did not turn the view in the tick before,
+     * Degrees to turn from [view] this tick. [isFresh] is true when this aim did not turn the view in the tick before,
      * so whatever it was doing is over.
      */
-    abstract fun turn(view: Rotation, goal: AimGoal, fresh: Boolean): RotationDelta
+    abstract fun turn(view: Rotation, goal: AimGoal, isFresh: Boolean): RotationDelta
 
     /**
-     * Ticks after this one it takes at least to turn from [from] to [to], a goal of [kind], 0 if this tick's turn gets
-     * there.
+     * Ticks after this one it takes about to turn from [from] onto [goal], 0 if this tick's turn gets there.
      */
-    abstract fun ticksToReach(from: Rotation, to: Rotation, kind: AimGoal.Kind = AimGoal.Kind.BLOCK): Int
+    abstract fun ticksToReach(from: Rotation, goal: AimGoal): Int
 
 }
 
 /**
  * Where the view has to go: [rotation] is the point to aim at, [width] and [height] the angular size of what has to be
- * hit (0 for the rotation itself), [reached] whether the view hits it already, [kind] what it is and [distance] how
+ * hit (0 for the rotation itself), [isReached] whether the view hits it already, [kind] what it is and [distance] how
  * many blocks away from the eyes, 0 for a bare rotation.
  */
 @AddonApi
@@ -59,7 +58,7 @@ class AimGoal @JvmOverloads constructor(
     val rotation: Rotation,
     val width: Float,
     val height: Float,
-    val reached: Boolean,
+    val isReached: Boolean,
     val kind: Kind = Kind.BLOCK,
     val distance: Float = 0f,
 ) {

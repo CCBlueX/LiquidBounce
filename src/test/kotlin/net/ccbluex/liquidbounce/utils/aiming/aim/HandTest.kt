@@ -43,16 +43,13 @@ class HandTest {
         kind: AimGoal.Kind = AimGoal.Kind.ENTITY,
         goal: (Int) -> Pair<Float, Float>,
     ): List<Pair<RotationDelta, Boolean>> {
-        val hand = Hand(Random(seed)).apply {
-            this.kind = kind
-            reset()
-        }
+        val hand = Hand(Random(seed)).apply { reset(kind) }
         var (yaw, pitch) = start
         val margin = if (width > 0f) width / 2 else step / 2
         return List(ticks) { tick ->
             val (goalYaw, goalPitch) = goal(tick)
             val reached = abs(goalYaw - yaw) < margin && abs(goalPitch - pitch) < margin
-            val delta = hand.step(yaw, pitch, goalYaw, goalPitch, width, width, reached, step)
+            val delta = hand.step(yaw, pitch, goalYaw, goalPitch, width, width, reached, kind, step)
             yaw += delta.deltaYaw
             pitch += delta.deltaPitch
             delta to (abs(goalYaw - yaw) < margin && abs(goalPitch - pitch) < margin)
@@ -73,6 +70,16 @@ class HandTest {
             val hand = Hand(Random(0))
             assertTrue(firstTurn(AimGoal.Kind.ENTITY) >= hand.reaction.first, "seed $seed")
             assertTrue(firstTurn(AimGoal.Kind.BLOCK) <= hand.reactionFor(AimGoal.Kind.BLOCK).last, "seed $seed")
+        }
+    }
+
+    @Test
+    fun `letting go is reacted to once, however the camera turns afterwards`() {
+        repeat(20) { seed ->
+            // 12 degrees a tick: every tick's goal is far enough from the last to be a new one
+            val stream = run(seed.toLong(), 40, 0f, kind = AimGoal.Kind.CAMERA) { tick -> 90f + tick * 12f to 0f }
+            val first = stream.indexOfFirst { (delta, _) -> delta.deltaYaw != 0f }
+            assertTrue(first in 0..Hand(Random(0)).reaction.last + 1, "seed $seed first turned after $first ticks")
         }
     }
 
@@ -120,6 +127,18 @@ class HandTest {
             // Between half a step and a step off on both axes: one count each is needed
             val stream = run(seed.toLong(), 30, 0f, start = 0.11f to -0.12f) { 0f to 0f }
             assertTrue(stream.takeLast(10).all { (_, onTarget) -> onTarget }, "seed $seed stopped short of the goal")
+        }
+    }
+
+    @Test
+    fun `a turn onto a box never comes to lie on its goal point to the count`() {
+        repeat(200) { seed ->
+            // The view starts on the mouse steps the goal lies on, as a camera does for a look on a 45 degree angle
+            var yaw = 135f - (400 + seed) * step
+            for ((delta, _) in run(seed.toLong(), 40, 3f, yaw to 0f, AimGoal.Kind.BLOCK) { 135f to 75f }) {
+                yaw += delta.deltaYaw
+                assertTrue(delta.deltaYaw == 0f || abs(yaw - 135f) >= step / 2, "seed $seed turned onto the goal")
+            }
         }
     }
 

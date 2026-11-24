@@ -46,7 +46,7 @@ class Surface @JvmOverloads constructor(
         }
 
         val direction = rotation.directionVector
-        val reach = eyes.distanceTo(box.center) + box.size
+        val reach = eyes.distanceTo(box.center) + box.xsize + box.ysize + box.zsize
         val hit = AABB.clip(listOf(box), eyes, eyes.fma(reach, direction), BlockPos.ZERO) ?: return false
         if (face != null && hit.direction != face) {
             return false
@@ -78,7 +78,9 @@ class Surface @JvmOverloads constructor(
 
         /** The box an attack on [entity] has to hit. */
         @JvmStatic
-        fun of(entity: Entity) = Surface(entity.boundingBox.inflate(entity.pickRadius.toDouble()))
+        @JvmOverloads
+        fun of(entity: Entity, throughWalls: Boolean = false) =
+            Surface(entity.boundingBox.inflate(entity.pickRadius.toDouble()), throughWalls = throughWalls)
 
         /** The outline of the block at [pos], or its [face] of it; a full block where it has no outline. */
         @JvmStatic

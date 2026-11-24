@@ -49,11 +49,11 @@ class Hand(private val random: RandomGenerator) {
     /** Divides every movement time. */
     var speed = 1f
 
-    /** Ticks before a new or switched entity is acted on. */
+    /** Ticks before a new or switched entity, or letting go of it, is acted on. */
     var reaction = 2..4
 
-    /** What the goal is: a block was the player's own choice, an entity and letting go of it have to be reacted to. */
-    var kind = AimGoal.Kind.ENTITY
+    /** What the goal was the last time it was looked at. */
+    private var kind = AimGoal.Kind.ENTITY
 
     /** Ticks before a new goal of [kind] is acted on. */
     fun reactionFor(kind: AimGoal.Kind) = when (kind) {
@@ -77,8 +77,9 @@ class Hand(private val random: RandomGenerator) {
     private var following = false
     private var tilt = 0f
 
-    /** Lets go of the mouse: the next goal is new and has to be reacted to. */
-    fun reset() {
+    /** Lets go of the mouse: the next goal, of [kind], is new and has to be reacted to. */
+    fun reset(kind: AimGoal.Kind) {
+        this.kind = kind
         yaw.reset()
         pitch.reset()
         seen = 0
@@ -91,7 +92,7 @@ class Hand(private val random: RandomGenerator) {
 
     /**
      * Degrees to turn this tick, a whole number of [step]s on each axis. [width] and [height] are the angular size of
-     * what has to be hit, 0 for a bare rotation, and [reached] whether the view hits it already.
+     * what has to be hit, 0 for a bare rotation, [reached] whether the view hits it already and [kind] what it is.
      */
     @Suppress("LongParameterList")
     fun step(
@@ -102,8 +103,11 @@ class Hand(private val random: RandomGenerator) {
         width: Float,
         height: Float,
         reached: Boolean,
+        kind: AimGoal.Kind,
         step: Float,
     ): RotationDelta {
+        val isLetGo = kind == AimGoal.Kind.CAMERA && this.kind == AimGoal.Kind.CAMERA
+        this.kind = kind
         val nearYaw = viewYaw + wrap(goalYaw - viewYaw)
         // Near straight up or down a small move of the goal swings its yaw a long way, so a jump is judged by how
         // far the goal moves in sight, not in yaw
@@ -111,7 +115,10 @@ class Hand(private val random: RandomGenerator) {
         if (seen > 0 && moved > max(JUMP, max(width, height) * 2f)) {
             // A new goal: what was seen of the old one says nothing about how this one moves
             seen = 0
-            reactIn = max(reactIn, nextReaction())
+            // The camera is the player's own hand, whose turns need no reaction once the target is let go
+            if (!isLetGo) {
+                reactIn = max(reactIn, nextReaction())
+            }
         }
         remember(nearYaw, goalPitch)
 
@@ -138,7 +145,13 @@ class Hand(private val random: RandomGenerator) {
                 movePitch += random.nextGaussian().toFloat() * BASE_NOISE
             }
         }
-        return RotationDelta(yaw.counts(moveYaw, step), pitch.counts(movePitch, step))
+        var turnYaw = yaw.counts(moveYaw, step)
+        // A look at a block can be an exact angle, as one held on a 45 degree step: no hand lies on it to the count
+        val isBox = kind == AimGoal.Kind.BLOCK && width > 0f
+        if (isBox && turnYaw != 0f && abs(nearYaw - viewYaw - turnYaw) < step / 2) {
+            turnYaw -= sign(turnYaw) * step
+        }
+        return RotationDelta(turnYaw, pitch.counts(movePitch, step))
     }
 
     /**

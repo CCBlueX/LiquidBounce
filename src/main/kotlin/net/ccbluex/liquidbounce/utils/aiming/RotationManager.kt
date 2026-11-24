@@ -97,6 +97,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     private var lastAim: Aim? = null
     private var yawFollowsPlayer = false
     private var pitchFollowsPlayer = false
+    private var lastCamera = Rotation.ZERO
 
     @Suppress("unused")
     private val lifecycleListener = object : EventListener {
@@ -274,49 +275,43 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             } else {
                 turn(target, lead)
             }
+        } else {
+            // The aim did not turn the view this tick, so whatever it was doing is over
+            lastAim = null
         }
 
         rotationTargetHandler.tick()
+        lastCamera = player.rotation
     }
 
     private fun turn(target: RotationTarget, lead: RotationTarget?) {
         val camera = player.rotation
-        val view = currentRotation ?: camera
         val yawTarget = requests.firstOrNull { it.yaw != null }
         val pitchTarget = requests.firstOrNull { it.pitch != null }
-        val changeLook = target.movementCorrection == MovementCorrection.CHANGE_LOOK
-        // Under ChangeLook the player looks through the view, so a free axis has nowhere else to go
-        val own = if (changeLook) view else camera
+        // An axis no target turns returns to the camera, unless the player looks through the view under ChangeLook
+        val returns = target.movementCorrection != MovementCorrection.CHANGE_LOOK
+        val yawReturns = returns && yawTarget == null
+        val pitchReturns = returns && pitchTarget == null
+        yawFollowsPlayer = yawFollowsPlayer && yawReturns
+        pitchFollowsPlayer = pitchFollowsPlayer && pitchReturns
+        val view = followed(currentRotation ?: camera, camera)
+        val own = if (returns) camera else view
         val goal = Rotation(yawTarget?.yaw ?: own.yaw, pitchTarget?.pitch ?: own.pitch)
         val step = RotationUtil.gcd.toFloat()
         val aim = target.aim
-        val delta = if (aim == null) {
-            view.rotationDeltaTo(goal)
-        } else {
-            aim.turn(view, aimGoal(view, goal, yawTarget, pitchTarget, step), aim !== lastAim)
-        }
+        val delta = aim?.turn(view, aimGoal(view, goal, yawTarget, pitchTarget, step), aim !== lastAim)
+            ?: view.rotationDeltaTo(goal)
         lastAim = aim
 
-        var next = RotationUtil.turnByCounts(
+        // An axis with nowhere to go stays where it is, whatever noise an aim adds to it
+        val yawStays = yawTarget == null && !yawReturns || yawFollowsPlayer
+        val pitchStays = pitchTarget == null && !pitchReturns || pitchFollowsPlayer
+        val turned = RotationUtil.turnByCounts(
             view,
-            (delta.deltaYaw / step).roundToInt(),
-            (delta.deltaPitch / step).roundToInt(),
+            if (yawStays) 0 else (delta.deltaYaw / step).roundToInt(),
+            if (pitchStays) 0 else (delta.deltaPitch / step).roundToInt(),
         )
-
-        if (yawTarget != null) {
-            yawFollowsPlayer = false
-        } else if (!changeLook && (yawFollowsPlayer || abs(angleDifference(camera.yaw, next.yaw)) < step / 2)) {
-            yawFollowsPlayer = true
-            next = Rotation(next.yaw + angleDifference(camera.yaw, next.yaw), next.pitch)
-        }
-
-        if (pitchTarget != null) {
-            pitchFollowsPlayer = false
-        } else if (!changeLook && (pitchFollowsPlayer || abs(camera.pitch - next.pitch) < step / 2)) {
-            pitchFollowsPlayer = true
-            next = Rotation(next.yaw, camera.pitch)
-        }
-
+        val next = arrived(view, turned, camera, yawReturns, pitchReturns, step)
         currentRotation = next
 
         if (lead == null && yawFollowsPlayer && pitchFollowsPlayer) {
@@ -327,6 +322,45 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         previousRotationTarget = target
         looks.offer(next, requests)
     }
+
+    /** [last] with the axes that follow the player on the [camera], so an aim finds nothing left to turn on them. */
+    private fun followed(last: Rotation, camera: Rotation) = Rotation(
+        if (yawFollowsPlayer) last.yaw + angleDifference(camera.yaw, last.yaw) else last.yaw,
+        if (pitchFollowsPlayer) camera.pitch else last.pitch,
+    )
+
+    /**
+     * [turned] with each returning axis on the [camera] from the tick its turn from [view] reaches it, or passes it
+     * while the player turns it; from then on the axis follows the player.
+     */
+    private fun arrived(
+        view: Rotation,
+        turned: Rotation,
+        camera: Rotation,
+        yawReturns: Boolean,
+        pitchReturns: Boolean,
+        step: Float,
+    ): Rotation {
+        val yawLeft = angleDifference(camera.yaw, turned.yaw)
+        val yawMoves = abs(angleDifference(camera.yaw, lastCamera.yaw)) >= step / 2
+        val pitchMoves = abs(camera.pitch - lastCamera.pitch) >= step / 2
+        yawFollowsPlayer = yawReturns && arrives(angleDifference(camera.yaw, view.yaw), yawLeft, step, yawMoves)
+        pitchFollowsPlayer = pitchReturns &&
+            arrives(camera.pitch - view.pitch, camera.pitch - turned.pitch, step, pitchMoves)
+        return Rotation(
+            if (yawFollowsPlayer) turned.yaw + yawLeft else turned.yaw,
+            if (pitchFollowsPlayer) camera.pitch else turned.pitch,
+        )
+    }
+
+    /** What an aim is given to turn from [view] onto [target] alone. */
+    internal fun aimGoal(view: Rotation, target: RotationTarget) = aimGoal(
+        view,
+        target.rotation(view),
+        target.takeIf { it.yaw != null },
+        target.takeIf { it.pitch != null },
+        RotationUtil.gcd.toFloat(),
+    )
 
     private fun aimGoal(
         view: Rotation,
@@ -347,12 +381,20 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view), kind)
         }
 
-        val tolerance = max(yawTarget?.tolerance ?: 0f, pitchTarget?.tolerance ?: 0f)
-        val margin = max(tolerance, step / 2)
+        val yawTolerance = yawTarget?.tolerance ?: 0f
+        val pitchTolerance = pitchTarget?.tolerance ?: 0f
         val delta = view.rotationDeltaTo(goal)
-        val reached = abs(delta.deltaYaw) < margin && abs(delta.deltaPitch) < margin
-        return AimGoal(goal, tolerance * 2, tolerance * 2, reached, kind)
+        val reached = abs(delta.deltaYaw) < max(yawTolerance, step / 2) &&
+            abs(delta.deltaPitch) < max(pitchTolerance, step / 2)
+        return AimGoal(goal, yawTolerance * 2, pitchTolerance * 2, reached, kind)
     }
+
+    /**
+     * Whether a turn that had [before] degrees to go and has [after] left got to its end, or went past a camera that
+     * [moves]. On one that holds still the hand settles by itself: a sweep cut short on it to the count is a snap.
+     */
+    private fun arrives(before: Float, after: Float, step: Float, moves: Boolean) =
+        abs(after) < step / 2 || moves && before * after < 0f
 
     /**
      * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
@@ -383,6 +425,13 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             maxPitch = max(maxPitch, rotation.pitch)
         }
         val distance = sqrt(surface.box.distanceToSqr(eyes)).toFloat()
+        // Straight above or below the eyes every yaw meets the surface, all the way to the pole
+        val isOverEyes = eyes.x in corners.minOf { it.x }..corners.maxOf { it.x } &&
+            eyes.z in corners.minOf { it.z }..corners.maxOf { it.z }
+        if (isOverEyes) {
+            val height = if (corners[0].y < eyes.y) 90f - minPitch else maxPitch + 90f
+            return AimGoal(goal, 360f, height, reached, kind, distance)
+        }
         return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached, kind, distance)
     }
 
