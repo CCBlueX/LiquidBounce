@@ -18,10 +18,8 @@
  */
 package net.ccbluex.liquidbounce.gametest.combat
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.restoring
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.util.Mth
@@ -35,45 +33,29 @@ import kotlin.math.abs
 internal fun ClientGameTestContext.combatTest(
     vararg modules: ClientModule,
     checks: (server: TestServerContext, y: Int) -> Unit,
-) {
-    val saved = fromClient { modules.map(ConfigSystem::serializeValueGroup) }
-
-    try {
-        worldBuilder().create().use { world ->
-            val server = world.server
-            val y = server.computeOnServer<Int, RuntimeException> {
-                it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 0, 0)
-            }
-            server.runCommand("gamerule spawn_mobs false")
-            server.runCommand("fill -8 ${y - 1} -8 8 ${y - 1} 8 stone")
-            server.runCommand("fill -8 $y -8 8 ${y + 4} 8 air")
-            server.runCommand("gamemode survival @a")
-            server.runCommand("clear @a")
-            server.runCommand("kill @e[type=!player]")
-            face(this, server, y, 0f)
-
-            checks(server, y)
+) = restoring(*modules) {
+    worldBuilder().create().use { world ->
+        val server = world.server
+        val y = server.computeOnServer<Int, RuntimeException> {
+            it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 0, 0)
         }
-    } finally {
-        onClient {
-            modules.forEach { it.enabled = false }
-            modules.zip(saved).forEach { (module, json) -> ConfigSystem.deserializeValueGroup(module, json) }
-        }
+        server.runCommand("gamerule spawn_mobs false")
+        server.runCommand("fill -8 ${y - 1} -8 8 ${y - 1} 8 stone")
+        server.runCommand("fill -8 $y -8 8 ${y + 4} 8 air")
+        server.runCommand("gamemode survival @a")
+        server.runCommand("clear @a")
+        server.runCommand("kill @e[type=!player]")
+        face(this, server, y, 0f)
+
+        checks(server, y)
     }
 }
 
-internal fun summonHusk(
-    context: ClientGameTestContext,
-    server: TestServerContext,
-    y: Int,
-    x: Double,
-    z: Double,
-    health: Int = 1000,
-    equipment: String = "{}",
-) = summon(
-    context, server, "husk $x $y $z", "NoAI:1b,PersistenceRequired:1b,Silent:1b,Health:${health}f," +
-        "attributes:[{id:\"minecraft:max_health\",base:${maxOf(health, 20)}d}],equipment:$equipment"
-)
+internal fun summonHusk(context: ClientGameTestContext, server: TestServerContext, y: Int, x: Double, z: Double) =
+    summon(
+        context, server, "husk $x $y $z", "NoAI:1b,PersistenceRequired:1b,Silent:1b,Health:1000f," +
+            "attributes:[{id:\"minecraft:max_health\",base:1000d}]"
+    )
 
 internal fun summonCrystal(context: ClientGameTestContext, server: TestServerContext, y: Int, x: Double, z: Double) =
     summon(context, server, "end_crystal $x $y $z", "ShowBottom:0b,Invulnerable:1b")

@@ -42,11 +42,11 @@ fun CombatScene.checkAutoPearlSimulatedPitch() {
     val y = Mth.floor(origin.y)
     val z = Mth.floor(origin.z)
     val wall = "${x - 3} $y ${z + 4} ${x + 3} ${y + 5} ${z + 4}"
-    world.server.runCommand("fill $wall minecraft:stone")
+    server.runCommand("fill $wall minecraft:stone")
     val blocked = try {
         flightAfterPearlFrom(at(0.0, 1.5, 8.0))
     } finally {
-        world.server.runCommand("fill $wall minecraft:air")
+        server.runCommand("fill $wall minecraft:air")
     }
     check(!blocked.isLowArc) { "AutoPearl: no high arc over the wall" }
 
@@ -57,7 +57,7 @@ fun CombatScene.checkAutoPearlSimulatedPitch() {
  * Enables AutoPearl, launches an enemy pearl from [from] and returns our flight, which has to land next to theirs.
  */
 private fun CombatScene.flightAfterPearlFrom(from: Vec3): Flight {
-    startAutoPearl {}
+    startAutoPearl()
     // Let the pearls in the hotbar arrive before the enemy pearl is launched
     context.waitTicks(PEARL_TICKS)
 
@@ -68,12 +68,12 @@ private fun CombatScene.flightAfterPearlFrom(from: Vec3): Flight {
     return ours
 }
 
-private class Flight(val start: Vec3, val landing: Vec3) {
+private class Flight(val startVelocity: Vec3, val landing: Vec3) {
     /**
      * Rises less steeply than 45 degrees.
      */
     val isLowArc: Boolean
-        get() = abs(start.y) < hypot(start.x, start.z)
+        get() = abs(startVelocity.y) < hypot(startVelocity.x, startVelocity.z)
 }
 
 /**
@@ -117,8 +117,8 @@ private fun CombatScene.followPearl(from: Vec3): Pair<Flight?, Flight?> {
             break
         }
     }
-    world.server.runCommand("kill @e[type=minecraft:ender_pearl]")
-    world.server.runCommand("tp @a ${origin.x} ${origin.y} ${origin.z} 0 0")
+    server.runCommand("kill @e[type=minecraft:ender_pearl]")
+    server.runCommand("tp @a ${origin.x} ${origin.y} ${origin.z} 0 0")
     context.waitTicks(2)
 
     val ours = oursId?.let { id -> Flight(checkNotNull(oursStart), checkNotNull(last[id])) }

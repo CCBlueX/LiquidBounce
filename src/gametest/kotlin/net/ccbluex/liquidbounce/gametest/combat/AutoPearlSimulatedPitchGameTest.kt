@@ -22,5 +22,5 @@ import net.ccbluex.gametest.harness.ClientGameTest
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
 
 class AutoPearlSimulatedPitchGameTest : ClientGameTest({ context ->
-    context.runCombatChecks(listOf(ModuleAutoPearl), CombatScene::checkAutoPearlSimulatedPitch)
+    context.combatTest(ModuleAutoPearl) { server, y -> CombatScene(context, server, y).checkAutoPearlSimulatedPitch() }
 })

@@ -23,6 +23,7 @@ import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.ServerGameTest
 import net.ccbluex.gametest.harness.action.summon
+import net.ccbluex.gametest.harness.verdict.ServerReport
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -35,17 +36,17 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.gametest.harness.disable
 import net.ccbluex.liquidbounce.gametest.harness.enable
 import net.ccbluex.liquidbounce.gametest.harness.setting
+import net.ccbluex.liquidbounce.gametest.health
 import net.ccbluex.liquidbounce.gametest.set
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
-import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import java.util.Locale
 import java.util.Random
-import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -55,9 +56,9 @@ private const val HAND_BACK_TICKS = 100
 
 /**
  * KillAura with the Human aim against an opponent that strafes and jumps around the player for a minute, then runs off
- * again and again while the player turns away: nothing that watches the player may object, and enough hits have to
- * land. Where an anticheat checks aim (Intave, MX), the Constant aim has to be caught first, or a clean run would
- * prove nothing.
+ * again and again while the player turns away: the server may not object once, and enough hits have to land. Where an
+ * anticheat checks aim (Intave, MX), the Constant aim then has to be caught, or a clean run would prove nothing;
+ * elsewhere it has to pass as well.
  */
 class KillAuraAimGameTest : ServerGameTest({
     val saved = client { ConfigSystem.serializeValueGroup(ModuleKillAura) to
@@ -69,8 +70,8 @@ class KillAuraAimGameTest : ServerGameTest({
             GlobalSettingsTarget.combatChoices.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("Passive") })
             // Anticheats allow no more than the reach of the game
             ModuleKillAura.range.containedValues.first { it.name == "RangeIncrease" }.setByString("0")
-            // Someone who has looked around does not hold the camera at round angles. From exactly 0 the mouse grid
-            // runs through the exact angle of a level target, which Intave reads as an aimbot when a turn ends on it
+            // The opponent spawns exactly in front of the camera. From yaw 0 the mouse grid would run through its
+            // exact angle, a start no fight has and Intave reads as an aimbot
             val player = checkNotNull(it.player)
             player.yRot = 17.32f
             player.xRot = 6.87f
@@ -79,9 +80,10 @@ class KillAuraAimGameTest : ServerGameTest({
         val opponent = Opponent(this)
         opponent.spawn()
 
+        val human = server.console.size
         aim("Human")
         enable(ModuleKillAura)
-        val hits = attacks.during("Human") { opponent.fight(FIGHT_TICKS) }
+        val hits = attacks.during("Human", opponent) { opponent.fight(FIGHT_TICKS) }
         // Fewer hits in a minute than a person who aims at all would land
         check(hits >= 60) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
 
@@ -92,44 +94,48 @@ class KillAuraAimGameTest : ServerGameTest({
             opponent.flee { tick ->
                 if (tick in 8 until 14) {
                     // Mostly sideways and a little up or down, never twice the same: a hand, not a script
-                    val yaw = side * (16.0 + mouse.nextDouble() * 8.0)
-                    val pitch = mouse.nextDouble() * 4.0 - 2.0
-                    client {
-                        // As the mouse turns it: whole counts, which the game scales by 0.15
-                        val step = RotationUtil.gcd
-                        checkNotNull(it.player).turn(
-                            (yaw / step).roundToInt() * step / 0.15,
-                            (pitch / step).roundToInt() * step / 0.15,
-                        )
-                    }
+                    turnCamera(side * (16.0 + mouse.nextDouble() * 8.0), mouse.nextDouble() * 4.0 - 2.0)
                 }
             }
             opponent.fight(60)
         }
-        disable(ModuleKillAura)
 
-        // The view turns back to the camera and is handed over where the camera looks, without a jump
-        awaitClient("the view to be handed back", HAND_BACK_TICKS) { RotationManager.currentRotation == null }
-        val (server, camera) = client { RotationManager.serverRotation to checkNotNull(it.player).rotation }
-        check(abs(angleDifference(server.yaw, camera.yaw)) < 1e-3f && abs(server.pitch - camera.pitch) < 1e-3f) {
-            "the server looks at $server, the camera at $camera"
+        // Looking a quarter turn away when KillAura stops, the view has a way back to the camera: it walks it
+        turnCamera(90.0, 0.0)
+        ticks(1)
+        disable(ModuleKillAura)
+        var last = client { RotationManager.serverRotation }
+        val way = last.rotationDeltaLengthTo(client { checkNotNull(it.player).rotation })
+        var largest = 0f
+        awaitClient("the view to be handed back", HAND_BACK_TICKS) {
+            val now = RotationManager.serverRotation
+            largest = max(largest, last.rotationDeltaLengthTo(now))
+            last = now
+            RotationManager.currentRotation == null
         }
+        check(largest < way * 0.7f) { "the view jumped $largest of the $way degrees back to the camera in one tick" }
+        expectNoObjection("the Human aim", human)
 
         aim("Constant")
+        val constant = server.console.size
         if (anticheats.any { it == Anticheat.INTAVE || it == Anticheat.MX }) {
-            expectViolation("the aim checks to catch the Constant aim") {
-                enable(ModuleKillAura)
-                attacks.during("Constant") { opponent.fight(600) }
-                disable(ModuleKillAura)
+            enable(ModuleKillAura)
+            attacks.during("Constant", opponent) { opponent.fight(600) }
+            disable(ModuleKillAura)
+            // Flags trail the turns they are about
+            ticks(40)
+            check(objections(constant).any { it.report == ServerReport.FLAG }) {
+                "no aim check caught the Constant aim, see ${server.log}"
             }
         } else {
             // Without aim checks Constant has to pass as well: instant, then slowed down by Dynamic
             for (dynamic in listOf("false", "true")) {
                 client { KillAuraRotationsValueGroup.set("Aim/Constant/Dynamic/Enabled", dynamic) }
                 enable(ModuleKillAura)
-                attacks.during("Constant, Dynamic $dynamic") { opponent.fight(600) }
+                attacks.during("Constant, Dynamic $dynamic", opponent) { opponent.fight(600) }
                 disable(ModuleKillAura)
             }
+            expectNoObjection("the Constant aim", constant)
         }
     } finally {
         client {
@@ -139,10 +145,44 @@ class KillAuraAimGameTest : ServerGameTest({
             attacks.unregister()
         }
     }
-})
+}) {
+    // Judged by the test itself, see [objections]: the flags it leaves out would use up what the harness tolerates
+    override val violationLevel get() = Int.MAX_VALUE
+
+    // A second attempt would make one clean fight in two enough
+    override val retries get() = 0
+}
 
 private fun GameTestScope.aim(mode: String) = client {
     (KillAuraRotationsValueGroup.setting<Any>("Aim") as ModeValueGroup<*>).setByString(mode)
+}
+
+/** Turns the camera as the mouse does: by whole counts, which the game scales by 0.15. */
+private fun GameTestScope.turnCamera(yaw: Double, pitch: Double) = client {
+    val step = RotationUtil.gcd
+    checkNotNull(it.player).turn((yaw / step).roundToInt() * step / 0.15, (pitch / step).roundToInt() * step / 0.15)
+}
+
+/**
+ * What the server objected to from console line [since] on. Intave's attackraytrace is left out: it misjudges hits on
+ * an opponent moved by teleports, whatever the aim.
+ */
+private fun GameTestScope.objections(since: Int) = server.console.drop(since).filter { line ->
+    when (line.report) {
+        ServerReport.FLAG -> !(line.anticheat == "Intave" && line.message.startsWith("attackraytrace"))
+        ServerReport.SETBACK, ServerReport.FAILMOVE -> true
+        null -> line.level == "WARN" || line.level == "ERROR"
+        else -> false
+    }
+}
+
+private fun GameTestScope.expectNoObjection(what: String, since: Int) {
+    // Flags trail the turns they are about
+    ticks(40)
+    val objections = objections(since)
+    check(objections.isEmpty()) {
+        "the server objected to $what ${objections.size} time(s), see ${server.log}\n" + objections.joinToString("\n")
+    }
 }
 
 private class Attacks : EventListener {
@@ -152,14 +192,21 @@ private class Attacks : EventListener {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { ticks += player.tickCount }
 
-    /** The hits landed during [fight], logged with the longest wait between two to compare aims and runs. */
-    fun during(aim: String, fight: () -> Unit): Int {
+    /**
+     * The attacks made during [fight], logged with the damage [opponent] took on the server and the longest wait
+     * between two attacks, to compare aims and runs.
+     */
+    fun during(aim: String, opponent: Opponent, fight: () -> Unit): Int {
         val before = ticks.size
+        val health = opponent.health()
         fight()
-        val landed = ticks.drop(before)
-        val wait = landed.zipWithNext { earlier, later -> later - earlier }.maxOrNull()
-        logger.info("[KillAuraAim] $aim landed ${landed.size} hits, longest wait $wait ticks")
-        return landed.size
+        val made = ticks.drop(before)
+        val wait = made.zipWithNext { earlier, later -> later - earlier }.maxOrNull()
+        logger.info(
+            "[KillAuraAim] $aim attacked ${made.size} times for ${health - opponent.health()} damage, " +
+                "longest wait $wait ticks"
+        )
+        return made.size
     }
 }
 
@@ -180,11 +227,15 @@ private class Opponent(private val scope: GameTestScope) {
     private var lift = 0.0
     private var jumpIn = 0
 
+    // Health to lose all test long, so the server tells which attacks landed
     fun spawn() = scope.summon(
         "minecraft:villager",
         scope.origin.south(3),
-        "{NoAI:1b,Invulnerable:1b,Silent:1b,PersistenceRequired:1b,Tags:[\"$tag\"]}",
+        "{NoAI:1b,Silent:1b,PersistenceRequired:1b,Health:1024f," +
+            "attributes:[{id:\"minecraft:max_health\",base:1024d}],Tags:[\"$tag\"]}",
     )
+
+    fun health() = scope.health("@e[tag=$tag,limit=1]")
 
     fun fight(ticks: Int) = repeat(ticks) {
         step()

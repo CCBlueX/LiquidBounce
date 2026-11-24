@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest.inventory
 
-import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.restoring
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
@@ -34,9 +33,6 @@ import net.minecraft.world.item.Item
  * between checks, and helpers that read the server's view of it.
  */
 class InventoryBench(val context: ClientGameTestContext, val server: TestServerContext) {
-
-    /** A key no vanilla binding uses, for the module keys under test. */
-    val testKey: InputConstants.Key = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_K)
 
     lateinit var origin: BlockPos
         private set
@@ -82,9 +78,6 @@ class InventoryBench(val context: ClientGameTestContext, val server: TestServerC
 
     fun stackAt(slot: Int) = onServer { it.inventory.getItem(slot).copy() }
 
-    val serverSlot: Int
-        get() = onServer { it.inventory.selectedSlot }
-
     /**
      * Waits until [condition] holds, failing with [message] after [ticks] ticks.
      */
@@ -103,18 +96,15 @@ class InventoryBench(val context: ClientGameTestContext, val server: TestServerC
      * Configures [module] on the client, enables it for [block] and restores its configuration afterwards.
      */
     fun withModule(module: ClientModule, configure: () -> Unit, block: () -> Unit) {
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(module) }
         try {
-            context.onClient {
-                configure()
-                module.enabled = true
+            context.restoring(module) {
+                context.onClient {
+                    configure()
+                    module.enabled = true
+                }
+                block()
             }
-            block()
         } finally {
-            context.onClient {
-                module.enabled = false
-                ConfigSystem.deserializeValueGroup(module, saved)
-            }
             reset()
         }
     }

@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
-import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
@@ -70,11 +69,6 @@ fun ClientGameTestContext.playerPosition(): Vec3 = fromClient { checkNotNull(it.
 
 fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
     it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-}
-
-fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int = computeOnServer<Int, RuntimeException> {
-    val level = it.overworld()
-    BlockPos.betweenClosed(from, to).count { pos -> !level.getBlockState(pos).isAir }
 }
 
 /**

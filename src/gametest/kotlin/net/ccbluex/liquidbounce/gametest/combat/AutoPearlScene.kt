@@ -24,13 +24,10 @@ import net.ccbluex.liquidbounce.gametest.onClient
 const val PEARL_TICKS = 30
 
 /**
- * Gives the player ender pearls and enables AutoPearl after [configure].
+ * Gives the player ender pearls and enables AutoPearl.
  */
-fun CombatScene.startAutoPearl(configure: () -> Unit) {
+fun CombatScene.startAutoPearl() {
     reset()
-    world.server.runCommand("item replace entity @a hotbar.0 with minecraft:ender_pearl 16")
-    context.onClient {
-        configure()
-        ModuleAutoPearl.enabled = true
-    }
+    server.runCommand("item replace entity @a hotbar.0 with minecraft:ender_pearl 16")
+    context.onClient { ModuleAutoPearl.enabled = true }
 }
