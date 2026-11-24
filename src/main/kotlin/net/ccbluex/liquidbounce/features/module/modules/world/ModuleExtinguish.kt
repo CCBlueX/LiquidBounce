@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -66,6 +67,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     }
 
     private var currentTarget: PlacementPlan? = null
+    private var placing: Job? = null
 
     private val rotations = tree(RotationsValueGroup(this))
 
@@ -90,7 +92,8 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             return@handler
         }
 
-        this.currentTarget = findAction()
+        this.currentTarget = findAction() ?: return@handler
+        placing = launchSequence(placing) { place() }
     }
 
     @Suppress("unused")
@@ -123,10 +126,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         return planExtinguishing()
     }
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        currentTarget ?: return@tickHandler
-
+    private suspend fun place() {
         val target by requires { currentTarget }
         val (rayTraceResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
             rotations.toRotationTarget(
@@ -139,7 +139,7 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         }
 
         if (!SilentHotbar.selectSlotSilently(this@ModuleExtinguish, target.hotbarItemSlot, 1)) {
-            return@tickHandler
+            return
         }
 
         val successFunction = {

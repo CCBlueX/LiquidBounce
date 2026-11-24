@@ -55,7 +55,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
-import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
@@ -174,10 +173,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
-    /** Fights on ticks without an aim; the others fight in [fightWithAim] once the aim goes out. */
+    /**
+     * Fights on ticks without an aim, and on those no rotation went out to [fightWithAim], which fights on the others.
+     */
     @Suppress("unused")
     private val gameHandler = tickHandler {
-        if (aim == null) {
+        if (aim == null || aiming?.isActive == true) {
             fight(aimed = false, aimedHit = null)
         }
     }
@@ -368,7 +369,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         wallsRange: Float
     ): Boolean {
         val (rotation, surface) = findRotation(entity, range, wallsRange) ?: return false
-        val ticks = rotations.calculateTicks(rotation, AimGoal.Kind.ENTITY)
+        val target = rotations.toRotationTarget(
+            rotation,
+            entity,
+            considerInventory = !ignoreOpenInventory,
+            surface = surface,
+        )
+        val ticks = rotations.calculateTicks(target)
         debugParameter("Rotation Ticks") { ticks }
 
         when (rotations.rotationTiming) {
@@ -391,12 +398,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             }
         }
 
-        aim = rotations.toRotationTarget(
-            rotation,
-            entity,
-            considerInventory = !ignoreOpenInventory,
-            surface = surface,
-        )
+        aim = target
         aiming = launchSequence(aiming) { fightWithAim() }
         return true
     }
@@ -442,7 +444,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             if (currentHit != null) {
                 debugParameter("Lazy Rotation") { true }
-                return currentRotation to Surface(Surface.of(entity).box, throughWalls = throughWalls)
+                return currentRotation to Surface.of(entity, throughWalls)
             }
         }
 

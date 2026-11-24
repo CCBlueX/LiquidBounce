@@ -31,14 +31,12 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
-import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 sealed class BlockPlacerRotationMode(
@@ -107,14 +105,11 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
                 ),
             )
         }) { going ->
-            val interactedBlockPos = placement.target.interactedBlockPos
-            raytraceBlock(
+            raytraceBlockHit(
                 max(placer.range, placer.wallRange).toDouble(),
                 going,
-                interactedBlockPos,
-                interactedBlockPos.stateOrEmpty
-            )?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == interactedBlockPos }
-                ?.let { placement to going }
+                placement.target.interactedBlockPos,
+            )?.let { placement to going }
         }
 
         if (postMove) {

@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import kotlinx.coroutines.Job
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -78,6 +79,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private val trackedWebs = ObjectLinkedOpenHashSet<BlockPos>()
 
     private var currentAction: UseAction? = null
+    private var placing: Job? = null
     private var lastSuccessfulWeb: BlockPos? = null
     private var lastSuccessfulAt = 0L
 
@@ -134,15 +136,13 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             }
         }
 
-        currentAction = placeAction ?: buildPickupAction()
+        currentAction = placeAction ?: buildPickupAction() ?: return@handler
+        placing = launchSequence(placing) { place() }
     }
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        currentAction ?: return@tickHandler
-
+    private suspend fun place() {
         val action by requires { currentAction }
-        val (resolvedHitResult, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+        val (hit, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
             rotations.toRotationTarget(action.rotation, considerInventory = true, surface = action.surface)
         }) { going ->
             action.resolveHitResult(traceFromPlayer(going))?.let { hit -> hit to going }
@@ -150,12 +150,12 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
         SilentHotbar.selectSlotSilently(this@NoWebPlaceWater, action.slot, 1)
         val onSuccess = {
-            action.onSuccess(resolvedHitResult)
+            action.onSuccess(hit)
             true
         }
 
         doPlacement(
-            resolvedHitResult,
+            hit,
             rotation,
             hand = action.slot.useHand,
             onItemUseSuccess = onSuccess,

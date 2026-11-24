@@ -92,7 +92,7 @@ internal object ModuleTickBase : ClientModule(
     /**
      * What has to be met to spend the balance. Saving it up does not depend on it.
      */
-    private val requires by multiEnumChoice("Requires", Requirement.KILLAURA)
+    private val requirements by multiEnumChoice("Requires", Requirement.KILLAURA)
     private val chance = percentageChance("Chance", 100f)
     private val cooldown by intRange("Cooldown", 0..0, 0..100, "ticks")
 
@@ -613,7 +613,7 @@ internal object ModuleTickBase : ClientModule(
         }
     }
 
-    private fun requirementsMet(hit: Vec3) = requires.all { it.meets(hit) }
+    private fun requirementsMet(hit: Vec3) = requirements.all { it.meets(hit) }
 
     private val prefersCritical
         get() = ModuleCriticals.running ||

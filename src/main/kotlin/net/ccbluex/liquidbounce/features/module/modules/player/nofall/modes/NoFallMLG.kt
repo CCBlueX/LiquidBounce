@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import kotlinx.coroutines.Job
 import net.ccbluex.agent.simulation.FallingPlayer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventState
@@ -26,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitMatches
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -69,6 +70,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.BlockHitResult
 
+@Suppress("TooManyFunctions")
 internal object NoFallMLG : NoFallMode("MLG") {
     private const val PICKUP_TRACKER_CAPACITY = 8
     private const val SCAFFOLDING_ATTEMPT_TIMEOUT_TICKS = 20
@@ -88,6 +90,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
     /** What this tick aims at; [currentTarget] unless the player still has to sneak for it. */
     private var goal: PlacementAction? = null
+    private var placing: Job? = null
     private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
     private var scaffoldingTarget: BlockPos? = null
     private var scaffoldingPlacedAtTick = 0
@@ -169,11 +172,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
             forceSneak = currentGoal.requiresSneak
             currentTarget = currentGoal.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
             goal = currentGoal
+            placing = launchSequence(placing) { place() }
         }
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        goal ?: return@tickHandler
+    private suspend fun place() {
         val aimed by requires { goal }
 
         val (action, hit, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {

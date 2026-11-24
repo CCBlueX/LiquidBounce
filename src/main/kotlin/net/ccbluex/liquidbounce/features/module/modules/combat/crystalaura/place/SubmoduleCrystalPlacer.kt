@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -201,8 +202,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         val surface = Surface.of(pos, side, throughWalls = wallsRange > 0f)
         val current by requires { placement?.takeIf { it.pos == pos && it.side == side } }
         val hit = ModuleCrystalAura.rotationMode.activeMode.look({ current.rotation }, surface) { view ->
-            raytraceBlock(getMaxRange().toDouble(), view, pos, pos.stateOrEmpty)
-                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+            raytraceBlockHit(getMaxRange().toDouble(), view, pos)
         } ?: return
 
         if (!chronometer.hasAtLeastElapsed(delay.toLong())) {

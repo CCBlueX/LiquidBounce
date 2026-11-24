@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -50,7 +50,6 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.HitResult
 import java.util.function.BooleanSupplier
 
 /**
@@ -223,15 +222,11 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
             return@tickHandler
         }
 
-        currentTarget ?: return@tickHandler
         val target by requires { currentTarget }
         requires { mc.gui.screen() !is AbstractContainerScreen<*> }
 
         val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
-            val (pos, _) = target
-            val state = pos.state ?: return@lookAt null
-            raytraceBlock(interactionRange.toDouble(), going, pos, state)
-                ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+            raytraceBlockHit(interactionRange.toDouble(), going, target.first)
         }
 
         // Attempt to interact with the block

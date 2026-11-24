@@ -97,10 +97,6 @@ object AutoBowAimbotFeature : ToggleableValueGroup(ModuleAutoBow, "BowAimbot", t
 
     @Suppress("unused")
     private val aimHandler = tickHandler {
-        if (aim == null) {
-            return@tickHandler
-        }
-
         val planned by requires { aim }
         val onTarget = ModuleAutoBow.lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
             rotations.toRotationTarget(planned, considerInventory = true)

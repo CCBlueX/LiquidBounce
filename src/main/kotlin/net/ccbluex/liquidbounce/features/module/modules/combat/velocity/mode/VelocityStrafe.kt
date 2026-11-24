@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -73,7 +72,9 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
 
         // Check if this is a regular velocity update
         if (packet.isLocalPlayerVelocity()) {
-            requires { !OnlyFacing.enabled || shouldStrafe }
+            if (OnlyFacing.enabled && !shouldStrafe) {
+                return@sequenceHandler
+            }
 
             // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
             waitTicks(delay)

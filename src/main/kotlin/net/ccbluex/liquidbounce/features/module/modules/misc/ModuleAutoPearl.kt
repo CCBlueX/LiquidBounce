@@ -54,12 +54,6 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 private const val MAX_SIMULATED_TICKS = 240
-private const val REFINE_STEPS = 10
-
-/**
- * How close an arc has to land to the enemy's pearl to be preferred for its shorter flight.
- */
-private const val LANDING_TOLERANCE = 1.0
 
 /**
  * Auto pearl module
@@ -127,10 +121,6 @@ object ModuleAutoPearl : ClientModule(
 
     private suspend fun throwQueued() {
         val rotation = queue.firstOrNull() ?: return
-        if (Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) == null) {
-            queue.removeFirst()
-            return
-        }
 
         // Leaves the queue once thrown, and as well when the throw gives up
         try {
@@ -174,16 +164,18 @@ object ModuleAutoPearl : ClientModule(
             return
         }
 
+        if (queue.isNotEmpty()) {
+            return
+        }
+
         val aim = aimAt(destination) ?: return
 
         if (Limits.enabled && aim.error > Limits.destDistance) {
             return
         }
 
-        if (queue.isEmpty()) {
-            queue.add(aim.rotation)
-            throwing = launchSequence(throwing) { throwQueued() }
-        }
+        queue.add(aim.rotation)
+        throwing = launchSequence(throwing) { throwQueued() }
     }
 
     private fun canTrigger(pearl: ThrownEnderpearl): Boolean {
@@ -209,7 +201,7 @@ object ModuleAutoPearl : ClientModule(
 
     /**
      * Simulates every pitch towards [destination] and refines each arc that lands closest locally. Of the arcs
-     * landing within [LANDING_TOLERANCE], the one with the shortest flight wins, so a blocked low arc falls back
+     * landing within a block of it, the one with the shortest flight wins, so a blocked low arc falls back
      * to a high one. Without such an arc, the closest one is returned.
      */
     private fun aimAt(destination: Vec3): Throw? {
@@ -238,12 +230,13 @@ object ModuleAutoPearl : ClientModule(
                 return@mapNotNull null
             }
 
-            (-REFINE_STEPS..REFINE_STEPS)
+            // A degree to either side of the coarse pitch, in tenths
+            (-10..10)
                 .mapNotNull { step -> simulate(current.rotation.pitch + step * 0.1f) }
                 .minByOrNull { it.error }
         }
 
-        return arcs.filter { it.error <= LANDING_TOLERANCE }.minByOrNull { it.ticks }
+        return arcs.filter { it.error <= 1.0 }.minByOrNull { it.ticks }
             ?: arcs.minByOrNull { it.error }
     }
 

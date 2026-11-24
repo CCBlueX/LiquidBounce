@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.raytracing
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -68,6 +69,15 @@ fun raytraceBlock(
         state.getShape(mc.level!!, pos, CollisionContext.of(mc.player!!)),
         state,
     )
+}
+
+/**
+ * Where the ray of [rotation] meets the block at [pos], which may lie behind other blocks.
+ */
+fun raytraceBlockHit(range: Double, rotation: Rotation, pos: BlockPos): BlockHitResult? {
+    val state = pos.state ?: return null
+    return raytraceBlock(range, rotation, pos, state)
+        ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
 }
 
 /**

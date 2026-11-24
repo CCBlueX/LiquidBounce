@@ -36,14 +36,13 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import java.util.function.BooleanSupplier
 
 /**
@@ -110,6 +109,11 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        // Counted here, so a deposit waits the same whether a look or the tick handler made it
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+        }
+
         currentTarget = null
         if (!rotateToTarget || ModuleAutoDeposit.matchingSlots(inventory = false).isEmpty()) {
             return@handler
@@ -134,7 +138,6 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
     @Suppress("unused")
     private val tickHandler = tickHandler {
         if (cooldownLeft > 0) {
-            cooldownLeft--
             return@tickHandler
         }
 
@@ -143,19 +146,13 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
         }
 
         if (rotateToTarget) {
-            currentTarget ?: return@tickHandler
-            depositSlot() ?: return@tickHandler
-
             val slot by requires { depositSlot() }
             val target by requires { currentTarget }
             requires { rotateToTarget }
             requires { mc.gui.screen() !is AbstractContainerScreen<*> }
 
             val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
-                val (pos, _) = target
-                val state = pos.state ?: return@lookAt null
-                raytraceBlock(interactionRange.toDouble(), going, pos, state)
-                    ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+                raytraceBlockHit(interactionRange.toDouble(), going, target.first)
             }
 
             deposit(slot, hit)

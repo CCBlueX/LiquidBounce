@@ -190,7 +190,13 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         // Keeps aiming while the hook flies and during the cooldown
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation, considerInventory = false, surface = surface),
+            rotations.toRotationTarget(
+                rotation,
+                // Only a straight throw has a surface; without one the entity's box would become it
+                entity = target.takeIf { surface != null },
+                considerInventory = false,
+                surface = surface,
+            ),
             Priority.IMPORTANT_FOR_USAGE_1,
             this
         )
@@ -202,7 +208,12 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
         lookAt(Priority.IMPORTANT_FOR_USAGE_1, {
             val (rotation, surface) = planned
-            rotations.toRotationTarget(rotation, considerInventory = false, surface = surface)
+            rotations.toRotationTarget(
+                rotation,
+                entity = targetTracker.target.takeIf { surface != null },
+                considerInventory = false,
+                surface = surface,
+            )
         }) { going -> going.takeIf { it.directionAngleTo(planned.first) <= aimOffThreshold } }
 
         // 1. select rod
@@ -218,8 +229,6 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val target = targetTracker.target
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
         val minRangeSq = range.start.sq()
-
-        requires { slot.itemStack.`is`(Items.FISHING_ROD) }
 
         // 3. timeout / hit entity / no movement / out of range
         tickConditional(hitTimeout) {

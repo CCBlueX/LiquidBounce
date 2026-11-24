@@ -117,8 +117,8 @@ object ModuleEasyPearl :
         }
 
         // The pearl goes once the rotation towards the target is ready
+        planned = getTargetRotation(hitResult.location) ?: return@handler
         targetPosition = hitResult.location
-        planned = getTargetRotation(hitResult.location)
         event.cancelEvent()
         throwing = launchSequence(throwing) { throwPearl() }
     }
@@ -130,7 +130,6 @@ object ModuleEasyPearl :
 
     private suspend fun throwPearl() {
         try {
-            requires { targetPosition != null }
             val aim by requires { planned }
             val going = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
                 rotation.toRotationTarget(aim, tolerance = aimOffThreshold)

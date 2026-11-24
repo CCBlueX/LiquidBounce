@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -175,10 +176,6 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     /** Runs the attack phase each tick, once the rotation going out is known. */
     @Suppress("unused")
     private val attackHandler = tickHandler {
-        if (phase != Phase.ATTACK) {
-            return@tickHandler
-        }
-
         requires { phase == Phase.ATTACK }
         val current by requires { engagement }
         val facing = lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
@@ -197,7 +194,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val rotation = raytraceBox(eyes, box, range = reach, wallsRange = 0.0)?.rotation
             ?: Rotation.lookingAt(box.center, eyes)
 
-        return rotations.toRotationTarget(rotation, target)
+        // The aim is judged from the client's eyes, so it gets the box as the attacking eyes see it
+        val seen = box.inflate(target.pickRadius.toDouble()).move(player.eyePosition.subtract(eyes))
+        return rotations.toRotationTarget(rotation, target, surface = Surface(seen, throughWalls = true))
     }
 
     private fun engage() {

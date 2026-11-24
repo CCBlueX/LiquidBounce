@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
@@ -65,7 +64,7 @@ import net.ccbluex.liquidbounce.utils.math.forAllFaces
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -76,7 +75,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -256,7 +254,9 @@ object ModuleFucker : ClientModule(
         requires { !ModuleBlink.running }
 
         val priority = if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1
-        val rayTraceResult = lookAt(priority, { plan }) { going -> hitOn(destroyerTarget.pos, going) }
+        val rayTraceResult = lookAt(priority, { plan }) { going ->
+            raytraceBlockHit(max(range, wallRange).toDouble(), going, destroyerTarget.pos)
+        }
         if (rayTraceResult.blockPos.state?.isNotBreakable(rayTraceResult.blockPos) != false) {
             return@tickHandler
         }
@@ -402,16 +402,6 @@ object ModuleFucker : ClientModule(
         aim = plan
 
         return true
-    }
-
-    /**
-     * What breaking with [rotation] hits, once it meets [pos]; the ray may pass through other blocks within the wall
-     * range.
-     */
-    private fun hitOn(pos: BlockPos, rotation: Rotation): BlockHitResult? {
-        val state = pos.state ?: return null
-        return raytraceBlock(max(range, wallRange).toDouble(), rotation, pos, state)
-            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
     }
 
     private fun updateSurroundings(initialPosition: BlockPos): Boolean {

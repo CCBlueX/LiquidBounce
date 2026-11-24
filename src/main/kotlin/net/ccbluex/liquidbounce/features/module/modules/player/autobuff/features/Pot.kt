@@ -58,7 +58,6 @@ import net.minecraft.world.item.SplashPotionItem
 import net.minecraft.world.level.entity.EntityTypeTest
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
 
 internal object Pot : StatusEffectBasedBuff("Pot") {
 
@@ -158,10 +157,12 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
         when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
-                // Only the pitch decides where a splash at the feet lands, so the yaw stays where the player looks
+                // The yaw only turns when the throw was led for a moving player
                 requires { isUsable(slot) }
+                val yaw = rotation.yaw.takeIf { it != player.yRot }
                 rotation = ModuleAutoBuff.lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
                     ModuleAutoBuff.Rotations.toRotationTarget(
+                        yaw = yaw,
                         pitch = rotation.pitch,
                         considerInventory = true,
                         tolerance = 3f,
@@ -210,8 +211,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
      * The potion inherits the player's velocity, so while moving the landing point drifts. We simulate the
      * exact potion trajectory and iteratively adjust the yaw towards the predicted landing spot.
      *
-     * ponytail: pitch stays near vertical and relies on the splash's large radius to cover the player;
-     *   precise landing control / throwing against walls (see #2051) is deferred.
+     * ponytail: only the yaw is adjusted; the pitch is the configured one and relies on the splash's large
+     *   radius to cover the player; precise landing control / throwing against walls (see #2051) is deferred.
      */
     private fun calculateSplashRotation(): Rotation {
         var rotation = Rotation(player.yRot, pitch.random())

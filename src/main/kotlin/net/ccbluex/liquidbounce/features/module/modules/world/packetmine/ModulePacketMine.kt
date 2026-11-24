@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -62,7 +63,6 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 /**
@@ -195,7 +195,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         mineTarget.updateBlockState()
         if (aim == null) {
             // Without rotations of its own, the player has to look at the target itself
-            handleBreaking(mineTarget, hitOn(mineTarget, RotationManager.currentRotation ?: player.rotation))
+            handleBreaking(mineTarget, RotationManager.currentRotation ?: player.rotation)
             return@tickHandler
         }
 
@@ -205,7 +205,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         val plan by requires { aim }
         val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
         mineTarget.updateBlockState()
-        handleBreaking(mineTarget, hitOn(mineTarget, going))
+        handleBreaking(mineTarget, going)
     }
 
     private fun rotate(mineTarget: MineTarget) {
@@ -234,13 +234,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         rotation = raytrace.rotation
     }
 
-    /** What the ray of [rotation] hits of the target, which may lie behind other blocks within the wall range. */
-    private fun hitOn(mineTarget: MineTarget, rotation: Rotation) =
-        raytraceBlock(max(range, wallsRange).toDouble(), rotation, mineTarget.targetPos, mineTarget.blockState)
-            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == mineTarget.targetPos }
-
     @Suppress("ReturnCount")
-    private fun handleBreaking(mineTarget: MineTarget, hit: BlockHitResult?) {
+    private fun handleBreaking(mineTarget: MineTarget, going: Rotation) {
+        val hit = raytraceBlockHit(max(range, wallsRange).toDouble(), going, mineTarget.targetPos)
         if (hit == null && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
             return
         }

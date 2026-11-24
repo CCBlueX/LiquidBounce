@@ -189,10 +189,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     private suspend fun shoot() {
         val planned by requires { throwing }
 
-        // Set the rotation with the usage priority of 2.
         lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
             rotations.toRotationTarget(
                 planned.first,
+                // Only a straight shot has a surface; without one the entity's box would become it
+                entity = targetTracker.target.takeIf { planned.second != null },
                 considerInventory = considerInventory,
                 surface = planned.second,
             )

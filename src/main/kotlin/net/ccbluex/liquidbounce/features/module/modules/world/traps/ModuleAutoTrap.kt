@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -63,6 +64,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     /** Aims at the placement of [currentPlan] this tick. */
     private var aim: RotationTarget? = null
+    private var placing: Job? = null
 
     /** Ticks of [delay] left after the last placement, planning nothing meanwhile. */
     private var cooldownLeft = 0
@@ -90,6 +92,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         aim = null
         if (cooldownLeft > 0) {
+            cooldownLeft--
             return@handler
         }
 
@@ -121,21 +124,11 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
                 considerInventory = !ignoreOpenInventory,
                 surface = blockChangeInfo.blockPlacementTarget.surface(),
             )
+            placing = launchSequence(placing) { place() }
         }
     }
 
-    @Suppress("unused")
-    private val placementHandler = tickHandler {
-        if (cooldownLeft > 0) {
-            cooldownLeft--
-            return@tickHandler
-        }
-
-        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
-            return@tickHandler
-        }
-
-        aim ?: return@tickHandler
+    private suspend fun place() {
         val target by requires { aim }
         val intent by requires { currentPlan }
         requires { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
@@ -144,22 +137,16 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             traceFromPlayer(going).takeIf { intent.validate(it) }?.let { hit -> hit to going }
         }
 
-        val plan = currentPlan ?: return@tickHandler
-        if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
-            currentPlan = null
-            return@tickHandler
-        }
-
-        if (shouldWaitForTiming(plan)) {
-            return@tickHandler
+        if (shouldWaitForTiming(intent)) {
+            return
         }
 
         CombatManager.pauseCombatForAtLeast(1)
-        SilentHotbar.selectSlotSilently(this@ModuleAutoTrap, plan.slot, 1)
+        SilentHotbar.selectSlotSilently(this@ModuleAutoTrap, intent.slot, 1)
 
         var successful = false
         val onSuccess = {
-            plan.onIntentFulfilled()
+            intent.onIntentFulfilled()
             successful = true
             true
         }
@@ -167,13 +154,13 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         doPlacement(
             raycast,
             rotation,
-            hand = plan.slot.useHand,
+            hand = intent.slot.useHand,
             onPlacementSuccess = onSuccess,
             onItemUseSuccess = onSuccess
         )
 
         if (!successful) {
-            return@tickHandler
+            return
         }
 
         cooldownLeft = delay

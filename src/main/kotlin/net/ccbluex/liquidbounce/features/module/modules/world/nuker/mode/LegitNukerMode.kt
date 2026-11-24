@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
@@ -43,12 +42,10 @@ import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 object LegitNukerMode : Mode("Legit") {
@@ -128,7 +125,11 @@ object LegitNukerMode : Mode("Legit") {
         val switching = wasTarget != null && target != wasTarget
         val delayEnd = player.tickCount + switchDelay
         val rayTraceResult = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { plan }) { going ->
-            if (switching && player.tickCount < delayEnd) null else hitOn(target, going)
+            if (switching && player.tickCount < delayEnd) {
+                null
+            } else {
+                raytraceBlockHit(max(range, wallRange).toDouble() + 1.0, going, target)
+            }
         }
 
         doBreak(rayTraceResult, forceImmediateBreak)
@@ -180,16 +181,6 @@ object LegitNukerMode : Mode("Legit") {
             rotations,
             considerInventory = !ignoreOpenInventory,
         )
-    }
-
-    /**
-     * What breaking with [rotation] hits, once the ray, which may pass through other blocks within the wall range,
-     * meets [pos].
-     */
-    private fun hitOn(pos: BlockPos, rotation: Rotation): BlockHitResult? {
-        val state = pos.state ?: return null
-        return raytraceBlock(max(range, wallRange).toDouble() + 1.0, rotation, pos, state)
-            ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
     }
 
 }

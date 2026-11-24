@@ -62,7 +62,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
         super.enable()
     }
 
-    /** Ticks left before the next look at the situation, after a notice, the Duels NPC or the head. */
+    /** Ticks left before the next look at the situation, after a notice or the head. */
     private var cooldownLeft = 0
 
     val repeatable = tickHandler {
@@ -140,7 +140,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
         cooldownLeft = 0
     }
 
-    private fun handleLobbySituation() {
+    private suspend fun handleLobbySituation() {
         inMatch = false
 
         val duelsEntity = world.entityGetter.firstOrNull(EntityTypes.ARMOR_STAND) {
@@ -160,7 +160,7 @@ object AutoQueueGommeDuels : Mode("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        cooldownLeft = 5 * 20
+        waitMillis(5000)
     }
 
     private suspend fun handleDuelsSituation() {

@@ -28,7 +28,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
 @Suppress("MaxLineLength", "MagicNumber")
-internal object TargetEntityMovementPrediction : ToggleableValueGroup(ElytraRotationProcessor, "Prediction", true) {
+internal object TargetEntityMovementPrediction : ToggleableValueGroup(ElytraRotations, "Prediction", true) {
     private val mode by enumChoice("Mode", PredictMode.SIMPLE)
     private val glidingOnly by boolean("GlidingOnly", true)
     private val multiplier by floatRange("Multiplier", 1.8f..2f, 0.5f..3f)

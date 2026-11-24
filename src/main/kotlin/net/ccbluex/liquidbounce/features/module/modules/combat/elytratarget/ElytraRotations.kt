@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ElytraRotationProcessor.ignoreKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ElytraRotations.ignoreKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -45,7 +45,7 @@ private const val BASE_YAW_SPEED = 45.0f
 private const val BASE_PITCH_SPEED = 35.0f
 private const val IDEAL_DISTANCE = 10
 
-internal object ElytraRotationProcessor : ValueGroup("Rotations"), EventListener {
+internal object ElytraRotations : ValueGroup("Rotations"), EventListener {
     private val sharpRotations by boolean("Sharp", false)
     internal val ignoreKillAura by boolean("IgnoreKillAuraRotation", true)
     internal val look by boolean("Look", false)
@@ -82,9 +82,6 @@ internal object ElytraRotationProcessor : ValueGroup("Rotations"), EventListener
     /**
      * Adaptively smooths the angle, but at the same time
      * Allows it to work well with [ModuleKillAura] and [ignoreKillAura].
-     *
-     * Please do not use this ANYWHERE ELSE
-     * This is only for [ModuleElytraTarget]
      */
     private fun turn(currentRotation: Rotation, targetRotation: Rotation): Rotation {
         val delta = currentRotation.rotationDeltaTo(targetRotation)
