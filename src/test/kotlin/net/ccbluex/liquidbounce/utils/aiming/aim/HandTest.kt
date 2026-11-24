@@ -143,6 +143,23 @@ class HandTest {
     }
 
     @Test
+    fun `a block missed by less than a count is met by a count towards its point`() {
+        repeat(40) { seed ->
+            val hand = Hand(Random(seed.toLong())).apply { reset(AimGoal.Kind.BLOCK) }
+            // The point lies on the lower edge of a face, and the view rests a little steeper: under the face
+            var yaw = 90.15f
+            var pitch = if (seed % 2 == 0) 82.65f else 82.62f
+            fun isMet() = pitch <= 82.58f && abs(yaw - 90f) < 10f
+            repeat(20) {
+                val delta = hand.step(yaw, pitch, 90f, 82.57f, 20f, 12f, isMet(), AimGoal.Kind.BLOCK, step)
+                yaw += delta.deltaYaw
+                pitch += delta.deltaPitch
+            }
+            assertTrue(isMet(), "seed $seed rests at $yaw/$pitch, off the block")
+        }
+    }
+
+    @Test
     fun `a strafing target is kept in sight`() {
         repeat(10) { seed ->
             val stream = run(seed.toLong(), 400, 9f) { tick ->

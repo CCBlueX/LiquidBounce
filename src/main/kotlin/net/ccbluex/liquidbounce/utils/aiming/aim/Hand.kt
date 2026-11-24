@@ -77,6 +77,9 @@ class Hand(private val random: RandomGenerator) {
     private var following = false
     private var tilt = 0f
 
+    /** Whether the hand, at rest beside the point of a block without meeting it, took the count onto that point. */
+    private var isOnPoint = false
+
     /** Lets go of the mouse: the next goal, of [kind], is new and has to be reacted to. */
     fun reset(kind: AimGoal.Kind) {
         this.kind = kind
@@ -88,6 +91,7 @@ class Hand(private val random: RandomGenerator) {
         pauseIn = 0
         following = false
         tilt = random.nextGaussian().toFloat() * TILT
+        isOnPoint = false
     }
 
     /**
@@ -148,7 +152,7 @@ class Hand(private val random: RandomGenerator) {
         var turnYaw = yaw.counts(moveYaw, step)
         // A look at a block can be an exact angle, as one held on a 45 degree step: no hand lies on it to the count
         val isBox = kind == AimGoal.Kind.BLOCK && width > 0f
-        if (isBox && turnYaw != 0f && abs(nearYaw - viewYaw - turnYaw) < step / 2) {
+        if (isBox && !isOnPoint && turnYaw != 0f && abs(nearYaw - viewYaw - turnYaw) < step / 2) {
             turnYaw -= sign(turnYaw) * step
         }
         return RotationDelta(turnYaw, pitch.counts(movePitch, step))
@@ -216,6 +220,7 @@ class Hand(private val random: RandomGenerator) {
         val errorPitch =
             seenPitch[delay] + velocityPitch * (delay + lead - 1) - viewPitch - pitch.ahead(lead, driftPitch)
         if (abs(errorYaw) <= toleranceYaw && abs(errorPitch) <= tolerancePitch && (reached || width == 0f)) {
+            isOnPoint = false
             return
         }
 
@@ -229,13 +234,26 @@ class Hand(private val random: RandomGenerator) {
         val floorPitch = if (needPitch && height > 0f) LANDING_FLOOR else 0f
         val landYaw = errorYaw * along + random.nextGaussian().toFloat() * floorYaw
         val landPitch = errorPitch * along + random.nextGaussian().toFloat() * floorPitch
-        yaw.submove(landYaw, needYaw, ticks, step)
-        pitch.submove(landPitch, needPitch, ticks, step)
+        val corrects = correctsMiss(needYaw || needPitch)
+        yaw.submove(landYaw, needYaw || corrects, ticks, step)
+        pitch.submove(landPitch, needPitch || corrects, ticks, step)
         yaw.pursue(driftYaw)
         pitch.pursue(driftPitch)
         pauseIn = whole + if (following) random.nextInt(PAUSE.first, PAUSE.last + 1) else 0
         // Each movement is a little turned, more or less like the one before
         tilt = tilt * TILT_KEEP + random.nextGaussian().toFloat() * TILT * sqrt(1f - TILT_KEEP * TILT_KEEP)
+    }
+
+    /**
+     * Whether a count towards the point is due: the hand rests within the tolerance of a block, with no movement
+     * [needed], and still does not meet it, so the point is on its edge. Once, as a point that misses as well leaves
+     * nothing to correct.
+     */
+    private fun correctsMiss(needed: Boolean): Boolean {
+        val isMissed = kind == AimGoal.Kind.BLOCK && !needed
+        val corrects = isMissed && !isOnPoint
+        isOnPoint = isMissed
+        return corrects
     }
 
     /**
