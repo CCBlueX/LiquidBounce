@@ -39,6 +39,8 @@ import net.ccbluex.liquidbounce.gametest.set
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import java.util.Locale
 import java.util.Random
@@ -79,8 +81,7 @@ class KillAuraAimGameTest : ServerGameTest({
 
         aim("Human")
         enable(ModuleKillAura)
-        opponent.fight(FIGHT_TICKS)
-        val hits = attacks.count
+        val hits = attacks.during("Human") { opponent.fight(FIGHT_TICKS) }
         // Fewer hits in a minute than a person who aims at all would land
         check(hits >= 60) { "the Human aim landed $hits hits in ${FIGHT_TICKS / 20} seconds" }
 
@@ -118,7 +119,7 @@ class KillAuraAimGameTest : ServerGameTest({
         if (anticheats.any { it == Anticheat.INTAVE || it == Anticheat.MX }) {
             expectViolation("the aim checks to catch the Constant aim") {
                 enable(ModuleKillAura)
-                opponent.fight(600)
+                attacks.during("Constant") { opponent.fight(600) }
                 disable(ModuleKillAura)
             }
         } else {
@@ -126,7 +127,7 @@ class KillAuraAimGameTest : ServerGameTest({
             for (dynamic in listOf("false", "true")) {
                 client { KillAuraRotationsValueGroup.set("Aim/Constant/Dynamic/Enabled", dynamic) }
                 enable(ModuleKillAura)
-                opponent.fight(600)
+                attacks.during("Constant, Dynamic $dynamic") { opponent.fight(600) }
                 disable(ModuleKillAura)
             }
         }
@@ -145,10 +146,21 @@ private fun GameTestScope.aim(mode: String) = client {
 }
 
 private class Attacks : EventListener {
-    var count = 0
+    /** The player's tick count at each attack. */
+    private val ticks = ArrayList<Int>()
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEntityEvent> { count++ }
+    private val attackHandler = handler<AttackEntityEvent> { ticks += player.tickCount }
+
+    /** The hits landed during [fight], logged with the longest wait between two to compare aims and runs. */
+    fun during(aim: String, fight: () -> Unit): Int {
+        val before = ticks.size
+        fight()
+        val landed = ticks.drop(before)
+        val wait = landed.zipWithNext { earlier, later -> later - earlier }.maxOrNull()
+        logger.info("[KillAuraAim] $aim landed ${landed.size} hits, longest wait $wait ticks")
+        return landed.size
+    }
 }
 
 /**
