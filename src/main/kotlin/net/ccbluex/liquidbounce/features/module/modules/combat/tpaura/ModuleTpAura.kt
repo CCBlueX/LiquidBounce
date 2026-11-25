@@ -62,6 +62,10 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.isEqual1_21_4
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_20_5
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_15_2
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
@@ -171,7 +175,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
      * Off, a target without line of sight is not attacked at all — the module routes to a spot that has one.
      */
     private val throughWall = tree(object : ToggleableValueGroup(this@ModuleTpAura, "ThroughWall", false) {
-        val range by float("Range", 2f, 0f..3f, "blocks")
+        val range by float("Range", 2f, 0f..6f, "blocks")
     })
 
     /** Hides the swing from the server only: the client still animates, no punch packet is sent. */
@@ -672,8 +676,43 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private var returnSearching = false
     private var returnStartedAt = 0L
 
+    /** How the server on the other side decides whether a swing reaches; the rule changed shape three times. */
+    private enum class ReachEra { LEGACY_LOS, FLAT, ATTRIBUTE_ONE, ATTRIBUTE_THREE }
+
+    /**
+     * How the server decides whether a swing reaches, resolved when the module starts. Switching the target
+     * protocol mid-session is not picked up until it is restarted; the module quits with the world anyway.
+     */
+    private var reachEra = ReachEra.ATTRIBUTE_THREE
+
+    private fun resolveReachEra(): ReachEra =
+        when {
+            // First: the legacy flags answer false without ViaFabricPlus, which is a modern native server.
+            !isOlderThan1_20_5 ->
+                if (isEqual1_21_4 || isNewerThanOrEquals1_21_5) ReachEra.ATTRIBUTE_THREE else ReachEra.ATTRIBUTE_ONE
+            isOlderThanOrEqual1_15_2 -> ReachEra.LEGACY_LOS
+            else -> ReachEra.FLAT
+        }
+
+    /** The most a sighted swing reaches on this server, before the safety margin. */
+    private val maxReach: Double
+        get() = when (reachEra) {
+            ReachEra.LEGACY_LOS -> LEGACY_SIGHTED_REACH
+            ReachEra.FLAT -> FLAT_REACH
+            ReachEra.ATTRIBUTE_ONE -> player.entityInteractionRange() + 1.0
+            ReachEra.ATTRIBUTE_THREE -> player.entityInteractionRange() + 3.0
+        }
+
     private val reach: Double
-        get() = player.entityInteractionRange() - REACH_MARGIN
+        get() = (maxReach - REACH_MARGIN).coerceAtLeast(0.5)
+
+    /**
+     * How far from the target a landing spot may be. The spot is chosen before the line of sight is known, so the
+     * no-line-of-sight budget decides — and on 1.20.5+ that is the same as the sighted one.
+     */
+    private val spotRadius: Double
+        get() = (if (reachEra == ReachEra.LEGACY_LOS) min(BLIND_REACH, maxReach) else maxReach) -
+            TARGET_MOVEMENT_MARGIN
 
     /**
      * The engagement while its target is still one. The hurt-time filter is skipped on purpose: a target
@@ -684,6 +723,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         get() = engagement?.takeIf { targetSelector.validate(it.target, checkHurtTime = false) }
 
     override fun onEnabled() {
+        reachEra = resolveReachEra()
         if (debug.log) {
             TpAuraLog.open()
         }
@@ -694,6 +734,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 "afterAttack" to afterAttack,
                 "hold" to hold,
                 "reach" to fmt(reach),
+                "era" to reachEra,
                 "throughWall" to throughWall.enabled,
                 "prediction" to prediction.enabled,
                 "spray" to prediction.spray,
@@ -2194,6 +2235,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 TpAuraLog.details(
                     "dist" to fmt(targetDist(target, feet)),
                     "reach" to fmt(reachTo(feet, target)),
+                    "era" to reachEra,
                     "retries" to engagement.retries,
                     "holdLeft" to engagement.holdLeft,
                 ),
@@ -2416,8 +2458,19 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         view.clear()
     }
 
-    private fun isInReach(feet: Vec3, target: LivingEntity) =
-        target.boundingBox.distanceToSqr(player.getEyePositionAt(feet)) <= Mth.square(reachTo(feet, target))
+    private fun isInReach(feet: Vec3, target: LivingEntity): Boolean {
+        val limit = reachTo(feet, target)
+        if (limit <= 0.0) {
+            return false
+        }
+        val eyes = player.getEyePositionAt(feet)
+        // Up to 1.20.4 the server compares entity centres; from 1.20.5 the eye against the bounding box.
+        val distanceSq = when (reachEra) {
+            ReachEra.LEGACY_LOS, ReachEra.FLAT -> eyes.distanceToSqr(target.position())
+            ReachEra.ATTRIBUTE_ONE, ReachEra.ATTRIBUTE_THREE -> target.boundingBox.distanceToSqr(eyes)
+        }
+        return distanceSq <= Mth.square(limit)
+    }
 
     /**
      * Ticks of target movement the route and the swing have to make up for: the measured flight, capped by
@@ -2509,14 +2562,18 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     /**
-     * What the server accepts: six blocks with a clear line of sight and three without it on 1.8–1.20.4; newer
-     * servers read `entity_interaction_range`, which [reach] already reflects. The smaller budget wins.
+     * What the server would accept from [feet]: six blocks with line of sight and three without it up to 1.15.2,
+     * six flat after that, and the attribute plus a tolerance from 1.20.5 — all measured, see [ReachEra]. Zero
+     * means the swing would be dropped: no line of sight and the switch is off.
      */
-    private fun reachTo(feet: Vec3, target: LivingEntity): Double = when {
-        sighted(feet, target) -> min(reach, SIGHTED_REACH)
-        throughWall.enabled -> min(reach, throughWall.range.toDouble())
-        // Without line of sight and without the switch, the server would drop the swing: not reachable at all.
-        else -> 0.0
+    private fun reachTo(feet: Vec3, target: LivingEntity): Double {
+        // Only the versions with the no-line-of-sight rule clamp the switch; later ones accept the full reach.
+        val blind = if (reachEra == ReachEra.LEGACY_LOS) min(BLIND_REACH, maxReach) else maxReach
+        return when {
+            sighted(feet, target) -> maxReach - REACH_MARGIN
+            throughWall.enabled -> min(throughWall.range.toDouble(), blind) - REACH_MARGIN
+            else -> 0.0
+        }
     }
 
     /** The server's own test: a ray from our eyes to the target's eyes, blocked by any collider. */
@@ -2761,7 +2818,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             box,
             // The spot search stays inside the blind reach: a spot further out is legal to swing from, but a
             // moving target leaves it before the swing lands, which is how every attack ended up out of range.
-            min(reach, BLIND_REACH) - TARGET_MOVEMENT_MARGIN,
+            spotRadius,
             from,
             requiresSupport = requireSupport,
         )
@@ -2775,7 +2832,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val preferred = if (target == null || landingSide == LandingSide.ANY) {
             emptyList()
         } else {
-            sideSpots(terrain, box, min(reach, BLIND_REACH) - TARGET_MOVEMENT_MARGIN, facingOf(target), requireSupport)
+            sideSpots(terrain, box, spotRadius, facingOf(target), requireSupport)
         }
         val all = (preferred + visible + blind).distinct().take(MAX_GOALS)
         if (target == null || landingSide == LandingSide.ANY) {
@@ -2929,9 +2986,12 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private const val REACH_MARGIN = 0.1
+    /** Reach without line of sight up to 1.15.2; also the scale the probe spacing is built from. */
     private const val BLIND_REACH = 3.0
     private const val EYE_DEPTH = 2
-    private const val SIGHTED_REACH = 6.0
+    /** Reach with line of sight up to 1.15.2, and the flat budget of the versions that dropped the rule. */
+    private const val LEGACY_SIGHTED_REACH = 6.0
+    private const val FLAT_REACH = 6.0
 
     /** Goals tried for a direct route; the nearest ones first, so a blocked direction does not blind the rest. */
     private const val MAX_DIRECT_GOALS = 6
