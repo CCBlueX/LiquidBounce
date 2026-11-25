@@ -19,19 +19,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 
 /**
- * Holds the look straight back against the movement and steeply down, sneaking at the edges.
+ * Holds the look of [ScaffoldBridgingGodBridge] and sneaks at the edges. On a straight row that look is 45 degrees off
+ * straight back, so the player walks the row with two keys: sneaking, diagonal keys move about 40% faster than one
+ * (MC-271065, kept on purpose since 25w04a).
  */
 object ScaffoldBridgingNinja : ScaffoldBridging("Ninja", "Sneak") {
 
     override val shouldHoldLook: Boolean
         get() = true
 
-    override fun look(): Rotation? {
-        val movement = movement() ?: return null
-        // Along a diagonal the face is further away
-        return Rotation(movement + 180f, if (movement % 90f == 0f) 80f else 75.6f)
-    }
+    override fun look(): Rotation? = ScaffoldBridgingGodBridge.look()
+
+    override fun wantedLine(row: Line): Line = ScaffoldBridgingGodBridge.wantedLine(row)
 
 }

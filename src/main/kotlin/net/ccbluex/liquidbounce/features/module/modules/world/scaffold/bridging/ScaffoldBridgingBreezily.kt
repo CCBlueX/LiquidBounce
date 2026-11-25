@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.Direction
 
 /**
- * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a straight
- * bridge, it taps left and right to stay over the blocks. The taps also slow the player down to where the look meets
- * the face at every block, so no edge needs a sneak or a jump.
+ * Holds the look straight back against the movement and steeply down, and walks over the edges. While the player runs
+ * forwards over a straight bridge, it taps left and right to stay over the blocks. The taps also slow the player down
+ * to where the look meets the face at every block, so no edge needs a sneak or a jump.
  */
 object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
 
@@ -45,7 +45,11 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
     override val shouldHoldLook: Boolean
         get() = true
 
-    override fun look(): Rotation? = ScaffoldBridgingNinja.look()
+    override fun look(): Rotation? {
+        val movement = movement() ?: return null
+        // Along a diagonal the face is further away
+        return Rotation(movement + 180f, if (movement % 90f == 0f) 80f else 75.6f)
+    }
 
     // Before SafeWalk's Ledge, which judges the edge by the movement going out
     @Suppress("unused")
