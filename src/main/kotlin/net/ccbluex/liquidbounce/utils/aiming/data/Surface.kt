@@ -45,7 +45,8 @@ class Surface @JvmOverloads constructor(
             return face == null
         }
 
-        val direction = rotation.directionVector
+        // The vector a click is traced with. directionVector is a few 1e-4 off it and passes an edge on the other side
+        val direction = rotation.viewVector
         val reach = eyes.distanceTo(box.center) + box.xsize + box.ysize + box.zsize
         val hit = AABB.clip(listOf(box), eyes, eyes.fma(reach, direction), BlockPos.ZERO) ?: return false
         if (face != null && hit.direction != face) {
