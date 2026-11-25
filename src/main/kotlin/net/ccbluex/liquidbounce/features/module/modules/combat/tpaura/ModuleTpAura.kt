@@ -701,13 +701,21 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             else -> ReachEra.FLAT
         }
 
+    /**
+     * The attribute the server set, not `player.entityInteractionRange()`: the Reach module answers the latter
+     * with its own increase added, and the server knows nothing about that. Reading the attribute keeps the
+     * budget at what the other side will actually accept.
+     */
+    private val attributeReach: Double
+        get() = player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)
+
     /** The most a sighted swing reaches on this server, before the safety margin. */
     private val maxReach: Double
         get() = when (reachEra) {
             ReachEra.LEGACY_LOS -> LEGACY_SIGHTED_REACH
             ReachEra.FLAT -> FLAT_REACH
-            ReachEra.ATTRIBUTE_ONE -> player.entityInteractionRange() + 1.0
-            ReachEra.ATTRIBUTE_THREE -> player.entityInteractionRange() + 3.0
+            ReachEra.ATTRIBUTE_ONE -> attributeReach + 1.0
+            ReachEra.ATTRIBUTE_THREE -> attributeReach + 3.0
         }
 
     private val reach: Double
