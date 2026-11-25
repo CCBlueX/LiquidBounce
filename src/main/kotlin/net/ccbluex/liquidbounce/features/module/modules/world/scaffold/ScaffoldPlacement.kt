@@ -130,7 +130,7 @@ internal object ScaffoldPlacement {
     ): BlockPlacementTarget? {
         keptLook = null
         stack = bestStack
-        heldLook = bridging.look(predictedPos)
+        heldLook = bridging.look()
         val offsets = when {
             ModuleFreeze.running -> BlockPosOffsets.FULL.offsets
             ScaffoldDownFeature.shouldGoDown -> BlockPosOffsets.DOWN.offsets
@@ -206,7 +206,8 @@ internal object ScaffoldPlacement {
     /**
      * Whether [look] stays although it does not place right now. A held look meets the face at the latest where
      * SafeWalk stops the player, so it stays on the ground until the player stood there for [STALL_TICKS], and through
-     * a hop that places nothing anyway. Any other look stays only while it places one of the next ticks.
+     * a hop, where a slow aim would not be back in time. Any other look stays only while it places one of the next
+     * ticks.
      */
     private fun shouldKeepLook(look: Rotation, stack: ItemStack, positions: List<BlockPos>) =
         if (bridging.shouldHoldLook) {
@@ -216,19 +217,19 @@ internal object ScaffoldPlacement {
         }
 
     /**
-     * Whether [rotation] puts [stack] at one of [positions] from where the player is in one of the next [ticks] ticks
-     * while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [safely] only
-     * counts a click that lands clear of the face's edges and leaves the player standing on a block.
+     * Whether [rotation] puts [stack] at one of [positions] from where [simulation] is in one of its next [ticks]
+     * ticks while still on the ground. If that's at the edge, SafeWalk holds the player there until it does. [safely]
+     * only counts a click that lands clear of the face's edges and leaves the player standing on a block.
      */
     private fun canPlaceSoon(
         rotation: Rotation,
         stack: ItemStack,
         positions: List<BlockPos>,
-        input: SimulatedInput = SimulatedInput.fromClientPlayer(DirectionalInput(player.input)),
+        simulation: SimulatedPlayer =
+            SimulatedPlayer.fromClientPlayer(SimulatedInput.fromClientPlayer(DirectionalInput(player.input))),
         ticks: Int = HOLD_TICKS,
         safely: Boolean = false,
     ): Boolean {
-        val simulation = SimulatedPlayer.fromClientPlayer(input)
         repeat(ticks) {
             simulation.tick()
             if (!simulation.onGround()) {
@@ -246,39 +247,51 @@ internal object ScaffoldPlacement {
     }
 
     /**
-     * Whether the player stands on a block at [position] once [placed] is down. Along a diagonal a held look often
-     * places the block beside the player's way first, and the one under the player would come a tick too late.
+     * Whether [rotation] puts [target] down before the player, moving on with [input] without sneaking, leaves the
+     * ground. Only a view that reached the aim, or rests on the look the bridging holds, stays the same over those
+     * ticks. A look meets a face a few hundredths of a block from its edge, so the walk is simulated as the rotation
+     * turns it.
      */
-    private fun canStandAt(position: Vec3, placed: BlockPos): Boolean {
-        if (!player.wouldBeCloseToFallOff(position)) {
-            return true
+    fun canPlaceInTime(target: BlockPlacementTarget, rotation: Rotation, input: DirectionalInput): Boolean {
+        val held = ModuleScaffold.aim?.let { aim -> rotation.rotationDeltaLengthTo(aim) <= RotationUtil.gcd } == true
+        if (!held && !bridging.shouldHoldLook) {
+            return false
         }
-        val feet = player.dimensions.makeBoundingBox(position).inflate(-0.05, 0.0, -0.05).move(0.0, -0.5, 0.0)
-        return feet.intersects(AABB(placed))
+        // Scaffold leaves a jump off the bridge out while no block can go down in the air. SafeWalk is not asked,
+        // which would ask scaffold again
+        val jumps = player.input.keyPresses.jump && ModuleScaffold.canPlaceInAir
+        val simulation = SimulatedPlayer.fromClientPlayer(input, jumps)
+        return canPlaceSoon(rotation, stack, listOf(target.placedBlock), simulation, safely = true)
     }
 
     /**
-     * Whether [rotation] puts [target] down before the player, walking on without sneaking, leaves the ground. Only a
-     * view that reached the aim stays the same over those ticks. A view resting near the held look barely moves,
-     * so its next tick counts as well.
+     * Whether [rotation], held through a jump from here with [input], builds what the jump comes down on: [target]
+     * on its first tick, where the lifted eyes meet the face from further out than they do walking, and a block on top
+     * of it while the player is above that, in the place it comes down.
      */
-    fun canPlaceInTime(target: BlockPlacementTarget, rotation: Rotation): Boolean {
-        val held = ModuleScaffold.aim?.let { aim -> rotation.rotationDeltaLengthTo(aim) <= RotationUtil.gcd } == true
-        val ticks = when {
-            held -> HOLD_TICKS
-            bridging.shouldHoldLook -> 1
-            else -> return false
+    fun canPlaceInJump(target: BlockPlacementTarget, rotation: Rotation, input: DirectionalInput): Boolean {
+        val simulation = SimulatedPlayer.fromClientPlayer(input, jump = true)
+        simulation.tick()
+        val places = placementTargetClickedBy(rotation, simulation.eyePosition, stack, listOf(target.placedBlock))
+            ?.takeIf { isValidCrosshairTarget(it.blockHitResult) }
+            ?.isWellInsideFace() == true
+        if (!places) {
+            return false
         }
-        // Built by hand: asking for SafeWalk here would ask scaffold again
-        val input = SimulatedInput(
-            DirectionalInput(player.input).toInput(
-                // Scaffold leaves a jump off the bridge out while no block can go down in the air
-                jump = player.input.keyPresses.jump && ModuleScaffold.canPlaceInAir,
-                // The held key alone does not sprint: walking against the view, movement correction keeps it off
-                sprint = player.isSprinting,
-            ).toAgent()
-        )
-        return canPlaceSoon(rotation, stack, listOf(target.placedBlock), input, ticks, safely = true)
+        // Scaffold lets go of the keys in the air, and 8 ticks on the jump is back down at the height of the top block
+        simulation.input = SimulatedInput(DirectionalInput.NONE.toInput().toAgent())
+        val reach = rotation.directionVector.scale(player.blockInteractionRange())
+        // The upper side of the block the first tick places, without its edges
+        val below = AABB(target.placedBlock).inflate(-FACE_MARGIN, 0.0, -FACE_MARGIN)
+        var meetsTop = false
+        repeat(8) {
+            simulation.tick()
+            val eyes = simulation.eyePosition
+            val isAbove = simulation.position().y > below.maxY + 1
+            val hit = below.clip(eyes, eyes.add(reach)).orElse(null)
+            meetsTop = meetsTop || isAbove && hit != null && hit.y > below.maxY - 1.0E-4
+        }
+        return meetsTop && canStandAt(simulation.position(), target.placedBlock.above())
     }
 
     fun rotation(target: BlockPlacementTarget?): Rotation? {
@@ -352,4 +365,16 @@ private fun BlockPlacementTarget.isWellInsideFace(): Boolean {
         axis == direction.axis ||
             local.get(axis) in bounds.min(axis) + FACE_MARGIN..bounds.max(axis) - FACE_MARGIN
     }
+}
+
+/**
+ * Whether the player stands on a block at [position] once [placed] is down. Along a diagonal a held look often
+ * places the block beside the player's way first, and the one under the player would come a tick too late.
+ */
+private fun canStandAt(position: Vec3, placed: BlockPos): Boolean {
+    if (!player.wouldBeCloseToFallOff(position)) {
+        return true
+    }
+    val feet = player.dimensions.makeBoundingBox(position).inflate(-0.05, 0.0, -0.05).move(0.0, -0.5, 0.0)
+    return feet.intersects(AABB(placed))
 }

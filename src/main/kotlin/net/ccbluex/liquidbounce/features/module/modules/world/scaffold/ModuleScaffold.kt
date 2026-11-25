@@ -613,20 +613,54 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     internal val isHopping
         get() = !player.onGround() && !canPlaceInAir && player.y >= placementY + 1
 
-    /** A jump off the end of the bridge is left out while no block can go down in the air. */
+    /**
+     * Whether a jump at an edge, moving with [input], gets a block to come down on: from an aim that follows in the
+     * air, or from a held look that meets the face on the first tick of the jump. The next block then goes on top of
+     * that one, under the player, unless SameY keeps the row.
+     */
+    internal fun canJumpAtEdge(input: DirectionalInput): Boolean =
+        canPlaceInAir || hasStarted && sameYMode == SameYMode.OFF && bridging.activeMode.shouldHoldLook &&
+            currentTarget?.let {
+                ScaffoldPlacement.canPlaceInJump(it, RotationManager.currentRotation ?: player.rotation, input)
+            } == true
+
+    /**
+     * A jump off the end of the bridge is left out while no block can go down in the air. Decided before
+     * [ScaffoldStabilizeMovementFeature] steers, which leaves a jumping player alone. A jump against a block is one
+     * up a step, such as a bridge leaves where it jumped at an edge.
+     */
     @Suppress("unused")
-    private val jumpHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        val jumps = event.jump && player.onGround() && !isTowering && ModuleClutch.fall == null
-        if (jumps && !canPlaceInAir && jumpsOffBridge(event.directionalInput)) {
+    private val jumpHandler = handler<MovementInputEvent>(
+        priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
+    ) { event ->
+        val jumps = event.jump && player.onGround() && !isTowering && ModuleClutch.fall == null &&
+            !player.horizontalCollision
+        if (jumps && !canPlaceInAir && landsOffBridge(event.directionalInput)) {
             event.jump = false
         }
     }
 
     /**
-     * Whether a jump now comes down where no block is, or so close to an edge that the landing runs over it. A view
-     * that turns steers a silent walk up to half a key step off its way, so then a jump to either side counts too.
+     * A held look puts the blocks of a jump under the player, not ahead of it. In the air the keys are let go until
+     * the jump comes down on the bridge. Not after a hit: where that throws the player is the player's to steer.
      */
-    private fun jumpsOffBridge(input: DirectionalInput): Boolean {
+    @Suppress("unused")
+    private val hopHandler = handler<MovementInputEvent>(
+        priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+    ) { event ->
+        val hops = isHopping && bridging.activeMode.shouldHoldLook && ModuleClutch.fall == null &&
+            player.hurtTime == 0
+        if (hops && event.directionalInput != DirectionalInput.NONE && landsOffBridge(event.directionalInput)) {
+            event.directionalInput = DirectionalInput.NONE
+        }
+    }
+
+    /**
+     * Whether a jump now, or the one under way, comes down where no block is, or so close to an edge that the landing
+     * runs over it. A view that turns steers a silent walk up to half a key step off its way, so then a jump to either
+     * side counts too.
+     */
+    private fun landsOffBridge(input: DirectionalInput): Boolean {
         // Without a silent view, or with one resting on the held look, the walk goes where the keys say
         val isSteady = RotationManager.currentRotation == null ||
             !isExpanding && ScaffoldPlacement.heldLook != null && !isLiningUp()
@@ -658,33 +692,27 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     var rawInput = DirectionalInput.NONE
         private set
 
+    /**
+     * Before [ScaffoldStabilizeMovementFeature] steers: the line leads where the keys ask to go, not where the
+     * steering of the last tick went.
+     */
     @Suppress("unused")
     private val rawInputHandler = handler<MovementInputEvent>(
         priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
     ) { event ->
         rawInput = event.directionalInput
-    }
-
-    @Suppress("unused")
-    private val handleMovementInput = handler<MovementInputEvent>(
-        priority = EventPriorityConvention.MODEL_STATE
-    ) { event ->
-        this.currentOptimalLine = null
-
-        val currentInput = event.directionalInput
-
-        if (currentInput == DirectionalInput.NONE) {
-            return@handler
+        currentOptimalLine = if (rawInput == DirectionalInput.NONE) {
+            null
+        } else {
+            ScaffoldMovementPlanner.getOptimalMovementLine(rawInput)?.let(bridging.activeMode::wantedLine)
         }
-
-        this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
     }
 
     /**
-     * Whether an edge has to stop the player: no blocks left, or the next block does not go down before the player
-     * walks off.
+     * Whether an edge has to stop the player: no blocks left, or the next block does not go down before the player,
+     * moving with [input], walks off.
      */
-    internal fun shouldStopAtEdge(): Boolean {
+    internal fun shouldStopAtEdge(input: DirectionalInput): Boolean {
         val target = currentTarget
         // A click waits out the delay, however well the view meets the face
         if (blockCount <= 0 || target == null || cooldown > 1) {
@@ -705,7 +733,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         if (ModuleClutch.fall != null || isExpanding) {
             return true
         }
-        promised = target.takeIf { ScaffoldPlacement.canPlaceInTime(it, view) }
+        promised = target.takeIf { ScaffoldPlacement.canPlaceInTime(it, view, input) }
         return promised == null
     }
 

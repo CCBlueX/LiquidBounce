@@ -42,7 +42,7 @@ import kotlin.math.hypot
  * Scaffold bridges over the void on courses a player walks while the anticheats watch: it must never let the player
  * fall, and nothing that watches may object. Human has to pass every anticheat with every bridging type, Constant
  * only those without aim checks. A bridge starts where the last one of its course ended, so all but the first arrive
- * walking. Degrees turned per block are logged for comparison.
+ * walking, up the steps that bridges with jumps left. Degrees turned per block are logged for comparison.
  */
 class ScaffoldGameTest : ServerGameTest(TestWorld.VOID, {
     val saved = client { ConfigSystem.serializeValueGroup(ModuleScaffold) }
@@ -145,6 +145,10 @@ private class Run(val bridging: String, val aim: String, val course: Course, pri
         if (stoppedAt >= 0 && tick == stoppedAt + 40) {
             course.keys(mc.options).forEach { key -> key.isDown = true }
         }
+        // A bridge that jumped at its edges left a step each time, and the way to its end leads up them
+        if (mc.options.keyJump !in course.keys(mc.options)) {
+            mc.options.keyJump.isDown = player.horizontalCollision && player.onGround()
+        }
 
         val sent = RotationManager.serverRotation
         val yaw = angleDifference(sent.yaw, last.yaw) * cos(Math.toRadians(sent.pitch.toDouble()))
@@ -191,6 +195,7 @@ private fun GameTestScope.bridge(bridging: String, aim: String, course: Course, 
     } finally {
         client {
             course.keys(it.options).forEach { key -> key.isDown = false }
+            it.options.keyJump.isDown = false
             ModuleScaffold.enabled = false
         }
     }

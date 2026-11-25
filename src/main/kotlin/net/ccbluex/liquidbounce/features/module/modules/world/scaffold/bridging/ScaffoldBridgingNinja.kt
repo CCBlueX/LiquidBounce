@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.minecraft.world.phys.Vec3
 
 /**
  * Holds the look straight back against the movement and steeply down, sneaking at the edges.
@@ -29,7 +28,7 @@ object ScaffoldBridgingNinja : ScaffoldBridging("Ninja", "Sneak") {
     override val shouldHoldLook: Boolean
         get() = true
 
-    override fun look(position: Vec3): Rotation? {
+    override fun look(): Rotation? {
         val movement = movement() ?: return null
         // Along a diagonal the face is further away
         return Rotation(movement + 180f, if (movement % 90f == 0f) 80f else 75.6f)

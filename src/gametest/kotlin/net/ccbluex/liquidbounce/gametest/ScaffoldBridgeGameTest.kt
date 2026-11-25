@@ -35,8 +35,9 @@ private const val SETTLE_TIMEOUT_TICKS = 200
 
 /**
  * Scaffold bridges over the void with every bridging type and either aim and nothing else changed: straight,
- * diagonally, from where a player usually stands, and with the jump key held. It must never let the player fall.
- * Blocks per second, and the ticks it needed a block but placed none, are logged for comparison.
+ * diagonally, from where a player usually stands, and with the jump key held. It must never let the player fall, and
+ * GodBridge and Breezily do not sneak at their edges: GodBridge jumps, Breezily needs neither. Blocks per second, and
+ * the ticks it needed a block but placed none, are logged for comparison.
  */
 class ScaffoldBridgeGameTest : ClientGameTest(ScaffoldBridge::test)
 
@@ -62,13 +63,15 @@ private object ScaffoldBridge {
         var lastTick = -1
         var waits = 0
         var sneaks = 0
+        var jumps = 0
+        var wasOnGround = true
         var fellAt: String? = null
 
         val blocksPerSecond
             get() = if (lastTick > firstTick) (placed - 1) * 20.0 / (lastTick - firstTick) else 0.0
 
         override fun toString() = "${bridging.padEnd(9)} ${aim.padEnd(8)} ${course.name.padEnd(8)} " +
-            "placed $placed, %.2f blocks/s, waits $waits, sneaks $sneaks".format(blocksPerSecond) +
+            "placed $placed, %.2f blocks/s, waits $waits, sneaks $sneaks, jumps $jumps".format(blocksPerSecond) +
             (fellAt?.let { ", fell at $it" } ?: "")
     }
 
@@ -92,14 +95,25 @@ private object ScaffoldBridge {
                 val blocks = attempts.sumOf { it.placed - 1 }
                 val ticks = attempts.sumOf { it.lastTick - it.firstTick }
                 logger.info(
-                    "[ScaffoldBridge] total ${key.first} ${key.second}: %.2f blocks/s, waits %d, sneaks %d".format(
-                        blocks * 20.0 / ticks, attempts.sumOf { it.waits }, attempts.sumOf { it.sneaks },
-                    )
+                    "[ScaffoldBridge] total ${key.first} ${key.second}: %.2f blocks/s, waits %d, sneaks %d, jumps %d"
+                        .format(
+                            blocks * 20.0 / ticks, attempts.sumOf { it.waits }, attempts.sumOf { it.sneaks },
+                            attempts.sumOf { it.jumps },
+                        )
                 )
             }
 
             val failed = runs.filter { it.fellAt != null || it.placed < BLOCKS }
             check(failed.isEmpty()) { "Scaffold did not bridge:\n" + failed.joinToString("\n") }
+
+            // GodBridge and Breezily walk over their edges. Where a step would miss the block GodBridge jumps, and
+            // Breezily's taps keep a straight bridge free of that too. Nothing sneaks but the first block going
+            // down, which lasts a tick or two longer, and a diagonal with Human now and then
+            val sneaked = runs.filter { it.bridging == "GodBridge" || it.bridging == "Breezily" }.filter {
+                it.aim == "Constant" && it.sneaks > 0 ||
+                    it.course == Course.STRAIGHT && (it.sneaks > 2 || it.bridging == "Breezily" && it.jumps > 0)
+            }
+            check(sneaked.isEmpty()) { "Scaffold sneaked or jumped at edges:\n" + sneaked.joinToString("\n") }
         }
     }
 
@@ -168,6 +182,11 @@ private object ScaffoldBridge {
         if (run.firstTick >= 0 && player.isShiftKeyDown) {
             run.sneaks++
         }
+        // Leaving the ground upwards
+        if (run.firstTick >= 0 && run.wasOnGround && !player.onGround() && player.deltaMovement.y > 0.2) {
+            run.jumps++
+        }
+        run.wasOnGround = player.onGround()
 
         if (player.y < BRIDGE_Y - 0.01) {
             run.fellAt = player.position().toString()

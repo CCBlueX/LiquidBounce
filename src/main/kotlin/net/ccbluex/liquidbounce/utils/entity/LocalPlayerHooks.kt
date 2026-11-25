@@ -32,6 +32,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSneakMultiplier
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.features.SilentMovementKeys
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.player.LocalPlayer
@@ -58,6 +61,22 @@ object LocalPlayerHooks : SimulationHooks {
 /** A simulation of the local player holding [input]. */
 fun SimulatedPlayer.Companion.fromClientPlayer(input: SimulatedInput): SimulatedPlayer =
     fromPlayer(player, input, PlayerSimulationCache.isLocalPlayerMoving, LocalPlayerHooks)
+
+/**
+ * A simulation of the local player moving on with [keys] as the rotation has it move: silent movement correction
+ * turns the keys onto the rotation's yaw and walks along that, up to half a key step off where the keys point. No
+ * ledge holds it back, whatever SafeWalk does.
+ */
+fun SimulatedPlayer.Companion.fromClientPlayer(keys: DirectionalInput, jump: Boolean): SimulatedPlayer {
+    val rotation = RotationManager.currentRotation
+    val isSilent = RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.SILENT
+    val turned = if (rotation != null && isSilent) SilentMovementKeys.peek(keys, player.yRot - rotation.yaw) else keys
+    // The held key alone does not sprint: walking against the view, movement correction keeps it off
+    val input = SimulatedInput(turned.toInput(jump = jump, sprint = player.isSprinting).toAgent())
+    val simulation = fromClientPlayer(input)
+    simulation.yRot = RotationManager.movementYaw
+    return simulation
+}
 
 /** The local player's keys with [directionalInput], held back at ledges while a module makes it safe walk. */
 fun SimulatedInput.Companion.fromClientPlayer(

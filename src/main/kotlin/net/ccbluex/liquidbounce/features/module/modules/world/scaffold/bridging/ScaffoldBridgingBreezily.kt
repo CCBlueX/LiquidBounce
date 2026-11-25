@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.Direction
-import net.minecraft.world.phys.Vec3
 
 /**
  * Holds the look of [ScaffoldBridgingNinja] and walks over the edges. While the player runs forwards over a straight
- * bridge, it taps left and right to stay over the blocks.
+ * bridge, it taps left and right to stay over the blocks. The taps also slow the player down to where the look meets
+ * the face at every block, so no edge needs a sneak or a jump.
  */
 object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
 
@@ -45,11 +45,12 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
     override val shouldHoldLook: Boolean
         get() = true
 
-    override fun look(position: Vec3): Rotation? = ScaffoldBridgingNinja.look(position)
+    override fun look(): Rotation? = ScaffoldBridgingNinja.look()
 
+    // Before SafeWalk's Ledge, which judges the edge by the movement going out
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(
-        priority = EventPriorityConvention.SAFETY_FEATURE
+        priority = (EventPriorityConvention.SAFETY_FEATURE + 1).toShort()
     ) { event ->
         // On a diagonal the taps would steer off the row, which the look meets as it is
         val straight = movement()?.let { it % 90f == 0f } ?: false
@@ -95,6 +96,11 @@ object ScaffoldBridgingBreezily : ScaffoldBridging("Breezily", "Ledge") {
             }
         }
 
+        // From the first step on: walking straight, every few blocks the player is past the face before the look
+        // meets it
+        if (lastSideways == 0f && currentSideways == 0f) {
+            currentSideways = 1f
+        }
         if (lastSideways != currentSideways && currentSideways != 0f) {
             lastSideways = currentSideways
             currentEdgeDistanceRandom = edgeDistance.random().toDouble()

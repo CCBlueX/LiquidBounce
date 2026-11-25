@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -39,13 +39,14 @@ sealed class ScaffoldBridging(name: String, safeWalk: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = bridging
 
-    // An edge is only sneaked at while the view lines up, and where another action would need a block placed in the air
+    // An edge is only sneaked at while the view lines up, and jumped at once the jump has a block to come down on
     @Suppress("unused")
     private val safeWalkMode = modes<Mode>(this, "SafeWalk", { modes -> modes.indexOfFirst { it.name == safeWalk } }) {
         ModuleSafeWalk.safeWalkChoices(
             it,
             ModuleScaffold::shouldStopAtEdge,
-            { ModuleScaffold.isLiningUp() || !ModuleScaffold.canPlaceInAir },
+            ModuleScaffold::isLiningUp,
+            ModuleScaffold::canJumpAtEdge,
         ) { ModuleScaffold.blockCount }
     }
 
@@ -53,8 +54,11 @@ sealed class ScaffoldBridging(name: String, safeWalk: String) : Mode(name) {
     open val shouldHoldLook: Boolean
         get() = false
 
-    /** The look to hold while the player stands at [position], null to aim at the face. */
-    open fun look(position: Vec3): Rotation? = null
+    /** The look to hold, null to aim at the face. */
+    open fun look(): Rotation? = null
+
+    /** The line the player walks and scaffold plans along: [row], through the middle of the blocks, by default. */
+    open fun wantedLine(row: Line): Line = row
 
     /**
      * The 45 degree step of [ModuleScaffold.rawInput]'s movement. It stays the same block after block and only
