@@ -739,13 +739,15 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     /**
      * Whether the view still turns to the look the bridging holds (bridge start, a corner, stop and go), during which
-     * an edge is only sneaked at, see [ScaffoldBridging.look].
+     * an edge is only sneaked at, see [ScaffoldBridging.look]. A hand that came within the tolerance may still be
+     * settling: until it rests, a click the walk counts on can miss the face.
      */
     internal fun isLiningUp(): Boolean {
         val look = ScaffoldPlacement.heldLook?.takeUnless { isExpanding } ?: return false
         val view = RotationManager.currentRotation ?: player.rotation
         val margin = max(HELD_LOOK_TOLERANCE, RotationUtil.gcd.toFloat())
-        return abs(angleDifference(view.yaw, look.yaw)) > margin || abs(view.pitch - look.pitch) > margin
+        val moves = RotationManager.lastRotation?.let { view.rotationDeltaLengthTo(it) >= RotationUtil.gcd / 2 } == true
+        return abs(angleDifference(view.yaw, look.yaw)) > margin || abs(view.pitch - look.pitch) > margin || moves
     }
 
     /**

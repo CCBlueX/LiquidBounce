@@ -28,10 +28,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNormal
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingTelly
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.block.outlineShape
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetfinding.AngleYawTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -131,6 +133,7 @@ internal object ScaffoldPlacement {
         keptLook = null
         stack = bestStack
         heldLook = bridging.look()
+        val position = if (bridging.shouldHoldLook) heldLookPos(predictedPos, optimalLine) else predictedPos
         val offsets = when {
             ModuleFreeze.running -> BlockPosOffsets.FULL.offsets
             ScaffoldDownFeature.shouldGoDown -> BlockPosOffsets.DOWN.offsets
@@ -140,7 +143,7 @@ internal object ScaffoldPlacement {
             // Prioritize the block that is closest to the line
             BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
         } else {
-            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
+            BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(position)
         }
 
         val searchOptions = BlockPlacementTargetFindingOptions(
@@ -148,13 +151,13 @@ internal object ScaffoldPlacement {
             FaceHandlingOptions(facePositionFactory(optimalLine), considerFacingAwayFaces = throughWalls),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(
-                position = predictedPos,
+                position = position,
                 pose = predictedPose,
                 // Nearest to the held look, or to where scaffold aims rather than to a view still turning there
                 rotation = heldLook ?: ModuleScaffold.aim ?: RotationManager.serverRotation,
             ),
         )
-        val needed = getTargetedPosition(predictedPos.toBlockPos())
+        val needed = getTargetedPosition(position.toBlockPos())
         val best = findBestBlockPlacementTarget(needed, searchOptions)
         if (best == null) {
             // Nothing to place: a held look stays rather than going back to the camera
@@ -377,4 +380,17 @@ private fun canStandAt(position: Vec3, placed: BlockPos): Boolean {
     }
     val feet = player.dimensions.makeBoundingBox(position).inflate(-0.05, 0.0, -0.05).move(0.0, -0.5, 0.0)
     return feet.intersects(AABB(placed))
+}
+
+/**
+ * Where a held look puts the next block down from. Up to two ticks before an edge scaffold predicts from where the
+ * player is, whose middle is still over the last block then, and the face of the next one is still turned away from
+ * the eyes: without a target scaffold would stop the player there, before the look can meet the face. The player
+ * clicks where it leaves the block.
+ */
+private fun heldLookPos(predictedPos: Vec3, line: Line?): Vec3 {
+    if (line == null || getTargetedPosition(predictedPos.toBlockPos()).state?.isAir != false) {
+        return predictedPos
+    }
+    return ScaffoldMovementPrediction.getFallOffPositionOnLine(line) ?: predictedPos
 }
