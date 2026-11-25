@@ -99,6 +99,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.AABB
@@ -186,6 +187,12 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     /** Which side of the target the landing spot prefers. */
     private val landingSide by enumChoice("LandingSide", LandingSide.ANY)
+
+    /**
+     * How far from the target's box the module prefers to stand. Closer leaves more slack for the target to move
+     * before the swing lands; standing further is only worth it where the server's reach allows it.
+     */
+    private val landingDistance by float("LandingDistance", 3f, 1f..8f, "blocks")
 
     private enum class LandingSide(override val tag: String) : Tagged {
         ANY("Any"),
@@ -710,9 +717,13 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
      * How far from the target a landing spot may be. The spot is chosen before the line of sight is known, so the
      * no-line-of-sight budget decides — and on 1.20.5+ that is the same as the sighted one.
      */
-    private val spotRadius: Double
-        get() = (if (reachEra == ReachEra.LEGACY_LOS) min(BLIND_REACH, maxReach) else maxReach) -
-            TARGET_MOVEMENT_MARGIN
+    /** Where the module prefers to stand: the configured distance, never past what the server accepts. */
+    private val standRadius: Double
+        get() = min(landingDistance.toDouble(), maxReach - REACH_MARGIN).coerceAtLeast(MIN_STAND)
+
+    /** The widest spot the server would accept; only tried when nothing closer can be reached. */
+    private val fallbackRadius: Double
+        get() = maxReach - REACH_MARGIN
 
     /**
      * The engagement while its target is still one. The hurt-time filter is skipped on purpose: a target
@@ -735,6 +746,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 "hold" to hold,
                 "reach" to fmt(reach),
                 "era" to reachEra,
+                "attribute" to fmt(player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)),
+                "landingDistance" to landingDistance,
                 "throughWall" to throughWall.enabled,
                 "prediction" to prediction.enabled,
                 "spray" to prediction.spray,
@@ -1009,9 +1022,18 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 "serverPos" to fmt(origin),
                 "onGround" to (TeleportManager.teleports.serverOnGround),
                 "reach" to fmt(reach),
+                "stand" to fmt(standRadius),
+                "slack" to fmt(maxReach - standRadius),
                 "unreachable" to unreachable.size,
             ),
         )
+
+        if (landingDistance > maxReach - REACH_MARGIN) {
+            dlog(
+                "STAND-CLAMPED",
+                TpAuraLog.details("wanted" to landingDistance, "reach" to fmt(maxReach - REACH_MARGIN)),
+            )
+        }
 
         // Manual mode decides when: being in reach is not the trigger, the player's action is.
         if (isInReach(origin.toMinecraft(), target) && (!manual.enabled || manualTriggered)) {
@@ -2814,14 +2836,25 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         target: LivingEntity? = null,
     ): List<BlockPos> {
         val terrain = Terrain.live(world)
-        val visible = terrain.reachPositions(
-            box,
-            // The spot search stays inside the blind reach: a spot further out is legal to swing from, but a
-            // moving target leaves it before the swing lands, which is how every attack ended up out of range.
-            spotRadius,
-            from,
-            requiresSupport = requireSupport,
-        )
+        // The configured distance first: a spot further out is legal to swing from, but a moving target leaves it
+        // before the swing lands, which is how every attack used to end up out of range.
+        var radius = standRadius
+        var visible = terrain.reachPositions(box, radius, from, requiresSupport = requireSupport)
+        if (visible.isEmpty() && fallbackRadius > radius) {
+            // Nothing at the configured distance — a hollow, a gap, a wall. A far spot beats no spot at all.
+            radius = fallbackRadius
+            visible = terrain.reachPositions(box, radius, from, requiresSupport = requireSupport)
+            if (visible.isNotEmpty()) {
+                dlog(
+                    "STAND-FALLBACK",
+                    TpAuraLog.details(
+                        "stand" to fmt(standRadius),
+                        "fallback" to fmt(fallbackRadius),
+                        "spots" to visible.size,
+                    ),
+                )
+            }
+        }
         if (!throughWall.enabled) {
             return visible
         }
@@ -2832,7 +2865,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val preferred = if (target == null || landingSide == LandingSide.ANY) {
             emptyList()
         } else {
-            sideSpots(terrain, box, spotRadius, facingOf(target), requireSupport)
+            sideSpots(terrain, box, radius, facingOf(target), requireSupport)
         }
         val all = (preferred + visible + blind).distinct().take(MAX_GOALS)
         if (target == null || landingSide == LandingSide.ANY) {
@@ -2986,6 +3019,9 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private const val REACH_MARGIN = 0.1
+
+    /** Never stand tighter than this to the target's box, whatever the configuration asks for. */
+    private const val MIN_STAND = 0.9
     /** Reach without line of sight up to 1.15.2; also the scale the probe spacing is built from. */
     private const val BLIND_REACH = 3.0
     private const val EYE_DEPTH = 2
