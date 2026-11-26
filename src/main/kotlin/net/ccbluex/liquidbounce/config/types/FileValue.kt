@@ -113,7 +113,7 @@ enum class FileDialogMode(
     };
 
     val title: String
-        get() = LanguageManager.getLanguage()?.getOrDefault(translationKey, fallbackTitle) ?: fallbackTitle
+        get() = LanguageManager.getLanguage().getOrDefault(translationKey, fallbackTitle)
 
     abstract fun selectFiles(extensions: Iterable<String>?): CompletionStage<List<String>>
 

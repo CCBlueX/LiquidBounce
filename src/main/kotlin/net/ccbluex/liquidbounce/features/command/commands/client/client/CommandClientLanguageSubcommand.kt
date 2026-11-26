@@ -43,13 +43,17 @@ object CommandClientLanguageSubcommand {
                 argument(
                     "language",
                     ClientStringArgumentType.word(),
-                    suggestions(LanguageManager.languageCodes),
+                    suggestions(strings = { LanguageManager.languageCodes }),
                 ) { language ->
                     exec { ctx ->
                         val code = ctx.get(language)
                         val choice = LanguageManager.languageChoiceFromCode(code)
                         if (choice == null) {
-                            chat(regular("Language not found."))
+                            val message = when (code) {
+                                in LanguageManager.languageCodes -> "$code is used when Minecraft is set to it."
+                                else -> "Language not found."
+                            }
+                            chat(regular(message))
                             return@exec 1
                         }
 

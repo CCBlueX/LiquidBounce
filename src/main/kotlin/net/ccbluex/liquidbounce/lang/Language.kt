@@ -24,6 +24,9 @@
  */
 package net.ccbluex.liquidbounce.lang
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -42,19 +45,15 @@ import java.util.concurrent.CopyOnWriteArrayList
 fun translation(key: String, vararg args: Any?): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 
+/**
+ * Translations are loaded on the render thread from what is bundled or cached; downloads run off it in [select].
+ */
 object LanguageManager : ValueGroup("Language") {
 
     var clientLanguage by enumChoice("ClientLanguage", ClientLanguage.AUTO)
-        .onChanged { _ ->
-            loadLanguage(currentLanguageChoice())
-            EventManager.callEvent(ClientLanguageChangedEvent())
-        }
+        .onChanged { _ -> withScope { select(currentLanguageCode()) } }
 
-    private val COMMON_UNDERSTOOD_LANGUAGE = ClientLanguage.EN_US
-    val MINECRAFT_LANGUAGE: ClientLanguage?
-        get() = NullableBypass.mc()?.let { mc ->
-            languageChoiceFromCode(mc.options.languageCode)
-        }
+    private const val COMMON_UNDERSTOOD_LANGUAGE = "en_us"
 
     enum class ClientLanguage(override val tag: String, val code: String? = null) : Tagged {
         AUTO("Auto"),
@@ -65,18 +64,17 @@ object LanguageManager : ValueGroup("Language") {
         ZH_CN("Chinese (Simplified)", "zh_cn"),
         ZH_TW("Chinese (Traditional)", "zh_tw"),
         RU_RU("Russian", "ru_ru"),
-        UA_UA("Ukrainian", "ua_ua"),
+        UK_UA("Ukrainian", "uk_ua"),
         PT_BR("Portuguese (Brazil)", "pt_br"),
         TR_TR("Turkish", "tr_tr"),
         NL_NL("Dutch (Netherlands)", "nl_nl"),
         NL_BE("Dutch (Belgium)", "nl_be"),
     }
 
-    val languageCodes = ClientLanguage.entries
-        .mapNotNull(ClientLanguage::code)
-        .toSet()
+    val languageCodes: Set<String>
+        get() = ClientLanguage.entries.mapNotNull(ClientLanguage::code).toSet() + PublishedLanguages.codes
 
-    private val languageRegistry = ConcurrentHashMap<ClientLanguage, net.ccbluex.liquidbounce.lang.ClientLanguage>()
+    private val languageRegistry = ConcurrentHashMap<String, net.ccbluex.liquidbounce.lang.ClientLanguage>()
 
     fun interface TranslationSource {
         fun load(code: String): Map<String, String>?
@@ -87,33 +85,31 @@ object LanguageManager : ValueGroup("Language") {
             ?.readJson<HashMap<String, String>>()
     }
 
-    private val sources = CopyOnWriteArrayList(listOf(clientTranslations))
+    // Published first, so a fix made after this release beats the bundled file.
+    private val sources = CopyOnWriteArrayList(listOf(PublishedLanguages, clientTranslations))
+
+    private val selection = Mutex()
 
     /**
-     * Earlier sources win, so an add-on cannot override a built-in key.
+     * The language [select] last made ready, which [ClientLanguageChangedEvent] announced.
+     */
+    @Volatile
+    private var selectedCode: String? = null
+
+    /**
+     * Earlier sources win, so an add-on cannot override a built-in or published key.
      */
     fun registerSource(source: TranslationSource) {
         sources += source
         languageRegistry.clear()
     }
 
-    private fun loadLanguage(choice: ClientLanguage): net.ccbluex.liquidbounce.lang.ClientLanguage? {
-        require(choice != ClientLanguage.AUTO) { "Cannot load language ${choice.code} because it is auto" }
-        require(choice.code != null) { "Cannot load language ${choice.tag} because it has no code" }
+    private fun loadLanguage(code: String) = languageRegistry.computeIfAbsent(code, ::createLanguage)
 
-        return if (languageRegistry.containsKey(choice)) {
-            languageRegistry[choice]!!
-        } else {
-            runCatching {
-                languageRegistry.computeIfAbsent(choice) {
-                    ClientLanguage(mergedTranslations(choice.code))
-                }
-            }.onSuccess {
-                logger.info("Loaded language ${choice.code}")
-            }.onFailure {
-                logger.error("Failed to load language ${choice.code}", it)
-            }.getOrNull()
-        }
+    private fun createLanguage(code: String): net.ccbluex.liquidbounce.lang.ClientLanguage {
+        val translations = mergedTranslations(code)
+        logger.info("Loaded language $code (${translations.size} keys)")
+        return ClientLanguage(translations)
     }
 
     private fun mergedTranslations(code: String): Map<String, String> {
@@ -129,8 +125,25 @@ object LanguageManager : ValueGroup("Language") {
             }
         }
 
-        check(merged.isNotEmpty()) { "No translations available for $code" }
         return merged
+    }
+
+    /**
+     * Downloads [code] when the published file changed, then announces it once it is loaded.
+     */
+    private suspend fun select(code: String) = selection.withLock {
+        val isUpdated = PublishedLanguages.download(code)
+        if (isUpdated) {
+            languageRegistry[code] = createLanguage(code)
+            languageRegistry.keys.retainAll(setOf(COMMON_UNDERSTOOD_LANGUAGE, code))
+        } else {
+            loadLanguage(code)
+        }
+
+        if (isUpdated || code != selectedCode) {
+            selectedCode = code
+            EventManager.callEvent(ClientLanguageChangedEvent())
+        }
     }
 
     fun languageChoiceFromCode(code: String): ClientLanguage? {
@@ -143,30 +156,27 @@ object LanguageManager : ValueGroup("Language") {
         }
     }
 
-    private fun currentLanguageChoice(): ClientLanguage {
-        if (clientLanguage != ClientLanguage.AUTO) {
-            return clientLanguage
-        }
+    /**
+     * Minecraft's language under [ClientLanguage.AUTO] also covers languages published after this release.
+     */
+    private fun currentLanguageCode(): String {
+        clientLanguage.code?.let { return it }
 
-        val minecraftChoice = MINECRAFT_LANGUAGE
-        if (minecraftChoice != null) {
-            return minecraftChoice
-        }
-
-        return COMMON_UNDERSTOOD_LANGUAGE
+        val code = NullableBypass.mc()?.options?.languageCode ?: return COMMON_UNDERSTOOD_LANGUAGE
+        return code.takeIf { languageChoiceFromCode(it) != null || PublishedLanguages.has(it) }
+            ?: COMMON_UNDERSTOOD_LANGUAGE
     }
 
-    fun loadDefault() {
+    suspend fun loadDefault() {
         loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
-        loadLanguage(currentLanguageChoice())
+        select(currentLanguageCode())
     }
 
-    fun getLanguage() = loadLanguage(currentLanguageChoice()) ?: getCommonLanguage()
+    fun getLanguage() = loadLanguage(currentLanguageCode())
 
     fun getCommonLanguage() = loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
 
-    fun hasFallbackTranslation(key: String) =
-        getCommonLanguage()?.has(key) ?: false
+    fun hasFallbackTranslation(key: String) = getCommonLanguage().has(key)
 
 }
 
@@ -183,7 +193,7 @@ class ClientLanguage(private val translations: Map<String, String>) : Language()
      * Use [getTranslation] instead.
      */
     override fun getOrDefault(key: String, fallback: String) = getTranslation(key)
-        ?: LanguageManager.getCommonLanguage()?.getTranslation(key)
+        ?: LanguageManager.getCommonLanguage().getTranslation(key)
         ?: fallback
 
     override fun has(key: String) = translations.containsKey(key)
