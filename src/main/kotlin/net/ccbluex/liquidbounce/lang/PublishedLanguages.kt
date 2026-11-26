@@ -31,11 +31,10 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption.ATOMIC_MOVE
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import kotlin.io.path.writeBytes
 
 /**
  * Newer translations of this version, mirrored from this repository by CCBlueX/Translations, so fixes and
@@ -72,12 +71,14 @@ internal object PublishedLanguages : LanguageManager.TranslationSource, EventLis
 
     private fun folder(channel: String) = ConfigSystem.rootFolder.resolve("translations/$channel")
 
+    private val File.isReadableFile: Boolean get() = isFile && canRead()
+
     private fun channel() = channel ?: cachedChannel().also { channel = it }
 
     private fun cachedChannel(): Channel {
-        val name = LiquidBounce.clientVersion.takeIf { folder(it).resolve("index.json").isFile } ?: NEXT
+        val name = LiquidBounce.clientVersion.takeIf { folder(it).resolve("index.json").isReadableFile } ?: NEXT
         val languages = runCatching {
-            folder(name).resolve("index.json").takeIf(File::isFile)?.let { parse(it.readText()) }
+            folder(name).resolve("index.json").takeIf { it.isReadableFile }?.let { parse(it.readText()) }
         }.onFailure { logger.error("Failed to read the cached translation index", it) }.getOrNull()
 
         return Channel(name, languages.orEmpty())
@@ -100,7 +101,7 @@ internal object PublishedLanguages : LanguageManager.TranslationSource, EventLis
     override fun load(code: String): Map<String, String>? {
         val language = find(code) ?: return null
         return folder(channel().name).resolve(language.file)
-            .takeIf(File::isFile)
+            .takeIf { it.isReadableFile }
             ?.readJson<HashMap<String, String>>()
     }
 
@@ -115,7 +116,7 @@ internal object PublishedLanguages : LanguageManager.TranslationSource, EventLis
 
         val language = find(code) ?: return@withContext isIndexChanged
         val file = folder(channel().name).resolve(language.file)
-        if (file.isFile && sha256Hex(file.readBytes()) == language.sha256) {
+        if (file.isReadableFile && file.inputStream().use(::sha256Hex) == language.sha256) {
             return@withContext isIndexChanged
         }
 
@@ -132,7 +133,7 @@ internal object PublishedLanguages : LanguageManager.TranslationSource, EventLis
         val name = if (published != null) version else NEXT
         val json = published ?: checkNotNull(fetch(NEXT, "index.json")) { "No translations are published" }
         val file = folder(name).resolve("index.json")
-        val isChanged = name != channel().name || !file.isFile || !file.readBytes().contentEquals(json)
+        val isChanged = name != channel().name || !file.isReadableFile || !file.readBytes().contentEquals(json)
 
         channel = Channel(name, parse(json.decodeToString()))
         write(file, json)
@@ -150,10 +151,9 @@ internal object PublishedLanguages : LanguageManager.TranslationSource, EventLis
     }
 
     private fun write(file: File, bytes: ByteArray) {
-        file.parentFile.mkdirs()
-        val temp = File(file.parentFile, "${file.name}.tmp")
-        temp.writeBytes(bytes)
-        Files.move(temp.toPath(), file.toPath(), REPLACE_EXISTING, ATOMIC_MOVE)
+        file.toPath().atomicWrite {
+            it.writeBytes(bytes)
+        }
     }
 
 }
