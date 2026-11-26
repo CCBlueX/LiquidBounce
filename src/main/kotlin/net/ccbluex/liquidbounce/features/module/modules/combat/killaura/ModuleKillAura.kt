@@ -113,6 +113,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      */
     internal var waitTicks = 0
 
+    private var lazySpeed = 0f
+    private var lazyAligned = false
+    private var lazyLastDesired: Rotation? = null
+    private val lazySpeedStep = 1f / 20f
+
     init {
         tree(KillAuraAutoBlock)
         tree(TargetRenderer(this) {
@@ -127,6 +132,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         targetTracker.reset()
         failedHits.clear()
         KillAuraNotifyWhenFail.failedHitsIncrement = 0
+        resetLazySpeed()
     }
 
     @Suppress("unused")
@@ -143,6 +149,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             waitTicks--
         }
 
+        if (!rotations.lazyRotation) {
+            resetLazySpeed()
+        }
+
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.gui.screen() is ContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDeadOrDying || !requirementsMet
@@ -150,11 +160,16 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
             // Reset current target
             targetTracker.reset()
+            resetLazySpeed()
             return@handler
         }
 
         // Update the current target tracker to make sure you attack the best enemy
         updateTarget()
+
+        if (rotations.lazyRotation && targetTracker.target == null) {
+            resetLazySpeed()
+        }
 
         // Update Auto Weapon
         ModuleAutoWeapon.onTarget(targetTracker.target)
@@ -267,7 +282,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
             if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
                 waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
-            }else if (KillAuraFailSwing.enabled) {
+            } else if (KillAuraFailSwing.enabled) {
                 dealWithFakeSwing(target)
             }
             return
@@ -326,6 +341,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             targetTracker.target = target
         } else if (KillAuraFightBot.enabled) {
             KillAuraFightBot.updateTarget()
+            resetLazySpeed()
 
             RotationManager.setRotationTarget(
                 rotations.toRotationTarget(
@@ -337,6 +353,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             )
         } else {
             targetTracker.reset()
+            resetLazySpeed()
         }
     }
 
@@ -346,9 +363,26 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         range: Float,
         wallsRange: Float
     ): Boolean {
-        val (rotation, _) = findRotation(entity, range, wallsRange) ?: return false
-        val ticks = rotations.calculateTicks(rotation)
+        val foundRotation = findRotation(entity, range, wallsRange) ?: return false
+        val rawRotation = foundRotation.rotation
+        val ticks = rotations.calculateTicks(rawRotation)
         debugParameter("Rotation Ticks") { ticks }
+
+        updateLazySpeed(true)
+
+        val aimRotation = if (rotations.lazyRotation) {
+            val currentRotation = RotationManager.currentRotation ?: player.rotation
+
+            val desiredRotation = if (lazyAligned) {
+                lazyLastDesired ?: rawRotation
+            } else {
+                rawRotation
+            }
+
+            lerpRotation(currentRotation, desiredRotation, lazySpeed)
+        } else {
+            rawRotation
+        }
 
         when (rotations.rotationTiming) {
 
@@ -372,7 +406,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         RotationManager.setRotationTarget(
             rotations.toRotationTarget(
-                rotation,
+                aimRotation,
                 entity,
                 considerInventory = !ignoreOpenInventory
             ),
@@ -391,6 +425,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+        lazyAligned = false
+
         if (rotations.lazyRotation) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentHit = isLookingAtEntity(
@@ -402,6 +438,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             )
 
             if (currentHit != null) {
+                lazyAligned = true
                 debugParameter("Lazy Rotation") { true }
                 return RotationWithVector(currentRotation, currentHit.location)
             }
@@ -425,8 +462,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             rotationPreference = rotationPreference
         )
 
-        return if (rotation == null && rotations.aimThroughWalls) {
-            val rotationThroughWalls = raytraceBox(
+        val result = if (rotation == null && rotations.aimThroughWalls) {
+            raytraceBox(
                 eyes = eyes,
                 box = point.box,
                 // Since [range] is squared, we need to square root
@@ -434,11 +471,15 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                 wallsRange = range.toDouble(),
                 rotationPreference = rotationPreference
             )
-
-            rotationThroughWalls
         } else {
             rotation
         }
+
+        result?.let {
+            lazyLastDesired = it.rotation
+        }
+
+        return result
     }
 
     /**
@@ -464,6 +505,59 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val isInventoryBlockingAttack = (isInventoryOpen || isInContainerScreen) &&
             !ignoreOpenInventory && !simulateInventoryClosing
         return !isInventoryBlockingAttack
+    }
+
+    private fun resetLazySpeed() {
+        lazySpeed = 0f
+        lazyAligned = false
+        lazyLastDesired = null
+    }
+
+    private fun updateLazySpeed(active: Boolean) {
+        if (!rotations.lazyRotation) {
+            resetLazySpeed()
+            return
+        }
+
+        val targetSpeed = if (active && !lazyAligned) {
+            1f
+        } else {
+            0f
+        }
+
+        if (lazySpeed < targetSpeed) {
+            lazySpeed = (lazySpeed + lazySpeedStep).coerceAtMost(targetSpeed)
+        } else if (lazySpeed > targetSpeed) {
+            lazySpeed = (lazySpeed - lazySpeedStep).coerceAtLeast(targetSpeed)
+        }
+
+        if (!active) {
+            lazyAligned = false
+            lazyLastDesired = null
+        }
+    }
+
+    private fun Float.wrapDegrees(): Float {
+        var value = this % 360f
+
+        if (value >= 180f) {
+            value -= 360f
+        }
+
+        if (value < -180f) {
+            value += 360f
+        }
+
+        return value
+    }
+
+    private fun lerpRotation(from: Rotation, to: Rotation, factor: Float): Rotation {
+        val t = factor.coerceIn(0f, 1f)
+
+        val yaw = from.yaw + (to.yaw - from.yaw).wrapDegrees() * t
+        val pitch = from.pitch + (to.pitch - from.pitch) * t
+
+        return Rotation(yaw, pitch).normalize()
     }
 
     enum class RaycastMode(override val tag: String) : Tagged {
