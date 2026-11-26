@@ -54,6 +54,10 @@ sealed class ScaffoldBridging(name: String, safeWalk: String) : Mode(name) {
     open val shouldHoldLook: Boolean
         get() = false
 
+    /** Degrees the view may be off where it aims at no face. */
+    open val tolerance: Float
+        get() = 0f
+
     /** The look to hold, null to aim at the face. */
     open fun look(): Rotation? = null
 

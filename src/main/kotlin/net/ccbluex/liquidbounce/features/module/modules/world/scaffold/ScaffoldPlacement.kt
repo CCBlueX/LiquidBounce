@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.DiagonalYawTargetPosit
 import net.ccbluex.liquidbounce.utils.block.targetfinding.EdgePointTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.MidHeightTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.RandomTargetPositionFactory
@@ -104,7 +105,7 @@ internal object ScaffoldPlacement {
     private val bridging
         get() = ModuleScaffold.bridging.activeMode
 
-    /** How to aim at the face when the bridging holds no look: Telly aims the way Normal does by default. */
+    /** How to aim at the face when the bridging holds no look. */
     private val aimMode
         get() = if (bridging === ScaffoldBridgingNormal) ScaffoldBridgingNormal.aimMode else AimMode.STABILIZED
 
@@ -136,7 +137,9 @@ internal object ScaffoldPlacement {
         val position = if (bridging.shouldHoldLook) heldLookPos(predictedPos, optimalLine) else predictedPos
         val offsets = when {
             ModuleFreeze.running -> BlockPosOffsets.FULL.offsets
-            ScaffoldDownFeature.shouldGoDown -> BlockPosOffsets.DOWN.offsets
+            // In the air Telly's eyes can be two blocks past the end of the row on a diagonal
+            ScaffoldDownFeature.shouldGoDown || ScaffoldBridgingTelly.placementPos != null ->
+                BlockPosOffsets.DOWN.offsets
             else -> BlockPosOffsets.NORMAL.offsets
         }
         val priorityComparator = if (optimalLine != null) {
@@ -153,8 +156,10 @@ internal object ScaffoldPlacement {
             PlayerLocationOnPlacement(
                 position = position,
                 pose = predictedPose,
-                // Nearest to the held look, or to where scaffold aims rather than to a view still turning there
-                rotation = heldLook ?: ModuleScaffold.aim ?: RotationManager.serverRotation,
+                // Nearest to the held look, Telly's look back down the row, or to where scaffold aims rather than to a
+                // view still turning there
+                rotation = heldLook ?: ScaffoldBridgingTelly.waitingLook() ?: ModuleScaffold.aim
+                    ?: RotationManager.serverRotation,
             ),
         )
         val needed = getTargetedPosition(position.toBlockPos())
@@ -298,19 +303,20 @@ internal object ScaffoldPlacement {
     }
 
     fun rotation(target: BlockPlacementTarget?): Rotation? {
-        if (ScaffoldBridgingTelly.running && ScaffoldBridgingTelly.doNotAim) {
+        if (ScaffoldBridgingTelly.isFacingForward) {
             return when (ScaffoldBridgingTelly.resetMode) {
                 ScaffoldBridgingTelly.ResetMode.REVERSE -> Rotation(
                     round(player.rotation.yaw / 45) * 45,
                     if (player.xRot < 45f) 45f else player.xRot
                 )
 
-                ScaffoldBridgingTelly.ResetMode.RESET -> null
+                // Turned to rather than let go of, which would wait out a reaction first
+                ScaffoldBridgingTelly.ResetMode.RESET -> player.rotation
             }
         }
 
         keptLook?.let { return it }
-        val target = target ?: return null
+        val target = target ?: return ScaffoldBridgingTelly.waitingLook()
         if (ModuleScaffold.visibility == Visibility.VISIBLE_AND_RAYTRACED) {
             val raycast = traceFromPlayer(rotation = target.rotation)
             if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.interactedBlockPos) {
@@ -340,10 +346,11 @@ internal object ScaffoldPlacement {
             ?: target.blockHitResult.takeIf { throughWalls && surface(target).isHitBy(player.eyePosition, rotation) }
     }
 
-    private fun facePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = if (bridging.shouldHoldLook) {
-        NearestRotationTargetPositionFactory
-    } else {
-        when (aimMode) {
+    private fun facePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when {
+        bridging.shouldHoldLook -> NearestRotationTargetPositionFactory
+        // Telly drags along the row looking back down it: on a diagonal the faces of both sides lie in that look
+        bridging === ScaffoldBridgingTelly && ModuleScaffold.canPlaceInAir -> MidHeightTargetPositionFactory
+        else -> when (aimMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(optimalLine)

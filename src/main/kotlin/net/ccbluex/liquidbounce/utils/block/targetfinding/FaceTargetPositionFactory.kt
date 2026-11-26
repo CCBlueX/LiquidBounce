@@ -214,6 +214,27 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory {
 }
 
 /**
+ * Nearest to the look along the middle of the face, halfway up it: a look sweeping along a row of faces, as a telly
+ * bridger's back at the end of the row, meets each with room on every side. A side face seen from above is a thin band,
+ * and a hand resting near its end misses it.
+ */
+object MidHeightTargetPositionFactory : FaceTargetPositionFactory {
+    override fun producePositionOnFace(
+        face: AlignedFace,
+        targetPos: BlockPos,
+        playerLocation: PlayerLocationOnPlacement
+    ): Vec3 {
+        val trimmed = trimFace(face, 0.3)
+        val nearest = NearestRotationTargetPositionFactory.aimAtNearestPointToRotationLine(
+            targetPos,
+            trimmed,
+            playerLocation,
+        )
+        return Vec3(nearest.x, (trimmed.from.y + trimmed.to.y) / 2, nearest.z)
+    }
+}
+
+/**
  * Like [CenterTargetPositionFactory], but prefers an unobstructed point on the face.
  *
  * The face center can be occluded by the block itself when only a small part of the face is visible

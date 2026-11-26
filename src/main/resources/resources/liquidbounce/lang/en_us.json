@@ -754,7 +754,7 @@
   "liquidbounce.module.scaffold.description": "Automatically places blocks beneath your feet allowing you to walk across gaps.",
   "liquidbounce.module.scaffold.messages.hypixelTower.stationaryWarning": "This tower only works only when standing still.",
   "liquidbounce.module.scaffold.messages.hypixelTower.wrongProtocolVersion": "Please use 1.8.x as protocol for this tower to work.",
-  "liquidbounce.module.scaffold.messages.telly.slowAim": "Telly needs an aim that turns around within a tick (Constant at 180). With this aim it bridges like Normal.",
+  "liquidbounce.module.scaffold.messages.telly.slowAim": "Telly needs an aim that turns around in the first ticks of a jump (Human, or Constant at 45 or faster). With this aim it bridges like Normal.",
   "liquidbounce.module.serverCrasher.description": "Attempts to crash the server by exploiting known bugs.",
   "liquidbounce.module.serverCrasher.messages.bundleExploit.notBundle": "You need to be holding a bundle containing at least one item.",
   "liquidbounce.module.serverCrasher.messages.signExploit.alteredSignPacket": "Successfully altered sign packet with exploit.",

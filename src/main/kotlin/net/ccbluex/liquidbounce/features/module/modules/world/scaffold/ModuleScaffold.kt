@@ -435,7 +435,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val prediction = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine)
+        val prediction = ScaffoldBridgingTelly.placementPos
+            ?: ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine)
         val predictedPos = prediction ?: player.position()
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose = when {
@@ -492,7 +493,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 rotation,
                 considerInventory = considerInventory,
                 surface = currentTarget?.let(::surface),
-                tolerance = if (ScaffoldPlacement.isHoldingLook) HELD_LOOK_TOLERANCE else 0f,
+                tolerance = if (ScaffoldPlacement.isHoldingLook) HELD_LOOK_TOLERANCE else bridging.activeMode.tolerance,
+                // Telly's turns round are the rehearsed ones of a telly bridger
+                isRehearsed = ScaffoldBridgingTelly.isTellying,
             )
         }) { going ->
             val target = currentTarget
@@ -532,7 +535,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     private fun surface(target: BlockPlacementTarget): Surface? = when {
         ModuleClutch.fall != null -> ScaffoldClutchFeature.surface(target) ?: ScaffoldPlacement.surface(target)
         isExpanding -> ScaffoldExpandFeature.surface(target)
-        ScaffoldPlacement.isHoldingLook -> null
+        ScaffoldPlacement.isHoldingLook || ScaffoldBridgingTelly.isFacingForward -> null
         else -> ScaffoldPlacement.surface(target)
     }
 
@@ -604,10 +607,11 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     /**
      * Whether a block can go down while the player is in the air, where nothing stops a fall: the bridge has started
-     * and the aim is instant. A slower aim has the block down too late.
+     * and the aim is instant, or Telly turns around in the first ticks of its jumps. A slower aim, or one that has to
+     * find the face anywhere, has the block down too late.
      */
     internal val canPlaceInAir
-        get() = hasStarted && hasInstantAim
+        get() = hasStarted && (hasInstantAim || ScaffoldBridgingTelly.running && ScaffoldBridgingTelly.canTurnAround)
 
     /** Whether the player is in the air above the row it stood on, with an aim too slow to place before it lands. */
     internal val isHopping
@@ -660,7 +664,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      * runs over it. A view that turns steers a silent walk up to half a key step off its way, so then a jump to either
      * side counts too.
      */
-    private fun landsOffBridge(input: DirectionalInput): Boolean {
+    internal fun landsOffBridge(input: DirectionalInput): Boolean {
         // Without a silent view, or with one resting on the held look, the walk goes where the keys say
         val isSteady = RotationManager.currentRotation == null ||
             !isExpanding && ScaffoldPlacement.heldLook != null && !isLiningUp()
@@ -915,7 +919,8 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             blockPos.offset(0, -2, 0)
         ScaffoldCeilingFeature.running && ScaffoldCeilingFeature.canConstructCeiling() ->
             blockPos.offset(0, 3, 0)
-        player.input.keyPresses.jump && (!player.moving || player.horizontalCollision) ->
+        // The keys the player holds: Telly lets go of W in the air, which is no standing jump
+        player.input.keyPresses.jump && (!DirectionalInput(mc.options).isMoving || player.horizontalCollision) ->
             blockPos.offset(0, -1, 0)
         // Telly places the row it jumped off, not one under the jump, unless SameY has it build up
         ScaffoldBridgingTelly.running ->

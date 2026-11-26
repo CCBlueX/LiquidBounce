@@ -40,9 +40,10 @@ import kotlin.math.hypot
 
 /**
  * Scaffold bridges over the void on courses a player walks while the anticheats watch: it must never let the player
- * fall, and nothing that watches may object. Human has to pass every anticheat with every bridging type, Constant
- * only those without aim checks. A bridge starts where the last one of its course ended, so all but the first arrive
- * walking, up the steps that bridges with jumps left. Degrees turned per block are logged for comparison.
+ * fall, and nothing that watches may object. Human has to pass every anticheat with every bridging type but Telly,
+ * whose turns round Intave's placement analysis flags, Constant only those without aim checks. A bridge starts where
+ * the last one of its course ended, so all but the first arrive walking, up the steps that bridges with jumps left.
+ * Degrees turned per block are logged for comparison.
  */
 class ScaffoldGameTest : ServerGameTest(TestWorld.VOID, {
     val saved = client { ConfigSystem.serializeValueGroup(ModuleScaffold) }
@@ -50,8 +51,10 @@ class ScaffoldGameTest : ServerGameTest(TestWorld.VOID, {
         for (bridging in listOf("Normal", "Ninja", "GodBridge", "Breezily")) {
             COURSES.forEach { course -> add(Triple(bridging, "Human", course)) }
         }
-        // Telly needs an aim that places in the air, with Human it bridges like Normal
-        COURSES.take(2).forEach { course -> add(Triple("Telly", "Human", course)) }
+        // Telly sprints and jumps forwards, straight or diagonal
+        if (anticheats.none { it == Anticheat.INTAVE }) {
+            COURSES.take(2).forEach { course -> add(Triple("Telly", "Human", course)) }
+        }
         // Human leaves a held jump out at the end of the bridge: once with an edge that sneaks, once with Ledge
         add(Triple("Normal", "Human", JUMPING))
         add(Triple("GodBridge", "Human", JUMPING))
