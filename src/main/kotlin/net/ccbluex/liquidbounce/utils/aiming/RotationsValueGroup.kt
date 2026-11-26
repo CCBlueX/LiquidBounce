@@ -59,7 +59,8 @@ open class RotationsValueGroup(
         considerInventory: Boolean = false,
         surface: Surface? = null,
         tolerance: Float = 0f,
-    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, surface, tolerance)
+        isRehearsed: Boolean = false,
+    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, surface, tolerance, isRehearsed)
 
     /**
      * A target with these settings; leave out the axis the module does not care about.
@@ -73,6 +74,7 @@ open class RotationsValueGroup(
         considerInventory: Boolean = false,
         surface: Surface? = null,
         tolerance: Float = 0f,
+        isRehearsed: Boolean = false,
     ) = RotationTarget(
         yaw,
         pitch,
@@ -83,17 +85,19 @@ open class RotationsValueGroup(
         movementCorrection,
         surface,
         tolerance,
+        isRehearsed,
     )
 
     /**
      * Ticks it takes about to turn from [from], by default the rotation the server has, to [rotation], a goal of
-     * [kind].
+     * [kind] [size] degrees across.
      */
     fun calculateTicks(
         rotation: Rotation,
         kind: AimGoal.Kind = AimGoal.Kind.BLOCK,
         from: Rotation = RotationManager.actualServerRotation,
-    ) = aim.activeMode.ticksToReach(from, AimGoal(rotation, 0f, 0f, false, kind))
+        size: Float = 0f,
+    ) = aim.activeMode.ticksToReach(from, AimGoal(rotation, size, size, false, kind))
 
     /** Ticks it takes about to turn from the rotation the server has onto [target], as large as it is. */
     fun calculateTicks(target: RotationTarget): Int {

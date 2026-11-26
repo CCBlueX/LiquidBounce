@@ -73,6 +73,12 @@ class AimGoal @JvmOverloads constructor(
 
         /** The player's own camera, once no module turns the view any more. */
         CAMERA,
+
+        /**
+         * A block or direction the player turns to the way he has rehearsed it, as a telly bridger turns round: at
+         * once, quickly, and to where it will be.
+         */
+        FLICK,
     }
 
 }

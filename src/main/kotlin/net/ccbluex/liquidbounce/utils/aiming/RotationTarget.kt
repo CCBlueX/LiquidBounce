@@ -62,6 +62,11 @@ class RotationTarget @JvmOverloads constructor(
      * Degrees [yaw] and [pitch] may be missed by, when there is no [surface].
      */
     val tolerance: Float = 0f,
+    /**
+     * Whether the player has rehearsed the turn onto it, as a telly bridger his turns round: it starts at once, and
+     * goes quickly to where it will be.
+     */
+    val isRehearsed: Boolean = false,
 ) {
 
     init {
@@ -78,6 +83,7 @@ class RotationTarget @JvmOverloads constructor(
         movementCorrection: MovementCorrection = MovementCorrection.SILENT,
         surface: Surface? = null,
         tolerance: Float = 0f,
+        isRehearsed: Boolean = false,
     ) : this(
         rotation.yaw,
         rotation.pitch,
@@ -88,6 +94,7 @@ class RotationTarget @JvmOverloads constructor(
         movementCorrection,
         surface,
         tolerance,
+        isRehearsed,
     )
 
     /** The surface to hit, if there is one. */

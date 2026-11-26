@@ -60,6 +60,7 @@ class Hand(private val random: RandomGenerator) {
         AimGoal.Kind.ENTITY, AimGoal.Kind.CAMERA -> reaction
         // The module asks ahead of the click, as a player bridging looks before he gets there
         AimGoal.Kind.BLOCK -> 0..1
+        AimGoal.Kind.FLICK -> 0..0
     }
 
     // A hand is not equally quick in every direction; which one is quicker differs between people
@@ -113,23 +114,20 @@ class Hand(private val random: RandomGenerator) {
         val isLetGo = kind == AimGoal.Kind.CAMERA && this.kind == AimGoal.Kind.CAMERA
         this.kind = kind
         val nearYaw = viewYaw + wrap(goalYaw - viewYaw)
-        // Near straight up or down a small move of the goal swings its yaw a long way, so a jump is judged by how
-        // far the goal moves in sight, not in yaw
-        val moved = hypot((nearYaw - seenYaw[0]) * cos(goalPitch * DEG_TO_RAD), goalPitch - seenPitch[0])
-        if (seen > 0 && moved > max(JUMP, max(width, height) * 2f)) {
-            // A new goal: what was seen of the old one says nothing about how this one moves
-            seen = 0
-            // The camera is the player's own hand, whose turns need no reaction once the target is let go
-            if (!isLetGo) {
-                reactIn = max(reactIn, nextReaction())
-            }
+        // A rehearsed turn goes from one face to the next, each a new goal however wide it looks up close
+        remember(nearYaw, goalPitch, if (kind == AimGoal.Kind.FLICK) 0f else max(width, height) * 2f, isLetGo)
+        // A telly bridger's hand holds still while the view is on the block and the click goes out
+        if (kind == AimGoal.Kind.FLICK && reached && width > 0f) {
+            yaw.reset()
+            pitch.reset()
+            return RotationDelta(0f, 0f)
         }
-        remember(nearYaw, goalPitch)
 
         if (pauseIn > 0) pauseIn--
         when {
             reactIn > 0 -> reactIn--
-            lookIn > 0 -> lookIn--
+            // A rehearsed turn goes at once, whatever the hand was about
+            lookIn > 0 && kind != AimGoal.Kind.FLICK -> lookIn--
             else -> look(viewYaw, viewPitch, width, height, reached, step)
         }
 
@@ -151,7 +149,7 @@ class Hand(private val random: RandomGenerator) {
         }
         var turnYaw = yaw.counts(moveYaw, step)
         // A look at a block can be an exact angle, as one held on a 45 degree step: no hand lies on it to the count
-        val isBox = kind == AimGoal.Kind.BLOCK && width > 0f
+        val isBox = kind.isBlock && width > 0f
         if (isBox && !isOnPoint && turnYaw != 0f && abs(nearYaw - viewYaw - turnYaw) < step / 2) {
             turnYaw -= sign(turnYaw) * step
         }
@@ -160,10 +158,15 @@ class Hand(private val random: RandomGenerator) {
 
     /**
      * Ticks a movement over [distance] degrees onto something [width] degrees wide takes, without the reaction. A turn
-     * back to the [camera][AimGoal.Kind.CAMERA] is a loose sweep, about twice as quick as an aimed one.
+     * back to the [camera][AimGoal.Kind.CAMERA] is a loose sweep about twice as quick as an aimed one, and a
+     * [rehearsed][AimGoal.Kind.FLICK] one quicker still.
      */
     fun ticksFor(distance: Float, width: Float, kind: AimGoal.Kind = AimGoal.Kind.ENTITY): Int {
-        val pace = if (kind == AimGoal.Kind.CAMERA) speed * RELEASE_SPEED else speed
+        val pace = when (kind) {
+            AimGoal.Kind.CAMERA -> speed * RELEASE_SPEED
+            AimGoal.Kind.FLICK -> speed * REHEARSED_SPEED
+            else -> speed
+        }
         val seconds = (FITTS_A + FITTS_B * log2(distance / max(width, MIN_WIDTH) + 1f)) / pace
         return max(1, (seconds / TICK).roundToInt())
     }
@@ -172,11 +175,12 @@ class Hand(private val random: RandomGenerator) {
     private fun look(viewYaw: Float, viewPitch: Float, width: Float, height: Float, reached: Boolean, step: Float) {
         lookIn = random.nextInt(LOOK.first, LOOK.last + 1)
 
-        val delay = min(PERCEPTION_DELAY, seen - 1)
+        // A rehearsed turn goes where the goal will be without waiting to see it
+        val delay = if (kind == AimGoal.Kind.FLICK) 0 else min(PERCEPTION_DELAY, seen - 1)
         val span = min(VELOCITY_SPAN, seen - 1 - delay)
         var velocityYaw = goalSpeed(seenYaw, delay, span)
         // People follow vertical movement, such as a jump, far less than sideways movement
-        var velocityPitch = goalSpeed(seenPitch, delay, span) * PITCH_GAIN
+        var velocityPitch = goalSpeed(seenPitch, delay, span) * if (kind == AimGoal.Kind.FLICK) 1f else PITCH_GAIN
         following = hypot(velocityYaw, velocityPitch) >= MOVING
         if (!following) {
             velocityYaw = 0f
@@ -206,7 +210,8 @@ class Hand(private val random: RandomGenerator) {
         val slow = if (distance > 0f) 1f + (slowYaw * nowYaw + slowPitch * nowPitch) / distance else 1f
         // Fitts' time covers the whole movement, so the main submovement leaves room for a correction
         val fitts = ticksFor(distance, if (abs(nowYaw) >= abs(nowPitch)) width else height, kind) * PRIMARY_SHARE
-        val ticks = max(MIN_SUBMOVEMENT.toFloat(), fitts * slow) *
+        // A rehearsed turn drags along with the goal rather than moving onto it in steps
+        val ticks = max(if (kind == AimGoal.Kind.FLICK) 1f else MIN_SUBMOVEMENT.toFloat(), fitts * slow) *
             exp(random.nextGaussian() * DURATION_SPREAD).toFloat()
         val whole = ceil(ticks).toInt()
         // A turn this tick is judged against the goal as it is now, so the hand's n-th tick meets the goal n - 1 ticks
@@ -250,7 +255,7 @@ class Hand(private val random: RandomGenerator) {
      * nothing to correct.
      */
     private fun correctsMiss(needed: Boolean): Boolean {
-        val isMissed = kind == AimGoal.Kind.BLOCK && !needed
+        val isMissed = kind.isBlock && !needed
         val corrects = isMissed && !isOnPoint
         isOnPoint = isMissed
         return corrects
@@ -266,7 +271,21 @@ class Hand(private val random: RandomGenerator) {
         0f
     }
 
-    private fun remember(yaw: Float, pitch: Float) {
+    /**
+     * Remembers where the goal is seen this tick. One that moved further than [size] is a new goal: what was seen of
+     * the old one says nothing about how it moves, and it is reacted to unless the target was [let go][isLetGo].
+     */
+    private fun remember(yaw: Float, pitch: Float, size: Float, isLetGo: Boolean) {
+        // Near straight up or down a small move of the goal swings its yaw a long way, so a jump is judged by how
+        // far the goal moves in sight, not in yaw
+        val moved = hypot((yaw - seenYaw[0]) * cos(pitch * DEG_TO_RAD), pitch - seenPitch[0])
+        if (seen > 0 && moved > max(JUMP, size)) {
+            seen = 0
+            // The camera is the player's own hand, whose turns need no reaction once the target is let go
+            if (!isLetGo) {
+                reactIn = max(reactIn, nextReaction())
+            }
+        }
         seenYaw.copyInto(seenYaw, 1, 0, HISTORY - 1)
         seenPitch.copyInto(seenPitch, 1, 0, HISTORY - 1)
         seenYaw[0] = yaw
@@ -444,6 +463,9 @@ class Hand(private val random: RandomGenerator) {
         const val RELEASE_SPEED = 2.2f
         const val RELEASE_UNDERSHOOT = 0.12f
 
+        /** Telly bridgers turning round and back within a jump, and on to each new block under it. */
+        const val REHEARSED_SPEED = 4.4f
+
         /** Degrees a movement onto a box lands off at least, however short it is. */
         const val LANDING_FLOOR = 0.25f
 
@@ -491,3 +513,7 @@ class Hand(private val random: RandomGenerator) {
     }
 
 }
+
+/** Whether the goal is a block or direction the hand aims onto, the way it turns there aside. */
+private val AimGoal.Kind.isBlock
+    get() = this == AimGoal.Kind.BLOCK || this == AimGoal.Kind.FLICK

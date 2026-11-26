@@ -1490,7 +1490,8 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
 	public fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;)V
 	public fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;)V
 	public fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;F)V
-	public synthetic fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZ)V
+	public synthetic fun <init> (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;)V
@@ -1499,7 +1500,8 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;F)V
-	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZ)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;IZLnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;Lnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAim ()Lnet/ccbluex/liquidbounce/utils/aiming/aim/Aim;
 	public final fun getConsiderInventory ()Z
 	public final fun getEntity ()Lnet/minecraft/world/entity/Entity;
@@ -1510,6 +1512,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
 	public final fun getTicksUntilReset ()I
 	public final fun getTolerance ()F
 	public final fun getYaw ()Ljava/lang/Float;
+	public final fun isRehearsed ()Z
 	public final fun rotation (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 }
 
@@ -1517,16 +1520,17 @@ public class net/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup : net/ccb
 	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;)V
 	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/aiming/features/MovementCorrection;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun calculateTicks (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;)I
-	public final fun calculateTicks (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)I
-	public static synthetic fun calculateTicks$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ILjava/lang/Object;)I
-	public final fun toRotationTarget (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;F)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+	public final fun calculateTicks (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;F)I
+	public static synthetic fun calculateTicks$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FILjava/lang/Object;)I
+	public final fun toRotationTarget (Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZ)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;Z)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;F)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
-	public static synthetic fun toRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
-	public static synthetic fun toRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+	public final fun toRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZ)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+	public static synthetic fun toRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Ljava/lang/Float;Ljava/lang/Float;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
+	public static synthetic fun toRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lnet/minecraft/world/entity/Entity;ZLnet/ccbluex/liquidbounce/utils/aiming/data/Surface;FZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;
 }
 
 public abstract class net/ccbluex/liquidbounce/utils/aiming/aim/Aim : net/ccbluex/liquidbounce/config/types/group/Mode {
@@ -1554,6 +1558,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind : java
 	public static final field BLOCK Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 	public static final field CAMERA Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 	public static final field ENTITY Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
+	public static final field FLICK Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;
 	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/aiming/aim/AimGoal$Kind;

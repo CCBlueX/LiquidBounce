@@ -74,6 +74,18 @@ class HandTest {
     }
 
     @Test
+    fun `a rehearsed turn goes at once, round and back`() {
+        repeat(20) { seed ->
+            // Not 180: a goal straight behind is as far either way, and the hand may take the other
+            val turns = run(seed.toLong(), 12, 20f, kind = AimGoal.Kind.FLICK) { tick ->
+                if (tick < 6) 170f to 70f else 0f to 0f
+            }
+            assertTrue(turns[0].first.deltaYaw > 0f, "seed $seed turned round late")
+            assertTrue(turns[6].first.deltaYaw < 0f, "seed $seed turned back late")
+        }
+    }
+
+    @Test
     fun `letting go is reacted to once, however the camera turns afterwards`() {
         repeat(20) { seed ->
             // 12 degrees a tick: every tick's goal is far enough from the last to be a new one

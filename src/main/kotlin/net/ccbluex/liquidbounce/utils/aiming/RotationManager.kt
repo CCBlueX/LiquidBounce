@@ -374,6 +374,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         val kind = when {
             yawTarget == null && pitchTarget == null -> AimGoal.Kind.CAMERA
             (yawTarget ?: pitchTarget)?.entity != null -> AimGoal.Kind.ENTITY
+            (yawTarget ?: pitchTarget)?.isRehearsed == true -> AimGoal.Kind.FLICK
             else -> AimGoal.Kind.BLOCK
         }
         if (surface != null) {
