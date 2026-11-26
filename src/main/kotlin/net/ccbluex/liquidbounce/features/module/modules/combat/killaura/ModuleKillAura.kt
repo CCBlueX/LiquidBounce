@@ -116,7 +116,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private var lazySpeed = 0f
     private var lazyAligned = false
     private var lazyLastDesired: Rotation? = null
-    private val lazySpeedStep = 1f / 20f
+    private const val lazySpeedStep = 1f / 20f
 
     init {
         tree(KillAuraAutoBlock)
@@ -368,7 +368,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val ticks = rotations.calculateTicks(rawRotation)
         debugParameter("Rotation Ticks") { ticks }
 
-        updateLazySpeed(true)
+        updateLazySpeed()
 
         val aimRotation = if (rotations.lazyRotation) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
@@ -513,27 +513,18 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         lazyLastDesired = null
     }
 
-    private fun updateLazySpeed(active: Boolean) {
+    private fun updateLazySpeed() {
         if (!rotations.lazyRotation) {
             resetLazySpeed()
             return
         }
 
-        val targetSpeed = if (active && !lazyAligned) {
-            1f
-        } else {
-            0f
-        }
+        val targetSpeed = if (lazyAligned) 0f else 1f
 
-        if (lazySpeed < targetSpeed) {
-            lazySpeed = (lazySpeed + lazySpeedStep).coerceAtMost(targetSpeed)
-        } else if (lazySpeed > targetSpeed) {
-            lazySpeed = (lazySpeed - lazySpeedStep).coerceAtLeast(targetSpeed)
-        }
-
-        if (!active) {
-            lazyAligned = false
-            lazyLastDesired = null
+        lazySpeed = when {
+            lazySpeed < targetSpeed -> (lazySpeed + lazySpeedStep).coerceAtMost(targetSpeed)
+            lazySpeed > targetSpeed -> (lazySpeed - lazySpeedStep).coerceAtLeast(targetSpeed)
+            else -> lazySpeed
         }
     }
 
