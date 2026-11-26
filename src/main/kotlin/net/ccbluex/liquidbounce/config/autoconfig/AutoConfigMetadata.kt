@@ -48,7 +48,6 @@ data class AutoConfigMetadata(
 ) {
 
     private fun asTexts(): List<Component> = buildList {
-        val colon = ":".asPlainText(ChatFormatting.DARK_GRAY)
         fun addEntry(key: String, value: String?) {
             if (value.isNullOrBlank()) return
 
@@ -76,6 +75,8 @@ data class AutoConfigMetadata(
     fun asText(): Component = asTexts().joinToText(NEW_LINE)
 
     companion object {
+        private val colon = ":".asPlainText(ChatFormatting.DARK_GRAY)
+
         @JvmField
         val FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
     }

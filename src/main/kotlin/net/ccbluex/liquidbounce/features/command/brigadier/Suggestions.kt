@@ -60,7 +60,7 @@ fun <S> suggestions(strings: () -> Iterable<String>?) = SuggestionProvider<S> { 
  */
 fun <S> suggestions(
     executor: Executor,
-    strings: Supplier<Iterable<String>?>,
+    strings: Supplier<out Iterable<String>?>,
 ) = SuggestionProvider<S> { _, builder ->
     CompletableFuture.supplyAsync(strings, executor)
         .handle { candidates, error ->
