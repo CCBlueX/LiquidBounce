@@ -35,7 +35,10 @@ import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.useDirectoryEntries
 
 private val itemLocks = ConcurrentHashMap<Int, Mutex>()
 
@@ -49,13 +52,19 @@ private const val RENAME_RETRY_DELAY_MS = 100L
  * [revisionDir] or its first subfolder that holds files, e.g. `items/265/1713/dist`.
  */
 private fun findContentFolder(revisionDir: File): File? {
-    fun File.containsFile() = isDirectory && !listFiles(File::isFile).isNullOrEmpty()
+    val path = revisionDir.toPath()
 
-    if (revisionDir.containsFile()) {
+    fun Path.containsFile(): Boolean =
+        Files.isDirectory(this) &&
+            this.useDirectoryEntries {
+                it.any(Files::isRegularFile)
+            }
+
+    if (path.containsFile()) {
         return revisionDir
     }
 
-    return revisionDir.listFiles(File::isDirectory)?.firstOrNull { it.containsFile() }
+    return path.useDirectoryEntries { it.firstOrNull { path -> path.containsFile() } }?.toFile()
 }
 
 // Windows refuses to rename a directory while a virus scanner still reads a jar just extracted into it.

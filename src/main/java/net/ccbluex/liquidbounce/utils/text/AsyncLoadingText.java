@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.utils.text;
 
 import com.google.common.base.Suppliers;
 import kotlinx.coroutines.Deferred;
+import net.ccbluex.liquidbounce.utils.client.error.StackTraceTextKt;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,9 +49,12 @@ public record AsyncLoadingText(
         throwable -> {
             String message = throwable.getMessage();
 
+            Style style = Style.EMPTY.applyFormat(ChatFormatting.RED)
+                .withHoverEvent(new HoverEvent.ShowText(DelegatedComponent.lazy(() -> StackTraceTextKt.stackTraceText(throwable))));
+
             return PlainText.of(message == null ?
                 "Unknown error (" + throwable.getClass().getName() + ")" :
-                message, ChatFormatting.RED);
+                message, style);
         };
 
     public AsyncLoadingText(Deferred<? extends Component> delegate) {

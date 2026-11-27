@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -88,7 +87,7 @@ object CommandExecutor : EventListener {
             is CommandException -> {
                 mc.gui.hud.chat.removeMessage("CommandManager#error")
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
-                chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
+                chat(e.text.copy().withStyle(ChatFormatting.RED), metadata = data)
 
                 if (e.usageInfo.isNotEmpty()) {
                     chat(highlight("Usage: ").bold(true), metadata = data)
@@ -109,13 +108,14 @@ object CommandExecutor : EventListener {
                 }
             }
             else -> {
-                val hoverText = DelegatedComponent.lazy(e::stackTraceText)
+                val hoverText = DelegatedComponent.lazy { e.stackTraceText() }
 
                 chat(
                     markAsError(
                         translation(
                             "liquidbounce.commandManager.exceptionOccurred",
-                            e.javaClass.simpleName ?: "Class name missing", e.message ?: "No message"
+                            e.javaClass.simpleName ?: "Class name missing".asPlainText(ChatFormatting.ITALIC),
+                            e.message ?: "No message".asPlainText(ChatFormatting.ITALIC),
                         )
                     ).onHover(HoverEvent.ShowText(hoverText)),
                     metadata = MessageMetadata(id = "CommandManager#error")

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.io.AppendLog
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
@@ -49,6 +50,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.Packet
 import net.minecraft.resources.Identifier
+import okio.BufferedSink
 import okio.appendingSink
 import okio.buffer
 import java.io.File
@@ -81,19 +83,19 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
     private val outputDir = ConfigSystem.rootFolder.resolve("packet-logger").apply { mkdirs() }
 
     private val classNames = ConcurrentHashMap<Class<out Packet<*>>, String>()
-    private val fieldNames = ConcurrentHashMap<Field, String>()
+    private val packetFields = ConcurrentHashMap<Class<out Packet<*>>, List<PacketFieldInfo>>()
 
     init {
         // Do not include this module in the auto config, as this is for debugging purposes only.
         doNotIncludeAlways()
     }
 
-    private val outputFile = atomic<File?>(null)
+    private val packetLog = atomic<AppendLog?>(null)
 
     private fun createFileIfNeeded() {
-        outputFile.compareAndSet(
+        packetLog.compareAndSet(
             expect = null,
-            update = outputDir.resolve("${LocalDateTime.now().toUnderlinedString()}.csv"),
+            update = AppendLog(outputDir.resolve("${LocalDateTime.now().toUnderlinedString()}.csv")),
         )
     }
 
@@ -103,9 +105,9 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
     }
 
     override fun onDisabled() {
-        outputFile.value = null
+        packetLog.getAndSet(null)?.close()
         classNames.clear()
-        fieldNames.clear()
+        packetFields.clear()
     }
 
     @Suppress("unused")
@@ -133,7 +135,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
                 val clazz = packet.javaClass
 
-                val packetClassName = clazz.name.substringAfterLast('.')
+                val packetClassName = simpleNameOf(clazz)
 
                 val text = "".asText()
                 if (origin == TransferOrigin.INCOMING) {
@@ -170,14 +172,13 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
         FILE("File") {
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
-                val file = outputFile.value ?: return
+                val log = packetLog.value ?: return
 
                 val clazz = packet.javaClass
+                val packetClassName = simpleNameOf(clazz)
 
-                val packetClassName = clazz.name.substringAfterLast('.')
-
-                file.appendingSink().buffer().use {
-                    it.writeUtf8(System.currentTimeMillis().toString())
+                log.append {
+                    writeUtf8(System.currentTimeMillis().toString())
                         .writeByte(','.code)
                         .writeUtf8(origin.tag)
                         .writeByte(','.code)
@@ -190,7 +191,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
                         .writeByte('"'.code)
 
                     collectFields(clazz, packet).forEach { (name, type, value) ->
-                        it.writeUtf8(name)
+                        writeUtf8(name)
                             .writeByte(':'.code)
                             .writeUtf8(type.toFullString())
                             .writeByte('='.code)
@@ -198,7 +199,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
                             .writeByte(';'.code)
                     }
 
-                    it.writeByte('"'.code).writeByte('\n'.code)
+                    writeByte('"'.code).writeByte('\n'.code)
                 }
             }
         };
@@ -209,34 +210,45 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
     @JvmRecord
     private data class PacketField(val name: String, val type: Type, val value: Any?)
 
-    private fun collectFields(clazz: Class<out Packet<*>>, packet: Packet<*>): List<PacketField> {
-        val fields = mutableListOf<PacketField>()
+    /** A [PacketField] without a value, kept per class so reflection is not repeated per packet. */
+    @JvmRecord
+    private data class PacketFieldInfo(val field: Field, val name: String, val type: Type)
 
-        var currentClass: Class<*>? = clazz
+    private fun simpleNameOf(clazz: Class<out Packet<*>>): String =
+        classNames.computeIfAbsent(clazz) { it.name.substringAfterLast('.') }
 
-        while (currentClass.isNotRoot()) {
-            currentClass.declaredFields.forEach { field ->
-                if (Modifier.isStatic(field.modifiers)) {
-                    return@forEach
+    private fun fieldsOf(clazz: Class<out Packet<*>>): List<PacketFieldInfo> =
+        packetFields.computeIfAbsent(clazz) { packetClass ->
+            buildList {
+                var currentClass: Class<*>? = packetClass
+
+                while (currentClass.isNotRoot()) {
+                    currentClass.declaredFields.forEach { field ->
+                        if (Modifier.isStatic(field.modifiers)) {
+                            return@forEach
+                        }
+
+                        field.isAccessible = true
+                        add(PacketFieldInfo(field, field.name, field.genericType))
+                    }
+
+                    currentClass = currentClass.superclass
                 }
-
-                field.isAccessible = true
-
-                val name = field.name
-
-                val value = try {
-                    field.get(packet)?.toString()
-                } catch (@Suppress("SwallowedException") _: IllegalAccessException) {
-                    "null"
-                }
-
-                fields += PacketField(name, field.genericType, value)
             }
-
-            currentClass = currentClass.superclass
         }
 
-        return fields
+    private fun collectFields(clazz: Class<out Packet<*>>, packet: Packet<*>): List<PacketField> {
+        val infos = fieldsOf(clazz)
+
+        return infos.map { info ->
+            val value = try {
+                info.field.get(packet)?.toString()
+            } catch (@Suppress("SwallowedException") _: IllegalAccessException) {
+                "null"
+            }
+
+            PacketField(info.name, info.type, value)
+        }
     }
 
     private fun MutableComponent.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {

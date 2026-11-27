@@ -42,10 +42,10 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.math.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.io.AppendLog
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.client.gui.screens.ChatScreen
-import java.io.File
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -92,8 +92,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     private val debugLog by boolean("DebugLog", false)
 
     private val outputDir = ConfigSystem.rootFolder.resolve("debug-log").apply { mkdirs() }
+
     // TSV: timestamp, owner path, name, value
-    private var outputFile: File? = null
+    private var outputLog: AppendLog? = null
 
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -275,7 +276,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
         parameter.update(value, now)
 
-        outputFile?.appendText("$now\t${section.path}\t$name\t$value\n")
+        outputLog?.appendLine("$now\t${section.path}\t$name\t$value")
     }
 
     @PublishedApi
@@ -289,7 +290,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     override fun onEnabled() {
         if (debugLog) {
-            outputFile = outputDir.resolve(LocalDateTime.now().toUnderlinedString() + ".tsv")
+            outputLog = AppendLog(outputDir.resolve(LocalDateTime.now().toUnderlinedString() + ".tsv"))
         }
         super.onEnabled()
     }
@@ -298,7 +299,8 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         sections.clear()
         structureVersion.incrementAndGet()
         DebugOverview.clear()
-        outputFile = null
+        outputLog?.close()
+        outputLog = null
         super.onDisabled()
     }
 

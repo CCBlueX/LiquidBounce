@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.io
 
+import okio.BufferedSource
 import java.io.InputStream
 import java.nio.charset.Charset
 
@@ -30,3 +31,10 @@ import java.nio.charset.Charset
 @JvmOverloads
 fun InputStream.readText(charset: Charset = Charsets.UTF_8): String =
     String(readAllBytes(), charset)
+
+fun BufferedSource.utf8Lines(): Iterator<String> = object : AbstractIterator<String>() {
+    override fun computeNext() {
+        val l = readUtf8Line()
+        if (l == null) done() else setNext(l)
+    }
+}

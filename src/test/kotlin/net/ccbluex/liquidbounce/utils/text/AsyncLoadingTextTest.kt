@@ -143,7 +143,11 @@ class AsyncLoadingTextTest {
 
         val exception = Exception()
         deferred.completeExceptionally(exception)
-        assertEquals(AsyncLoadingText.DEFAULT_ON_EXCEPTION.apply(exception), text.get())
+        // The style contains lambda, won't pass *equals*
+        assertEquals(
+            AsyncLoadingText.DEFAULT_ON_EXCEPTION.apply(exception).contents,
+            text.get().contents
+        )
     }
 
 }
