@@ -16,6 +16,9 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    LiquidProxyLocation,
+    LiquidProxySession,
+    LiquidProxyState,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -669,6 +672,51 @@ export async function connectToProxy(id: number) {
         },
         body: JSON.stringify({id})
     });
+}
+
+/**
+ * A failed request has no answer. The client words the reason itself: in the state, or as a notification
+ * when the request was to change something.
+ */
+async function liquidProxy<T>(path: string, method = "GET", body?: object): Promise<T | undefined> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy${path}`, {
+        method,
+        headers: body && {"Content-Type": "application/json"},
+        body: body && JSON.stringify(body)
+    });
+    return response.ok ? await response.json() : undefined;
+}
+
+export function getLiquidProxyState(refresh = false) {
+    return liquidProxy<LiquidProxyState>(refresh ? "?refresh=true" : "");
+}
+
+export function setLiquidProxySettings(settings: { network?: string, forwardAuthentication?: boolean }) {
+    return liquidProxy<LiquidProxyState>("/settings", "PUT", settings);
+}
+
+export function connectToLiquidProxy(location: string) {
+    return liquidProxy<LiquidProxyState>("/connect", "POST", {location});
+}
+
+export function disconnectFromLiquidProxy() {
+    return liquidProxy<LiquidProxyState>("/disconnect", "POST");
+}
+
+export function getLiquidProxyLocations() {
+    return liquidProxy<LiquidProxyLocation[]>("/locations");
+}
+
+export function getLiquidProxySessions() {
+    return liquidProxy<LiquidProxySession[]>("/sessions");
+}
+
+export function endLiquidProxySession(id: string) {
+    return liquidProxy<LiquidProxySession[]>(`/sessions/${id}/end`, "POST");
+}
+
+export function changeLiquidProxySessionIp(id: string) {
+    return liquidProxy<LiquidProxySession[]>(`/sessions/${id}/new-ip`, "POST");
 }
 
 export async function getGameWindow(): Promise<GameWindow> {
