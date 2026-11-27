@@ -203,6 +203,21 @@ public enum VfpCompatibility {
         }
     }
 
+    /**
+     * Before 1.20.5 the interaction reach was a constant on the server (six blocks with line of sight, three
+     * without); from 1.20.5 it comes from `entity_interaction_range` and line of sight is not consulted.
+     */
+    public boolean isOlderThan1_20_5() {
+        try {
+            var version = ViaFabricPlus.api().targetVersion();
+
+            return version.olderThan(ProtocolVersion.v1_20_5);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.20.5", throwable);
+            return false;
+        }
+    }
+
     public boolean isNewerThanOrEqual1_21_5() {
         try {
             var version = ViaFabricPlus.api().targetVersion();

@@ -92,8 +92,25 @@ open class Clicker<T>(
         null
     }
 
+    /**
+     * `Minecraft.tick` parks `missTime` at [SCREEN_MISS_LOCK] while any screen is open — a lock, not a miss: the
+     * real cooldown after a swing that hit nothing only ever sets 10. It is cleared by `continueAttack(false)`,
+     * which never runs while the screen is open, so without this the module stops attacking in chat or the
+     * inventory and cannot know why.
+     */
     private val passesMissCooldown
-        get() = !(missCooldown?.get() == true && mc.missTime > 0)
+        get() = !(missCooldown?.get() == true && mc.missTime in 1 until SCREEN_MISS_LOCK)
+
+    /**
+     * Whether a click could go out now, for callers that send the attack packet themselves instead of going
+     * through [click]: the miss cooldown and the weapon's cooldown are the only gates left.
+     */
+    val canAttackNow: Boolean
+        get() = passesMissCooldown && itemCooldown?.isCooldownPassed() != false
+
+    /** [canAttackNow], [tick] ticks from now — used to leave before a long cooldown would be wasted on arrival. */
+    fun canAttackAt(tick: Int): Boolean =
+        passesMissCooldown && itemCooldown?.isCooldownPassed(tick) != false
 
     private val human = HumanClickTiming()
 
@@ -228,3 +245,8 @@ open class Clicker<T>(
     override fun parent() = parent
 
 }
+
+/**
+ * `Minecraft.missTime` is parked at this while a screen is open; the miss cooldown of a failed swing is 10.
+ */
+private const val SCREEN_MISS_LOCK = 10_000

@@ -28,14 +28,49 @@ class StepsValueGroup : ValueGroup("Steps") {
 
     private val length by float("Length", Options.DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks")
     private val pace by enumChoice("Pacing", Pace.BATCHES)
+
+    /**
+     * Packets a tick, used by [Pace.BATCHES] only; the other pacings ignore it.
+     *
+     * Deliberately **not** hidden outside `Batches`: `visibleWhen` works by dropping the value from the
+     * serialised list, and the click GUI does not re-add a setting that disappeared once — it stays
+     * missing after switching back to `Batches` until the game restarts.
+     */
     private val packetsPerTick by int(
         "PerTick", Pacing.DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets",
-    ).visibleWhen { pace == Pace.BATCHES }
+    )
 
-    fun options() = Options(length.toDouble(), pace.pacing(packetsPerTick))
+    /**
+     * Sends descending steps as on ground, so the server never banks the fall distance. Off by default, as it
+     * was in the module this grew out of: a strict server reads a descent that claims ground as an invalid move.
+     */
+    private val spoofOnGround by boolean("SpoofOnGround", false)
+
+    fun options() = Options(
+        stepLength = length.toDouble(),
+        pacing = pace.pacing(packetsPerTick),
+        shouldClaimGroundOnDescent = spoofOnGround,
+    )
+
+    /** The pacing name, for diagnostics. */
+    val paceName: String
+        get() = pace.tag
+
+    val isBurst: Boolean
+        get() = pace == Pace.BURST
+
+    val isInstant: Boolean
+        get() = pace == Pace.INSTANT
 
     /** The ticks the packets of [route] take to go out. */
     fun ticks(route: Route) = if (pace == Pace.BATCHES) route.batches(packetsPerTick).size else 1
+
+    /** How many batches [route] goes out in, for the dispatch log. */
+    fun batchCount(route: Route): Int = ticks(route)
+
+    /** The sizes of the batches [route] is cut into, for the per-tick diagnostics. */
+    fun batchSizes(route: Route): IntArray =
+        if (pace == Pace.BATCHES) route.batches(packetsPerTick) else intArrayOf(route.steps.size)
 
     private enum class Pace(override val tag: String) : Tagged {
         BATCHES("Batches"),

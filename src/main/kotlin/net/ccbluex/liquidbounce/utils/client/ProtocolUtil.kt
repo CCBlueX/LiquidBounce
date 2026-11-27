@@ -143,6 +143,18 @@ val isOlderThanOrEqual1_12_2: Boolean
  * 1.21 added rotation fields to [net.minecraft.network.protocol.game.ServerboundUseItemPacket].
  * Older protocols need the movement rotation packet to be sent before a use-item interaction.
  */
+/**
+ * From 1.20.5 the interaction reach is the `entity_interaction_range` attribute and the server no longer asks
+ * for line of sight; below it, the reach was a constant that did (six blocks with sight, three without).
+ */
+val isOlderThan1_20_5: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_20_5
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-1.20.5 protocol", it)
+    }.getOrDefault(false)
+
 val isOlderThan1_21: Boolean
     get() = runCatching {
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21
