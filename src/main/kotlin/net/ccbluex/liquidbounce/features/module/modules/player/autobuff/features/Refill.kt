@@ -25,18 +25,22 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.inventoryPlan
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
 
 object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
+    private val healingOnly by boolean("HealingPotionsOnly", false)
 
     @Suppress("unused")
     private val refill = inventoryPlan(inventoryConstraints) {
         val validFeatures = ModuleAutoBuff.activeFeatures
-        val validItems = Slots.Inventory.filter { slot ->
-            validFeatures.any { f -> f.isValidItem(slot.itemStack, false) }
+        val validItems = Slots.Inventory.filter {
+            val itemStack = it.itemStack
+            validFeatures.any { f -> f.isValidItem(itemStack, false) } && (!healingOnly || itemStack.isHealing)
         }
 
         for (slot in validItems) {
@@ -59,4 +63,6 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
         }
     }
 
+    private val ItemStack.isHealing
+        get() = getPotionEffects().any { it.effect == MobEffects.INSTANT_HEALTH }
 }

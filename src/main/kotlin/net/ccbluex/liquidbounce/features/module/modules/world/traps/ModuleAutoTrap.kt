@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -29,14 +30,15 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -60,7 +62,12 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     private var currentPlan: BlockChangeIntent<*>? = null
 
-    private var timeout = false
+    /** Aims at the placement of [currentPlan] this tick. */
+    private var aim: RotationTarget? = null
+    private var placing: Job? = null
+
+    /** Ticks of [delay] left after the last placement, planning nothing meanwhile. */
+    private var cooldownLeft = 0
 
     private var pendingCombatWaitTicks = 0
 
@@ -74,7 +81,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     }
 
     private fun resetState() {
-        timeout = false
+        cooldownLeft = 0
+        aim = null
         currentPlan = null
         pendingCombatWaitTicks = 0
         targetTracker.reset()
@@ -82,7 +90,9 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        if (timeout) {
+        aim = null
+        if (cooldownLeft > 0) {
+            cooldownLeft--
             return@handler
         }
 
@@ -109,44 +119,34 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
                 return@handler
             }
 
-            RotationManager.setRotationTarget(
+            aim = rotations.toRotationTarget(
                 blockChangeInfo.blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                Priority.IMPORTANT_FOR_PLAYER_LIFE,
-                this
+                surface = blockChangeInfo.blockPlacementTarget.surface(),
             )
+            placing = launchSequence(placing) { place() }
         }
     }
 
-    @Suppress("unused")
-    private val placementHandler = tickHandler {
-        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
-            return@tickHandler
+    private suspend fun place() {
+        val target by requires { aim }
+        val intent by requires { currentPlan }
+        requires { ignoreOpenInventory || mc.gui.screen() !is AbstractContainerScreen<*> }
+
+        val (raycast, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, { target }) { going ->
+            traceFromPlayer(going).takeIf { intent.validate(it) }?.let { hit -> hit to going }
         }
 
-        val plan = currentPlan ?: return@tickHandler
-        if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
-            currentPlan = null
-            return@tickHandler
-        }
-
-        if (shouldWaitForTiming(plan)) {
-            return@tickHandler
-        }
-
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val raycast = traceFromPlayer(rotation)
-        if (!plan.validate(raycast)) {
-            return@tickHandler
+        if (shouldWaitForTiming(intent)) {
+            return
         }
 
         CombatManager.pauseCombatForAtLeast(1)
-        SilentHotbar.selectSlotSilently(this@ModuleAutoTrap, plan.slot, 1)
+        SilentHotbar.selectSlotSilently(this@ModuleAutoTrap, intent.slot, 1)
 
         var successful = false
         val onSuccess = {
-            plan.onIntentFulfilled()
+            intent.onIntentFulfilled()
             successful = true
             true
         }
@@ -154,22 +154,17 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         doPlacement(
             raycast,
             rotation,
-            hand = plan.slot.useHand,
+            hand = intent.slot.useHand,
             onPlacementSuccess = onSuccess,
             onItemUseSuccess = onSuccess
         )
 
         if (!successful) {
-            return@tickHandler
+            return
         }
 
-        timeout = true
+        cooldownLeft = delay
         pendingCombatWaitTicks = 0
-        try {
-            waitTicks(delay)
-        } finally {
-            timeout = false
-        }
     }
 
     /**

@@ -40,13 +40,16 @@ import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
+import net.ccbluex.liquidbounce.utils.aiming.aim.AimGoal
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -58,7 +61,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -69,6 +72,12 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.Relative
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * A rotation manager. Will also actively affect our F5 model.
@@ -76,12 +85,19 @@ import net.minecraft.world.phys.AABB
 @Suppress("TooManyFunctions")
 object RotationManager : ValueGroup("RotationManager"), EventListener {
 
-    /**
-     * Our final target rotation. This rotation is only used to define our current rotation.
-     */
-    private val rotationTarget
-        get() = rotationTargetHandler.getActiveRequestValue()
     private val rotationTargetHandler = RequestHandler<RotationTarget>()
+
+    /**
+     * The modules waiting in [lookAt] for the view.
+     */
+    internal val looks = Looks()
+
+    /** The targets of this tick, most important first. */
+    private val requests = ArrayList<RotationTarget>()
+    private var lastAim: Aim? = null
+    private var yawFollowsPlayer = false
+    private var pitchFollowsPlayer = false
+    private var lastCamera = Rotation.ZERO
 
     @Suppress("unused")
     private val lifecycleListener = object : EventListener {
@@ -89,7 +105,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     }
 
     val activeRotationTarget: RotationTarget?
-        get() = rotationTarget ?: previousRotationTarget
+        get() = rotationTargetHandler.getActiveRequestValue() ?: previousRotationTarget
     internal var previousRotationTarget: RotationTarget? = null
         private set
 
@@ -148,7 +164,11 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     private fun reset() {
         rotationTargetHandler.clear()
+        requests.clear()
         previousRotationTarget = null
+        lastAim = null
+        yawFollowsPlayer = false
+        pitchFollowsPlayer = false
         currentRotation = null
         lastRotation = null
         lastModelRotation = null
@@ -194,10 +214,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         valueGroup: RotationsValueGroup,
         priority: Priority,
         provider: EventListener,
-        whenReached: RestrictedSingleUseAction? = null
+        surface: Surface? = null,
     ) {
         setRotationTarget(valueGroup.toRotationTarget(
-            rotation, considerInventory = considerInventory, whenReached = whenReached
+            rotation, considerInventory = considerInventory, surface = surface
         ), priority, provider)
     }
 
@@ -239,45 +259,195 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     }
 
     /**
-     * Update current rotation to a new rotation step
+     * Turns the view one tick towards the targets. Each axis follows the most important target that turns it; an axis
+     * no target turns goes back to where the player looks and then follows the mouse. Once both do and no target is
+     * left, the view is handed back.
      */
-    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
         lastModelRotation = currentRotation
-        val playerRotation = player.rotation
-        val activeRotationTarget = this.activeRotationTarget ?: return
-        val rotationTarget = this.rotationTarget
+        rotationTargetHandler.activeRequestValues(requests)
+        val lead = requests.firstOrNull()
+        val target = lead ?: previousRotationTarget
 
-        // Prevents any rotation changes when inventory is opened
-        if (isRotatingAllowed(activeRotationTarget)) {
-            val fromRotation = currentRotation ?: playerRotation
-            val rotation = activeRotationTarget.towards(fromRotation, rotationTarget == null)
-                // After generating the next rotation, we need to normalize it
-                .normalize()
-
-            val diffSqr = rotation.rotationDeltaLengthSqrTo(playerRotation)
-
-            if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
-                    || activeRotationTarget.processors.isEmpty()
-                    || diffSqr <= activeRotationTarget.resetThreshold.sq())) {
-                currentRotation?.let { currentRotation ->
-                    player.yRot = player.withFixedYaw(currentRotation)
-                    player.yBob = player.yRot
-                    player.yBobO = player.yRot
-                }
-
-                currentRotation = null
-                previousRotationTarget = null
+        if (target != null && (lead != null || currentRotation != null) && isRotatingAllowed(target)) {
+            if (lead == null && target.movementCorrection == MovementCorrection.CHANGE_LOOK) {
+                release()
             } else {
-                currentRotation = rotation
-                previousRotationTarget = activeRotationTarget
-
-                rotationTarget?.whenReached?.invoke()
+                turn(target, lead)
             }
+        } else {
+            // The aim did not turn the view this tick, so whatever it was doing is over
+            lastAim = null
         }
 
-        // Update reset ticks
         rotationTargetHandler.tick()
+        lastCamera = player.rotation
+    }
+
+    private fun turn(target: RotationTarget, lead: RotationTarget?) {
+        val camera = player.rotation
+        val yawTarget = requests.firstOrNull { it.yaw != null }
+        val pitchTarget = requests.firstOrNull { it.pitch != null }
+        // An axis no target turns returns to the camera, unless the player looks through the view under ChangeLook
+        val returns = target.movementCorrection != MovementCorrection.CHANGE_LOOK
+        val yawReturns = returns && yawTarget == null
+        val pitchReturns = returns && pitchTarget == null
+        yawFollowsPlayer = yawFollowsPlayer && yawReturns
+        pitchFollowsPlayer = pitchFollowsPlayer && pitchReturns
+        val view = followed(currentRotation ?: camera, camera)
+        val own = if (returns) camera else view
+        val goal = Rotation(yawTarget?.yaw ?: own.yaw, pitchTarget?.pitch ?: own.pitch)
+        val step = RotationUtil.gcd.toFloat()
+        val aim = target.aim
+        val delta = aim?.turn(view, aimGoal(view, goal, yawTarget, pitchTarget, step), aim !== lastAim)
+            ?: view.rotationDeltaTo(goal)
+        lastAim = aim
+
+        // An axis with nowhere to go stays where it is, whatever noise an aim adds to it
+        val yawStays = yawTarget == null && !yawReturns || yawFollowsPlayer
+        val pitchStays = pitchTarget == null && !pitchReturns || pitchFollowsPlayer
+        val turned = RotationUtil.turnByCounts(
+            view,
+            if (yawStays) 0 else (delta.deltaYaw / step).roundToInt(),
+            if (pitchStays) 0 else (delta.deltaPitch / step).roundToInt(),
+        )
+        val next = arrived(view, turned, camera, yawReturns, pitchReturns, step)
+        currentRotation = next
+
+        if (lead == null && yawFollowsPlayer && pitchFollowsPlayer) {
+            release()
+            return
+        }
+
+        previousRotationTarget = target
+        looks.offer(next, requests)
+    }
+
+    /** [last] with the axes that follow the player on the [camera], so an aim finds nothing left to turn on them. */
+    private fun followed(last: Rotation, camera: Rotation) = Rotation(
+        if (yawFollowsPlayer) last.yaw + angleDifference(camera.yaw, last.yaw) else last.yaw,
+        if (pitchFollowsPlayer) camera.pitch else last.pitch,
+    )
+
+    /**
+     * [turned] with each returning axis on the [camera] from the tick its turn from [view] reaches it, or passes it
+     * while the player turns it; from then on the axis follows the player.
+     */
+    private fun arrived(
+        view: Rotation,
+        turned: Rotation,
+        camera: Rotation,
+        yawReturns: Boolean,
+        pitchReturns: Boolean,
+        step: Float,
+    ): Rotation {
+        val yawLeft = angleDifference(camera.yaw, turned.yaw)
+        val yawMoves = abs(angleDifference(camera.yaw, lastCamera.yaw)) >= step / 2
+        val pitchMoves = abs(camera.pitch - lastCamera.pitch) >= step / 2
+        yawFollowsPlayer = yawReturns && arrives(angleDifference(camera.yaw, view.yaw), yawLeft, step, yawMoves)
+        pitchFollowsPlayer = pitchReturns &&
+            arrives(camera.pitch - view.pitch, camera.pitch - turned.pitch, step, pitchMoves)
+        return Rotation(
+            if (yawFollowsPlayer) turned.yaw + yawLeft else turned.yaw,
+            if (pitchFollowsPlayer) camera.pitch else turned.pitch,
+        )
+    }
+
+    /** What an aim is given to turn from [view] onto [target] alone. */
+    internal fun aimGoal(view: Rotation, target: RotationTarget) = aimGoal(
+        view,
+        target.rotation(view),
+        target.takeIf { it.yaw != null },
+        target.takeIf { it.pitch != null },
+        RotationUtil.gcd.toFloat(),
+    )
+
+    private fun aimGoal(
+        view: Rotation,
+        goal: Rotation,
+        yawTarget: RotationTarget?,
+        pitchTarget: RotationTarget?,
+        step: Float,
+    ): AimGoal {
+        val owner = yawTarget.takeIf { it === pitchTarget }
+        val surface = owner?.hitSurface
+        val kind = when {
+            yawTarget == null && pitchTarget == null -> AimGoal.Kind.CAMERA
+            (yawTarget ?: pitchTarget)?.entity != null -> AimGoal.Kind.ENTITY
+            (yawTarget ?: pitchTarget)?.isRehearsed == true -> AimGoal.Kind.FLICK
+            else -> AimGoal.Kind.BLOCK
+        }
+        if (surface != null) {
+            val eyes = player.eyePosition
+            return surfaceGoal(goal, eyes, surface, surface.isHitBy(eyes, view), kind)
+        }
+
+        val yawTolerance = yawTarget?.tolerance ?: 0f
+        val pitchTolerance = pitchTarget?.tolerance ?: 0f
+        val delta = view.rotationDeltaTo(goal)
+        val reached = abs(delta.deltaYaw) < max(yawTolerance, step / 2) &&
+            abs(delta.deltaPitch) < max(pitchTolerance, step / 2)
+        return AimGoal(goal, yawTolerance * 2, pitchTolerance * 2, reached, kind)
+    }
+
+    /**
+     * Whether a turn that had [before] degrees to go and has [after] left got to its end, or went past a camera that
+     * [moves]. On one that holds still the hand settles by itself: a sweep cut short on it to the count is a snap.
+     */
+    private fun arrives(before: Float, after: Float, step: Float, moves: Boolean) =
+        abs(after) < step / 2 || moves && before * after < 0f
+
+    /**
+     * [goal] on [surface], with the yaw and pitch extents of it as seen from [eyes].
+     */
+    private fun surfaceGoal(
+        goal: Rotation,
+        eyes: Vec3,
+        surface: Surface,
+        reached: Boolean,
+        kind: AimGoal.Kind,
+    ): AimGoal {
+        if (surface.box.contains(eyes)) {
+            return AimGoal(goal, 180f, 180f, reached, kind)
+        }
+
+        val corners = surface.corners
+        val center = Rotation.lookingAt(corners.fold(Vec3.ZERO, Vec3::add).scale(1.0 / corners.size), eyes)
+        var minYaw = Float.POSITIVE_INFINITY
+        var maxYaw = Float.NEGATIVE_INFINITY
+        var minPitch = Float.POSITIVE_INFINITY
+        var maxPitch = Float.NEGATIVE_INFINITY
+        for (corner in corners) {
+            val rotation = Rotation.lookingAt(corner, eyes)
+            val yaw = angleDifference(rotation.yaw, center.yaw)
+            minYaw = min(minYaw, yaw)
+            maxYaw = max(maxYaw, yaw)
+            minPitch = min(minPitch, rotation.pitch)
+            maxPitch = max(maxPitch, rotation.pitch)
+        }
+        val distance = sqrt(surface.box.distanceToSqr(eyes)).toFloat()
+        // Straight above or below the eyes every yaw meets the surface, all the way to the pole
+        val isOverEyes = eyes.x in corners.minOf { it.x }..corners.maxOf { it.x } &&
+            eyes.z in corners.minOf { it.z }..corners.maxOf { it.z }
+        if (isOverEyes) {
+            val height = if (corners[0].y < eyes.y) 90f - minPitch else maxPitch + 90f
+            return AimGoal(goal, 360f, height, reached, kind, distance)
+        }
+        return AimGoal(goal, maxYaw - minYaw, maxPitch - minPitch, reached, kind, distance)
+    }
+
+    private fun release() {
+        currentRotation?.let { currentRotation ->
+            player.yRot = player.withFixedYaw(currentRotation)
+            player.yBob = player.yRot
+            player.yBobO = player.yRot
+        }
+
+        currentRotation = null
+        previousRotationTarget = null
+        lastAim = null
+        yawFollowsPlayer = false
+        pitchFollowsPlayer = false
     }
 
     fun applyChangeLookRotation(partialTicks: Float) {
@@ -345,7 +515,17 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         priority = FIRST_PRIORITY
     ) { event ->
         EventManager.callEvent(RotationUpdateEvent)
+        looks.request(::setRotationTarget)
         update()
+    }
+
+    /**
+     * Resumes the modules whose look was met this tick: after every other first handler, such as the clicker planning
+     * this tick's clicks, and before modules tick and the movement packet goes out.
+     */
+    @Suppress("unused")
+    private val lookHandler = handler<GameTickEvent>(priority = (FIRST_PRIORITY - 1).toShort()) {
+        looks.settle()
     }
 
     /**

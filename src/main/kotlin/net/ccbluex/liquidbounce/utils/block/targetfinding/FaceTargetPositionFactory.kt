@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.VisibilityPredicate
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -210,6 +211,27 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory {
         targetPos: BlockPos,
         playerLocation: PlayerLocationOnPlacement
     ): Vec3 = face.center
+}
+
+/**
+ * Nearest to the look along the middle of the face, halfway up it: a look sweeping along a row of faces, as a telly
+ * bridger's back at the end of the row, meets each with room on every side. A side face seen from above is a thin band,
+ * and a hand resting near its end misses it.
+ */
+object MidHeightTargetPositionFactory : FaceTargetPositionFactory {
+    override fun producePositionOnFace(
+        face: AlignedFace,
+        targetPos: BlockPos,
+        playerLocation: PlayerLocationOnPlacement
+    ): Vec3 {
+        val trimmed = trimFace(face, 0.3)
+        val nearest = NearestRotationTargetPositionFactory.aimAtNearestPointToRotationLine(
+            targetPos,
+            trimmed,
+            playerLocation,
+        )
+        return Vec3(nearest.x, (trimmed.from.y + trimmed.to.y) / 2, nearest.z)
+    }
 }
 
 /**

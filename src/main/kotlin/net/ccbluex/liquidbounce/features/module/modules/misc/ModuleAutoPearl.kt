@@ -18,22 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.launchSequence
 import net.ccbluex.liquidbounce.event.requires
-import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickConditional
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -41,13 +39,13 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
@@ -90,6 +88,7 @@ object ModuleAutoPearl : ClientModule(
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     private val queue = ArrayDeque<Rotation>()
+    private var throwing: Job? = null
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
@@ -103,56 +102,47 @@ object ModuleAutoPearl : ClientModule(
         val entity = data.type.create(world, EntitySpawnReason.SPAWN_ITEM_USE) as ThrownEnderpearl
         entity.recreateFromPacket(data)
 
-        proceedPearl(
-            pearl = entity,
-            // entity.velocity & entity.pos doesn't work, don't use it
-            velocity = with(data) { Vec3(movement.x, movement.y, movement.z) },
-            pearlPos = with(data) { Vec3(x, y, z) }
-        )
-    }
+        // entity.velocity & entity.pos doesn't work, don't use it
+        val velocity = with(data) { Vec3(movement.x, movement.y, movement.z) }
+        val pearlPos = with(data) { Vec3(x, y, z) }
 
-    @Suppress("unused")
-    private val simulatedTickHandler = sequenceHandler<RotationUpdateEvent> {
-        val rotation = queue.firstOrNull() ?: return@sequenceHandler
-
-        CombatManager.pauseCombatForAtLeast(combatPauseTime)
-        if (Rotate.enabled) {
-            RotationManager.setRotationTarget(
-                Rotate.rotations.toRotationTarget(rotation),
-                Priority.IMPORTANT_FOR_USAGE_3,
-                this@ModuleAutoPearl
-            )
+        // Simulating against the world is only safe on the client thread
+        mc.execute {
+            proceedPearl(pearl = entity, velocity = velocity, pearlPos = pearlPos)
         }
     }
 
     @Suppress("unused")
-    private val gameTickHandler = tickHandler {
-        val rotation = queue.removeFirstOrNull() ?: return@tickHandler
-
-        val itemSlot by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
-
-        if (Rotate.enabled) {
-            fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
-            }
-
-            tickConditional(20) {
-                RotationManager.setRotationTarget(
-                    Rotate.rotations.toRotationTarget(rotation),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleAutoPearl
-                )
-
-                isRotationSufficient()
-            }
-
-            if (!isRotationSufficient()) {
-                return@tickHandler
-            }
+    private val combatPauseHandler = handler<RotationUpdateEvent> {
+        if (queue.isNotEmpty()) {
+            CombatManager.pauseCombatForAtLeast(combatPauseTime)
         }
+    }
 
-        val (yaw, pitch) = rotation.normalize()
-        useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+    private suspend fun throwQueued() {
+        val rotation = queue.firstOrNull() ?: return
+
+        // Leaves the queue once thrown, and as well when the throw gives up
+        try {
+            val itemSlot by requires { Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) }
+
+            if (!Rotate.enabled) {
+                CombatManager.pauseCombatForAtLeast(combatPauseTime)
+                val (yaw, pitch) = rotation.normalize()
+                useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+                return
+            }
+
+            // Gives up when the rotation is not there after 20 ticks
+            val until = player.tickCount + 20
+            requires { player.tickCount <= until }
+            val (yaw, pitch) = lookAt(Priority.IMPORTANT_FOR_USAGE_3, {
+                Rotate.rotations.toRotationTarget(rotation, tolerance = 1f)
+            })
+            useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+        } finally {
+            queue.removeFirstOrNull()
+        }
     }
 
     private fun proceedPearl(
@@ -174,19 +164,18 @@ object ModuleAutoPearl : ClientModule(
             return
         }
 
-        val rotation = SituationalProjectileAngleCalculator.calculateAngleForStaticTarget(
-            TrajectoryInfo.GENERIC,
-            destination,
-            EntityDimensions.fixed(1.0F, 0.0F)
-        ) ?: return
-
-        if (!canThrow(rotation, destination)) {
+        if (queue.isNotEmpty()) {
             return
         }
 
-        if (queue.isEmpty()) {
-            queue.add(rotation)
+        val aim = aimAt(destination) ?: return
+
+        if (Limits.enabled && aim.error > Limits.destDistance) {
+            return
         }
+
+        queue.add(aim.rotation)
+        throwing = launchSequence(throwing) { throwQueued() }
     }
 
     private fun canTrigger(pearl: ThrownEnderpearl): Boolean {
@@ -208,18 +197,47 @@ object ModuleAutoPearl : ClientModule(
         }
     }
 
-    private fun canThrow(
-        angles: Rotation,
-        destination: Vec3
-    ): Boolean {
-        val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            simulationOwner = player,
-            trajectoryInfo = TrajectoryInfo.GENERIC,
-            trajectoryType = TrajectoryType.ENDER_PEARL,
-            rotation = angles
-        ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
+    private class Throw(val rotation: Rotation, val error: Double, val ticks: Int)
 
-        return !Limits.enabled || destination.closerThan(simulatedDestination, Limits.destDistance.toDouble())
+    /**
+     * Simulates every pitch towards [destination] and refines each arc that lands closest locally. Of the arcs
+     * landing within a block of it, the one with the shortest flight wins, so a blocked low arc falls back
+     * to a high one. Without such an arc, the closest one is returned.
+     */
+    private fun aimAt(destination: Vec3): Throw? {
+        val yaw = destination.subtract(player.eyePosition).yaw
+
+        fun simulate(pitch: Float): Throw? {
+            val rotation = Rotation(yaw, pitch.coerceIn(-90f, 90f))
+            val result = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                simulationOwner = player,
+                trajectoryInfo = TrajectoryInfo.GENERIC,
+                trajectoryType = TrajectoryType.ENDER_PEARL,
+                rotation = rotation
+            ).runSimulation(MAX_SIMULATED_TICKS)
+            val landing = result.hitResult?.location ?: return null
+            return Throw(rotation, landing.distanceTo(destination), result.positions.size)
+        }
+
+        val coarse = (-90..90).map { simulate(it.toFloat()) }
+        val arcs = coarse.withIndex().mapNotNull { (index, current) ->
+            if (current == null) {
+                return@mapNotNull null
+            }
+
+            val neighbours = listOfNotNull(coarse.getOrNull(index - 1), coarse.getOrNull(index + 1))
+            if (neighbours.any { it.error < current.error }) {
+                return@mapNotNull null
+            }
+
+            // A degree to either side of the coarse pitch, in tenths
+            (-10..10)
+                .mapNotNull { step -> simulate(current.rotation.pitch + step * 0.1f) }
+                .minByOrNull { it.error }
+        }
+
+        return arcs.filter { it.error <= 1.0 }.minByOrNull { it.ticks }
+            ?: arcs.minByOrNull { it.error }
     }
 
     private fun runSimulation(

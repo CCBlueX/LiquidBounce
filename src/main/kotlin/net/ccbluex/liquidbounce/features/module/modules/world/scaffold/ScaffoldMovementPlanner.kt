@@ -91,12 +91,16 @@ object ScaffoldMovementPlanner {
 
         val lastBlocksLine = fitLinesThroughLastPlacedBlocks()
 
-        // If the recent placements match the current movement direction, follow them. Otherwise use the current
-        // support block as a fresh anchor because the user probably started a new direction.
-        val lineAnchor = if (lastBlocksLine != null && !divergesTooMuchFromDirection(lastBlocksLine, direction)) {
-            lastBlocksLine.getNearestPointTo(player.position())
-        } else {
-            Vec3(
+        // How far the last placed blocks lie along the movement: 1 for a row, 0.7 for the stairs of a diagonal
+        val along = lastBlocksLine?.direction?.dot(direction) ?: 0.0
+        val lineAnchor = when {
+            lastBlocksLine != null && along > 0.9 -> lastBlocksLine.getNearestPointTo(player.position())
+            // The middle of stairs runs through the middle between each two of their blocks. The row those two make
+            // is no line to follow: its nearest point moves along with the player, who then walks straight along
+            // its edge
+            lastBlocksLine != null && along > 0.5 -> lastBlocksLine.position
+            // The user probably started a new direction, the current support block is a fresh anchor
+            else -> Vec3(
                 supportReference.blockPos.x + 0.5 + supportReference.offsetX,
                 player.position().y,
                 supportReference.blockPos.z + 0.5 + supportReference.offsetZ
@@ -112,10 +116,6 @@ object ScaffoldMovementPlanner {
         }
 
         return optimalLine
-    }
-
-    private fun divergesTooMuchFromDirection(lastBlocksLine: Line, direction: Vec3): Boolean {
-        return lastBlocksLine.direction.dot(direction) < 0.5 // cos(60deg)
     }
 
     /**

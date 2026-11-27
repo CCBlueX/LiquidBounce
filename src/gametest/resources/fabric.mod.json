@@ -20,6 +20,7 @@
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",
+      "net.ccbluex.liquidbounce.gametest.ScaffoldBridgeGameTest",
       "net.ccbluex.liquidbounce.gametest.TargetStrafeGameTest",
       "net.ccbluex.liquidbounce.gametest.server.HarnessGameTest",
       "net.ccbluex.liquidbounce.gametest.server.LegitMovementGameTest",
@@ -40,7 +41,13 @@
       "net.ccbluex.liquidbounce.gametest.server.InventoryUsePlansServerGameTest",
       "net.ccbluex.liquidbounce.gametest.server.InventoryPlanGameTest",
       "net.ccbluex.liquidbounce.gametest.server.NoRotateSetGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.KillAuraAimGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.ScaffoldGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.NavigationGameTests",
+      "net.ccbluex.liquidbounce.gametest.combat.AimbotCrystalsGameTest",
+      "net.ccbluex.liquidbounce.gametest.CrystalAuraCrosshairGameTest",
+      "net.ccbluex.liquidbounce.gametest.inventory.AutoBuffGameTest",
+      "net.ccbluex.liquidbounce.gametest.combat.AutoPearlSimulatedPitchGameTest",
       "net.ccbluex.gametest.harness.ResultsGameTest"
     ]
   },

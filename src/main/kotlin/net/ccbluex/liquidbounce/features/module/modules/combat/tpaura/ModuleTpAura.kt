@@ -33,11 +33,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
@@ -73,7 +78,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
     private val clicker = tree(Clicker(this, mc.options.keyAttack))
-    private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
+    private val rotations = tree(RotationsValueGroup(this))
     private val steps = tree(StepsValueGroup())
 
     private val view = RouteView().apply {
@@ -144,7 +149,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             Phase.ROUTING -> route()
             Phase.READY -> launch()
             Phase.APPROACH -> approach()
-            Phase.ATTACK -> attack()
+            Phase.ATTACK -> {}
             Phase.RETURN -> if (!trip.isAway) {
                 view.done()
                 phase = Phase.IDLE
@@ -152,25 +157,46 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
     }
 
+    /** Aims from the attack position ahead of the teleport. */
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         val engagement = engagement ?: return@handler
-        val feet = when (phase) {
+        val destination = when (phase) {
             Phase.READY, Phase.APPROACH -> engagement.route?.destination?.toMinecraft()
-            Phase.ATTACK -> trip.position.toMinecraft()
             else -> null
         } ?: return@handler
 
-        val eyes = player.getEyePositionAt(feet)
-        val box = engagement.target.boundingBox
-        val rotation = raytraceBox(eyes, box, range = reach, wallsRange = 0.0)?.rotation
-            ?: Rotation.lookingAt(box.center, eyes)
-
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation, engagement.target),
+            aimFrom(destination, engagement.target),
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleTpAura
         )
+    }
+
+    /** Runs the attack phase each tick, once the rotation going out is known. */
+    @Suppress("unused")
+    private val attackHandler = tickHandler {
+        requires { phase == Phase.ATTACK }
+        val current by requires { engagement }
+        val facing = lookAt(Priority.IMPORTANT_FOR_USAGE_2, {
+            aimFrom(trip.position.toMinecraft(), current.target)
+        }) { going ->
+            isFacing(player.getEyePositionAt(trip.position.toMinecraft()), current.target, going)
+        }
+
+        attack(facing)
+    }
+
+    /** Aims at [target] from the eyes of a player standing at [feet]. */
+    private fun aimFrom(feet: Vec3, target: LivingEntity): RotationTarget {
+        val eyes = player.getEyePositionAt(feet)
+        val box = target.boundingBox
+        val rotation = raytraceBox(eyes, box, range = reach, wallsRange = 0.0)?.rotation
+            ?: Rotation.lookingAt(box.center, eyes)
+
+        // The aim is judged from the client's eyes, so it gets the box as the attacking eyes see it
+        val seen = box.inflate(target.pickRadius.toDouble()).move(player.eyePosition.subtract(eyes))
+        return rotations.toRotationTarget(rotation, target, surface = Surface(seen, throughWalls = true))
     }
 
     private fun engage() {
@@ -264,7 +290,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         phase = Phase.ATTACK
     }
 
-    private fun attack() {
+    private fun attack(facing: Boolean) {
         if (trip.run?.state == Teleport.State.REJECTED) {
             return rejected()
         }
@@ -278,7 +304,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.engaged = true
-        if (clicker.isClickTick && isFacing(player.getEyePositionAt(feet), target) &&
+        if (clicker.isClickTick && facing &&
             !player.cannotAttackWithItem(player.mainHandItem, 0)
         ) {
             clicker.click {
@@ -343,14 +369,14 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private fun isInReach(feet: Vec3, target: LivingEntity) =
         target.boundingBox.distanceToSqr(player.getEyePositionAt(feet)) <= Mth.square(reach)
 
-    /** Whether the rotation the server has hits [target] from [eyes]. */
-    private fun isFacing(eyes: Vec3, target: LivingEntity): Boolean {
+    /** Whether [rotation] hits [target] from [eyes]. */
+    private fun isFacing(eyes: Vec3, target: LivingEntity, rotation: Rotation): Boolean {
         val box = target.boundingBox.inflate(target.pickRadius.toDouble())
         if (box.contains(eyes)) {
             return true
         }
 
-        val end = eyes.fma(reach + REACH_MARGIN, RotationManager.serverRotation.directionVector)
+        val end = eyes.fma(reach + REACH_MARGIN, rotation.directionVector)
         val hit = box.clip(eyes, end).orElse(null) ?: return false
         return hasLineOfSight(eyes, hit)
     }

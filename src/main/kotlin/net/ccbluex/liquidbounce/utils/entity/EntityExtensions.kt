@@ -263,11 +263,12 @@ val Player.isSlowDueToUsingItem: Boolean
 
 fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 
-fun Player.wouldBeCloseToFallOff(position: Vec3): Boolean {
+/** Whether a player standing at [position] has no block under it, or less than [margin] of one. */
+fun Player.wouldBeCloseToFallOff(position: Vec3, margin: Double = 0.05): Boolean {
     val hitbox =
         this.dimensions
             .makeBoundingBox(position)
-            .inflate(-0.05, 0.0, -0.05)
+            .inflate(-margin, 0.0, -margin)
             .move(0.0, this.fallDistance - this.maxUpStep(), 0.0)
 
     return this.level().noCollision(this, hitbox)

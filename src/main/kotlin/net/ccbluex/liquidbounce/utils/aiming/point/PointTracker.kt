@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptContext
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorDelay
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorGaussian
+import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorHeight
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorLazy
 import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -61,6 +62,8 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
      * This will allow the point to be delayed until the ticks expire.
      */
     private val delay = tree(PointProcessorDelay(this))
+
+    private val height = tree(PointProcessorHeight(this))
 
     private val processors = arrayOf(delay, lazy, gaussian)
 
@@ -106,9 +109,15 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
 
         val pos = pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) } ?: bestHitVector
         var point = PointInsideBox(pos, box)
+        if (height.enabled) {
+            // An exempt part of the box stays exempt, also where the view meets it already
+            height.process(point, eyes)
+                .takeIf { kept -> predicates.none { it.predicate(predicateContext, kept.pos) } }
+                ?.let { point = it }
+        }
         for (processor in processors) {
             if (processor.enabled) {
-                point = processor.process(point)
+                point = processor.process(point, eyes)
             }
         }
         return point

@@ -22,10 +22,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
@@ -34,14 +35,14 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import java.util.function.BooleanSupplier
 
 /**
@@ -76,13 +77,15 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
     private val rotateToTarget by boolean("RotateToTarget", false)
     private val rotations = tree(RotationsValueGroup(this))
 
-    private var currentTargetBlock: BlockPos? = null
+    /** The storage block to punch and the target that aims at it, chosen anew every tick. */
+    private var currentTarget: Pair<BlockPos, RotationTarget>? = null
 
     override val running: Boolean
         get() = super.running && pauseOn.none { it.asBoolean }
 
     override fun onDisabled() {
-        currentTargetBlock = null
+        currentTarget = null
+        cooldownLeft = 0
         super.onDisabled()
     }
 
@@ -106,11 +109,17 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        // Counted here, so a deposit waits the same whether a look or the tick handler made it
+        if (cooldownLeft > 0) {
+            cooldownLeft--
+        }
+
+        currentTarget = null
         if (!rotateToTarget || ModuleAutoDeposit.matchingSlots(inventory = false).isEmpty()) {
             return@handler
         }
 
-        currentTargetBlock = selectBlockTarget(
+        currentTarget = selectBlockTarget(
             player.eyePosition,
             interactionRange,
             wallInteractionRange,
@@ -118,52 +127,54 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
                 state.block in validStorageBlocks
             },
             rotations,
-            ModuleAutoDeposit
         )
     }
 
+    private fun depositSlot() = ModuleAutoDeposit.matchingSlots(inventory = false).firstOrNull() as? HotbarItemSlot
+
+    /** Ticks of [interactionDelay] left after the last deposit. */
+    private var cooldownLeft = 0
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (cooldownLeft > 0) {
+            return@tickHandler
+        }
+
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
-        val slot = ModuleAutoDeposit.matchingSlots(inventory = false)
-            .firstOrNull() as? HotbarItemSlot ?: return@tickHandler
+        if (rotateToTarget) {
+            val slot by requires { depositSlot() }
+            val target by requires { currentTarget }
+            requires { rotateToTarget }
+            requires { mc.gui.screen() !is AbstractContainerScreen<*> }
 
-        val rayTraceResult = if (rotateToTarget) {
-            val targetBlockPos = currentTargetBlock ?: return@tickHandler
-            val currentPlayerRotation = RotationManager.serverRotation
-
-            val hit = raytraceBlock(
-                interactionRange.toDouble(),
-                currentPlayerRotation,
-                targetBlockPos,
-                targetBlockPos.state ?: return@tickHandler
-            )
-
-            if (hit?.type != HitResult.Type.BLOCK || hit.blockPos != targetBlockPos) {
-                return@tickHandler
+            val hit = lookAt(Priority.IMPORTANT_FOR_USAGE_1, { target.second }) { going ->
+                raytraceBlockHit(interactionRange.toDouble(), going, target.first)
             }
-            hit
+
+            deposit(slot, hit)
+            currentTarget = null
         } else {
+            val slot = depositSlot() ?: return@tickHandler
             val hit = mc.hitResult as? BlockHitResult ?: return@tickHandler
             val state = hit.blockPos.state ?: return@tickHandler
             if (state.block !in validStorageBlocks) {
                 return@tickHandler
             }
-            hit
+
+            deposit(slot, hit)
         }
 
+        cooldownLeft = interactionDelay
+    }
+
+    private fun deposit(slot: HotbarItemSlot, hit: BlockHitResult) {
         SilentHotbar.selectSlotSilently(this@PunchToDeposit, slot, 1)
-        clickStorage(rayTraceResult)
+        clickStorage(hit)
         swingMode.attackSwing()
-
-        if (rotateToTarget) {
-            currentTargetBlock = null
-        }
-
-        waitTicks(interactionDelay)
     }
 
 }

@@ -33,8 +33,9 @@ private val POSITION = Regex("""\[(-?[\d.E-]+)d, (-?[\d.E-]+)d, (-?[\d.E-]+)d]""
 // The session's max_block_modifications
 private const val FILL_LIMIT = 32768
 
-/** The player's health as the server has it. */
-fun GameTestScope.health() = query("data get entity $playerName Health", HEALTH).groupValues[1].toFloat()
+/** The health of [entity], the player unless another one is selected, as the server has it. */
+fun GameTestScope.health(entity: String = playerName) =
+    query("data get entity $entity Health", HEALTH).groupValues[1].toFloat()
 
 fun GameTestScope.serverPosition(): Vec3 {
     val (x, y, z) = query("data get entity $playerName Pos", POSITION).destructured

@@ -46,7 +46,6 @@ object ScaffoldJumpStrafe : ToggleableValueGroup(ModuleScaffold, "StrafeOnJump",
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        // Taken from GodBridge feature
         val direction = player.getMovementDirectionOfInput() + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)

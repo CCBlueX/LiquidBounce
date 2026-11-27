@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -43,7 +42,6 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
-import java.util.concurrent.ThreadLocalRandom
 
 internal object FlyEnderpearl : Mode("Enderpearl") {
 
@@ -91,8 +89,7 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(
-                Rotation(player.yRot, ThreadLocalRandom.current().nextFloat(80f, 90f)),
-                valueGroup = rotations,
+                rotations.toRotationTarget(pitch = (80f..90f).random(), considerInventory = true),
                 provider = ModuleFastUse,
                 priority = Priority.IMPORTANT_FOR_USAGE_2
             )

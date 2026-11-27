@@ -19,12 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.requires
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
@@ -36,8 +37,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.On
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -45,9 +49,11 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlockHit
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -57,7 +63,6 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 /**
@@ -124,6 +129,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
+
+    /** Aims at the current target this tick; null when the player has to look at it on their own. */
+    private var aim: RotationTarget? = null
     private var tickCounter = 0L
     private var nextAllowedStartTick = 0L
 
@@ -169,22 +177,35 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        tickCounter++
+        aim = null
         val mineTarget = currentTarget ?: return@handler
         mineTarget.updateBlockState()
         rotate(mineTarget)
     }
 
     @Suppress("unused")
-    private val repeatable = handler<GameTickEvent> {
-        tickCounter++
-        val mineTarget = currentTarget ?: return@handler
+    private val repeatable = tickHandler {
+        val mineTarget = currentTarget ?: return@tickHandler
         if (mineTarget.isInvalidOrOutOfRange()) {
             currentTarget = null
-            return@handler
+            return@tickHandler
         }
 
         mineTarget.updateBlockState()
-        handleBreaking(mineTarget)
+        if (aim == null) {
+            // Without rotations of its own, the player has to look at the target itself
+            handleBreaking(mineTarget, RotationManager.currentRotation ?: player.rotation)
+            return@tickHandler
+        }
+
+        // Goes on with the rotation going out on the next tick, whether it hits or not
+        requires { currentTarget === mineTarget }
+        requires { !mineTarget.isInvalidOrOutOfRange() }
+        val plan by requires { aim }
+        val going = lookAt(Priority.IMPORTANT_FOR_USAGE_2, { plan }) { it }
+        mineTarget.updateBlockState()
+        handleBreaking(mineTarget, going)
     }
 
     private fun rotate(mineTarget: MineTarget) {
@@ -203,12 +224,10 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
         }
 
         if (rotate) {
-            RotationManager.setRotationTarget(
+            aim = rotations.toRotationTarget(
                 raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
-                Priority.IMPORTANT_FOR_USAGE_2,
-                ModulePacketMine
+                surface = Surface.of(mineTarget.targetPos, throughWalls = wallsRange > 0f),
             )
         }
 
@@ -216,17 +235,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     }
 
     @Suppress("ReturnCount")
-    private fun handleBreaking(mineTarget: MineTarget) {
-        // are we looking at the target?
-        val hit = raytraceBlock(
-            max(range, wallsRange).toDouble(),
-            RotationManager.serverRotation,
-            mineTarget.targetPos,
-            mineTarget.blockState
-        )
-
-        val invalidHit = hit == null || hit.type != HitResult.Type.BLOCK || hit.blockPos != mineTarget.targetPos
-        if (invalidHit && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
+    private fun handleBreaking(mineTarget: MineTarget, going: Rotation) {
+        val hit = raytraceBlockHit(max(range, wallsRange).toDouble(), going, mineTarget.targetPos)
+        if (hit == null && rotationMode.getFailProcedure(mineTarget).execute(mineTarget)) {
             return
         }
 

@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import kotlinx.coroutines.Job
+import net.ccbluex.agent.simulation.SimulatedInput
+import net.ccbluex.agent.simulation.SimulatedPlayer
+import net.ccbluex.agent.v26_3.toAgent
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
@@ -28,11 +32,10 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
@@ -45,24 +48,27 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.considerInventory
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridging
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingBreezily
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingGodBridge
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNinja
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingNormal
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.bridging.ScaffoldBridgingTelly
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAccelerationFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoBlockFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldClutchFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldEagleFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldExpandFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldJumpStrafe
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ledge
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldExpandTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -72,16 +78,24 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.Visibility
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.fromClientPlayer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
@@ -113,7 +127,9 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Scaffold module
@@ -133,16 +149,31 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         tree(ScaffoldMovementPrediction)
     }
 
-    internal val technique = choices(
-        "Technique",
-        ScaffoldNormalTechnique,
-        arrayOf(
-            ScaffoldNormalTechnique,
-            ScaffoldExpandTechnique,
-            ScaffoldGodBridgeTechnique,
-            ScaffoldBreezilyTechnique
+    /** How the player bridges. Old configs saved Normal, GodBridge or Breezily as the technique. */
+    val bridging = modes(object : EventListener {
+        override fun parent() = ModuleScaffold
+
+        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
+        override val running: Boolean
+            get() = super.running && ModuleClutch.fall == null
+    }, "Bridging", listOf("Technique"), { 0 }) {
+        arrayOf<ScaffoldBridging>(
+            ScaffoldBridgingNormal,
+            ScaffoldBridgingNinja,
+            ScaffoldBridgingGodBridge,
+            ScaffoldBridgingBreezily,
+            ScaffoldBridgingTelly,
         )
-    ).apply(::tagBy)
+    }.apply(::tagBy)
+    internal val visibility by enumChoice("Visibility", Visibility.VISIBLE)
+
+    init {
+        tree(ScaffoldDownFeature)
+        tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldCeilingFeature)
+        tree(ScaffoldHeadHitterFeature)
+        tree(ScaffoldExpandFeature)
+    }
 
     private val sameYMode by enumChoice("SameY", SameYMode.OFF)
 
@@ -213,29 +244,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     private var wasTowering: Boolean = false
 
-    private val activeTechnique get() = when {
-        ModuleClutch.fall != null -> ScaffoldClutchTechnique
-        isTowering -> ScaffoldNormalTechnique
-        else -> technique.activeMode
-    }
+    /** Whether the next block comes from [ScaffoldExpandFeature]; a tower always builds right under the player. */
+    private val isExpanding get() = ScaffoldExpandFeature.running && !isTowering
 
     /**
      * [ModuleClutch] has scaffold build under a fall without enabling it.
      */
     override val running: Boolean
         get() = super.running || ModuleClutch.fall != null
-
-    private object SafeWalk : EventListener {
-        override fun parent() = ModuleScaffold
-
-        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
-        override val running: Boolean
-            get() = super.running && ModuleClutch.fall == null
-    }
-
-    // SafeWalk feature - uses the SafeWalk module as a base
-    @Suppress("unused")
-    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
@@ -263,7 +279,23 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     }
 
-    private var currentTarget: BlockPlacementTarget? = null
+    /** The block scaffold wants to place this tick; null again once it is placed. */
+    internal var currentTarget: BlockPlacementTarget? = null
+        private set
+
+    /** Whether [currentTarget] waits for the rotation to hit it rather than going down with the view as it is. */
+    private var isAimed = false
+
+    /** Where scaffold aimed last, kept over the ticks it has nothing to aim at. */
+    internal var aim: Rotation? = null
+        private set
+
+    /** Ticks until the next block may go down, counted down at the start of every tick, see [delay]. */
+    private var cooldown = 0
+
+    /** The rotation asked for this tick under [NORMAL] timing; null on ticks scaffold asks for none. */
+    private var planned: Rotation? = null
+    private var placing: Job? = null
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
@@ -289,14 +321,14 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
-    private val ledge by boolean("Ledge", true)
-
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
     private var placementY = 0
-    private var forceSneak = 0
     private var startY = 0
     private var jumps = 0
+
+    /** The block SafeWalk was told goes down in time, which the next tick then places rather than choosing again. */
+    private var promised: BlockPlacementTarget? = null
 
     private var nextBlock: Block? = null
 
@@ -359,11 +391,18 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
+        ScaffoldPlacement.reset()
         SilentHotbar.resetSlot(this)
         nextBlock = null
         updateRenderCount(null)
-        forceSneak = 0
         currentTarget = null
+        promised = null
+        isAimed = false
+        aim = null
+        planned = null
+        cooldown = 0
+        hasStarted = false
+        rawInput = DirectionalInput.NONE
         renderer.clearSilently()
     }
 
@@ -379,6 +418,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         NoFallBlink.waitUntilGround = true
+        if (cooldown > 0) {
+            cooldown--
+        }
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
@@ -393,23 +435,28 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.position()
+        val prediction = ScaffoldBridgingTelly.placementPos
+            ?: ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine)
+        val predictedPos = prediction ?: player.position()
         // Check if the player is probably going to sneak at the predicted position
-        val predictedPose =
-            if (ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input))) {
+        val predictedPose = when {
+            ScaffoldEagleFeature.running && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input)) ->
                 Pose.CROUCHING
-            } else {
-                Pose.STANDING
-            }
+            // Without a prediction the click comes from where the player is, sneaking at the ledge or not
+            prediction == null -> player.pose
+            else -> Pose.STANDING
+        }
 
         debugGeometry("predictedPos") {
             DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
-        val technique = activeTechnique
-
-        val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
+        val view = RotationManager.currentRotation ?: player.rotation
+        val target = findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
+            // On a diagonal the way can ask for the other neighbour by now, and the player already left for this one
+            .let { found -> promised?.takeIf { hitFor(it, view) != null } ?: found }
             .also { this.currentTarget = it }
+        promised = null
 
         debugGeometry("lineToBlock") {
             // Debug stuff
@@ -424,82 +471,294 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             )
         }
 
-        // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
+        isAimed = false
+        planned = null
         if (rotationTiming == NORMAL) {
-            val rotation = technique.getRotations(target)
+            val rotation = aimAt(target) ?: return@handler
+            isAimed = target != null
+            aim = rotation
+            planned = rotation
+            placing = launchSequence(placing) { placeOnHit() }
+        }
+    }
 
-            RotationManager.setRotationTarget(
-                rotation ?: return@handler,
+    /**
+     * Asks for the planned rotation every tick and places the current target on the tick the rotation going out
+     * clicks it.
+     */
+    private suspend fun placeOnHit() {
+        val rotation by requires { planned }
+        val (target, hit, going) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            ScaffoldRotationValueGroup.toRotationTarget(
+                rotation,
                 considerInventory = considerInventory,
-                valueGroup = ScaffoldRotationValueGroup,
-                provider = this@ModuleScaffold,
-                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                surface = currentTarget?.let(::surface),
+                tolerance = if (ScaffoldPlacement.isHoldingLook) HELD_LOOK_TOLERANCE else bridging.activeMode.tolerance,
+                // Telly's turns round are the rehearsed ones of a telly bridger
+                isRehearsed = ScaffoldBridgingTelly.isTellying,
             )
+        }) { going ->
+            val target = currentTarget
+            if (target == null || cooldown > 0) {
+                null
+            } else {
+                hitFor(target, going)?.let { hit -> Triple(target, hit, going.normalize()) }
+            }
+        }
+
+        place(target, hit, going)
+    }
+
+    private fun hitFor(target: BlockPlacementTarget?, rotation: Rotation) =
+        crosshairTarget(target, rotation)?.takeIf(::isValidCrosshairTarget)
+
+    /** The block to place next, see [aimAt] and [crosshairTarget]. */
+    private fun findPlacementTarget(
+        predictedPos: Vec3,
+        predictedPose: Pose,
+        optimalLine: Line?,
+        bestStack: ItemStack,
+    ): BlockPlacementTarget? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.findPlacementTarget(bestStack)
+        isExpanding -> ScaffoldExpandFeature.findPlacementTarget(predictedPos, predictedPose, bestStack)
+        else -> ScaffoldPlacement.findTarget(predictedPos, predictedPose, optimalLine, bestStack)
+    }
+
+    /** Where scaffold looks to place [target]. */
+    private fun aimAt(target: BlockPlacementTarget?): Rotation? = when {
+        ModuleClutch.fall != null -> target?.rotation
+        isExpanding -> ScaffoldExpandFeature.rotation(target)
+        else -> ScaffoldPlacement.rotation(target)
+    }
+
+    /** What a look has to meet to place [target], see [crosshairTarget]; nothing for the exact held look. */
+    private fun surface(target: BlockPlacementTarget): Surface? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.surface(target) ?: ScaffoldPlacement.surface(target)
+        isExpanding -> ScaffoldExpandFeature.surface(target)
+        ScaffoldPlacement.isHoldingLook || ScaffoldBridgingTelly.isFacingForward -> null
+        else -> ScaffoldPlacement.surface(target)
+    }
+
+    /** The hit a click with [rotation] places [target] with, if it does. */
+    private fun crosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? = when {
+        ModuleClutch.fall != null -> ScaffoldClutchFeature.hitFor(target, rotation)
+        isExpanding -> ScaffoldExpandFeature.hitFor(target, rotation)
+        else -> ScaffoldPlacement.hitFor(target, rotation)
+    }
+
+    /**
+     * Clicks [hit] to place [target]. [beforeClick] runs once there is a block to place.
+     *
+     * @return whether it clicked
+     */
+    private fun place(
+        target: BlockPlacementTarget,
+        hit: BlockHitResult,
+        rotation: Rotation,
+        beforeClick: () -> Unit = {},
+    ): Boolean {
+        val hand = handToPlaceWith() ?: return false
+        beforeClick()
+
+        // Taken before the block changes it
+        val previousFallOffPos = currentOptimalLine?.let(ScaffoldMovementPrediction::getFallOffPositionOnLine)
+
+        doPlacement(hit, rotation, hand, {
+            onPlaced(target.placedBlock)
+            currentTarget = null
+            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+            cooldown = delay.random() + 1
+            true
+        }, swingMode = swingMode)
+        return true
+    }
+
+    private fun handToPlaceWith(): InteractionHand? {
+        var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offhandItem)
+
+        if (!ScaffoldAutoBlockFeature.alwaysHoldBlock) {
+            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
+        }
+
+        return when {
+            hasBlockInMainHand -> InteractionHand.MAIN_HAND
+            hasBlockInOffHand -> InteractionHand.OFF_HAND
+            else -> null
+        }
+    }
+
+    private fun onPlaced(placed: BlockPos) {
+        hasStarted = true
+        ScaffoldMovementPlanner.trackPlacedBlock(placed)
+        renderer.addBlock(placed)
+        ScaffoldEagleFeature.onBlockPlacement()
+        ScaffoldBlinkFeature.onBlockPlacement()
+        ScaffoldSprintControlFeature.onBlockPlacement()
+    }
+
+    /** Whether a block went down since Scaffold was enabled; until then the aim may still be turning onto the face. */
+    internal var hasStarted = false
+        private set
+
+    /** Whether the aim turns around within a tick. */
+    internal val hasInstantAim
+        get() = ScaffoldRotationValueGroup.calculateTicks(Rotation(180f, 0f), from = Rotation.ZERO) == 0
+
+    /**
+     * Whether a block can go down while the player is in the air, where nothing stops a fall: the bridge has started
+     * and the aim is instant, or Telly turns around in the first ticks of its jumps. A slower aim, or one that has to
+     * find the face anywhere, has the block down too late.
+     */
+    internal val canPlaceInAir
+        get() = hasStarted && (hasInstantAim || ScaffoldBridgingTelly.running && ScaffoldBridgingTelly.canTurnAround)
+
+    /** Whether the player is in the air above the row it stood on, with an aim too slow to place before it lands. */
+    internal val isHopping
+        get() = !player.onGround() && !canPlaceInAir && player.y >= placementY + 1
+
+    /**
+     * Whether a jump at an edge, moving with [input], gets a block to come down on: from an aim that follows in the
+     * air, or from a held look that meets the face on the first tick of the jump. The next block then goes on top of
+     * that one, under the player, unless SameY keeps the row.
+     */
+    internal fun canJumpAtEdge(input: DirectionalInput): Boolean =
+        canPlaceInAir || hasStarted && sameYMode == SameYMode.OFF && bridging.activeMode.shouldHoldLook &&
+            currentTarget?.let {
+                ScaffoldPlacement.canPlaceInJump(it, RotationManager.currentRotation ?: player.rotation, input)
+            } == true
+
+    /**
+     * A jump off the end of the bridge is left out while no block can go down in the air. Decided before
+     * [ScaffoldStabilizeMovementFeature] steers, which leaves a jumping player alone. A jump against a block is one
+     * up a step, such as a bridge leaves where it jumped at an edge.
+     */
+    @Suppress("unused")
+    private val jumpHandler = handler<MovementInputEvent>(
+        priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
+    ) { event ->
+        val jumps = event.jump && player.onGround() && !isTowering && ModuleClutch.fall == null &&
+            !player.horizontalCollision
+        if (jumps && !canPlaceInAir && landsOffBridge(event.directionalInput)) {
+            event.jump = false
+        }
+    }
+
+    /**
+     * A held look puts the blocks of a jump under the player, not ahead of it. In the air the keys are let go until
+     * the jump comes down on the bridge. Not after a hit: where that throws the player is the player's to steer.
+     */
+    @Suppress("unused")
+    private val hopHandler = handler<MovementInputEvent>(
+        priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+    ) { event ->
+        val hops = isHopping && bridging.activeMode.shouldHoldLook && ModuleClutch.fall == null &&
+            player.hurtTime == 0
+        if (hops && event.directionalInput != DirectionalInput.NONE && landsOffBridge(event.directionalInput)) {
+            event.directionalInput = DirectionalInput.NONE
+        }
+    }
+
+    /**
+     * Whether a jump now, or the one under way, comes down where no block is, or so close to an edge that the landing
+     * runs over it. A view that turns steers a silent walk up to half a key step off its way, so then a jump to either
+     * side counts too.
+     */
+    internal fun landsOffBridge(input: DirectionalInput): Boolean {
+        // Without a silent view, or with one resting on the held look, the walk goes where the keys say
+        val isSteady = RotationManager.currentRotation == null ||
+            !isExpanding && ScaffoldPlacement.heldLook != null && !isLiningUp()
+        val ways = if (isSteady) floatArrayOf(0f) else floatArrayOf(-30f, 0f, 30f)
+        return ways.any { offset ->
+            // Built by hand: asking for SafeWalk here would ask scaffold again. No sneak, which would cut it short
+            val simulation = SimulatedPlayer.fromClientPlayer(
+                SimulatedInput(input.toInput(jump = true, sprint = player.isSprinting).toAgent())
+            )
+            simulation.yRot += offset
+            // A jump that stays on the bridge, or reaches other ground, has landed within a second
+            val lands = (1..20).any {
+                simulation.tick()
+                simulation.onGround()
+            }
+            if (lands) {
+                // The landing carries the player on for a few ticks
+                simulation.input = SimulatedInput(input.toInput(sprint = player.isSprinting).toAgent())
+                repeat(3) { simulation.tick() }
+            }
+            !lands || player.wouldBeCloseToFallOff(simulation.position())
         }
     }
 
     var currentOptimalLine: Line? = null
         private set
+
+    /** The movement the player asks for, before [ScaffoldStabilizeMovementFeature] steers it towards the line. */
     var rawInput = DirectionalInput.NONE
         private set
 
+    /**
+     * Before [ScaffoldStabilizeMovementFeature] steers: the line leads where the keys ask to go, not where the
+     * steering of the last tick went.
+     */
     @Suppress("unused")
-    private val handleMovementInput = handler<MovementInputEvent>(
-        priority = EventPriorityConvention.MODEL_STATE
+    private val rawInputHandler = handler<MovementInputEvent>(
+        priority = (EventPriorityConvention.MODEL_STATE + 1).toShort()
     ) { event ->
-        this.currentOptimalLine = null
-        this.rawInput = event.directionalInput
-
-        val currentInput = event.directionalInput
-
-        if (currentInput == DirectionalInput.NONE) {
-            return@handler
+        rawInput = event.directionalInput
+        currentOptimalLine = if (rawInput == DirectionalInput.NONE) {
+            null
+        } else {
+            ScaffoldMovementPlanner.getOptimalMovementLine(rawInput)?.let(bridging.activeMode::wantedLine)
         }
-
-        this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
     }
 
-    @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(
-        // Runs after the model state
-        priority = EventPriorityConvention.SAFETY_FEATURE
-    ) { event ->
-        if (forceSneak > 0) {
-            event.sneak = true
-            forceSneak--
+    /**
+     * Whether an edge has to stop the player: no blocks left, or the next block does not go down before the player,
+     * moving with [input], walks off.
+     */
+    internal fun shouldStopAtEdge(input: DirectionalInput): Boolean {
+        val target = currentTarget
+        // A click waits out the delay, however well the view meets the face
+        if (blockCount <= 0 || target == null || cooldown > 1) {
+            return true
         }
-
-        // Ledge feature - AutoJump and AutoSneak
-        if (ledge) {
-            val technique = activeTechnique
-
-            val ledgeAction = ledge(
-                this.currentTarget,
-                RotationManager.currentRotation ?: player.rotation,
-                technique as? ScaffoldLedgeExtension
-            )
-
-            if (ledgeAction.jump) {
-                event.jump = true
-            }
-
-            if (ledgeAction.stopInput) {
-                event.directionalInput = DirectionalInput.NONE
-            }
-
-            if (ledgeAction.stepBack) {
-                event.directionalInput = event.directionalInput.copy(
-                    forwards = false,
-                    backwards = true
-                )
-            }
-
-            if (ledgeAction.sneakTime > forceSneak) {
-                event.sneak = true
-                forceSneak = ledgeAction.sneakTime
-            }
+        if (rotationTiming != NORMAL) {
+            // These place with the aim itself, on the tick it clicks
+            return aimAt(target)?.let { hitFor(target, it) } == null
         }
+        val view = RotationManager.currentRotation ?: player.rotation
+        // A view still turning onto the held look may pass over the face for a tick and be gone by the click
+        if (isLiningUp()) {
+            return true
+        }
+        if (hitFor(target, view) != null) {
+            return false
+        }
+        if (ModuleClutch.fall != null || isExpanding) {
+            return true
+        }
+        promised = target.takeIf { ScaffoldPlacement.canPlaceInTime(it, view, input) }
+        return promised == null
     }
+
+    /**
+     * Whether the view still turns to the look the bridging holds (bridge start, a corner, stop and go), during which
+     * an edge is only sneaked at, see [ScaffoldBridging.look]. A hand that came within the tolerance may still be
+     * settling: until it rests, a click the walk counts on can miss the face.
+     */
+    internal fun isLiningUp(): Boolean {
+        val look = ScaffoldPlacement.heldLook?.takeUnless { isExpanding } ?: return false
+        val view = RotationManager.currentRotation ?: player.rotation
+        val margin = max(HELD_LOOK_TOLERANCE, RotationUtil.gcd.toFloat())
+        val moves = RotationManager.lastRotation?.let { view.rotationDeltaLengthTo(it) >= RotationUtil.gcd / 2 } == true
+        return abs(angleDifference(view.yaw, look.yaw)) > margin || abs(view.pitch - look.pitch) > margin || moves
+    }
+
+    /**
+     * Degrees a hand may rest off the held look. Ending a turn exactly on a 45 degree angle is what Intave's placement
+     * analysis reads as a snap, and the look still places from this far off.
+     */
+    private const val HELD_LOOK_TOLERANCE = 1.5f
 
     @Suppress("unused")
     private val timerHandler = handler<GameTickEvent> {
@@ -509,7 +768,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         updateRenderCount(blockCount)
 
         if (player.onGround()) {
@@ -528,76 +787,39 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-        val technique = activeTechnique
+        val onTick = rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP
 
-        val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            technique.getRotations(target) ?: (RotationManager.currentRotation ?: player.rotation)
-        } else {
-            RotationManager.currentRotation ?: player.rotation
-        }.normalize()
-        val currentCrosshairTarget = technique.getCrosshairTarget(target, currentRotation)
-        // The clicker decides on the hit the technique would place with, falling back to the raw crosshair hit when
-        // the technique has none: it also fires without a placement target, and on hits the technique rejected.
-        val clickerTarget = if (SimulatePlacementAttempts.enabled) {
-            currentCrosshairTarget ?: traceFromPlayer(currentRotation)
-        } else {
-            null
-        }
-        val currentDelay = delay.random()
-
-        var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
-        val hasBlockInOffHand = isValidBlock(player.offhandItem)
+        val currentRotation = (target?.takeIf { onTick }?.let(::aimAt)
+            ?: RotationManager.currentRotation ?: player.rotation).normalize()
 
         if (ScaffoldAutoBlockFeature.alwaysHoldBlock) {
-            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
+            handleSilentBlockSelection(
+                isValidBlock(player.inventory.getItem(player.inventory.selectedSlot)),
+                isValidBlock(player.offhandItem),
+            )
         }
 
-        // Prioritize by all means the main hand if it has a block
-        val suitableHand = InteractionHand.entries.firstOrNull {
-            isValidBlock(player.getItemInHand(it))
+        if (SimulatePlacementAttempts.enabled) {
+            // The clicker decides on the hit scaffold would place with, falling back to the raw crosshair hit when
+            // there is none: it also fires without a placement target, and on hits scaffold rejected.
+            simulatePlacementAttempt(
+                crosshairTarget(target, currentRotation) ?: traceFromPlayer(currentRotation),
+                currentRotation,
+            )
         }
 
-        fun commonPlaceSucceed(placed: BlockPos) {
-            ScaffoldMovementPlanner.trackPlacedBlock(placed)
-            renderer.addBlock(placed)
-            ScaffoldEagleFeature.onBlockPlacement()
-            ScaffoldBlinkFeature.onBlockPlacement()
-            ScaffoldSprintControlFeature.onBlockPlacement()
+        // An aimed target goes down once the rotation hits it, see placeOnHit
+        if (target == null || isAimed || cooldown > 0) {
+            return@handler
         }
 
-        if (simulatePlacementAttempts(clickerTarget, suitableHand) && player.moving
-            && SimulatePlacementAttempts.clicker.isClickTick
-        ) {
-            SimulatePlacementAttempts.clicker.click {
-                doPlacement(clickerTarget!!, currentRotation, suitableHand!!, {
-                    commonPlaceSucceed(clickerTarget.targetBlockPos)
-                    true
-                }, swingMode = swingMode)
-                true
+        val hit = hitFor(target, currentRotation) ?: return@handler
+
+        val clicked = place(target, hit, currentRotation) {
+            if (!onTick) {
+                return@place
             }
-        }
 
-        if (target == null || currentCrosshairTarget == null) {
-            return@tickHandler
-        }
-
-        // Does the crosshair target meet the requirements?
-        if (!isValidCrosshairTarget(currentCrosshairTarget)) {
-            return@tickHandler
-        }
-
-        if (!ScaffoldAutoBlockFeature.alwaysHoldBlock) {
-            hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
-        }
-
-        if (!hasBlockInMainHand && !hasBlockInOffHand) {
-            return@tickHandler
-        }
-
-        val handToInteractWith = if (hasBlockInMainHand) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
-        var wasSuccessful = false
-
-        if (rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) {
             // Check if server rotation matches the current rotation
             if (currentRotation != RotationManager.serverRotation) {
                 network.send(
@@ -622,17 +844,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             }
         }
 
-        // Take the fall off position before placing the block
-        val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
-
-        doPlacement(currentCrosshairTarget, currentRotation, handToInteractWith, {
-            commonPlaceSucceed(target.placedBlock)
-            currentTarget = null
-            wasSuccessful = true
-            true
-        }, swingMode = swingMode)
-
-        if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
+        if (clicked && rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
             network.send(
                 PosRot(
                     player.x, player.y, player.z, player.withFixedYaw(currentRotation), player.xRot, player.onGround(),
@@ -640,11 +852,24 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
                 )
             )
         }
+    }
 
-        if (wasSuccessful) {
-            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+    private fun simulatePlacementAttempt(clickerTarget: BlockHitResult, rotation: Rotation) {
+        // Prioritize by all means the main hand if it has a block
+        val suitableHand = InteractionHand.entries.firstOrNull {
+            isValidBlock(player.getItemInHand(it))
+        }
 
-            waitTicks(currentDelay)
+        if (simulatePlacementAttempts(clickerTarget, suitableHand) && player.moving
+            && SimulatePlacementAttempts.clicker.isClickTick
+        ) {
+            SimulatePlacementAttempts.clicker.click {
+                doPlacement(clickerTarget, rotation, suitableHand!!, {
+                    onPlaced(clickerTarget.targetBlockPos)
+                    true
+                }, swingMode = swingMode)
+                true
+            }
         }
     }
 
@@ -694,8 +919,13 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             blockPos.offset(0, -2, 0)
         ScaffoldCeilingFeature.running && ScaffoldCeilingFeature.canConstructCeiling() ->
             blockPos.offset(0, 3, 0)
-        player.input.keyPresses.jump && (!player.moving || player.horizontalCollision) ->
+        // The keys the player holds: Telly lets go of W in the air, which is no standing jump
+        player.input.keyPresses.jump && (!DirectionalInput(mc.options).isMoving || player.horizontalCollision) ->
             blockPos.offset(0, -1, 0)
+        // Telly places the row it jumped off, not one under the jump, unless SameY has it build up
+        ScaffoldBridgingTelly.running ->
+            (if (sameYMode == SameYMode.OFF) SameYMode.ON else sameYMode).getTargetedBlockPos(blockPos)
+                ?: blockPos.offset(0, -1, 0)
         else -> sameYMode.getTargetedBlockPos(blockPos)
             ?: blockPos.offset(0, -1, 0)
     }

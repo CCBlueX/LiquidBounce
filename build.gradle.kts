@@ -196,7 +196,7 @@ loom.runs.named("clientGameTest") {
 tasks.named("runClientGameTest") {
     // A game that cannot start may wait on an error dialog forever. The server tests wait up to two minutes for
     // a game test server that is restarting, and up to three for a free session. Building schematics takes longer.
-    timeout = Duration.ofMinutes(if (gameTestSchematics != null) 120 else 30)
+    timeout = Duration.ofMinutes(if (gameTestSchematics != null) 120 else 45)
 }
 
 dependencies {

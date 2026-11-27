@@ -19,17 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import kotlinx.coroutines.Job
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb
+import net.ccbluex.liquidbounce.event.launchSequence
+import net.ccbluex.liquidbounce.event.requires
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Surface
+import net.ccbluex.liquidbounce.utils.aiming.lookAt
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -37,8 +39,8 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
+import net.ccbluex.liquidbounce.utils.block.targetfinding.surface
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -77,6 +79,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private val trackedWebs = ObjectLinkedOpenHashSet<BlockPos>()
 
     private var currentAction: UseAction? = null
+    private var placing: Job? = null
     private var lastSuccessfulWeb: BlockPos? = null
     private var lastSuccessfulAt = 0L
 
@@ -87,6 +90,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private data class UseAction(
         val slot: HotbarItemSlot,
         val rotation: Rotation,
+        val surface: Surface,
         val resolveHitResult: (BlockHitResult) -> BlockHitResult?,
         val onSuccess: (BlockHitResult) -> Unit,
     )
@@ -132,31 +136,26 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             }
         }
 
-        currentAction = placeAction ?: buildPickupAction()
-
-        val action = currentAction ?: return@handler
-        RotationManager.setRotationTarget(
-            action.rotation,
-            valueGroup = rotations,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoWeb,
-        )
+        currentAction = placeAction ?: buildPickupAction() ?: return@handler
+        placing = launchSequence(placing) { place() }
     }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val action = currentAction ?: return@handler
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val resolvedHitResult = action.resolveHitResult(traceFromPlayer(rotation)) ?: return@handler
+    private suspend fun place() {
+        val action by requires { currentAction }
+        val (hit, rotation) = lookAt(Priority.IMPORTANT_FOR_PLAYER_LIFE, {
+            rotations.toRotationTarget(action.rotation, considerInventory = true, surface = action.surface)
+        }) { going ->
+            action.resolveHitResult(traceFromPlayer(going))?.let { hit -> hit to going }
+        }
 
-        SilentHotbar.selectSlotSilently(this, action.slot, 1)
+        SilentHotbar.selectSlotSilently(this@NoWebPlaceWater, action.slot, 1)
         val onSuccess = {
-            action.onSuccess(resolvedHitResult)
+            action.onSuccess(hit)
             true
         }
 
         doPlacement(
-            resolvedHitResult,
+            hit,
             rotation,
             hand = action.slot.useHand,
             onItemUseSuccess = onSuccess,
@@ -192,6 +191,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         return UseAction(
             slot = plan.hotbarItemSlot,
             rotation = plan.placementTarget.rotation,
+            surface = plan.placementTarget.surface(),
             resolveHitResult = { rayTraceResult ->
                 if (plan.placementTarget.doesCrosshairTargetMatchRequirements(rayTraceResult)) rayTraceResult else null
             },
@@ -208,12 +208,16 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         directions: Array<Direction>,
     ): UseAction? {
         val side = pickBestSide(webPos, directions) ?: return null
-        val faceCenter = AABB(webPos).centerOnSide(side)
+        val webBox = AABB(webPos)
+        val faceCenter = webBox.centerOnSide(side)
         val fallbackHitResult = BlockHitResult(faceCenter, side, webPos, false)
+        val eyes = player.eyePosition
 
         return UseAction(
             slot = waterSlot,
-            rotation = Rotation.lookingAt(point = faceCenter, from = player.eyePosition),
+            rotation = Rotation.lookingAt(point = faceCenter, from = eyes),
+            // Any look clicks the planned face, also through blocks; from inside the web no face can be met
+            surface = Surface(webBox, side.takeUnless { webBox.contains(eyes) }, throughWalls = true),
             resolveHitResult = { rayTraceResult ->
                 resolveDirectionalPlacementHitResult(rayTraceResult, webPos, side, fallbackHitResult)
             },
@@ -245,6 +249,8 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         return UseAction(
             slot = bucketSlot,
             rotation = Rotation.lookingAt(point = pickupCenter, from = player.eyePosition),
+            // Any look clicks the source block, also through blocks
+            surface = Surface.of(pickupPos, throughWalls = true),
             resolveHitResult = { rayTraceResult ->
                 resolvePickupHitResult(rayTraceResult, pickupPos, pickupCenter)
             },
