@@ -438,6 +438,8 @@
   "liquidbounce.module.autoWalk.description": "自动行走：直线向前、绕过障碍物朝视线方向前进、前往目的地（也可用 .goto 设置）或跟随玩家（也可用 .follow 设置）。",
   "liquidbounce.module.autoWalk.messages.arrived": "已到达 %s，%s，%s。",
   "liquidbounce.module.autoWeapon.description": "自动切换到快捷栏中最好的武器。",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "当 AutoBlock 仅在危险时格挡且你处于危险中时，优先选择剑，以便手中持有可格挡的物品。",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "当目标站在虚空旁边时，优先选择附有击退的武器，将其推下边缘。",
   "liquidbounce.module.autoWindCharge.description": "在按下跳跃键时自动用风弹加速跳跃。",
   "liquidbounce.module.avoidHazards.description": "防止你走进可能对你产生负面影响的方块。",
   "liquidbounce.module.backtrack.description": "使目标卡住，让你能更有效的攻击它们。",
