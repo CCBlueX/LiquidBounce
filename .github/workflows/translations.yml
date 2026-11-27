@@ -1,0 +1,54 @@
+name: Translations
+
+# Publishes the bundled languages to CCBlueX/Translations, which serves them at i18n.liquidbounce.net.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/main/resources/resources/liquidbounce/lang/**
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+concurrency:
+  group: translations
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          path: source
+
+      - uses: actions/checkout@v7
+        with:
+          repository: CCBlueX/Translations
+          ssh-key: ${{ secrets.TRANSLATIONS_DEPLOY_KEY }}
+          path: translations
+
+      - name: Sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          translations/scripts/sync.sh liquidbounce source src/main/resources/resources/liquidbounce/lang "origin/${{ github.event.repository.default_branch }}"
+          cd translations
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -F - <<EOF
+          sync: ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}
+
+          Source commit: ${GITHUB_SHA}
+          Source repository: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+          Original commit message: $(git -C ../source log -1 --format=%s "$GITHUB_SHA")
+          EOF
+          git push -q || { git pull -q --rebase && git push -q; }
