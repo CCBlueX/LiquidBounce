@@ -19,7 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
@@ -37,12 +38,14 @@ import kotlin.math.pow
  * or something.
  */
 class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
-    override val category get() = ItemType.MACE.defaultCategory
+    override val category: ItemCategory
+        get() = ItemCategory(GenericItemType.MACE)
 
     companion object {
         /** `0.85.pow(1 / 20.0)` */
         const val P = 0.9919069797821398
         const val ASSUMED_FALL_DISTANCE = 15.0
+
         /**
          * Estimates damage for different enchantments. Note that sharpness is already considered by
          * `ItemStack.attackDamage`
@@ -54,13 +57,12 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.1f),
                 // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
-//                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.WIND_BURST, 0.2f),
             )
 
         private val COMPARATOR =
-            ComparatorChain<MaceItemFacet>(
-                comparingDouble(this::estimateDamage),
+            ComparatorChain(
+                comparingDouble(::estimateDamage),
                 comparing { it.itemStack.item is MaceItem },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,

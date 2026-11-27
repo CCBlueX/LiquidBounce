@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
@@ -43,22 +42,19 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot.Type
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparatorMode
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
-import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
-import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
-import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -83,16 +79,51 @@ import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.SplashPotionItem
 import net.minecraft.world.item.WindChargeItem
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.material.LavaFluid
-import net.minecraft.world.level.material.WaterFluid
-import java.util.function.Predicate
+import net.minecraft.world.level.material.Fluid
 
-@JvmRecord
-data class ItemCategory(val type: ItemType, val subtype: Int) {
-    fun isEmpty(): Boolean = type == ItemType.NONE
+/**
+ * Describes what an item is, and is used as the key when facets are grouped by category as well as when a slot asks
+ * for something.
+ */
+data class ItemCategory(val type: GenericItemType, val subtype: ItemSubtype = ItemSubtype.None)
+
+/**
+ * The distinction within a [GenericItemType]. Facets that share a category are compared with each other, so they have
+ * to be mutually comparable.
+ */
+sealed interface ItemSubtype {
+    /**
+     * The type alone describes the item.
+     */
+    data object None : ItemSubtype
+
+    /**
+     * One exact item.
+     */
+    data class SpecificItem(val item: Item) : ItemSubtype
+
+    /**
+     * The tool types an item serves, as a bitmask of the masks of [MiningToolItemFacet].
+     */
+    data class ToolTypes(val mask: Int) : ItemSubtype
+
+    /**
+     * One armor slot, identified by the entity slot id of the [ArmorPiece].
+     */
+    data class ArmorSlot(val entitySlotId: Int) : ItemSubtype
+
+    /**
+     * The fluid a bucket holds.
+     */
+    data class BucketFluid(val fluid: Fluid) : ItemSubtype
+
+    /**
+     * The milk bucket, which does not hold a fluid.
+     */
+    data object MilkBucket : ItemSubtype
 }
 
-enum class ItemType(
+enum class GenericItemType(
     val oneIsSufficient: Boolean,
     /**
      * Higher priority means the item category is filled in first.
@@ -122,8 +153,8 @@ enum class ItemType(
     ARROW(true),
     TOOL(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     ROD(true),
-    THROWABLE(false),
     SHIELD(true),
+    THROWABLE(false),
     FOOD(false),
     BUCKET(false),
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
@@ -131,71 +162,33 @@ enum class ItemType(
     TOTEM(false),
     POTION(false),
     BLOCK(false),
+    /**
+     * What nobody keeps, such as an empty bottle or a potion that only harms the one who drinks it.
+     */
     JUNK(false),
-    NONE(false);
-
-    val defaultCategory = ItemCategory(this, 0)
+    /**
+     * Represents any item. Every item in the inventory has this type.
+     */
+    ANY_ITEM(true),
 }
 
 enum class ItemFunction {
     WEAPON_LIKE,
+
+    /**
+     * Crossbows and bows.
+     */
+    BOW_LIKE,
     FOOD,
 }
 
-enum class ItemSortChoice(
-    override val tag: String,
-    val category: ItemCategory,
-    /**
-     * This is the function that is used for the greedy check.
-     *
-     * IF IT WAS IMPLEMENTED
-     */
-    val satisfactionCheck: Predicate<ItemStack>? = null,
-) : Tagged {
-    SWORD("Sword", ItemType.SWORD.defaultCategory, { it.isSword }),
-    WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
-    SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
-    MACE("Mace", ItemType.MACE.defaultCategory, { it.item is MaceItem }),
-    BEST_KNOCKBACK(
-        "BestKnockback",
-        ItemType.KNOCKBACK.defaultCategory,
-        { it.getEnchantment(Enchantments.KNOCKBACK) > 0 },
-    ),
-    BOW("Bow", ItemType.BOW.defaultCategory),
-    CROSSBOW("Crossbow", ItemType.CROSSBOW.defaultCategory),
-    AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
-    PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_PICKAXE), { it.isPickaxe }),
-    SHOVEL("Shovel", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_SHOVEL), { it.isShovel }),
-    HOE("Hoe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_HOE), { it.isHoe }),
-    ROD("Rod", ItemType.ROD.defaultCategory),
-    SHIELD("Shield", ItemType.SHIELD.defaultCategory),
-    WATER("Water", ItemType.BUCKET.defaultCategory),
-    LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
-    MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
-    PEARL("Pearl", ItemType.PEARL.defaultCategory, { it.item == Items.ENDER_PEARL }),
-    GAPPLE(
-        "Gapple",
-        ItemType.GAPPLE.defaultCategory,
-        Predicate { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
-    ),
-    FOOD("Food", ItemType.FOOD.defaultCategory, { it.foodComponent != null }),
-    POTION("Potion", ItemType.POTION.defaultCategory),
-    BLOCK("Block", ItemType.BLOCK.defaultCategory, { it.item is BlockItem }),
-    THROWABLES("Throwables", ItemType.THROWABLE.defaultCategory),
-    IGNORE("Ignore", ItemType.NONE.defaultCategory),
-    NONE("None", ItemType.NONE.defaultCategory),
-}
-
-/**
- * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
- */
 class ItemCategorization(
     availableItems: List<ItemSlot>,
 ) {
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlot.Type.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, Type.ARMOR, id))
         }
 
         /**
@@ -209,6 +202,12 @@ class ItemCategorization(
             EquipmentSlot.FEET, constructArmorPiece(Items.DIAMOND_BOOTS, 3),
         )
 
+        /**
+         * Note: this must be initialized AFTER [diamondArmorPieces], because the [ItemCategorization] constructor
+         * reads [diamondArmorPieces] during initialization. Companion-object properties are initialized in
+         * declaration order, so declaring this first would pass a null map to
+         * [ArmorKitParameters.getParametersForSlots] and crash the whole class's static initialization.
+         */
         @JvmField
         val Default = ItemCategorization(emptyList())
     }
@@ -281,118 +280,100 @@ class ItemCategorization(
      */
     @Suppress("CyclomaticComplexMethod", "CognitiveComplexMethod", "LongMethod")
     fun getItemFacets(slot: ItemSlot): List<ItemFacet> {
-        val itemStack = slot.itemStack
-        if (itemStack.isEmpty) {
+        if (slot.itemStack.isEmpty) {
             return emptyList()
         }
 
         return buildList {
-            WeaponItemFacet.createIfUsefulAsWeapon(slot)?.let(::add)
+            val item = slot.itemStack.item
 
-            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > mainWeaponKnockback) {
+            if (slot.itemStack.getEnchantment(Enchantments.KNOCKBACK) > mainWeaponKnockback) {
                 add(KnockbackItemFacet(slot))
             }
 
-            when (val item = itemStack.item) {
-                is BowItem -> add(BowItemFacet(slot))
-                is CrossbowItem -> add(CrossbowItemFacet(slot))
-                is ArrowItem -> add(ArrowItemFacet(slot))
-                is FishingRodItem -> add(RodItemFacet(slot))
-                is ShieldItem -> add(ShieldItemFacet(slot))
-                is BlockItem -> {
-                    if (ScaffoldBlockItemSelection.isValidBlock(itemStack)
-                        && !ScaffoldBlockItemSelection.isBlockUnfavourable(itemStack)
-                    ) {
+            this += PrimitiveItemFacet(
+                slot,
+                ItemCategory(GenericItemType.ANY_ITEM, ItemSubtype.SpecificItem(item))
+            )
+            // Everything could be a weapon (i.e. a stick with Knockback II should be preferred over a stick)
+            WeaponItemFacet.createIfUsefulAsWeapon(slot)?.let { this += it }
+
+            when {
+                // Treat animal armor as a normal item
+                slot.itemStack.isPlayerArmor && ModuleAutoArmor.isAllowedByCurseFilter(slot) ->
+                    add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
+                slot.itemStack.isSword -> add(SwordItemFacet(slot))
+                item is BowItem -> add(BowItemFacet(slot))
+                item is CrossbowItem -> add(CrossbowItemFacet(slot))
+                item is ArrowItem -> add(ArrowItemFacet(slot))
+                item is FishingRodItem -> add(RodItemFacet(slot))
+                item is ShieldItem -> add(ShieldItemFacet(slot))
+                slot.itemStack.isSpear -> add(SpearItemFacet(slot))
+                item is MaceItem -> add(MaceItemFacet(slot))
+                slot.itemStack.isAxe -> {
+                    val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
+                    when {
+                        sharpnessLevel >= 100 -> add(GodAxeFacet(slot))
+                        sharpnessLevel >= 5 -> add(SharpAxeFacet(slot))
+                        else -> add(MiningToolItemFacet(slot))
+                    }
+                }
+                slot.itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
+                item is BlockItem -> {
+                    val isUsableBlock = (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
+                        && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack))
+
+                    if (isUsableBlock) {
                         add(BlockItemFacet(slot))
-                    } else {
-                        add(ItemFacet(slot))
                     }
                 }
-
-                Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemSortChoice.MILK.category))
-                is BucketItem -> {
-                    val category = when (item.content) {
-                        is WaterFluid -> ItemSortChoice.WATER.category
-                        is LavaFluid -> ItemSortChoice.LAVA.category
-                        else -> ItemCategory(ItemType.BUCKET, item.content.javaClass.hashCode())
-                    }
-                    add(PrimitiveItemFacet(slot, category))
-                }
-
-                is PotionItem -> {
-                    val effects = itemStack.getPotionEffects().toList()
+                item is PotionItem -> {
+                    val effects = slot.itemStack.getPotionEffects().toList()
                     val isUsefulPotion =
                         effects.isNotEmpty() && effects.all { it.effect in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                     if (isUsefulPotion) {
                         add(PotionItemFacet(slot))
-                    } else if (!itemStack.has(DataComponents.CUSTOM_NAME) && (effects.isEmpty() ||
+                    } else if (!slot.itemStack.has(DataComponents.CUSTOM_NAME) && (effects.isEmpty() ||
                             (item !is SplashPotionItem && item !is LingeringPotionItem &&
                                 effects.any { it.effect in PotionItemFacet.BAD_STATUS_EFFECTS }))
                     ) {
-                        add(PrimitiveItemFacet(slot, ItemType.JUNK.defaultCategory))
-                    } else {
-                        add(ItemFacet(slot))
+                        add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.JUNK)))
                     }
                 }
-
-                Items.GLASS_BOTTLE -> {
-                    if (itemStack.has(DataComponents.CUSTOM_NAME)) {
-                        add(ItemFacet(slot))
-                    } else {
-                        add(PrimitiveItemFacet(slot, ItemType.JUNK.defaultCategory))
+                item == Items.GLASS_BOTTLE -> {
+                    if (!slot.itemStack.has(DataComponents.CUSTOM_NAME)) {
+                        add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.JUNK)))
                     }
                 }
-
-                is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemType.PEARL.defaultCategory))
-                Items.TOTEM_OF_UNDYING -> add(PrimitiveItemFacet(slot, ItemType.TOTEM.defaultCategory))
-
-                Items.GOLDEN_APPLE -> {
+                item == Items.TOTEM_OF_UNDYING -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.TOTEM)))
+                item is EggItem || item is SnowballItem || item is WindChargeItem -> {
+                    add(ThrowableItemFacet(slot))
+                }
+                item == Items.MILK_BUCKET -> add(
+                    PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, ItemSubtype.MilkBucket))
+                )
+                item is BucketItem -> add(
+                    PrimitiveItemFacet(
+                        slot,
+                        ItemCategory(GenericItemType.BUCKET, ItemSubtype.BucketFluid(item.content))
+                    )
+                )
+                item is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.PEARL)))
+                item == Items.GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemType.GAPPLE.defaultCategory))
+                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.GAPPLE)))
                 }
-
-                Items.ENCHANTED_GOLDEN_APPLE -> {
+                item == Items.ENCHANTED_GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemType.GAPPLE.defaultCategory, 1))
+                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.GAPPLE), 1))
                 }
-
-                is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
-
-                else -> when {
-                    itemStack.isAxe -> {
-                        val sharpnessLevel = itemStack.getEnchantment(Enchantments.SHARPNESS)
-                        if (sharpnessLevel >= 100) {
-                            add(GodAxeFacet(slot))
-                        } else if (sharpnessLevel >= 5) {
-                            add(SharpAxeFacet(slot))
-                        } else {
-                            add(MiningToolItemFacet(slot))
-                        }
+                else -> {
+                    if (slot.itemStack.isFood) {
+                        add(FoodItemFacet(slot))
                     }
-
-                    itemStack.isPlayerArmor && ModuleAutoArmor.isAllowedByCurseFilter(slot) ->
-                        add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
-
-                    itemStack.isSword -> add(SwordItemFacet(slot))
-
-                    itemStack.isSpear -> add(SpearItemFacet(slot))
-
-                    itemStack.item is MaceItem -> add(MaceItemFacet(slot))
-
-                    itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
-
-                    itemStack.isFood -> add(FoodItemFacet(slot))
-
-                    // A custom name marks what the server handed out, such as a lobby menu item or a tracker.
-                    // Its own category keeps it out of ThrowUnknownItems.
-                    itemStack.has(DataComponents.CUSTOM_NAME) ->
-                        add(PrimitiveItemFacet(slot, ItemCategory(ItemType.NONE, 1)))
-
-                    else -> add(ItemFacet(slot))
                 }
             }
-
         }
     }
 }

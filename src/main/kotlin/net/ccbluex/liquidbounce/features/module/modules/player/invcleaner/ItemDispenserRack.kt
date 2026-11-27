@@ -1,0 +1,55 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
+
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+
+class ItemDispenserRack(wishOrganizer: WishOrganizer, itemFacets: List<ItemFacet>) {
+    private val dispensersForType = buildMap {
+        for (facet in itemFacets) {
+            val wishGroupsForFacet = wishOrganizer.itemCategoryWishGroupMap[facet.category] ?: continue
+
+            for (id in wishGroupsForFacet) {
+                getOrPut(id, ::ArrayList).add(facet)
+            }
+        }
+
+        values.forEach { facetList -> facetList.sort() }
+    }
+
+    private val alreadyDispensedItemSlots = HashSet<ItemSlot>()
+
+    fun nextItemForGroup(id: WishOrganizer.WishItemGroupId): ItemFacet? {
+        val facetStack = this.dispensersForType[id] ?: return null
+        while (facetStack.isNotEmpty()) {
+            val currentItem = facetStack.removeLast()
+
+            // Check if this item slot has already been dispensed.
+            // This is possible as an item might appear in multiple dispensers.
+            if (alreadyDispensedItemSlots.add(currentItem.itemSlot)) {
+                return currentItem
+            }
+        }
+
+        return null
+    }
+
+}
