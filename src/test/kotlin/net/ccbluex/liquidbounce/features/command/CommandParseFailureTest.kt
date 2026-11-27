@@ -22,10 +22,12 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
+import com.mojang.brigadier.arguments.StringArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.CommandErrors
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.argument
 import net.ccbluex.liquidbounce.features.command.brigadier.literal
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.network.chat.contents.TranslatableContents
@@ -112,6 +114,25 @@ class CommandParseFailureTest {
         assertEquals(usage, exception.usageInfo.dropLast(1))
         assertTrue(exception.usageInfo.last().string.contains("<--[HERE]"))
     }
+
+    @Test
+    fun `alias usage lists the redirect target's subcommands`() {
+        dispatcher.register("usagechat", aliases = listOf("usagec")) {
+            literal("msg") {
+                argument("user", StringArgumentType.word()) {
+                    exec { 1 }
+                }
+            }
+        }
+
+        assertEquals(listOf("usagec msg <user>"), usageOf("usagec"))
+        assertEquals(listOf("usagec msg <user>"), usageOf("usagec msg"))
+        assertEquals(listOf("usagechat msg <user>"), usageOf("usagechat"))
+    }
+
+    private fun usageOf(input: String): List<String> =
+        dispatcher.buildUsage(dispatcher.parse(StringReader(input), ClientCommandSource).context.build(input))
+            .map { it.string }
 
     private fun CommandException.translationKey(): String =
         (text.contents as TranslatableContents).key

@@ -328,7 +328,7 @@
   "liquidbounce.command.xray.reset.description": "Resets the list of rendered blocks to the default values.",
   "liquidbounce.commandManager.commandExecuting": "正在執行命令 \"%s\"，請稍候…",
   "liquidbounce.commandManager.commandNotExecutable": "無法執行命令 \"%s\"。",
-  "liquidbounce.commandManager.commandProgress": "%s Executing command %s (%ss)",
+  "liquidbounce.commandManager.commandProgress": "%s 正在執行命令 %s (%s)",
   "liquidbounce.commandManager.emptyMultiSelect": "No valid values provided for parameter \"%s\".",
   "liquidbounce.commandManager.errorContext": "at: %s",
   "liquidbounce.commandManager.exceptionOccurred": "無法執行命令。%s: %s",

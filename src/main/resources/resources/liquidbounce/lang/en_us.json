@@ -406,7 +406,7 @@
   "liquidbounce.command.xray.reset.description": "Resets the list of rendered blocks to the default values.",
   "liquidbounce.commandManager.commandCancelled": "Command \"%s\" was cancelled.",
   "liquidbounce.commandManager.commandExecuting": "Command \"%s\" is already executing, please wait...",
-  "liquidbounce.commandManager.commandProgress": "%s Executing command %s (%ss)",
+  "liquidbounce.commandManager.commandProgress": "%s Executing command %s (%s)",
   "liquidbounce.commandManager.emptyMultiSelect": "No valid values provided for parameter \"%s\".",
   "liquidbounce.commandManager.errorContext": "at: %s",
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s: %s",
