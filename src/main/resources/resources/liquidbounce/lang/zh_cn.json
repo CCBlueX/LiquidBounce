@@ -328,7 +328,7 @@
   "liquidbounce.command.xray.reset.description": "将渲染方块列表重置为默认值。",
   "liquidbounce.commandManager.commandCancelled": "命令 \"%s\" 已取消。",
   "liquidbounce.commandManager.commandExecuting": "已经在执行命令 \"%s\"，请稍候…",
-  "liquidbounce.commandManager.commandProgress": "%s 正在执行命令 %s（%s 秒）",
+  "liquidbounce.commandManager.commandProgress": "%s 正在执行命令 %s（%s）",
   "liquidbounce.commandManager.emptyMultiSelect": "没有为参数 \"%s\" 提供有效值。",
   "liquidbounce.commandManager.errorContext": "位置：%s",
   "liquidbounce.commandManager.exceptionOccurred": "无法执行命令。%s: %s",

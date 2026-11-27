@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.updateChat
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.formatAsTime
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
@@ -83,14 +84,14 @@ class KAsyncCommand<S : Any> internal constructor(
             var n = 0
             while (isActive) {
                 delay(0.25.seconds)
-                val duration = (System.currentTimeMillis() - startAt) / 1000
+                val duration = (System.currentTimeMillis() - startAt).toInt().formatAsTime()
                 val char = LOADING_CHARS[n % LOADING_CHARS.size]
                 updateChat(
                     translation(
                         "liquidbounce.commandManager.commandProgress",
                         regular("<$char>"),
                         variable(commandPath),
-                        variable(duration.toString()),
+                        variable(duration),
                     ).append(CommonComponents.SPACE).append(cancelButton(commandPath, handlerJob)),
                     metadata = progressMessageMetadata
                 )
@@ -100,7 +101,7 @@ class KAsyncCommand<S : Any> internal constructor(
 
         handlerJob.invokeOnCompletion {
             EXECUTING_COMMANDS.remove(commandPath)
-            progressJob.cancel()
+            progressJob.cancel(it as? CancellationException)
             mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
         }
 

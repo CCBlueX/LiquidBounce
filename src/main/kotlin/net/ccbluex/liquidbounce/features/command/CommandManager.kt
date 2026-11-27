@@ -347,7 +347,7 @@ object CommandManager : EventListener {
             throw mapParseFailure(
                 parse,
                 tokens.first(),
-                usage = buildUsage(parse.context.build(lowered)),
+                usage = getDispatcher().buildUsage(parse.context.build(lowered)),
                 unknownHints = unknownCommandHints(tokens.first()),
             )
         }
@@ -361,7 +361,7 @@ object CommandManager : EventListener {
             // there is no matching subcommand to delegate to.
             throw CommandException(
                 translation("liquidbounce.commandManager.invalidUsage", tokens.first()),
-                usageInfo = buildUsage(context)
+                usageInfo = getDispatcher().buildUsage(context)
             )
         }
 
@@ -402,19 +402,6 @@ object CommandManager : EventListener {
                 )
             }
         }
-    }
-
-    /**
-     * Builds the usage lines for a command context, based on the Brigadier tree
-     * ([CommandDispatcher.getSmartUsage]).
-     */
-    private fun buildUsage(context: CommandContext<ClientCommandSource>): List<Component> {
-        val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
-        val commandPath = context.nodes.joinToString(" ") { it.node.name }
-
-        return getDispatcher().getSmartUsage(lastNode, ClientCommandSource)
-            .values
-            .map { usage -> "$commandPath $usage".asPlainText() }
     }
 
     /**
@@ -662,4 +649,28 @@ internal fun mapParseFailure(
                 usageInfo = usage,
             )
     }
+}
+
+/**
+ * Builds the usage lines for a command context, based on the Brigadier tree
+ * ([CommandDispatcher.getSmartUsage]).
+ *
+ * An alias is a redirecting literal without children of its own: whatever follows it is
+ * parsed into a child context rooted at the redirect target ([CommandDispatcher.parse]).
+ * Both levels therefore have to be walked, and usage for a node that only redirects has to
+ * come from the node it redirects to, or an alias reports no usage at all.
+ */
+internal fun CommandDispatcher<ClientCommandSource>.buildUsage(
+    context: CommandContext<ClientCommandSource>,
+): List<Component> {
+    val parsedNodes = generateSequence(context) { it.child }
+        .flatMap { it.nodes.asSequence() }
+        .map { it.node }
+        .toList()
+    val lastNode = parsedNodes.lastOrNull() ?: return emptyList()
+    val commandPath = parsedNodes.joinToString(" ") { it.name }
+
+    return getSmartUsage(lastNode.redirect ?: lastNode, ClientCommandSource)
+        .values
+        .map { usage -> "$commandPath $usage".asPlainText() }
 }
