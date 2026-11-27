@@ -84,6 +84,8 @@ internal object SocketEventListener : EventListener {
     }
 
     private fun serializeAndBroadcast(event: Event) {
+        if (WebSocketSessionManager.isEmpty()) return
+
         val eventName = event.javaClass.eventName
         val json = try {
             val writer = writeBuffer.get()

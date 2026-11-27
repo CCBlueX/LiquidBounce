@@ -20,14 +20,16 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import io.ktor.server.sse.ServerSSESession
 import io.ktor.sse.ServerSentEvent
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.Collections
-import java.util.WeakHashMap
 
+// TODO: send by request parameter
 object SseSessionManager {
 
     private val sessions: MutableSet<ServerSSESession> =
-        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+        Collections.synchronizedSet(ReferenceOpenHashSet())
 
     fun add(session: ServerSSESession) {
         sessions.add(session)
@@ -44,7 +46,10 @@ object SseSessionManager {
             session.launch {
                 try {
                     session.send(frame)
+                } catch (_: CancellationException) {
+                    remove(session)
                 } catch (t: Throwable) {
+                    remove(session)
                     onError(session, t)
                 }
             }
