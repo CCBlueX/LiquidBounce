@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import okhttp3.FormBody
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
+import okio.buffer
 import kotlin.io.path.div
 
 /**
@@ -45,9 +46,8 @@ object LogsApi {
         val path = (mc.gameDirectory.toPath() / "logs" / "latest.log").toOkioPath()
         val size = FileSystem.SYSTEM.metadataOrNull(path)?.size ?: return@withContext null
         val skipped = (size - MAX_LOG_BYTES).coerceAtLeast(0L)
-        var content = FileSystem.SYSTEM.read(path) {
-            skip(skipped)
-            readUtf8(size - skipped)
+        var content = FileSystem.SYSTEM.openReadOnly(path).use { handle ->
+            handle.source(skipped).buffer().use { it.readUtf8(size - skipped) }
         }
 
         if (skipped > 0) {
@@ -55,7 +55,7 @@ object LogsApi {
             content = content.substringAfter('\n')
         }
 
-        content.lineSequence().toList().takeLast(MAX_LOG_LINES).joinToString("\n")
+        content.lines().takeLast(MAX_LOG_LINES).joinToString("\n")
     }
 
     /**
