@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.Collections
-import java.util.WeakHashMap
 
 object WebSocketSessionManager {
 
     private val sessions: MutableSet<WebSocketSession> =
-        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+        Collections.synchronizedSet(ReferenceOpenHashSet())
 
     fun add(session: WebSocketSession) {
         sessions.add(session)
@@ -37,6 +37,8 @@ object WebSocketSessionManager {
     fun remove(session: WebSocketSession) {
         sessions.remove(session)
     }
+
+    fun isEmpty(): Boolean = sessions.isEmpty()
 
     fun broadcast(message: String, onError: (WebSocketSession, Throwable) -> Unit) {
         val snapshot = sessions.toTypedArray().ifEmpty { return }
@@ -49,6 +51,7 @@ object WebSocketSessionManager {
                 } catch (_: CancellationException) {
                     remove(session)
                 } catch (t: Throwable) {
+                    remove(session)
                     onError(session, t)
                 }
             }
